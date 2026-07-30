@@ -378,8 +378,18 @@ class WorldModel(nn.Module):
         x_hist: [B, W, N_total]
         a_seq:  [B, H, N_action]
         """
-        z_t = self.encode(x_hist)  # 只跑一次 Encoder
-        s_traj = self.state_decoder_gru.rollout(z_t, a_seq)
+        z_t = self.encode(x_hist)  # 只跑一次 Encoder (已存储 RevIN stats)
+        s_traj_norm = self.state_decoder_gru.rollout(z_t, a_seq)  # [B, H, n_state] (归一化空间)
+        
+        # RevIN denorm: 用 encode() 存储的 mean/std
+        mean_s = self.revin._mean[:, :, :self.n_state]  # [B, 1, n_state]
+        std_s = self.revin._std[:, :, :self.n_state]
+        if self.revin.affine:
+            w_s = self.revin.weight[:self.n_state]
+            b_s = self.revin.bias[:self.n_state]
+            s_traj_norm = (s_traj_norm - b_s) / (w_s + self.revin.eps)
+        s_traj = s_traj_norm * std_s + mean_s
+        
         return s_traj
     
     def _rollout_sliding(self, x_hist, a_seq):

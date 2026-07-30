@@ -84,25 +84,20 @@ def evaluate_rollout(model, loader, device, max_batches=200):
             break
         
         x_hist = x_hist.to(device)
+        s_next = s_next.to(device)  # 修复: 移到同一设备
         B = x_hist.size(0)
         
-        # 用真实动作序列做展开
-        a_seq = x_hist[:, -cfg.PRED_LEN:, cfg.N_STATE:]  # 取窗口最后 PRED_LEN 步的动作
-        # 注意: 这里用历史动作做"展开", 不是MPC规划的动作
-        # 真实使用场景中 a_seq 来自 MPC 求解器
+        a_seq = x_hist[:, -cfg.ROLLOUT_LEN:, cfg.N_STATE:]
         
         for mode in ['gru', 'sliding']:
-            s_traj = model.rollout(x_hist, a_seq, mode=mode)  # [B, H, N_state]
-            
-            # 计算每步的 MAE
-            # 注意: rollout预测的是未来, 但我们没有真实未来的 (s_next只是一步)
-            # 这里简化为: 对比 rollout 的第1步预测 vs 一步预测
-            step1_pred = s_traj[:, 0, :]  # [B, N_state]
+            s_traj = model.rollout(x_hist, a_seq, mode=mode)
+            step1_pred = s_traj[:, 0, :]
             mae_main_temp = float(torch.abs(step1_pred[:, cfg.TARGET_IDX] - s_next[:, cfg.TARGET_IDX]).mean())
             results[mode].append(mae_main_temp)
     
     return {
         'gru_mae_main_temp_mean': float(np.mean(results['gru'])),
+        'mae_main_temp_mean': float(np.mean(results['gru'])),  # 兼容性
         'sliding_mae_main_temp_mean': float(np.mean(results['sliding'])),
         'gru_mae_main_temp_std': float(np.std(results['gru'])),
         'sliding_mae_main_temp_std': float(np.std(results['sliding'])),
