@@ -1,9 +1,14 @@
 """
-world_model.py — 动作条件化世界模型
+world_model.py — 动作条件化世界模型 v2
 基于 Exp-0 TCN-iTransformer 改造:
 - 输入: [s_{t-W:t} ‖ a_{t-W:t}] → 16维 (14状态 + 2动作)
-- 输出: s_{t+1} (14维全状态)
-- 改动: +动作通道, +全状态输出, +自回归展开
+- Encoder: TCN+VarAttn → z_t (历史压缩, 只跑一次)
+- Decoder: GRU Cell → 逐步接收动作 a_t → 预测 ŝ_{t+1}
+- 两种 rollout 模式可切换:
+  * 'gru':    Encoder 1次 + GRU Cell H次 (推荐)
+  * 'sliding': Encoder H次 + 滑动窗口 (对照)
+
+v2 改动: +GRU Cell rollout, +encode()接口, +可切换模式
 """
 import torch
 import torch.nn as nn
@@ -46,7 +51,6 @@ class PatchEmbedding(nn.Module):
         self.pos_embed = nn.Parameter(torch.randn(1, self.n_patches, d_model) * 0.02)
     
     def forward(self, x):
-        """x: [B, T] → [B, n_patches, d_model]"""
         patches = x.unfold(dimension=1, size=cfg.PATCH_LEN, step=cfg.STRIDE)
         out = self.proj(patches)
         out = self.norm(out)
@@ -123,7 +127,6 @@ class PerVariableTCN(nn.Module):
         self.tcn = nn.Sequential(*layers)
     
     def forward(self, x):
-        """x: [B*N, n_patches, d_model] → [B*N, d_model]"""
         x = self.input_proj(x)
         x = x.transpose(1, 2)
         x = self.tcn(x)
@@ -131,41 +134,128 @@ class PerVariableTCN(nn.Module):
         return x
 
 
+class GRUStateDecoder(nn.Module):
+    """
+    GRU 状态解码器 (v2 新增)
+    - 将 Encoder 输出 z_t 作为初始隐状态
+    - 逐步接收动作 a_t, 预测全状态 ŝ_{t+1}
+    - 隐状态 h 自动累积历史信息, 无需反复编码
+    """
+    def __init__(self, d_hidden, n_action, n_state, n_layers=2, dropout=0.1):
+        super().__init__()
+        self.d_hidden = d_hidden
+        self.n_action = n_action
+        
+        # 动作嵌入
+        self.action_embed = nn.Sequential(
+            nn.Linear(n_action, d_hidden // 4),
+            nn.GELU(),
+            nn.Linear(d_hidden // 4, d_hidden // 2),
+        )
+        
+        # GRU: 输入 = z_t拼接后的隐状态 + action嵌入
+        # 实际输入维度 = d_hidden + d_hidden//2
+        self.gru_cell = nn.GRUCell(d_hidden + d_hidden // 2, d_hidden)
+        
+        # 状态预测头
+        self.state_head = nn.Sequential(
+            nn.Linear(d_hidden, d_hidden * 2),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(d_hidden * 2, n_state),
+        )
+    
+    def forward(self, z_t, a_t, h_prev=None):
+        """
+        单步解码
+        
+        Args:
+            z_t: [B, d_hidden] Encoder输出的历史压缩 (第一次传入, 后续为None时只用h_prev)
+            a_t: [B, n_action] 当前步动作
+            h_prev: [B, d_hidden] 上一步隐状态 (None时用z_t初始化)
+        
+        Returns:
+            s_next: [B, n_state] 预测的下一状态
+            h_new: [B, d_hidden] 更新后的隐状态
+        """
+        if h_prev is None:
+            h_prev = z_t
+        
+        # 拼接条件: 历史编码 + 当前动作
+        a_emb = self.action_embed(a_t)                    # [B, d_hidden//2]
+        gru_input = torch.cat([h_prev, a_emb], dim=-1)   # [B, d_hidden + d_hidden//2]
+        
+        h_new = self.gru_cell(gru_input, h_prev)         # [B, d_hidden]
+        s_next = self.state_head(h_new)                   # [B, n_state]
+        
+        return s_next, h_new
+    
+    def rollout(self, z_t, a_seq):
+        """
+        从 z_t 出发, 沿 a_seq 展开 H 步
+        
+        Args:
+            z_t: [B, d_hidden]
+            a_seq: [B, H, n_action]
+        
+        Returns:
+            s_traj: [B, H, n_state] 预测状态轨迹
+        """
+        B, H, _ = a_seq.shape
+        s_traj = []
+        h = z_t
+        
+        for t in range(H):
+            s_next, h = self.forward(z_t=None, a_t=a_seq[:, t, :], h_prev=h)
+            s_traj.append(s_next)
+        
+        return torch.stack(s_traj, dim=1)  # [B, H, n_state]
+
+
 class WorldModel(nn.Module):
     """
-    动作条件化世界模型 (基于 Exp-0 TCN-iTransformer 改造)
+    动作条件化世界模型 v2
     
-    输入: [B, W, N_state+N_action]  (W=96, N_state=14, N_action=2)
-    输出: [B, N_state]              (全状态预测)
+    架构:
+      Encoder: [s_win ‖ a_win] → TCN+VarAttn → z_t  (历史编码, 只跑一次)
+      Decoder: z_t + a_t → GRU Cell → ŝ_{t+1}        (逐步展开)
+    
+    两种 rollout 模式:
+      - 'gru':     Encoder 1次 + GRU Cell H次 (默认, 推荐)
+      - 'sliding': Encoder H次 (对照, 冗余)
     """
     def __init__(self, n_state=14, n_action=2, window_size=96,
                  d_model=64, n_heads=4, n_var_layers=2, n_tcn_layers=2,
-                 patch_len=16, stride=8, dropout=0.1):
+                 patch_len=16, stride=8, dropout=0.1,
+                 rollout_mode='gru'):
         super().__init__()
         self.n_state = n_state
         self.n_action = n_action
         self.n_total = n_state + n_action
         self.window_size = window_size
         self.d_model = d_model
+        self.rollout_mode = rollout_mode
         
-        # 1. RevIN (对所有输入通道归一化)
+        # --- Encoder (同v1) ---
         self.revin = RevIN(self.n_total)
-        
-        # 2. Patching (共享)
         self.patch_embed = PatchEmbedding(window_size, patch_len, stride, d_model)
         self.n_patches = self.patch_embed.n_patches
-        
-        # 3. Per-variable TCN
         self.var_encoder = PerVariableTCN(self.n_patches, d_model, n_tcn_layers, dropout)
-        
-        # 4. 变量间 Attention
         self.var_attention_layers = nn.ModuleList([
             VariableAttention(d_model, n_heads, dropout)
             for _ in range(n_var_layers)
         ])
         
-        # 5. 全状态解码器 (16变量 → 14维状态)
-        self.state_decoder = nn.Sequential(
+        # --- z_t 投影: 变量表示 → 隐状态 ---
+        self.z_proj = nn.Linear(self.n_total * d_model, d_model)
+        
+        # --- Decoder: GRU Cell (v2 新增) ---
+        self.state_decoder_gru = GRUStateDecoder(
+            d_hidden=d_model, n_action=n_action, n_state=n_state, dropout=dropout
+        )
+        
+        # --- 保留 v1 的直接解码器 (用于一步预测训练) ---
+        self.state_decoder_direct = nn.Sequential(
             nn.Linear(self.n_total * d_model, d_model * 4),
             nn.GELU(),
             nn.Dropout(dropout),
@@ -184,10 +274,12 @@ class WorldModel(nn.Module):
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
     
-    def forward(self, x, return_attention=False):
+    def encode(self, x):
         """
-        x: [B, W, N_total]  (W=窗口, N_total=16)
-        → s_next: [B, N_state]
+        Encoder: 将历史窗口压缩为隐状态 z_t
+        
+        Input:  [B, W, N_total]
+        Output: [B, d_model]
         """
         B, W, N = x.shape
         
@@ -197,92 +289,137 @@ class WorldModel(nn.Module):
         # 2. Per-variable Patching + TCN
         var_tokens = []
         for i in range(N):
-            xi = x_norm[:, :, i]
-            patches_i = self.patch_embed(xi)
+            patches_i = self.patch_embed(x_norm[:, :, i])
             var_tokens.append(patches_i)
-        var_tokens = torch.stack(var_tokens, dim=1)  # [B, N, n_patches, d_model]
+        var_tokens = torch.stack(var_tokens, dim=1)
         
-        # 3. TCN编码
         var_tokens = var_tokens.reshape(B * N, self.n_patches, self.d_model)
-        var_repr = self.var_encoder(var_tokens)  # [B*N, d_model]
-        var_repr = var_repr.reshape(B, N, self.d_model)  # [B, N, d_model]
+        var_repr = self.var_encoder(var_tokens)
+        var_repr = var_repr.reshape(B, N, self.d_model)
         
-        # 4. 变量间 Attention
+        # 3. 变量间 Attention
+        for attn_layer in self.var_attention_layers:
+            var_repr, _ = attn_layer(var_repr)
+        
+        # 4. → z_t
+        var_repr_flat = var_repr.reshape(B, N * self.d_model)
+        z_t = self.z_proj(var_repr_flat)
+        
+        return z_t
+    
+    def forward(self, x, return_attention=False):
+        """
+        一步预测 (同v1, 保留兼容)
+        
+        x: [B, W, N_total] → s_next: [B, N_state]
+        """
+        B, W, N = x.shape
+        
+        x_norm = self.revin(x, mode='norm')
+        
+        var_tokens = []
+        for i in range(N):
+            patches_i = self.patch_embed(x_norm[:, :, i])
+            var_tokens.append(patches_i)
+        var_tokens = torch.stack(var_tokens, dim=1)
+        
+        var_tokens = var_tokens.reshape(B * N, self.n_patches, self.d_model)
+        var_repr = self.var_encoder(var_tokens)
+        var_repr = var_repr.reshape(B, N, self.d_model)
+        
         attn_weights = None
         for attn_layer in self.var_attention_layers:
             var_repr, attn_weights = attn_layer(var_repr)
         
-        # 5. 全状态解码
-        var_repr_flat = var_repr.reshape(B, N * self.d_model)  # [B, N*d_model]
-        s_next_norm = self.state_decoder(var_repr_flat)  # [B, N_state]
+        var_repr_flat = var_repr.reshape(B, N * self.d_model)
+        s_next_norm = self.state_decoder_direct(var_repr_flat)
         
-        # 6. RevIN 逆变换 (只对状态变量部分)
-        # NOTE: RevIN存储的是全通道的mean/std, 这里只取状态通道
+        # RevIN 逆变换
         mean_s = self.revin._mean[:, :, :self.n_state]
         std_s = self.revin._std[:, :, :self.n_state]
         w_s = self.revin.weight[:self.n_state]
         b_s = self.revin.bias[:self.n_state]
-        s_next_norm_expand = s_next_norm.unsqueeze(1)  # [B, 1, N_state]
+        s_next_norm_expand = s_next_norm.unsqueeze(1)
         if self.revin.affine:
             s_next_norm_expand = (s_next_norm_expand - b_s) / (w_s + self.revin.eps)
         s_next = s_next_norm_expand * std_s + mean_s
-        s_next = s_next.squeeze(1)  # [B, N_state]
+        s_next = s_next.squeeze(1)
         
         if return_attention:
             return s_next, attn_weights
         return s_next
     
-    def rollout(self, s_0, a_seq, window_states=None, window_actions=None):
+    def rollout(self, x_hist, a_seq, mode=None):
         """
         自回归展开 H 步
         
         Args:
-            s_0: [B, N_state] 初始状态
-            a_seq: [B, H, N_action] H步动作序列
-            window_states: [B, W, N_state] 初始历史窗口状态 (可选)
-            window_actions: [B, W, N_action] 初始历史窗口动作 (可选)
+            x_hist: [B, W, N_total] 历史窗口
+            a_seq:  [B, H, N_action] H步动作序列
+            mode:   'gru' | 'sliding' (默认使用 self.rollout_mode)
         
         Returns:
-            s_pred: [B, H, N_state] 预测状态轨迹
+            s_traj: [B, H, N_state]
         """
-        B = s_0.shape[0]
-        H = a_seq.shape[1]
+        if mode is None:
+            mode = self.rollout_mode
         
-        # 初始化窗口
-        if window_states is None:
-            window_states = s_0.unsqueeze(1).repeat(1, self.window_size, 1)
-        if window_actions is None:
-            window_actions = a_seq[:, 0:1, :].repeat(1, self.window_size, 1)
+        if mode == 'gru':
+            return self._rollout_gru(x_hist, a_seq)
+        elif mode == 'sliding':
+            return self._rollout_sliding(x_hist, a_seq)
+        else:
+            raise ValueError(f"Unknown rollout mode: {mode}")
+    
+    def _rollout_gru(self, x_hist, a_seq):
+        """
+        GRU模式: Encoder 1次 + GRU Cell H次
+        
+        x_hist: [B, W, N_total]
+        a_seq:  [B, H, N_action]
+        """
+        z_t = self.encode(x_hist)  # 只跑一次 Encoder
+        s_traj = self.state_decoder_gru.rollout(z_t, a_seq)
+        return s_traj
+    
+    def _rollout_sliding(self, x_hist, a_seq):
+        """
+        滑动窗口模式 (v1, 保留对照): Encoder H次
+        """
+        B, H = a_seq.shape[0], a_seq.shape[1]
+        states = x_hist[:, :, :self.n_state]
+        actions = x_hist[:, :, self.n_state:]
         
         s_pred = []
-        s_cur = s_0
-        
         for t in range(H):
-            # 构造输入: [s_win ‖ a_win]
-            x_t = torch.cat([window_states, window_actions], dim=2)  # [B, W, N_total]
-            
-            # 预测下一步
-            s_next = self.forward(x_t)  # [B, N_state]
+            x_t = torch.cat([states, actions], dim=2)
+            s_next = self.forward(x_t)
             s_pred.append(s_next)
-            
-            # 滑动窗口
-            window_states = torch.cat([window_states[:, 1:, :], s_next.unsqueeze(1)], dim=1)
-            window_actions = torch.cat([window_actions[:, 1:, :], a_seq[:, t:t+1, :]], dim=1)
-            s_cur = s_next
+            states = torch.cat([states[:, 1:, :], s_next.unsqueeze(1)], dim=1)
+            actions = torch.cat([actions[:, 1:, :], a_seq[:, t:t+1, :]], dim=1)
         
-        return torch.stack(s_pred, dim=1)  # [B, H, N_state]
+        return torch.stack(s_pred, dim=1)
 
 
 if __name__ == '__main__':
-    # 快速测试
-    model = WorldModel()
-    x = torch.randn(4, 96, 16)
-    s_next = model(x)
-    print(f"Input: {x.shape} → Output: {s_next.shape}")
-    print(f"Params: {sum(p.numel() for p in model.parameters()):,}")
+    model = WorldModel(rollout_mode='gru')
+    print(f"WorldModel v2 | Params: {sum(p.numel() for p in model.parameters()):,}")
     
-    # 测试 rollout
-    s_0 = torch.randn(4, 14)
+    x_hist = torch.randn(4, 96, 16)
     a_seq = torch.randn(4, 18, 2)
-    s_traj = model.rollout(s_0, a_seq)
-    print(f"Rollout: s_0 {s_0.shape} + a_seq {a_seq.shape} → trajectory {s_traj.shape}")
+    
+    # 一步预测
+    s_next = model(x_hist)
+    print(f"Forward:  {x_hist.shape} → {s_next.shape}")
+    
+    # Encoder
+    z = model.encode(x_hist)
+    print(f"Encode:   {x_hist.shape} → z_t {z.shape}")
+    
+    # GRU rollout
+    s_traj_gru = model.rollout(x_hist, a_seq, mode='gru')
+    print(f"Rollout(GRU):   {x_hist.shape} + a_seq {a_seq.shape} → {s_traj_gru.shape}")
+    
+    # Sliding rollout
+    s_traj_sliding = model.rollout(x_hist, a_seq, mode='sliding')
+    print(f"Rollout(sliding): {x_hist.shape} + a_seq {a_seq.shape} → {s_traj_sliding.shape}")
