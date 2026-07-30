@@ -85,12 +85,13 @@ World Model:
 ### 实验 1d: 消融实验
 | 变体 | 说明 |
 |------|------|
-| Full Model | 完整架构 |
+| **Full Model (当前)** | 滑动窗口架构: [s_win‖a_win] → TCN+VarAttn → ŝ_{t+1}, rollout时滑动窗口更新 |
 | No-Action | 去掉动作输入（退化为纯预测） |
-| No-RevIN | 去掉RevIN |
+| No-RevIN | 去掉 RevIN 归一化 |
 | No-VarAttn | 去掉变量间注意力 |
+| **GRU Decoder (Exp-0风格)** | 替代方案: Encoder(z_t) → GRU(h_0=z_t) → 每步(动作+隐状态) → ŝ_{t+1}。Exp-0已验证GRU自回归18步效果, 隐状态自然承载历史信息, 无需显式滑动窗口管理。与Full Model对比滚动效率和精度 |
 | Mamba Backbone | 用 Mamba 替代 TCN |
-| GRU-only | 只用 GRU 做时序编码 |
+| Action-Abs | 动作用绝对值 vs 当前差分定义 |
 
 ### 实验 1e: Baseline 对比
 | Baseline | 说明 |
