@@ -133,7 +133,7 @@ def evaluate_full_rollout(model, raw_data, device, mode='sliding', n_samples=500
         mainT_true = raw_data[idx+W:idx+W+H, cfg.TARGET_IDX]
         
         s_traj = model.rollout(x_t, future_a, mode=mode)
-        mainT_pred = s_traj[0, :, cfg.TARGET_IDX].cpu().numpy()
+        mainT_pred = s_traj[0, :, cfg.TARGET_IDX].detach().cpu().numpy()
         errors[i] = np.abs(mainT_pred - mainT_true)
     
     return errors.mean(axis=0), np.sqrt((errors**2).mean(axis=0))
