@@ -214,20 +214,22 @@ class GRUStateDecoder(nn.Module):
 
 class WorldModel(nn.Module):
     """
-    动作条件化世界模型 v2
+    动作条件化世界模型 v3 (概率化)
     
     架构:
       Encoder: [s_win ‖ a_win] → TCN+VarAttn → z_t  (历史编码, 只跑一次)
-      Decoder: z_t + a_t → GRU Cell → ŝ_{t+1}        (逐步展开)
+      Decoder: z_t + a_t → GRU Cell → (μ, log_σ²)_{t+1}  (逐步展开, 概率输出)
     
     两种 rollout 模式:
       - 'gru':     Encoder 1次 + GRU Cell H次 (默认, 推荐)
       - 'sliding': Encoder H次 (对照, 冗余)
+    
+    输出: (μ, log_σ²) 双头 — 高斯分布参数, 用于 NLL 损失训练
     """
     def __init__(self, n_state=14, n_action=2, window_size=96,
                  d_model=64, n_heads=4, n_var_layers=2, n_tcn_layers=2,
                  patch_len=16, stride=8, dropout=0.1,
-                 rollout_mode='gru'):
+                 rollout_mode='gru', probabilistic=True):
         super().__init__()
         self.n_state = n_state
         self.n_action = n_action
@@ -235,8 +237,10 @@ class WorldModel(nn.Module):
         self.window_size = window_size
         self.d_model = d_model
         self.rollout_mode = rollout_mode
+        self.probabilistic = probabilistic
+        self.n_out = n_state * 2 if probabilistic else n_state  # μ + log_σ²
         
-        # --- Encoder (同v1) ---
+        # --- Encoder (同v2) ---
         self.revin = RevIN(self.n_total)
         self.patch_embed = PatchEmbedding(window_size, patch_len, stride, d_model)
         self.n_patches = self.patch_embed.n_patches
@@ -249,12 +253,12 @@ class WorldModel(nn.Module):
         # --- z_t 投影: 变量表示 → 隐状态 ---
         self.z_proj = nn.Linear(self.n_total * d_model, d_model)
         
-        # --- Decoder: GRU Cell (v2 新增) ---
+        # --- Decoder: GRU Cell (概率化) ---
         self.state_decoder_gru = GRUStateDecoder(
-            d_hidden=d_model, n_action=n_action, n_state=n_state, dropout=dropout
+            d_hidden=d_model, n_action=n_action, n_state=self.n_out, dropout=dropout
         )
         
-        # --- 保留 v1 的直接解码器 (用于一步预测训练) ---
+        # --- 保留 v1 的直接解码器 (用于一步预测训练, 概率化) ---
         self.state_decoder_direct = nn.Sequential(
             nn.Linear(self.n_total * d_model, d_model * 4),
             nn.GELU(),
@@ -262,7 +266,7 @@ class WorldModel(nn.Module):
             nn.Linear(d_model * 4, d_model * 2),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(d_model * 2, n_state),
+            nn.Linear(d_model * 2, self.n_out),
         )
         
         self._init_weights()
@@ -307,11 +311,17 @@ class WorldModel(nn.Module):
         
         return z_t
     
-    def forward(self, x, return_attention=False):
+    def forward(self, x, return_attention=False, return_stats=False):
         """
-        一步预测 (同v1, 保留兼容)
+        一步预测 (概率版)
         
-        x: [B, W, N_total] → s_next: [B, N_state]
+        x: [B, W, N_total]
+        
+        Returns (probabilistic=True):
+            mu:     [B, N_state]  预测均值
+            logvar: [B, N_state]  预测 log(σ²)
+        Returns (probabilistic=False):
+            s_next: [B, N_state]
         """
         B, W, N = x.shape
         
@@ -332,24 +342,48 @@ class WorldModel(nn.Module):
             var_repr, attn_weights = attn_layer(var_repr)
         
         var_repr_flat = var_repr.reshape(B, N * self.d_model)
-        s_next_norm = self.state_decoder_direct(var_repr_flat)
+        raw_out = self.state_decoder_direct(var_repr_flat)  # [B, n_out]
         
-        # RevIN 逆变换
+        # RevIN 逆变换 → 原空间
         mean_s = self.revin._mean[:, :, :self.n_state]
         std_s = self.revin._std[:, :, :self.n_state]
         w_s = self.revin.weight[:self.n_state]
         b_s = self.revin.bias[:self.n_state]
-        s_next_norm_expand = s_next_norm.unsqueeze(1)
-        if self.revin.affine:
-            s_next_norm_expand = (s_next_norm_expand - b_s) / (w_s + self.revin.eps)
-        s_next = s_next_norm_expand * std_s + mean_s
-        s_next = s_next.squeeze(1)
         
-        if return_attention:
-            return s_next, attn_weights
-        return s_next
+        if self.probabilistic:
+            mu_norm = raw_out[:, :self.n_state]
+            logvar_norm = raw_out[:, self.n_state:]
+            
+            # Denorm μ
+            mu_norm_expand = mu_norm.unsqueeze(1)
+            if self.revin.affine:
+                mu_norm_expand = (mu_norm_expand - b_s) / (w_s + self.revin.eps)
+            mu = mu_norm_expand * std_s + mean_s
+            mu = mu.squeeze(1)
+            
+            # Denorm σ: σ_raw = σ_norm * std_s  (σ 只受 scale 影响)
+            sigma_norm = torch.exp(logvar_norm * 0.5)  # [B, n_state]
+            sigma = sigma_norm * std_s.squeeze(1)       # 原空间 scale
+            logvar = 2.0 * torch.log(sigma + 1e-8)      # 原空间 log(σ²)
+            
+            if return_attention:
+                return mu, logvar, attn_weights
+            if return_stats:
+                return mu, logvar, sigma
+            return mu, logvar
+        else:
+            s_next_norm = raw_out
+            s_next_norm_expand = s_next_norm.unsqueeze(1)
+            if self.revin.affine:
+                s_next_norm_expand = (s_next_norm_expand - b_s) / (w_s + self.revin.eps)
+            s_next = s_next_norm_expand * std_s + mean_s
+            s_next = s_next.squeeze(1)
+            
+            if return_attention:
+                return s_next, attn_weights
+            return s_next
     
-    def rollout(self, x_hist, a_seq, mode=None):
+    def rollout(self, x_hist, a_seq, mode=None, return_stats=False):
         """
         自回归展开 H 步
         
@@ -357,21 +391,23 @@ class WorldModel(nn.Module):
             x_hist: [B, W, N_total] 历史窗口
             a_seq:  [B, H, N_action] H步动作序列
             mode:   'gru' | 'sliding' (默认使用 self.rollout_mode)
+            return_stats: 是否返回方差 (probabilistic 模式)
         
         Returns:
             s_traj: [B, H, N_state]
+            (可选) sigma_traj: [B, H, N_state]
         """
         if mode is None:
             mode = self.rollout_mode
         
         if mode == 'gru':
-            return self._rollout_gru(x_hist, a_seq)
+            return self._rollout_gru(x_hist, a_seq, return_stats=return_stats)
         elif mode == 'sliding':
-            return self._rollout_sliding(x_hist, a_seq)
+            return self._rollout_sliding(x_hist, a_seq, return_stats=return_stats)
         else:
             raise ValueError(f"Unknown rollout mode: {mode}")
     
-    def _rollout_gru(self, x_hist, a_seq):
+    def _rollout_gru(self, x_hist, a_seq, return_stats=False):
         """
         GRU模式: Encoder 1次 + GRU Cell H次
         
@@ -379,20 +415,34 @@ class WorldModel(nn.Module):
         a_seq:  [B, H, N_action]
         """
         z_t = self.encode(x_hist)  # 只跑一次 Encoder (已存储 RevIN stats)
-        s_traj_norm = self.state_decoder_gru.rollout(z_t, a_seq)  # [B, H, n_state] (归一化空间)
+        raw_traj = self.state_decoder_gru.rollout(z_t, a_seq)  # [B, H, n_out] (归一化空间)
         
-        # RevIN denorm: 用 encode() 存储的 mean/std
+        # RevIN denorm
         mean_s = self.revin._mean[:, :, :self.n_state]  # [B, 1, n_state]
         std_s = self.revin._std[:, :, :self.n_state]
         if self.revin.affine:
             w_s = self.revin.weight[:self.n_state]
             b_s = self.revin.bias[:self.n_state]
-            s_traj_norm = (s_traj_norm - b_s) / (w_s + self.revin.eps)
-        s_traj = s_traj_norm * std_s + mean_s
         
-        return s_traj
+        if self.probabilistic:
+            mu_norm = raw_traj[:, :, :self.n_state]
+            logvar_norm = raw_traj[:, :, self.n_state:]
+            if self.revin.affine:
+                mu_norm = (mu_norm - b_s) / (w_s + self.revin.eps)
+            s_traj = mu_norm * std_s + mean_s
+            
+            if return_stats:
+                sigma_norm = torch.exp(logvar_norm * 0.5)
+                sigma_traj = sigma_norm * std_s
+                return s_traj, sigma_traj
+            return s_traj
+        else:
+            if self.revin.affine:
+                raw_traj = (raw_traj - b_s) / (w_s + self.revin.eps)
+            s_traj = raw_traj * std_s + mean_s
+            return s_traj
     
-    def _rollout_sliding(self, x_hist, a_seq):
+    def _rollout_sliding(self, x_hist, a_seq, return_stats=False):
         """
         滑动窗口模式 (v1, 保留对照): Encoder H次
         """
@@ -401,14 +451,32 @@ class WorldModel(nn.Module):
         actions = x_hist[:, :, self.n_state:]
         
         s_pred = []
+        sigma_pred = [] if self.probabilistic and return_stats else None
+        
         for t in range(H):
             x_t = torch.cat([states, actions], dim=2)
-            s_next = self.forward(x_t)
-            s_pred.append(s_next)
-            states = torch.cat([states[:, 1:, :], s_next.unsqueeze(1)], dim=1)
+            
+            if self.probabilistic:
+                mu, logvar = self.forward(x_t)
+                s_pred.append(mu)
+                if return_stats:
+                    sigma_pred.append(torch.exp(logvar * 0.5))
+            else:
+                s_next = self.forward(x_t)
+                s_pred.append(s_next)
+            
+            # 用 μ 更新下一窗口的状态
+            s_next_use = s_pred[-1]
+            if isinstance(s_next_use, tuple):
+                s_next_use = s_next_use[0]
+            states = torch.cat([states[:, 1:, :], s_next_use.unsqueeze(1)], dim=1)
             actions = torch.cat([actions[:, 1:, :], a_seq[:, t:t+1, :]], dim=1)
         
-        return torch.stack(s_pred, dim=1)
+        s_traj = torch.stack(s_pred, dim=1)
+        if return_stats and sigma_pred is not None:
+            sigma_traj = torch.stack(sigma_pred, dim=1)
+            return s_traj, sigma_traj
+        return s_traj
 
 
 if __name__ == '__main__':

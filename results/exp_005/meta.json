@@ -1,0 +1,19 @@
+{
+  "exp_id": "exp_005",
+  "name": "Probabilistic World Model \u2014 Gaussian NLL loss",
+  "date": "2026-07-31T10:50:28.257743",
+  "changes_vs_exp004": [
+    "\u635f\u5931: MSE \u2192 Gaussian NLL (GaussNLLLoss)",
+    "\u6a21\u578b\u8f93\u51fa: s\u0302 \u2192 (\u03bc, log\u03c3\u00b2) \u53cc\u5934",
+    "Rollout \u7528 \u03bc \u505a\u786e\u5b9a\u6027\u9884\u6d4b, \u03c3 \u8bc4\u4f30\u4e0d\u786e\u5b9a\u6027"
+  ],
+  "rollout_k": 5,
+  "rollout_weights": [
+    1.0,
+    0.8,
+    0.6,
+    0.4,
+    0.2
+  ],
+  "loss": "gaussian_nll"
+}
