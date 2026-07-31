@@ -1,0 +1,21 @@
+{
+  "exp_id": "exp_006",
+  "name": "\u03b2-NLL Calibrated Probabilistic World Model (warmup)",
+  "date": "2026-07-31T11:51:11.809997",
+  "changes_vs_exp005": [
+    "\u635f\u5931: GaussNLL \u2192 BetaNLL (\u03b2=-0.3, warmup=20)",
+    "warmup: \u524d20 epoch \u03b2=0 (\u6807\u51c6NLL), \u4e4b\u540e\u7ebf\u6027\u8fc7\u6e21\u5230\u76ee\u6807\u03b2",
+    "\u03b2<0 \u60e9\u7f5a\u5c0f\u03c3\u6837\u672c, \u5f3a\u5236\u03c3\u4e0d\u8fc7\u5ea6\u574d\u7f29"
+  ],
+  "rollout_k": 5,
+  "rollout_weights": [
+    1.0,
+    0.8,
+    0.6,
+    0.4,
+    0.2
+  ],
+  "loss": "beta_nll_warmup",
+  "beta": -0.3,
+  "beta_warmup": 20
+}
