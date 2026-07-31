@@ -93,6 +93,7 @@ class WorldModel_ActionHistory(nn.Module):
     def forward(self, x):
         """x: [B, W, N_state + N_action] 绝对阀位"""
         B, W, _ = x.shape
+        d = cfg.D_MODEL
         s = x[:, :, :cfg.N_STATE]
         a = x[:, :, cfg.N_STATE:]  # [B, W, 2]
 
