@@ -1,0 +1,72 @@
+{
+  "full": {
+    "variant": "full",
+    "description": "\u5b8c\u6574\u6a21\u578b (TCN + VarAttn + RevIN)",
+    "params": 476182,
+    "best_epoch": 19,
+    "one_step_rmse_target": 0.1425,
+    "rollout_mae": {
+      "5": 0.2801,
+      "10": 0.6216,
+      "20": 1.2151,
+      "30": 1.6102
+    },
+    "growth": 15.8
+  },
+  "zero_actions": {
+    "variant": "zero_actions",
+    "description": "\u52a8\u4f5c\u901a\u9053\u7f6e\u96f6 (\u540c\u7b49\u67b6\u6784)",
+    "params": 476182,
+    "best_epoch": 27,
+    "one_step_rmse_target": 0.1311,
+    "rollout_mae": {
+      "5": 0.2777,
+      "10": 0.5731,
+      "20": 1.1377,
+      "30": 1.6817
+    },
+    "growth": 17.9
+  },
+  "no_varattn": {
+    "variant": "no_varattn",
+    "description": "\u53bb\u6389 VariableAttention",
+    "params": 376214,
+    "best_epoch": 63,
+    "one_step_rmse_target": 0.562,
+    "rollout_mae": {
+      "5": 0.2633,
+      "10": 0.5059,
+      "20": 1.0285,
+      "30": 1.2019
+    },
+    "growth": 9.8
+  },
+  "mlp_backbone": {
+    "variant": "mlp_backbone",
+    "description": "MLP \u66ff\u6362 TCN",
+    "params": 668694,
+    "best_epoch": 50,
+    "one_step_rmse_target": 0.4914,
+    "rollout_mae": {
+      "5": 0.254,
+      "10": 0.4891,
+      "20": 0.951,
+      "30": 1.167
+    },
+    "growth": 11.5
+  },
+  "no_revin": {
+    "variant": "no_revin",
+    "description": "\u53bb\u6389 RevIN \u5f52\u4e00\u5316",
+    "params": 476156,
+    "best_epoch": 3,
+    "one_step_rmse_target": 9.8873,
+    "rollout_mae": {
+      "5": 7.12,
+      "10": 9.3684,
+      "20": 5.9442,
+      "30": 7.7922
+    },
+    "growth": 0.8
+  }
+}
