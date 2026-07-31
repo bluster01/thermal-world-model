@@ -1,0 +1,19 @@
+{
+  "exp_id": "exp_007",
+  "name": "End-to-end \u03bc optimization \u2014 MSE only, no \u03c3 head",
+  "date": "2026-07-31T12:48:26.135713",
+  "changes_vs_exp004": [
+    "WorldModel v3 architecture (probabilistic=False \u2192 pure MSE decoder)",
+    "\u56de\u9000: \u6254\u6389\u03c3\u53cc\u5934, \u7eafMSE\u7aef\u5230\u7aef\u4f18\u5316\u03bc",
+    "\u5bf9\u6bd4: \u9a8c\u8bc1NLL\u8bad\u7ec3\u5e26\u6765\u7684\u03bc\u6536\u76ca\u662f\u5426\u6765\u81ea\u67b6\u6784\u800c\u975e\u635f\u5931\u51fd\u6570"
+  ],
+  "rollout_k": 5,
+  "rollout_weights": [
+    1.0,
+    0.8,
+    0.6,
+    0.4,
+    0.2
+  ],
+  "loss": "mse"
+}
