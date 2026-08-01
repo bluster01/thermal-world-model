@@ -1,27 +1,20 @@
 """
-exp_016_ablation_sweep.py — 符号正则/权重/延迟 消融矩阵
-=========================================================
-基线 = exp_015: 绝对阀位 + 双阀符号正则(λ=0.1) + 多步权重W1 + 无滞后
+exp_017_multistep_signreg.py — 多步符号正则 (修长程 PID 共因翻转)
+=================================================================
+问题: exp_016 L3_W1_l0.10 短程方向正确(开阀→降温@10s -0.281°C), 但 t12(120s)
+翻转 +0.278°C — 长程被训练数据里 PID 共因(开阀↔升温)污染。
 
-控制变量法, 每次只变一个维度:
+根因假设: 训练 rollout K=5 只监督到 50s, 长程行为是模型自回归外推,
+外推时回到数据统计(120s+ 开阀正相关)。单步符号正则只约束 ∂T_{t+1}/∂a。
 
-λ 扫描 (固定 W1, L0):
-  L0_W1_l0.00  无符号正则 (对照=exp_012 双阀版)
-  L0_W1_l0.01  弱正则
-  L0_W1_l0.10  = exp_015 基线
-  L0_W1_l1.00  强正则
+修复方案 (exp_017):
+- ROLLOUT_K: 5 → 12 (训练监督覆盖到 120s)
+- 多步 counterfactual 符号正则: 扰动输入窗口末位动作 ±SIGN_DELTA (与
+  eval_sensitivity 一致, 同时扰动历史末位和未来首位动作), 重滚 K 步,
+  强制每一步 ∂T/∂a < 0 (开阀→每步温度更低, 关阀→每步更高)
+- 对照: 017_B 同 K=12 无正则, 分离 "K12监督本身" vs "多步正则" 贡献
 
-权重扫描 (固定 λ=0.1, L0):
-  L0_W0_l0.10  标准权重 [1.0,0.8,0.6,0.4,0.2]
-  L0_W1_l0.10  = exp_015 基线 (多步权重)
-  L0_W2_l0.10  均匀权重 [1.0,1.0,1.0,1.0,1.0]
-
-延迟扫描 (固定 λ=0.1, W1):
-  L0_W1_l0.10  = exp_015 基线 (无滞后)
-  L3_W1_l0.10  滞后 [0,3,6,9] (30-90s)
-  L6_W1_l0.10  滞后 [0,6,12,18] (60-180s)
-
-用法: python exp_016_ablation_sweep.py <config_name>
+用法: python exp_017_multistep_signreg.py <config>
 """
 import os, sys, json, time
 import numpy as np
@@ -32,41 +25,33 @@ import torch.nn.functional as F
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 import config as cfg
 from data_loader import load_raw_data
-from world_model import WorldModel
+from world_model import RevIN, PatchEmbedding, PerVariableTCN, VariableAttention
 
 DEVICE = torch.device(cfg.DEVICE if torch.cuda.is_available() else 'cpu')
 
-CONFIG_NAME = sys.argv[1] if len(sys.argv) > 1 else 'L0_W1_l0.10'
+CONFIG_NAME = sys.argv[1] if len(sys.argv) > 1 else 'A'
 
-# ===== 配置表 =====
 CONFIGS = {
-    # λ 扫描
-    'L0_W1_l0.00': dict(lags=[0], weights=[1.0, 0.6, 1.0, 0.6, 1.2], lam=0.00),
-    'L0_W1_l0.01': dict(lags=[0], weights=[1.0, 0.6, 1.0, 0.6, 1.2], lam=0.01),
-    'L0_W1_l0.10': dict(lags=[0], weights=[1.0, 0.6, 1.0, 0.6, 1.2], lam=0.10),
-    'L0_W1_l1.00': dict(lags=[0], weights=[1.0, 0.6, 1.0, 0.6, 1.2], lam=1.00),
-    # 权重扫描
-    'L0_W0_l0.10': dict(lags=[0], weights=[1.0, 0.8, 0.6, 0.4, 0.2], lam=0.10),
-    'L0_W2_l0.10': dict(lags=[0], weights=[1.0, 1.0, 1.0, 1.0, 1.0], lam=0.10),
-    # 延迟扫描
-    'L0_W1_l0.10': dict(lags=[0], weights=[1.0, 0.6, 1.0, 0.6, 1.2], lam=0.10),
-    'L3_W1_l0.10': dict(lags=[0, 3, 6, 9], weights=[1.0, 0.6, 1.0, 0.6, 1.2], lam=0.10),
-    'L3_W1_l0.00': dict(lags=[0, 3, 6, 9], weights=[1.0, 0.6, 1.0, 0.6, 1.2], lam=0.00),
-    'L6_W1_l0.10': dict(lags=[0, 6, 12, 18], weights=[1.0, 0.6, 1.0, 0.6, 1.2], lam=0.10),
+    # A: 多步符号正则 (主方案)
+    'A': dict(lags=[0, 3, 6, 9], weights=None, lam=0.10),
+    # B: 对照 — K=12 无正则 (分离 K12 监督 vs 多步正则)
+    'B': dict(lags=[0, 3, 6, 9], weights=None, lam=0.00),
 }
 
-CFG = CONFIGS[CONFIG_NAME]
-LAGS = CFG['lags']
-ROLLOUT_W = CFG['weights']
-SIGN_LAMBDA = CFG['lam']
+CFG_C = CONFIGS[CONFIG_NAME]
+LAGS = CFG_C['lags']
+SIGN_LAMBDA = CFG_C['lam']
 N_LAGS = len(LAGS)
-ROLLOUT_K, BETA, BETA_WARMUP = 5, -0.3, 20
+
+# K=12 覆盖 120s; W1 模式扩展到 12 步 (奇偶交替, 末步 1.2)
+ROLLOUT_K, BETA, BETA_WARMUP = 12, -0.3, 20
+ROLLOUT_W = [1.0, 0.6, 1.0, 0.6, 1.0, 0.6, 1.0, 0.6, 1.0, 0.6, 1.0, 1.2]
 BS, STEPS = 256, 500
 SIGN_DELTA = 5.0
 SIGN_WARMUP = 20
 CONSTRAINED_DIMS = [0, 1]
 
-print(f"Config: {CONFIG_NAME} | lags={LAGS} | weights={ROLLOUT_W} | λ={SIGN_LAMBDA}")
+print(f"Config: {CONFIG_NAME} | lags={LAGS} | K={ROLLOUT_K} | λ={SIGN_LAMBDA}")
 
 
 class BetaNLLLoss(nn.Module):
@@ -80,11 +65,8 @@ class BetaNLLLoss(nn.Module):
         return nll.mean()
 
 
-# ===== 模型: 支持滞后动作特征 =====
-from world_model import RevIN, PatchEmbedding, PerVariableTCN, VariableAttention
-
 class WorldModel_Lag(nn.Module):
-    """标准 WorldModel + 可选滞后动作特征注入 decoder"""
+    """与 exp_016 完全一致: 滞后动作特征注入 decoder"""
     def __init__(self):
         super().__init__()
         d = cfg.D_MODEL
@@ -93,17 +75,12 @@ class WorldModel_Lag(nn.Module):
         self.np = self.patch.n_patches
         self.tcn = PerVariableTCN(self.np, d, cfg.N_TCN_LAYERS, cfg.DROPOUT)
 
-        if N_LAGS > 1:
-            self.lag_embed = nn.Sequential(
-                nn.Linear(N_LAGS * cfg.N_ACTION, d * 2),
-                nn.GELU(), nn.Dropout(cfg.DROPOUT),
-                nn.Linear(d * 2, d),
-            )
-            n_tokens = cfg.N_STATE + 1
-        else:
-            # lags=[0] → 标准模型 (动作在输入拼接, 无额外token)
-            self.lag_embed = None
-            n_tokens = cfg.N_STATE
+        self.lag_embed = nn.Sequential(
+            nn.Linear(N_LAGS * cfg.N_ACTION, d * 2),
+            nn.GELU(), nn.Dropout(cfg.DROPOUT),
+            nn.Linear(d * 2, d),
+        )
+        n_tokens = cfg.N_STATE + 1
 
         self.var_attn = nn.ModuleList([VariableAttention(d, cfg.N_HEADS, cfg.DROPOUT)
                                        for _ in range(cfg.N_VAR_LAYERS)])
@@ -126,13 +103,10 @@ class WorldModel_Lag(nn.Module):
         var_tokens = var_tokens.reshape(B * cfg.N_STATE, self.np, d)
         s_repr = self.tcn(var_tokens).reshape(B, cfg.N_STATE, d)
 
-        if self.lag_embed is not None:
-            lag_vals = [a[:, -1 - lag, :] for lag in LAGS]
-            lag_feat = torch.cat(lag_vals, dim=1)
-            a_token = self.lag_embed(lag_feat).unsqueeze(1)
-            tokens = torch.cat([s_repr, a_token], 1)
-        else:
-            tokens = s_repr
+        lag_vals = [a[:, -1 - lag, :] for lag in LAGS]
+        lag_feat = torch.cat(lag_vals, dim=1)
+        a_token = self.lag_embed(lag_feat).unsqueeze(1)
+        tokens = torch.cat([s_repr, a_token], 1)
         for attn in self.var_attn:
             tokens, _ = attn(tokens)
 
@@ -174,7 +148,32 @@ test_data = raw_data[n_val_end:]
 print(f"Data: {len(train_data)}+{len(val_data)}+{len(test_data)} | 绝对阀位")
 
 
-# ===== Training =====
+def rollout_from(model, xt, at, K):
+    """基准/扰动共用: 从 xt 滚动 K 步, 返回 [B, K, N_STATE] mu 序列"""
+    ss = xt[:, :, :cfg.N_STATE].clone()
+    aa = xt[:, :, cfg.N_STATE:].clone()
+    mus = []
+    for k in range(K):
+        mu, _ = model(torch.cat([ss, aa], 2))
+        mus.append(mu)
+        ss = torch.cat([ss[:, 1:], mu.detach().unsqueeze(1)], 1)
+        aa = torch.cat([aa[:, 1:], at[:, k:k+1]], 1)
+    return torch.stack(mus, 1)
+
+
+def rollout_from_lv(model, xt, at, K):
+    """返回 (mu, lv) 序列, 供 NLL 训练使用"""
+    ss = xt[:, :, :cfg.N_STATE].clone()
+    aa = xt[:, :, cfg.N_STATE:].clone()
+    mus, lvs = [], []
+    for k in range(K):
+        mu, lv = model(torch.cat([ss, aa], 2))
+        mus.append(mu); lvs.append(lv)
+        ss = torch.cat([ss[:, 1:], mu.detach().unsqueeze(1)], 1)
+        aa = torch.cat([aa[:, 1:], at[:, k:k+1]], 1)
+    return torch.stack(mus, 1), torch.stack(lvs, 1)
+
+
 def train_epoch(model, raw, opt, crit, epoch):
     model.train(); W, K = cfg.WINDOW_SIZE, ROLLOUT_K; N = len(raw)
     total_nll, total_sign = 0., 0.
@@ -191,28 +190,27 @@ def train_epoch(model, raw, opt, crit, epoch):
         st = torch.FloatTensor(np.stack(sb)).to(DEVICE)
         opt.zero_grad()
 
-        ss = xt[:,:,:cfg.N_STATE]; aa = xt[:,:,cfg.N_STATE:]
+        mus_base, lvs_base = rollout_from_lv(model, xt, at, K)
         nll_loss = 0.
         for k in range(K):
-            mu, lv = model(torch.cat([ss, aa], 2))
-            nll_loss += ROLLOUT_W[k] * crit(mu, lv, st[:,k])
-            ss = torch.cat([ss[:,1:], mu.detach().unsqueeze(1)], 1)
-            aa = torch.cat([aa[:,1:], at[:,k:k+1]], 1)
+            nll_loss += ROLLOUT_W[k] * crit(mus_base[:, k], lvs_base[:, k], st[:, k])
 
         sign_loss = torch.tensor(0., device=DEVICE)
         if SIGN_LAMBDA > 0 and epoch > SIGN_WARMUP:
-            ss0 = xt[:,:,:cfg.N_STATE]
-            aa0 = xt[:,:,cfg.N_STATE:].clone()
-            mu_orig, _ = model(torch.cat([ss0, aa0], 2))
-            t_orig = mu_orig[:, cfg.TARGET_IDX]
+            t_base = mus_base[:, :, cfg.TARGET_IDX]  # [B, K]
             for adim in CONSTRAINED_DIMS:
-                aa_open = aa0.clone(); aa_open[:, -1, adim] += SIGN_DELTA
-                mu_open, _ = model(torch.cat([ss0, aa_open], 2))
-                t_open = mu_open[:, cfg.TARGET_IDX]
-                aa_close = aa0.clone(); aa_close[:, -1, adim] -= SIGN_DELTA
-                mu_close, _ = model(torch.cat([ss0, aa_close], 2))
-                t_close = mu_close[:, cfg.TARGET_IDX]
-                sign_loss += F.relu(t_open - t_orig).mean() + F.relu(t_orig - t_close).mean()
+                for d in (+SIGN_DELTA, -SIGN_DELTA):
+                    aa0 = xt[:, :, cfg.N_STATE:].clone()
+                    aa0[:, -1, adim] = torch.clamp(aa0[:, -1, adim] + d, 0, 100)
+                    at_p = at.clone()
+                    at_p[:, 0, adim] = torch.clamp(at_p[:, 0, adim] + d, 0, 100)
+                    xt_p = torch.cat([xt[:, :, :cfg.N_STATE], aa0], 2)
+                    mus_p = rollout_from(model, xt_p, at_p, K)
+                    t_p = mus_p[:, :, cfg.TARGET_IDX]
+                    if d > 0:  # 开阀 → 每步更低
+                        sign_loss += F.relu(t_p - t_base).mean()
+                    else:      # 关阀 → 每步更高
+                        sign_loss += F.relu(t_base - t_p).mean()
 
         loss = nll_loss + SIGN_LAMBDA * sign_loss
         loss.backward()
@@ -240,6 +238,7 @@ def validate(model, raw, n=200):
 
 @torch.no_grad()
 def eval_rollout(model, raw, H=18, n=500):
+    """与 exp_016 完全一致: H=18 步评测, 便于直接对比"""
     model.eval(); W = cfg.WINDOW_SIZE; N = len(raw)
     np.random.seed(42); idxs = np.random.choice(range(N-W-H), n, replace=False)
     err = np.zeros((n, H))
@@ -255,6 +254,7 @@ def eval_rollout(model, raw, H=18, n=500):
 
 @torch.no_grad()
 def eval_sensitivity(model, raw, n=200):
+    """与 exp_016 完全一致: 扰动历史末位+未来首位动作"""
     model.eval(); W = cfg.WINDOW_SIZE; N = len(raw)
     np.random.seed(42); idxs = np.random.choice(range(N-W-13), n, replace=False)
     abs_deltas = [-10., -5., -2., -1., 1., 2., 5., 10.]
@@ -290,7 +290,7 @@ def main():
     model = WorldModel_Lag().to(DEVICE)
     print(f"Params: {sum(p.numel() for p in model.parameters()):,}")
 
-    exp_dir = f"results/exp_016_{CONFIG_NAME}"
+    exp_dir = f"results/exp_017_{CONFIG_NAME}"
     os.makedirs(f"{exp_dir}/checkpoints", exist_ok=True)
 
     crit = BetaNLLLoss(beta=BETA)
@@ -298,18 +298,13 @@ def main():
     sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, mode='min', patience=5, factor=0.5)
 
     best_m, pc, be = float('inf'), 0, 0; t0 = time.time()
-    best_since_warmup = False
     for ep in range(1, cfg.EPOCHS + 1):
         crit.beta = 0. if ep <= BETA_WARMUP else BETA * min((ep - BETA_WARMUP) / 10, 1.)
         nll, sign = train_epoch(model, train_data, opt, crit, ep)
         v0, v4 = validate(model, val_data); sched.step(v4)
         if ep % 10 == 0 or ep == 1:
             print(f"  E{ep:3d} | NLL:{nll:7.0f} | Sign:{sign:.4f} | V0:{v0:.4f} | V4:{v4:.4f}")
-        # 只在符号正则生效后 (epoch > SIGN_WARMUP) 选择 best; λ=0 无正则则正常早停
         reg_active = (SIGN_LAMBDA > 0)
-        if (not reg_active or ep > SIGN_WARMUP) and not best_since_warmup:
-            best_since_warmup = True
-            if reg_active: print(f"  [符号正则生效, 开始选 best]")
         if not reg_active or ep > SIGN_WARMUP:
             if v4 < best_m - 0.001: best_m, be, pc = v4, ep, 0; torch.save(
                 {'epoch':ep, 'model_state_dict':model.state_dict()},
@@ -326,7 +321,8 @@ def main():
     sens = eval_sensitivity(model, test_data)
     print(f"  Sens (二级 ±10, t1/t12): {sens['action_1']['10.0_1']:+.3f} / {sens['action_1']['10.0_12']:+.3f}")
 
-    result = {'config': CONFIG_NAME, 'lags': LAGS, 'weights': ROLLOUT_W, 'lambda': SIGN_LAMBDA,
+    result = {'config': CONFIG_NAME, 'lags': LAGS, 'weights': ROLLOUT_W,
+              'lambda': SIGN_LAMBDA, 'rollout_k': ROLLOUT_K,
               'best_epoch': be, 'rollout_mae': mae.tolist(), 'sensitivity': sens}
     with open(f"{exp_dir}/results.json", 'w') as f: json.dump(result, f, indent=2)
     print(f"Saved: {exp_dir}/results.json")
