@@ -1,18 +1,17 @@
 """
-exp_017_multistep_signreg.py — 多步符号正则 (修长程 PID 共因翻转)
+exp_017_multistep_signreg.py — 长程符号正则 (匹配真实物理滞后)
 =================================================================
-问题: exp_016 L3_W1_l0.10 短程方向正确(开阀→降温@10s -0.281°C), 但 t12(120s)
-翻转 +0.278°C — 长程被训练数据里 PID 共因(开阀↔升温)污染。
+问题: exp_016 单步符号正则 (∂T/∂a<0 on t+1) 是伪物理 — 事件研究
+(event_study_valve.py) 证明主汽温对二级减温阀的真实响应是 60-90s+
+大滞后: 开阀后前 90s 主汽温微升 (+0.3°C, 减温水未传到), 120s+ 才转降,
+10min 达 -3.4°C。强制单步降温把物理从 120s 滞后扭曲成 10s 伪响应,
+且把 120s 的真实降温翻转成升温 (exp_016 L3_W1_l0.10: t1 -0.281 / t12 +0.278)。
 
-根因假设: 训练 rollout K=5 只监督到 50s, 长程行为是模型自回归外推,
-外推时回到数据统计(120s+ 开阀正相关)。单步符号正则只约束 ∂T_{t+1}/∂a。
-
-修复方案 (exp_017):
-- ROLLOUT_K: 5 → 12 (训练监督覆盖到 120s)
-- 多步 counterfactual 符号正则: 扰动输入窗口末位动作 ±SIGN_DELTA (与
-  eval_sensitivity 一致, 同时扰动历史末位和未来首位动作), 重滚 K 步,
-  强制每一步 ∂T/∂a < 0 (开阀→每步温度更低, 关阀→每步更高)
-- 对照: 017_B 同 K=12 无正则, 分离 "K12监督本身" vs "多步正则" 贡献
+新设计 (基于物理真值):
+- ROLLOUT_K: 5 → 12 (监督覆盖 120s)
+- 长程正则 (C): 只约束 t>=8 (80s+) 响应方向 ∂T/∂a<0, 短程 (t<8) 自由 —
+  匹配 "前 90s 微升, 120s+ 转降" 的物理
+- 对照 (B): K=12 无正则, 分离 "K12 长监督本身" vs "长程正则"
 
 用法: python exp_017_multistep_signreg.py <config>
 """
@@ -32,15 +31,19 @@ DEVICE = torch.device(cfg.DEVICE if torch.cuda.is_available() else 'cpu')
 CONFIG_NAME = sys.argv[1] if len(sys.argv) > 1 else 'A'
 
 CONFIGS = {
-    # A: 多步符号正则 (主方案)
-    'A': dict(lags=[0, 3, 6, 9], weights=None, lam=0.10),
-    # B: 对照 — K=12 无正则 (分离 K12 监督 vs 多步正则)
-    'B': dict(lags=[0, 3, 6, 9], weights=None, lam=0.00),
+    # A: 多步正则全步约束 (原设计, 已被事件研究证伪 — 保留作反例)
+    'A': dict(lags=[0, 3, 6, 9], weights=None, lam=0.10, sign_start=0),
+    # B: 对照 — K=12 无正则 (分离 K12 监督 vs 正则)
+    'B': dict(lags=[0, 3, 6, 9], weights=None, lam=0.00, sign_start=0),
+    # C: 长程正则 — 只约束 t>=8 (80s+) 响应为负, 短程自由 (匹配事件研究真值:
+    #    开阀后前 90s 微升+0.3°C, 120s+ 才转降 — 短程约束=伪物理)
+    'C': dict(lags=[0, 3, 6, 9], weights=None, lam=0.10, sign_start=8),
 }
 
 CFG_C = CONFIGS[CONFIG_NAME]
 LAGS = CFG_C['lags']
 SIGN_LAMBDA = CFG_C['lam']
+SIGN_START = CFG_C['sign_start']
 N_LAGS = len(LAGS)
 
 # K=12 覆盖 120s; W1 模式扩展到 12 步 (奇偶交替, 末步 1.2)
@@ -197,7 +200,8 @@ def train_epoch(model, raw, opt, crit, epoch):
 
         sign_loss = torch.tensor(0., device=DEVICE)
         if SIGN_LAMBDA > 0 and epoch > SIGN_WARMUP:
-            t_base = mus_base[:, :, cfg.TARGET_IDX]  # [B, K]
+            # 只约束 t >= SIGN_START 的步 (C: 80s+ 长程物理响应区)
+            t_base = mus_base[:, SIGN_START:, cfg.TARGET_IDX]  # [B, K-SIGN_START]
             for adim in CONSTRAINED_DIMS:
                 for d in (+SIGN_DELTA, -SIGN_DELTA):
                     aa0 = xt[:, :, cfg.N_STATE:].clone()
@@ -206,10 +210,10 @@ def train_epoch(model, raw, opt, crit, epoch):
                     at_p[:, 0, adim] = torch.clamp(at_p[:, 0, adim] + d, 0, 100)
                     xt_p = torch.cat([xt[:, :, :cfg.N_STATE], aa0], 2)
                     mus_p = rollout_from(model, xt_p, at_p, K)
-                    t_p = mus_p[:, :, cfg.TARGET_IDX]
-                    if d > 0:  # 开阀 → 每步更低
+                    t_p = mus_p[:, SIGN_START:, cfg.TARGET_IDX]
+                    if d > 0:  # 开阀 → 长程每步更低
                         sign_loss += F.relu(t_p - t_base).mean()
-                    else:      # 关阀 → 每步更高
+                    else:      # 关阀 → 长程每步更高
                         sign_loss += F.relu(t_base - t_p).mean()
 
         loss = nll_loss + SIGN_LAMBDA * sign_loss
