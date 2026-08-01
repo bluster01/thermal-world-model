@@ -20,6 +20,7 @@ import torch.nn.functional as F
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 import config as cfg
 from data_loader import load_raw_data
+from world_model import RevIN
 
 DEVICE = torch.device(cfg.DEVICE if torch.cuda.is_available() else 'cpu')
 VARIANT = sys.argv[1] if len(sys.argv) > 1 else 'A'
@@ -46,10 +47,12 @@ class BetaNLLLoss(nn.Module):
 
 
 class LSTMDynamics(nn.Module):
-    """LSTM 动力学模型: [B, W, dim] → LSTM → MLP → (μ, logσ²)"""
+    """LSTM 动力学模型: [B, W, dim] → RevIN → LSTM → MLP → (μ, logσ²)
+    加入 RevIN 与世界模型同条件 (审稿人公平性要求)"""
     def __init__(self):
         super().__init__()
         d = cfg.N_STATE + (cfg.N_ACTION if INCLUDE_ACTION else 0)
+        self.revin = RevIN(d)  # 状态+动作一起归一化 (动作绝对值 0-100 量纲也大)
         self.lstm = nn.LSTM(d, LSTM_HIDDEN, LSTM_LAYERS, dropout=cfg.DROPOUT, batch_first=True)
         self.head = nn.Sequential(
             nn.Linear(LSTM_HIDDEN, 64), nn.GELU(), nn.Dropout(cfg.DROPOUT),
@@ -59,10 +62,21 @@ class LSTMDynamics(nn.Module):
 
     def forward(self, x):
         # x: [B, W, d]
-        h, _ = self.lstm(x)
-        raw = self.head(h[:, -1])  # 最后时刻隐状态
-        mu = raw[:, :cfg.N_STATE]
-        lv = raw[:, cfg.N_STATE:]
+        x_n = self.revin(x, mode='norm')
+        h, _ = self.lstm(x_n)
+        raw = self.head(h[:, -1])  # 最后时刻隐状态 (归一化空间)
+        mu_n = raw[:, :cfg.N_STATE]
+        lv_n = raw[:, cfg.N_STATE:]
+        # 反归一化 μ (全仿射逆), σ 只乘 std (与世界模型一致)
+        ms = self.revin._mean[:, :, :cfg.N_STATE]
+        ss = self.revin._std[:, :, :cfg.N_STATE]
+        w = self.revin.weight[:cfg.N_STATE]
+        b = self.revin.bias[:cfg.N_STATE]
+        mu_n2 = mu_n.unsqueeze(1)
+        if self.revin.affine: mu_n2 = (mu_n2 - b) / (w + self.revin.eps)
+        mu = (mu_n2 * ss + ms).squeeze(1)
+        sig = torch.exp(lv_n * 0.5) * ss.squeeze(1)
+        lv = 2.0 * torch.log(sig + 1e-8)
         return mu, lv
 
     def rollout(self, x_hist, a_seq, mode='sliding', return_stats=False):
