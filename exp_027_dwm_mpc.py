@@ -153,6 +153,10 @@ def plan_cem(wm, x_hist, t_set, a_last, sp_fut=None):
 
 
 M_STEP = 6  # 多步执行: 每步执行 a_plan[0:M_STEP], 窗口推进 M_STEP 步 (对齐动作时标 60s)
+DIST_AMP = 0.3  # 过程扰动幅度 (°C/步 随机游走, 模拟负荷/燃料扰动; 0=无扰动)
+
+def _dist_rng(seed):
+    return np.random.default_rng(seed)
 
 def simulate(wm, track_idx, planner, n_steps=120, seed=42):
     """反事实仿真: 每步策略动作 → WM 闭环预测温度 → 窗口推进 (receding horizon)
@@ -169,6 +173,8 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
     pid_actions, mpc_actions = [], []
     a_last = torch.FloatTensor(test_raw[i+W, VALVE_IDX]).to(DEVICE)
     a_init = None
+    rng = _dist_rng(seed + track_idx) if DIST_AMP > 0 else None
+    d_state = 0.0
     # 初始窗口: 真实
     win = torch.FloatTensor(test_raw[i:i+W]).unsqueeze(0).to(DEVICE)
     for t in range(0, n_steps, M_STEP):
@@ -195,12 +201,23 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
                 mu, _ = wm(win, a_full.reshape(1, -1))
         # 多步执行: 依次执行 a_plan[0..M_STEP-1], 窗口逐步推进 (对应预测温度)
         n_exec = min(M_STEP, len(a_plan), len(mu[0]))
+        # PID 参考: 真实动作 + WM 闭环预测 (同一扰动世界, 公平协议)
+        with torch.no_grad():
+            a_pid_full = torch.FloatTensor(test_raw[gi:gi+H_OUT, VALVE_IDX]).unsqueeze(0).to(DEVICE)
+            if getattr(wm, 'use_sp', False):
+                mu_pid, _ = wm(win, a_pid_full.reshape(1, -1), sp_fut.unsqueeze(0))
+            else:
+                mu_pid, _ = wm(win, a_pid_full.reshape(1, -1))
         for j in range(n_exec):
             gi_j = gi + j
             if gi_j + W + 1 >= N: break
             pid_a = test_raw[gi_j+W, VALVE_IDX]
-            pid_t = test_raw[gi_j+W, TARGET_IDX]
+            if rng is not None:  # 过程扰动 (两策略共享同一扰动序列)
+                d_state = 0.9 * d_state + rng.normal(0, DIST_AMP)
+            pid_t = mu_pid[0, j].item() + (d_state if rng is not None else 0.0)
             y_j = mu[0, j].item()
+            if rng is not None:
+                y_j = y_j + d_state
             next_row = torch.FloatTensor(test_raw[gi_j+W]).unsqueeze(0).unsqueeze(0).to(DEVICE)
             next_row[0, 0, TARGET_IDX] = y_j
             win = torch.cat([win[:, 1:, :], next_row], 1)

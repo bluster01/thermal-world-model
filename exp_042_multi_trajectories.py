@@ -57,8 +57,8 @@ starts = np.random.choice(range(N - M.W - M.H_OUT - 120), 50, replace=False)
 pick = starts[[0, 8, 16, 24, 32, 40, 45, 47, 49]]
 results = []
 for i in pick:
-    mpc_t, pid_t, tset, mpc_a, pid_a = M.simulate(wm, i, 'grad', n_steps=120)
-    pid_wm_t = sim_pid_wm(i, 120)
+    mpc_t, pid_t, tset, mpc_a, pid_a = M.simulate(wm, i, 'grad', n_steps=120)  # pid_t = PID-WM (同一扰动世界)
+    pid_wm_t = pid_t
     t_real = M.test_raw[i+M.W:i+M.W+120, M.TARGET_IDX]
     rm = float(np.sqrt(np.mean((mpc_t - tset)**2)))
     rp_wm = float(np.sqrt(np.mean((pid_wm_t - tset)**2)))
