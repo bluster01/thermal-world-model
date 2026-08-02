@@ -29,6 +29,7 @@ PLANNER = sys.argv[2] if len(sys.argv) > 2 else 'grad'  # grad | cem
 N_TRACKS = int(sys.argv[3]) if len(sys.argv) > 3 else 50
 H_PLAN = int(sys.argv[4]) if len(sys.argv) > 4 else 10  # 规划视野 (≤ H_OUT=18)
 ALPHA = float(sys.argv[5]) if len(sys.argv) > 5 else 0.5  # 终端价值系数 (α 扫描用)
+SP_TRAJ = int(sys.argv[6]) if len(sys.argv) > 6 else 1     # 方案1: SP轨迹目标 (1=前馈目标, 0=标量目标)
 
 W = cfg.WINDOW_SIZE
 N_FEAT = 40
@@ -57,7 +58,7 @@ def load_wm():
 def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
     """J = Σwₜ(ŷₜ−T_set)² + 终端 + 平滑 + 偏离 + 软约束
     a_seq: [H, 2] 可微, 返回 J (标量, 可反传)
-    sp_fut: [H] 未来设定值轨迹 (M10 前馈, 固定不优化)"""
+    sp_fut: [H] 未来设定值轨迹 — 目标轨迹版 (方案1): t_set 标量时用标量, sp_fut 给定时目标=轨迹"""
     w = torch.linspace(1.0, 0.8, H_PLAN, device=DEVICE)
     # 规划序列 [H_PLAN,2] → 填充到 H_OUT 步 → [B, H_OUT*2] (与训练一致)
     if H_PLAN < H_OUT:
@@ -65,12 +66,14 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
         a_full = torch.cat([a_seq, tail], 0)
     else:
         a_full = a_seq[:H_OUT]
-    if sp_fut is not None and getattr(wm, 'use_sp', False):
-        mu, _ = wm(x_hist, a_full.reshape(1, -1), sp_fut.unsqueeze(0))
-    else:
-        mu, _ = wm(x_hist, a_full.reshape(1, -1))
+    mu, _ = wm(x_hist, a_full.reshape(1, -1))
     mu = mu[0, :H_PLAN]                       # [H] 单目标
-    err = (mu - t_set) ** 2
+    # 目标: 标量 t_set (默认) 或未来 SP 轨迹 (方案1: SP 前馈目标)
+    if sp_fut is not None:
+        target = sp_fut[:H_PLAN]
+    else:
+        target = t_set
+    err = (mu - target) ** 2
     J = (w * err).sum() / H_PLAN
     # 终端价值 (启发式 T1)
     J = J + ALPHA * err[-1]
@@ -107,7 +110,7 @@ def plan_grad(wm, x_hist, t_set, a_last, a_init=None, sp_fut=None):
 
 def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last, sp_fut=None):
     """批量目标: a_seqs [N, H, 2] → J [N] (CEM 用, GPU 并行)
-    与 build_objective 相同的 J 结构"""
+    与 build_objective 相同的 J 结构; sp_fut 给定=目标轨迹 (方案1)"""
     N = a_seqs.shape[0]
     w = torch.linspace(1.0, 0.8, H_PLAN, device=DEVICE)
     if H_PLAN < H_OUT:
@@ -116,12 +119,13 @@ def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last, sp_fut=None):
     else:
         a_full = a_seqs[:, :H_OUT, :]
     x_rep = x_hist.repeat(N, 1, 1)
-    if sp_fut is not None and getattr(wm, 'use_sp', False):
-        mu, _ = wm(x_rep, a_full.reshape(N, -1), sp_fut.unsqueeze(0).repeat(N, 1))
-    else:
-        mu, _ = wm(x_rep, a_full.reshape(N, -1))
+    mu, _ = wm(x_rep, a_full.reshape(N, -1))
     mu = mu[:, :H_PLAN]
-    err = (mu - t_set) ** 2
+    if sp_fut is not None:
+        target = sp_fut[:H_PLAN]
+    else:
+        target = t_set
+    err = (mu - target) ** 2
     J = (w * err).sum(1) / H_PLAN
     J = J + ALPHA * err[:, -1]
     if H_PLAN > 1:
@@ -171,8 +175,10 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
         pid_a = test_raw[gi+W, VALVE_IDX]
         pid_t = test_raw[gi+W, TARGET_IDX]
         # MPC 规划 (基于当前窗口)
-        t_set = torch.tensor(float(test_raw[gi+W, SP_IDX]), dtype=torch.float32, device=DEVICE)  # 真实 SP
-        sp_fut = torch.FloatTensor(test_raw[gi+W:gi+W+H_OUT, SP_IDX]).to(DEVICE)  # 未来 SP 轨迹 (前馈)
+        t_set = torch.tensor(float(test_raw[gi+W, SP_IDX]), dtype=torch.float32, device=DEVICE)  # 真实 SP (当前值)
+        sp_fut = torch.FloatTensor(test_raw[gi+W:gi+W+H_OUT, SP_IDX]).to(DEVICE)  # 未来 SP 轨迹
+        if not SP_TRAJ:
+            sp_fut = None  # 标量目标模式: 用当前 SP
         if planner == 'grad':
             a_plan, Js = plan_grad(wm, win, t_set, a_last, a_init, sp_fut)
         else:

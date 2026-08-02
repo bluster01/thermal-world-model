@@ -199,10 +199,14 @@ class DirectWM(RevINModel):
         self.varattn = VariableAttention(d, 4, cfg.DROPOUT) if use_varattn else None
         a_dim = d * 2 if use_action else 0
         n_tokens = N_FEAT if per_variable else 1
-        act_in = H_OUT * 2 + (H_OUT if use_sp else 0)  # 动作 + 未来设定值
+        # 动作编码 (阀位) — use_action
+        act_in = H_OUT * 2 + (H_OUT if (use_sp and use_action) else 0)
         self.action_enc = nn.Sequential(
             nn.Linear(act_in, d * 2), nn.GELU(), nn.Dropout(cfg.DROPOUT)) if use_action else None
-        in_dim = n_tokens * d + a_dim
+        # SP 编码 (设定值轨迹) — use_sp 独立于 use_action (M11: 纯 SP 条件)
+        self.sp_enc = nn.Sequential(
+            nn.Linear(H_OUT, d * 2), nn.GELU(), nn.Dropout(cfg.DROPOUT)) if (use_sp and not use_action) else None
+        in_dim = n_tokens * d + a_dim + (d * 2 if (use_sp and not use_action) else 0)
         self.decoder = nn.Sequential(
             nn.Linear(in_dim, d * 4), nn.GELU(), nn.Dropout(cfg.DROPOUT),
             nn.Linear(d * 4, d * 4), nn.GELU(), nn.Dropout(cfg.DROPOUT),
@@ -238,6 +242,12 @@ class DirectWM(RevINModel):
                 a_in = a_future.reshape(B, -1)
             a_feat = self.action_enc(a_in)
             z = torch.cat([s_repr.reshape(B, -1), a_feat], 1)
+        elif self.use_sp:
+            # 纯 SP 条件 (M11): 无阀位动作, SP 轨迹独立编码
+            pv_now = x_hist[:, -1, TARGET_IDX].unsqueeze(1)
+            sp_res = (sp_future - pv_now) / 3.0                    # [B,H] 偏差轨迹
+            sp_feat = self.sp_enc(sp_res)
+            z = torch.cat([s_repr.reshape(B, -1), sp_feat], 1)
         else:
             z = s_repr.reshape(B, -1)
         raw = self.decoder(z)
@@ -375,6 +385,7 @@ def build_model(mid):
     if mid == 'M8': return DirectWM(use_action=True, use_patch=True, per_variable=True, use_varattn=True, beta_mode='warmup_pos')  # β warmup 到 +0.3 (对照)
     if mid == 'M9': return TimeXerWM(beta_mode='fixed')  # TimeXer 式 cross-attention 动作注入
     if mid == 'M10': return DirectWM(use_action=True, use_patch=True, per_variable=True, use_varattn=True, beta_mode='fixed', use_sp=True)  # M7+未来设定值前馈
+    if mid == 'M11': return DirectWM(use_action=False, use_patch=True, per_variable=True, use_varattn=True, beta_mode='fixed', use_sp=True)  # 纯SP条件 (路线B: SP为动作通道)
     if mid == 'B1': return TCNBaseline()
     if mid == 'B2': return RecurrentBaseline('lstm')
     if mid == 'B3': return RecurrentBaseline('gru')
