@@ -40,6 +40,9 @@ ETA = 0.05                   # 梯度规划步长
 E_STEPS = 30                 # 内层梯度步数
 LAMBDA1 = 0.1                # 动作变化惩罚 (平滑性)
 LAMBDA2 = 0.05               # 动作偏离 last 惩罚
+LAMBDA3 = 0.1                # 重叠一致性惩罚 (FIX_MODE='overlap': 新计划头部偏离旧计划尾部)
+OVERLAP_REF = None           # 旧计划引用 (simulate 每次重规划前设置; 首块 None)
+HARD_DELTA = 0.0             # 边界硬约束幅值 (与 FIX_MODE 独立, 支持 overlap+hard 组合; 0=关)
 N_CEM_SAMPLES = 200          # CEM 采样数
 N_CEM_ELITE = 20             # 精英数
 CEM_ITERS = 5
@@ -82,6 +85,12 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
     if a_seq.shape[0] > 1:
         J = J + LAMBDA1 * ((a_seq[1:] - a_seq[:-1]) ** 2).sum()
     J = J + LAMBDA2 * ((a_seq - a_last) ** 2).sum()
+    # 重叠一致性: 新计划头部 (执行段) 软钉在旧计划未执行段 (平滑切换, 非blend式陈旧执行)
+    if FIX_MODE == 'overlap' and OVERLAP_REF is not None:
+        m = min(M_STEP, a_seq.shape[0], len(OVERLAP_REF) - M_STEP)
+        if m > 0:
+            ref = OVERLAP_REF[M_STEP:M_STEP + m]
+            J = J + LAMBDA3 * ((a_seq[:m] - ref) ** 2).sum()
     # 软约束: 超区间惩罚
     over = F.relu(mu - T_MAX).pow(2).sum() + F.relu(T_MIN - mu).pow(2).sum()
     J = J + 2.0 * over
@@ -108,6 +117,8 @@ def plan_grad(wm, x_hist, t_set, a_last, a_init=None, sp_fut=None):
             if FIX_MODE in ('hard2', 'hard5'):  # 边界硬约束: 首步钳制在 a_last±δ (rate constraint)
                 delta = 2.0 if FIX_MODE == 'hard2' else 5.0
                 a[0:1] = torch.clamp(a[0:1], a_last - delta, a_last + delta)
+            elif HARD_DELTA > 0:                # 独立硬约束幅值 (支持 overlap+hard 组合)
+                a[0:1] = torch.clamp(a[0:1], a_last - HARD_DELTA, a_last + HARD_DELTA)
         Js.append(J.item())
     return a.detach(), Js
 
@@ -135,6 +146,11 @@ def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last, sp_fut=None):
     if H_PLAN > 1:
         J = J + LAMBDA1 * ((a_seqs[:, 1:] - a_seqs[:, :-1]) ** 2).sum((1, 2))
     J = J + LAMBDA2 * ((a_seqs - a_last.unsqueeze(0).unsqueeze(0)) ** 2).sum((1, 2))  # [1,1,2] 广播
+    if FIX_MODE == 'overlap' and OVERLAP_REF is not None:  # CEM 路径同款重叠一致性
+        m = min(M_STEP, a_seqs.shape[1], len(OVERLAP_REF) - M_STEP)
+        if m > 0:
+            ref = OVERLAP_REF[M_STEP:M_STEP + m].unsqueeze(0).unsqueeze(0)
+            J = J + LAMBDA3 * ((a_seqs[:, :m] - ref) ** 2).sum((1, 2))
     over = F.relu(mu - T_MAX).pow(2).sum(1) + F.relu(T_MIN - mu).pow(2).sum(1)
     J = J + 2.0 * over
     return J
@@ -170,6 +186,7 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
     track_idx: test 集起始索引
     返回: (mpc_temp, pid_temp, t_set_traj, mpc_actions, pid_actions)
     """
+    global OVERLAP_REF  # 模块级引用: build_objective 的重叠一致性项需要 (函数内赋值默认局部)
     np.random.seed(seed)
     i = track_idx
     N = len(test_raw)
@@ -190,8 +207,10 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
         if not SP_TRAJ:
             sp_fut = None  # 标量目标模式: 用当前 SP
         if planner == 'grad':
+            OVERLAP_REF = a_init  # 旧计划引用 (重叠一致性用; 首块 None)
             a_plan, Js = plan_grad(wm, win, t_set, a_last, a_init, sp_fut)
         else:
+            OVERLAP_REF = a_init
             a_plan, Js = plan_cem(wm, win, t_set, a_last, sp_fut)
         # WM 闭环: MPC 动作序列 → 预测 M_STEP 步温度
         with torch.no_grad():
