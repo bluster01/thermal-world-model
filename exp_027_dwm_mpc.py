@@ -113,12 +113,13 @@ def plan_grad(wm, x_hist, t_set, a_last, a_init=None, sp_fut=None):
         opt.step()
         with torch.no_grad():
             a.clamp_(0, 100)                    # 阀位物理范围
-            a[1:] = torch.clamp(a[1:] - a[:-1], -CLIP_DELTA, CLIP_DELTA) + a[:-1]  # |Δa|≤5
             if FIX_MODE in ('hard2', 'hard5'):  # 边界硬约束: 首步钳制在 a_last±δ (rate constraint)
                 delta = 2.0 if FIX_MODE == 'hard2' else 5.0
                 a[0:1] = torch.clamp(a[0:1], a_last - delta, a_last + delta)
             elif HARD_DELTA > 0:                # 独立硬约束幅值 (支持 overlap+hard 组合)
                 a[0:1] = torch.clamp(a[0:1], a_last - HARD_DELTA, a_last + HARD_DELTA)
+            # 内部限幅必须在 a[0] 钳制之后: 否则 a[1] 相对未钳制的 a[0] 限幅, 距 a_last 可达 δ+5
+            a[1:] = torch.clamp(a[1:] - a[:-1], -CLIP_DELTA, CLIP_DELTA) + a[:-1]  # |Δa|≤5
         Js.append(J.item())
     return a.detach(), Js
 
