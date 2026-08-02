@@ -229,9 +229,11 @@ class DirectWM(RevINModel):
             s_repr, _ = self.varattn(s_repr)
         if self.use_action:
             if self.use_sp:
-                # SP 前馈: 归一化到动作量级 (SP~567 原始量级会压掉动作 0-53, 见 M10 尺度bug)
-                sp_n = (sp_future - 560.0) / 30.0
-                a_in = torch.cat([a_future.reshape(B, -1), sp_n.reshape(B, -1)], 1)
+                # SP 前馈: 残差形式 (SP−PV)/3 — 绝对SP静态分量冗余(RevIN已去均值),
+                # 偏差信号是控制器真实输入, 且SP跳变瞬间PV未动→残差立即跳变(独立于动作历史)
+                pv_now = x_hist[:, -1, TARGET_IDX].unsqueeze(1)   # [B,1] 当前温度
+                sp_res = (sp_future - pv_now) / 3.0               # [B,H] 偏差轨迹
+                a_in = torch.cat([a_future.reshape(B, -1), sp_res.reshape(B, -1)], 1)
             else:
                 a_in = a_future.reshape(B, -1)
             a_feat = self.action_enc(a_in)
