@@ -29,13 +29,13 @@ SMOKE = '--smoke' in sys.argv
 M.SP_TRAJ = 0
 M.DIST_AMP = 0.3
 M.M_STEP = 6
-M.H_PLAN = 18
+M.H_PLAN = int(os.environ.get('H_PLAN', 18))
 N_TRACKS = 2 if SMOKE else 10
 OUT_DIR = 'results/exp_051_boundary_fix'
 os.makedirs(OUT_DIR, exist_ok=True)
 
 wm = M.load_wm()
-MODES = ['none', 'hard2', 'hard5', 'blend', 'inert05', 'inert025']
+MODES = os.environ.get('MODES', 'none,hard2,hard5,blend,inert05,inert025').split(',')
 
 def boundary_stats(mpc_a):
     """从实际执行流算重规划边界跳变 (块起点 vs 上一块终点)"""
