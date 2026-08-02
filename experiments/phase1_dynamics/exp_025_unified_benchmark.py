@@ -96,6 +96,87 @@ class RevINModel(nn.Module):
         return mu, None
 
 
+class TimeXerWM(RevINModel):
+    """M9: TimeXer 式条件世界模型 (2025 长程预测排行榜第1, 外生注入核心)
+    v2 (M9b) 修正:
+      1. FlattenHead 输出: 全部内生 token 展平→线性投影 (消除 GLB 单 token 信息瓶颈)
+      2. 动作独立 cross-attn 通路: GLB 先与动作 cross-attn, 再与状态 cross-attn
+         (动作是未来干预信号, 不应与 39 个状态共享 softmax 被稀释)
+    内生(主汽温): patch + 位置编码 + GLB token + self-attention
+    外生(39状态): inverted embedding (变量即token, Linear(W→d))
+    动作(2阀位):  独立 Linear(H→d)
+    """
+    def __init__(self, probabilistic=True, beta_mode='fixed'):
+        super().__init__()
+        d = cfg.D_MODEL; W = cfg.WINDOW_SIZE
+        self.probabilistic = probabilistic
+        self.beta_mode = beta_mode
+        self.use_action = True
+        self.use_revin = True
+        # 内生: 主汽温 patch (PatchEmbedding 自带位置编码, np=11)
+        self.patch = PatchEmbedding(W, 16, 8, d)
+        self.np = self.patch.n_patches
+        self.glb_token = nn.Parameter(torch.randn(1, 1, d) * 0.02)
+        # 外生: 39 状态 inverted embedding + 动作
+        self.exog_lin = nn.Linear(W, d)                 # [B, 39, W] → [B, 39, d]
+        self.act_lin = nn.Linear(H_OUT, d)              # [B, 2, H] → [B, 2, d]
+        # TimeXer encoder 层 (self-attn → 动作 cross-attn → 状态 cross-attn → FFN)
+        self.enc_layers = nn.ModuleList([
+            TimeXerLayer(d, 4, cfg.DROPOUT) for _ in range(cfg.N_TCN_LAYERS)
+        ])
+        self.norm = nn.LayerNorm(d)
+        # FlattenHead: 全部内生 token (np+1) 展平 → 投影到 H*2 (消除信息瓶颈)
+        self.head = nn.Linear((self.np + 1) * d, H_OUT * 2 if probabilistic else H_OUT)
+
+    def forward(self, x_hist, a_future=None):
+        B = x_hist.shape[0]; d = cfg.D_MODEL; W = cfg.WINDOW_SIZE
+        x_n = self.revin(x_hist, mode='norm')
+        # 内生: 主汽温 [B,W] → patch [B,np,d] + GLB
+        xt = x_n[:, :, TARGET_IDX]
+        zt = self.patch(xt)                              # [B, np, d]
+        glb = self.glb_token.expand(B, -1, -1)           # [B, 1, d]
+        x = torch.cat([zt, glb], 1)                      # [B, np+1, d]
+        # 外生: 39 状态 (除主汽温) → [B, 39, d]
+        exog_idx = [i for i in range(N_FEAT) if i != TARGET_IDX]
+        ze = self.exog_lin(x_n[:, :, exog_idx].permute(0, 2, 1))
+        # 动作: [B, 2, H] → [B, 2, d]
+        za = self.act_lin(a_future.permute(0, 2, 1))
+        for layer in self.enc_layers:
+            x = layer(x, ze, za)
+        x = self.norm(x)
+        out = self.head(x.reshape(B, -1))                # FlattenHead: [B, (np+1)*d] → [B, H*2]
+        if self.probabilistic:
+            out = out.reshape(B, H_OUT, 2)
+            return self.denorm_out(out[..., 0], out[..., 1])
+        return self.denorm_out(out.reshape(B, H_OUT), None)
+
+
+class TimeXerLayer(nn.Module):
+    """TimeXer encoder 层 v2: self-attn → 动作 cross-attn → 状态 cross-attn → FFN
+    动作单独通路: 干预信号不被 39 个状态在 softmax 中稀释"""
+    def __init__(self, d, heads, dropout):
+        super().__init__()
+        self.self_attn = nn.MultiheadAttention(d, heads, dropout, batch_first=True)
+        self.act_attn = nn.MultiheadAttention(d, heads, dropout, batch_first=True)
+        self.exog_attn = nn.MultiheadAttention(d, heads, dropout, batch_first=True)
+        self.ffn = nn.Sequential(
+            nn.Linear(d, d * 4), nn.GELU(), nn.Dropout(dropout), nn.Linear(d * 4, d))
+        self.n1 = nn.LayerNorm(d); self.n2 = nn.LayerNorm(d)
+        self.n3 = nn.LayerNorm(d); self.n4 = nn.LayerNorm(d)
+
+    def forward(self, x, ze, za):
+        # x: [B, np+1, d] 内生 (最后一位是 GLB), ze: [B, 39, d], za: [B, 2, d]
+        x = x + self.self_attn(x, x, x)[0]; x = self.n1(x)
+        glb = x[:, -1:, :]
+        # 动作通路 (独立 softmax, 权重不被状态稀释)
+        glb = glb + self.act_attn(glb, za, za)[0]; glb = self.n2(glb)
+        # 状态通路
+        glb = glb + self.exog_attn(glb, ze, ze)[0]; glb = self.n3(glb)
+        x = torch.cat([x[:, :-1, :], glb], 1)
+        x = x + self.ffn(x); x = self.n4(x)
+        return x
+
+
 # ===== 模型 =====
 class DirectWM(RevINModel):
     """Direct WM 模块化 (flags 控制组件) — 默认含 VarAttn"""
@@ -280,6 +361,7 @@ def build_model(mid):
     if mid == 'M6': return GlobalMinMaxWM()
     if mid == 'M7': return DirectWM(use_action=True, use_patch=True, per_variable=True, use_varattn=True, beta_mode='fixed')   # β 固定 -0.3, 无 warmup
     if mid == 'M8': return DirectWM(use_action=True, use_patch=True, per_variable=True, use_varattn=True, beta_mode='warmup_pos')  # β warmup 到 +0.3 (对照)
+    if mid == 'M9': return TimeXerWM(beta_mode='fixed')  # TimeXer 式 cross-attention 动作注入
     if mid == 'B1': return TCNBaseline()
     if mid == 'B2': return RecurrentBaseline('lstm')
     if mid == 'B3': return RecurrentBaseline('gru')
