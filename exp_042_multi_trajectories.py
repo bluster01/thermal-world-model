@@ -76,28 +76,28 @@ json.dump(results, open("results/exp_042_trajectories.json", 'w'), indent=2, def
 fig, axes = plt.subplots(9, 2, figsize=(12, 24))
 for row, r in enumerate(results):
     t = np.arange(len(r['temp_mpc'])) * 10  # 秒
-    # 左: 温度 (三视角)
+    # Left: temperature (three views)
     ax = axes[row, 0]
-    ax.plot(t, r['temp_real'], 'k-', lw=1.0, alpha=0.85, label='真实 (物理基准)')
-    ax.plot(t, r['temp_pidwm'], 'gray', lw=1.2, ls='--', label='PID-WM闭环 (公平对照)')
-    ax.plot(t, r['temp_mpc'], 'C0-', lw=1.4, label='DWM-MPC (WM闭环)')
-    ax.plot(t, r['sp'], 'r--', lw=0.8, alpha=0.5, label='设定值 SP')
-    ax.set_ylabel('主汽温 (°C)', fontsize=9)
+    ax.plot(t, r['temp_real'], 'k-', lw=1.0, alpha=0.85, label='Actual (physical)')
+    ax.plot(t, r['temp_pidwm'], 'gray', lw=1.2, ls='--', label='PID-WM (fair baseline)')
+    ax.plot(t, r['temp_mpc'], 'C0-', lw=1.4, label='DWM-MPC (WM closed-loop)')
+    ax.plot(t, r['sp'], 'r--', lw=0.8, alpha=0.5, label='Setpoint SP')
+    ax.set_ylabel('Main steam temp (°C)', fontsize=9)
     ax.legend(fontsize=6.5, loc='best', ncol=2)
-    ax.set_title(f"轨迹 {row+1} (起点 {r['start']})  RMSE: MPC {r['rmse_mpc']:.2f} / PID-WM {r['rmse_pidwm']:.2f} / 真实 {r['rmse_pidreal']:.2f}", fontsize=9)
+    ax.set_title(f"Track {row+1} (start {r['start']})  RMSE: MPC {r['rmse_mpc']:.2f} / PID-WM {r['rmse_pidwm']:.2f} / Actual {r['rmse_pidreal']:.2f}", fontsize=9)
     ax.grid(alpha=0.3)
-    # 右: 二级阀动作
+    # Right: secondary valve action
     ax = axes[row, 1]
-    ax.plot(t, r['act_pid'], 'k-', lw=1.0, label='PID 二级阀 (真实)')
-    ax.plot(t, r['act_mpc'], 'C1-', lw=1.2, label='MPC 二级阀')
-    ax.set_ylabel('二级减温阀 (%)', fontsize=9)
+    ax.plot(t, r['act_pid'], 'k-', lw=1.0, label='PID valve (actual)')
+    ax.plot(t, r['act_mpc'], 'C1-', lw=1.2, label='MPC valve')
+    ax.set_ylabel('Secondary attemp. valve (%)', fontsize=9)
     ax.legend(fontsize=7, loc='best')
-    ax.set_title(f"动作 {row+1}", fontsize=9)
+    ax.set_title(f"Actuator {row+1}", fontsize=9)
     ax.grid(alpha=0.3)
 for ax in axes[:, 0]:
-    ax.set_xlabel('时间 (s)', fontsize=9)
+    ax.set_xlabel('Time (s)', fontsize=9)
 for ax in axes[:, 1]:
-    ax.set_xlabel('时间 (s)', fontsize=9)
+    ax.set_xlabel('Time (s)', fontsize=9)
 plt.tight_layout()
 plt.savefig('figures/fig_multi_trajectories.png', dpi=150)
 print("\nSaved: figures/fig_multi_trajectories.png")
