@@ -13,6 +13,8 @@ import torch
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config as cfg
 from exp_027_dwm_mpc import (
     load_wm, build_objective, H_PLAN, ETA, E_STEPS, H_OUT, W, DEVICE,

@@ -16,6 +16,8 @@ import torch
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config as cfg
 from experiments.phase1_dynamics.exp_025_unified_benchmark import (
     build_model, test_raw, VALVE_IDX, TARGET_IDX, H_OUT)

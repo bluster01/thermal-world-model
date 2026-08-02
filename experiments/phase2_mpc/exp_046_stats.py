@@ -3,6 +3,9 @@
 paired Wilcoxon signed-rank on 50 tracks (公平协议 exp_041 per_track)
 """
 import json, os, sys
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'src'))
 import numpy as np
 from scipy import stats
 

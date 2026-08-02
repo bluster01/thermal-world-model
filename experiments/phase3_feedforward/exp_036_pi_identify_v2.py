@@ -11,6 +11,9 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'src'))
 import config as cfg
 from experiments.phase1_dynamics.exp_025_unified_benchmark import train_raw, test_raw, SP_IDX, VALVE_IDX, TARGET_IDX
 

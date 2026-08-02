@@ -20,6 +20,9 @@ import torch
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'src'))
 import config as cfg
 from experiments.phase1_dynamics import exp_025_unified_benchmark as E
 

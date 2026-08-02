@@ -3,6 +3,9 @@
 选轨迹: 8, 9, 3 (PID-WM MAE 0.24/0.24/0.47)
 """
 import json, os
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'src'))
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """汇总 exp_016 全矩阵 — 只读 results.json"""
 import json
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src'))
 
 confs = ['L0_W1_l0.00','L0_W1_l0.01','L0_W1_l0.10','L0_W1_l1.00',
          'L0_W0_l0.10','L0_W2_l0.10','L3_W1_l0.10','L6_W1_l0.10']

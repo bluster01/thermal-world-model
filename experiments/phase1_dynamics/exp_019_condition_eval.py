@@ -25,6 +25,9 @@ from data_loader import load_raw_data
 TCN_ROOT = '/home/bluster/Desktop/AI/时序预测/TIME-all-model/TCN-Improved-GRU'
 sys.path.insert(0, TCN_ROOT)
 sys.path.insert(0, os.path.join(TCN_ROOT, 'utils'))
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src'))
 from evaluate_by_condition import classify_conditions
 
 # 世界模型滞后结构 (L3)
