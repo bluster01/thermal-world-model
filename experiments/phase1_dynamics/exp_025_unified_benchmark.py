@@ -32,6 +32,7 @@ MODEL_ID = sys.argv[1] if len(sys.argv) > 1 else 'M0'
 BETA, BETA_WARMUP = -0.3, 20
 BS, STEPS = 256, 500
 H_OUT = 18
+SP_IDX = 36  # 数据列: 二级减温调节阀设定 (主汽温真实 SP, csv idx 37)
 EPOCHS = cfg.EPOCHS
 PATIENCE = cfg.EARLY_STOPPING_PATIENCE
 
@@ -179,15 +180,17 @@ class TimeXerLayer(nn.Module):
 
 # ===== 模型 =====
 class DirectWM(RevINModel):
-    """Direct WM 模块化 (flags 控制组件) — 默认含 VarAttn"""
+    """Direct WM 模块化 (flags 控制组件) — 默认含 VarAttn
+    use_sp=True (M10): 额外输入未来设定值轨迹 (sp_future) — 前馈 MPC 用"""
     def __init__(self, use_action=True, use_patch=True, per_variable=True,
-                 use_varattn=True, probabilistic=True, beta_mode='warmup'):
+                 use_varattn=True, probabilistic=True, beta_mode='warmup', use_sp=False):
         super().__init__()
         self.beta_mode = beta_mode  # 'warmup' | 'fixed' | 'warmup_pos'
         d = cfg.D_MODEL; W = cfg.WINDOW_SIZE
         self.use_action, self.use_patch = use_action, use_patch
         self.per_variable, self.probabilistic = per_variable, probabilistic
         self.use_varattn = use_varattn
+        self.use_sp = use_sp  # M10: 未来设定值前馈
         if use_patch:
             self.patch = PatchEmbedding(W, 16, 8, d); self.np = self.patch.n_patches
         else:
@@ -196,8 +199,9 @@ class DirectWM(RevINModel):
         self.varattn = VariableAttention(d, 4, cfg.DROPOUT) if use_varattn else None
         a_dim = d * 2 if use_action else 0
         n_tokens = N_FEAT if per_variable else 1
+        act_in = H_OUT * 2 + (H_OUT if use_sp else 0)  # 动作 + 未来设定值
         self.action_enc = nn.Sequential(
-            nn.Linear(H_OUT * 2, d * 2), nn.GELU(), nn.Dropout(cfg.DROPOUT)) if use_action else None
+            nn.Linear(act_in, d * 2), nn.GELU(), nn.Dropout(cfg.DROPOUT)) if use_action else None
         in_dim = n_tokens * d + a_dim
         self.decoder = nn.Sequential(
             nn.Linear(in_dim, d * 4), nn.GELU(), nn.Dropout(cfg.DROPOUT),
@@ -205,7 +209,7 @@ class DirectWM(RevINModel):
             nn.Linear(d * 4, H_OUT * 2 if probabilistic else H_OUT),
         )
 
-    def forward(self, x_hist, a_future=None):
+    def forward(self, x_hist, a_future=None, sp_future=None):
         B = x_hist.shape[0]; d = cfg.D_MODEL
         x_n = self.revin(x_hist, mode='norm')
         if self.use_patch:
@@ -224,7 +228,13 @@ class DirectWM(RevINModel):
             assert self.per_variable, "VarAttn 需要 per-variable 表示"
             s_repr, _ = self.varattn(s_repr)
         if self.use_action:
-            a_feat = self.action_enc(a_future.reshape(B, -1))
+            if self.use_sp:
+                # SP 前馈: 归一化到动作量级 (SP~567 原始量级会压掉动作 0-53, 见 M10 尺度bug)
+                sp_n = (sp_future - 560.0) / 30.0
+                a_in = torch.cat([a_future.reshape(B, -1), sp_n.reshape(B, -1)], 1)
+            else:
+                a_in = a_future.reshape(B, -1)
+            a_feat = self.action_enc(a_in)
             z = torch.cat([s_repr.reshape(B, -1), a_feat], 1)
         else:
             z = s_repr.reshape(B, -1)
@@ -362,6 +372,7 @@ def build_model(mid):
     if mid == 'M7': return DirectWM(use_action=True, use_patch=True, per_variable=True, use_varattn=True, beta_mode='fixed')   # β 固定 -0.3, 无 warmup
     if mid == 'M8': return DirectWM(use_action=True, use_patch=True, per_variable=True, use_varattn=True, beta_mode='warmup_pos')  # β warmup 到 +0.3 (对照)
     if mid == 'M9': return TimeXerWM(beta_mode='fixed')  # TimeXer 式 cross-attention 动作注入
+    if mid == 'M10': return DirectWM(use_action=True, use_patch=True, per_variable=True, use_varattn=True, beta_mode='fixed', use_sp=True)  # M7+未来设定值前馈
     if mid == 'B1': return TCNBaseline()
     if mid == 'B2': return RecurrentBaseline('lstm')
     if mid == 'B3': return RecurrentBaseline('gru')
@@ -382,18 +393,24 @@ def get_data(mid):
 
 def train_epoch(model, raw, opt, crit, probabilistic):
     model.train(); W = cfg.WINDOW_SIZE; H = H_OUT; N = len(raw)
+    use_sp = getattr(model, 'use_sp', False)
     total = 0.
     for _ in range(STEPS):
         idxs = np.random.randint(0, N-W-H, size=BS)
-        xh, af, tt = [], [], []
+        xh, af, sp, tt = [], [], [], []
         for i in idxs:
             xh.append(raw[i:i+W]); af.append(raw[i+W:i+W+H, VALVE_IDX])
+            if use_sp: sp.append(raw[i+W:i+W+H, SP_IDX])
             tt.append(raw[i+W:i+W+H, TARGET_IDX])
         x_hist = torch.FloatTensor(np.stack(xh)).to(DEVICE)
         a_fut = torch.FloatTensor(np.stack(af)).to(DEVICE)
         t_true = torch.FloatTensor(np.stack(tt)).to(DEVICE)
         opt.zero_grad()
-        mu, lv = model(x_hist, a_fut)
+        if use_sp:
+            sp_fut = torch.FloatTensor(np.stack(sp)).to(DEVICE)
+            mu, lv = model(x_hist, a_fut, sp_fut)
+        else:
+            mu, lv = model(x_hist, a_fut)
         w = torch.linspace(1.0, 0.6, H, device=DEVICE)
         if probabilistic:
             loss = (w * crit(mu, lv, t_true).mean(dim=0)).sum() / H
@@ -405,16 +422,25 @@ def train_epoch(model, raw, opt, crit, probabilistic):
     return total / STEPS
 
 
+def _sp_fut(raw, i, W, H):
+    """use_sp 模型的未来设定值轨迹 [1, H]"""
+    return torch.FloatTensor(raw[i+W:i+W+H, SP_IDX]).unsqueeze(0).to(DEVICE)
+
+
 @torch.no_grad()
 def validate(model, raw, probabilistic, n=200):
     model.eval(); W = cfg.WINDOW_SIZE; H = H_OUT; N = len(raw)
     norm_out = getattr(model, 'norm_output', False)
+    use_sp = getattr(model, 'use_sp', False)
     m0, m4 = 0., 0.
     for _ in range(n):
         i = np.random.randint(0, N-W-H)
         xh = torch.FloatTensor(raw[i:i+W]).unsqueeze(0).to(DEVICE)
         af = torch.FloatTensor(raw[i+W:i+W+H, VALVE_IDX]).unsqueeze(0).to(DEVICE)
-        mu, _ = model(xh, af)
+        if use_sp:
+            mu, _ = model(xh, af, _sp_fut(raw, i, W, H))
+        else:
+            mu, _ = model(xh, af)
         # 目标: raw 是归一化数据 (M6) 或物理数据 (其他) — 统一转到物理比较
         if norm_out:
             mu = mu * span_g[TARGET_IDX] + train_min[TARGET_IDX]
@@ -431,12 +457,16 @@ def validate(model, raw, probabilistic, n=200):
 def eval_rollout(model, raw, probabilistic, n=500):
     model.eval(); W = cfg.WINDOW_SIZE; H = H_OUT; N = len(raw)
     norm_out = getattr(model, 'norm_output', False)
+    use_sp = getattr(model, 'use_sp', False)
     np.random.seed(42); idxs = np.random.choice(range(N-W-H), n, replace=False)
     err = np.zeros((n, H))
     for j, i in enumerate(idxs):
         xh = torch.FloatTensor(raw[i:i+W]).unsqueeze(0).to(DEVICE)
         af = torch.FloatTensor(raw[i+W:i+W+H, VALVE_IDX]).unsqueeze(0).to(DEVICE)
-        mu, _ = model(xh, af)
+        if use_sp:
+            mu, _ = model(xh, af, _sp_fut(raw, i, W, H))
+        else:
+            mu, _ = model(xh, af)
         if norm_out:
             mu = mu * span_g[TARGET_IDX] + train_min[TARGET_IDX]
             tt = raw[i+W:i+W+H, TARGET_IDX] * span_g[TARGET_IDX] + train_min[TARGET_IDX]
@@ -454,6 +484,7 @@ def eval_sensitivity(model, raw, n=200):
     np.random.seed(7); idxs = np.random.choice(range(N-W-H), n, replace=False)
     abs_deltas = [-10., -5., -2., -1., 1., 2., 5., 10.]
     norm_out = getattr(model, 'norm_output', False)
+    use_sp = getattr(model, 'use_sp', False)
     # 物理扰动 d (阀位单位) → 归一化空间扰动 (M6 动作已归一化)
     d_scale = np.ones(2)
     clamp_max = 100.0
@@ -469,10 +500,16 @@ def eval_sensitivity(model, raw, n=200):
             for i in idxs:
                 x_hist = torch.FloatTensor(raw[i:i+W]).unsqueeze(0).to(DEVICE)
                 a_fut = torch.FloatTensor(raw[i+W:i+W+H, VALVE_IDX]).unsqueeze(0).to(DEVICE)
-                mu_b, _ = model(x_hist, a_fut)
+                if use_sp:
+                    mu_b, _ = model(x_hist, a_fut, _sp_fut(raw, i, W, H))
+                else:
+                    mu_b, _ = model(x_hist, a_fut)
                 bp = mu_b[0].cpu().numpy()
                 a_p = a_fut.clone(); a_p[0, 0, adim] = torch.clamp(a_p[0, 0, adim] + d_n, 0, clamp_max)
-                mu_p, _ = model(x_hist, a_p)
+                if use_sp:
+                    mu_p, _ = model(x_hist, a_p, _sp_fut(raw, i, W, H))
+                else:
+                    mu_p, _ = model(x_hist, a_p)
                 pp = mu_p[0].cpu().numpy()
                 for s in [1, 3, 8, 12]:
                     dT[s].append(pp[s] - bp[s])
@@ -492,12 +529,16 @@ def eval_sigma_calib(model, raw, n=300):
     """|error|/σ 校准 (理想=1.0) — 仅概率模型"""
     model.eval(); W = cfg.WINDOW_SIZE; H = H_OUT; N = len(raw)
     norm_out = getattr(model, 'norm_output', False)
+    use_sp = getattr(model, 'use_sp', False)
     np.random.seed(11); idxs = np.random.choice(range(N-W-H), n, replace=False)
     ratios = []
     for i in idxs:
         xh = torch.FloatTensor(raw[i:i+W]).unsqueeze(0).to(DEVICE)
         af = torch.FloatTensor(raw[i+W:i+W+H, VALVE_IDX]).unsqueeze(0).to(DEVICE)
-        mu, lv = model(xh, af)
+        if use_sp:
+            mu, lv = model(xh, af, _sp_fut(raw, i, W, H))
+        else:
+            mu, lv = model(xh, af)
         if lv is None: return None
         if norm_out:
             mu = mu * span_g[TARGET_IDX] + train_min[TARGET_IDX]

@@ -32,7 +32,8 @@ ALPHA = float(sys.argv[5]) if len(sys.argv) > 5 else 0.5  # 终端价值系数 (
 
 W = cfg.WINDOW_SIZE
 N_FEAT = 40
-T_SET_MODE = 'window_mean'   # 温度目标: 窗口均值 (每样本自适应)
+T_SET_MODE = 'real_sp'     # 温度目标: 数据中真实设定值 (二级减温调节阀设定, csv idx 37 = 数据 idx 36)
+SP_IDX = 36                # 数据列: 二级减温调节阀设定 (主汽温 SP, SP−PV 均值+0.49°C 验证)
 ETA = 0.05                   # 梯度规划步长
 E_STEPS = 30                 # 内层梯度步数
 LAMBDA1 = 0.1                # 动作变化惩罚 (平滑性)
@@ -53,9 +54,10 @@ def load_wm():
     return model
 
 
-def build_objective(wm, x_hist, a_seq, t_set, a_last):
+def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
     """J = Σwₜ(ŷₜ−T_set)² + 终端 + 平滑 + 偏离 + 软约束
-    a_seq: [H, 2] 可微, 返回 J (标量, 可反传)"""
+    a_seq: [H, 2] 可微, 返回 J (标量, 可反传)
+    sp_fut: [H] 未来设定值轨迹 (M10 前馈, 固定不优化)"""
     w = torch.linspace(1.0, 0.8, H_PLAN, device=DEVICE)
     # 规划序列 [H_PLAN,2] → 填充到 H_OUT 步 → [B, H_OUT*2] (与训练一致)
     if H_PLAN < H_OUT:
@@ -63,7 +65,10 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last):
         a_full = torch.cat([a_seq, tail], 0)
     else:
         a_full = a_seq[:H_OUT]
-    mu, _ = wm(x_hist, a_full.reshape(1, -1))
+    if sp_fut is not None and getattr(wm, 'use_sp', False):
+        mu, _ = wm(x_hist, a_full.reshape(1, -1), sp_fut.unsqueeze(0))
+    else:
+        mu, _ = wm(x_hist, a_full.reshape(1, -1))
     mu = mu[0, :H_PLAN]                       # [H] 单目标
     err = (mu - t_set) ** 2
     J = (w * err).sum() / H_PLAN
@@ -79,7 +84,7 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last):
     return J
 
 
-def plan_grad(wm, x_hist, t_set, a_last, a_init=None):
+def plan_grad(wm, x_hist, t_set, a_last, a_init=None, sp_fut=None):
     """梯度规划: Adam 上升 E 轮, warm-start
     a_last: [2] 上一步阀位 → 初始化为 H 步恒定序列"""
     if a_init is not None:
@@ -90,7 +95,7 @@ def plan_grad(wm, x_hist, t_set, a_last, a_init=None):
     Js = []
     for _ in range(E_STEPS):
         opt.zero_grad()
-        J = build_objective(wm, x_hist, a, t_set, a_last)
+        J = build_objective(wm, x_hist, a, t_set, a_last, sp_fut)
         J.backward()
         opt.step()
         with torch.no_grad():
@@ -100,7 +105,7 @@ def plan_grad(wm, x_hist, t_set, a_last, a_init=None):
     return a.detach(), Js
 
 
-def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last):
+def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last, sp_fut=None):
     """批量目标: a_seqs [N, H, 2] → J [N] (CEM 用, GPU 并行)
     与 build_objective 相同的 J 结构"""
     N = a_seqs.shape[0]
@@ -111,7 +116,10 @@ def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last):
     else:
         a_full = a_seqs[:, :H_OUT, :]
     x_rep = x_hist.repeat(N, 1, 1)
-    mu, _ = wm(x_rep, a_full.reshape(N, -1))
+    if sp_fut is not None and getattr(wm, 'use_sp', False):
+        mu, _ = wm(x_rep, a_full.reshape(N, -1), sp_fut.unsqueeze(0).repeat(N, 1))
+    else:
+        mu, _ = wm(x_rep, a_full.reshape(N, -1))
     mu = mu[:, :H_PLAN]
     err = (mu - t_set) ** 2
     J = (w * err).sum(1) / H_PLAN
@@ -124,7 +132,7 @@ def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last):
     return J
 
 
-def plan_cem(wm, x_hist, t_set, a_last):
+def plan_cem(wm, x_hist, t_set, a_last, sp_fut=None):
     """CEM: 200 采样 (GPU 批量) + 精英加权, 5 轮
     a_last: [2] → 初始均值 H 步恒定"""
     a_mean = a_last.unsqueeze(0).repeat(H_PLAN, 1).clone()
@@ -132,7 +140,7 @@ def plan_cem(wm, x_hist, t_set, a_last):
     for _ in range(CEM_ITERS):
         samples = a_mean + a_std * torch.randn(N_CEM_SAMPLES, H_PLAN, 2, device=DEVICE)
         samples.clamp_(0, 100)
-        Js = build_objective_batch(wm, x_hist, samples, t_set, a_last)
+        Js = build_objective_batch(wm, x_hist, samples, t_set, a_last, sp_fut)
         _, idx = torch.topk(Js, N_CEM_ELITE, largest=False)
         elite = samples[idx]
         a_mean = elite.mean(0)
@@ -163,11 +171,12 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
         pid_a = test_raw[gi+W, VALVE_IDX]
         pid_t = test_raw[gi+W, TARGET_IDX]
         # MPC 规划 (基于当前窗口)
-        t_set = torch.tensor(np.mean(win[0, :, TARGET_IDX].cpu().numpy()), dtype=torch.float32, device=DEVICE)
+        t_set = torch.tensor(float(test_raw[gi+W, SP_IDX]), dtype=torch.float32, device=DEVICE)  # 真实 SP
+        sp_fut = torch.FloatTensor(test_raw[gi+W:gi+W+H_OUT, SP_IDX]).to(DEVICE)  # 未来 SP 轨迹 (前馈)
         if planner == 'grad':
-            a_plan, Js = plan_grad(wm, win, t_set, a_last, a_init)
+            a_plan, Js = plan_grad(wm, win, t_set, a_last, a_init, sp_fut)
         else:
-            a_plan, Js = plan_cem(wm, win, t_set, a_last)
+            a_plan, Js = plan_cem(wm, win, t_set, a_last, sp_fut)
         a1 = a_plan[0]
         # WM 闭环: MPC 动作序列(填充到H_OUT) → 预测第一步温度
         with torch.no_grad():
@@ -175,7 +184,10 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
                 a_full = torch.cat([a_plan, a_plan[-1:].repeat(H_OUT - H_PLAN, 1)], 0)
             else:
                 a_full = a_plan[:H_OUT]
-            mu, _ = wm(win, a_full.reshape(1, -1))
+            if getattr(wm, 'use_sp', False):
+                mu, _ = wm(win, a_full.reshape(1, -1), sp_fut.unsqueeze(0))
+            else:
+                mu, _ = wm(win, a_full.reshape(1, -1))
             y1 = mu[0, 0].item()
         # 窗口推进: 真实数据下一行 (温度列替换为模型预测)
         next_row = torch.FloatTensor(test_raw[gi+W]).unsqueeze(0).unsqueeze(0).to(DEVICE)  # [1,1,40]
