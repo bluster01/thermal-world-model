@@ -194,7 +194,8 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
             else:
                 mu, _ = wm(win, a_full.reshape(1, -1))
         # 多步执行: 依次执行 a_plan[0..M_STEP-1], 窗口逐步推进 (对应预测温度)
-        for j in range(M_STEP):
+        n_exec = min(M_STEP, len(a_plan), len(mu[0]))
+        for j in range(n_exec):
             gi_j = gi + j
             if gi_j + W + 1 >= N: break
             pid_a = test_raw[gi_j+W, VALVE_IDX]
@@ -208,7 +209,7 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
             t_set_traj.append(t_set.item())
             mpc_actions.append(a_plan[j].cpu().numpy())
             pid_actions.append(pid_a)
-        a_last = a_plan[M_STEP - 1]
+        a_last = a_plan[n_exec - 1]
         a_init = a_plan  # warm-start
     return (np.array(mpc_temp), np.array(pid_temp), np.array(t_set_traj),
             np.array(mpc_actions), np.array(pid_actions))
