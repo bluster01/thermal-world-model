@@ -40,15 +40,16 @@ def settle_time(temp, sp_after, tol=0.3):
 
 results = []
 for k, e in enumerate(ev_sel):
-    i0 = e - 20  # 跳变前 20 步开始仿真 (窗口需含跳变前历史)
+    i0 = e + 1 - W  # 窗口结束于跳变时刻 e+1 (含跳变前完整历史), off=0
+    if i0 < 0: continue
     sp_before, sp_after = test_raw[e, SP_IDX], test_raw[e+1, SP_IDX]
     # PID 真实轨迹 (跳变后 180 步)
     pid_t = test_raw[e+1:e+1+180, TARGET_IDX]
-    # MPC 闭环 (从跳变前开始, 覆盖跳变)
+    # MPC 闭环 (从跳变前窗口开始, 覆盖跳变)
     mpc_t, _, _, _, _ = simulate(wm, i0, 'grad', n_steps=180)
-    # 对齐: simulate 从 i0 起, MPC 温度对应 i0+W+t; 跳变发生在 e+1 → 偏移 off = e+1-(i0+W)
-    off = e + 1 - (i0 + W)
-    if off < 0 or off + 180 > len(mpc_t): continue
+    # 对齐: simulate 从 i0 起, 第一帧预测 = i0+W = e+1 (跳变时刻) → off=0
+    off = 0
+    if off + 180 > len(mpc_t): continue
     mpc_align = mpc_t[off:off+180]
     # 指标
     pid_settle = settle_time(pid_t, sp_after)
