@@ -30,6 +30,7 @@ N_TRACKS = int(sys.argv[3]) if len(sys.argv) > 3 else 50
 H_PLAN = int(sys.argv[4]) if len(sys.argv) > 4 else 10  # 规划视野 (≤ H_OUT=18)
 ALPHA = float(sys.argv[5]) if len(sys.argv) > 5 else 0.5  # 终端价值系数 (α 扫描用)
 SP_TRAJ = int(sys.argv[6]) if len(sys.argv) > 6 else 1     # 方案1: SP轨迹目标 (1=前馈目标, 0=标量目标)
+FIX_MODE = sys.argv[7] if len(sys.argv) > 7 else 'none'    # 边界跳变修复: none|hard2|hard5|blend|inert05|inert025
 
 W = cfg.WINDOW_SIZE
 N_FEAT = 40
@@ -104,6 +105,9 @@ def plan_grad(wm, x_hist, t_set, a_last, a_init=None, sp_fut=None):
         with torch.no_grad():
             a.clamp_(0, 100)                    # 阀位物理范围
             a[1:] = torch.clamp(a[1:] - a[:-1], -CLIP_DELTA, CLIP_DELTA) + a[:-1]  # |Δa|≤5
+            if FIX_MODE in ('hard2', 'hard5'):  # 边界硬约束: 首步钳制在 a_last±δ (rate constraint)
+                delta = 2.0 if FIX_MODE == 'hard2' else 5.0
+                a[0:1] = torch.clamp(a[0:1], a_last - delta, a_last + delta)
         Js.append(J.item())
     return a.detach(), Js
 
@@ -201,6 +205,27 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
                 mu, _ = wm(win, a_full.reshape(1, -1))
         # 多步执行: 依次执行 a_plan[0..M_STEP-1], 窗口逐步推进 (对应预测温度)
         n_exec = min(M_STEP, len(a_plan), len(mu[0]))
+        # 边界跳变修复: 构造实际执行块 a_exec (none/hard: 执行=计划; blend/inert: 执行≠计划)
+        prev_plan = a_init  # 旧计划 (warm-start 继承来源), 首块为 None
+        blended = FIX_MODE == 'blend' and prev_plan is not None and len(prev_plan) > M_STEP
+        if blended:
+            # 加权融合: a_exec[j] = w_j·a_old[M_STEP+j] + (1−w_j)·a_plan[j], w_j 线性 1→0
+            # 连续性由构造保证: j=0 时完全继承旧计划未执行段, 而旧计划内部 |Δa|≤5
+            a_exec = a_plan[:n_exec].clone()
+            for j in range(n_exec):
+                w = 1.0 - j / float(n_exec)
+                a_old_step = prev_plan[min(M_STEP + j, len(prev_plan) - 1)]
+                a_exec[j] = w * a_old_step + (1.0 - w) * a_plan[j]
+        elif FIX_MODE.startswith('inert'):
+            # 惯性块: 一阶惯性环节作用于执行流 a_exec[j] = a_exec[j-1] + K·(a_plan[j] − a_exec[j-1])
+            K = 0.5 if FIX_MODE == 'inert05' else 0.25
+            a_exec = a_plan[:n_exec].clone()
+            a_prev_ex = a_last
+            for j in range(n_exec):
+                a_exec[j] = a_prev_ex + K * (a_plan[j] - a_prev_ex)
+                a_prev_ex = a_exec[j]
+        else:
+            a_exec = a_plan[:n_exec]
         # PID 参考: 真实动作 + WM 闭环预测 (同一扰动世界, 公平协议)
         with torch.no_grad():
             a_pid_full = torch.FloatTensor(test_raw[gi:gi+H_OUT, VALVE_IDX]).unsqueeze(0).to(DEVICE)
@@ -208,6 +233,20 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
                 mu_pid, _ = wm(win, a_pid_full.reshape(1, -1), sp_fut.unsqueeze(0))
             else:
                 mu_pid, _ = wm(win, a_pid_full.reshape(1, -1))
+        # 执行≠计划时: 用实际执行动作重算 WM 温度 (闭环一致性, 否则评测的是未执行的动作)
+        if blended or FIX_MODE.startswith('inert'):
+            if H_PLAN < H_OUT:
+                tail = a_plan[-1:].repeat(H_OUT - H_PLAN, 1)
+                a_full_exec = torch.cat([a_exec, a_plan[n_exec:], tail], 0)
+            else:
+                a_full_exec = torch.cat([a_exec, a_plan[n_exec:]], 0)[:H_OUT]
+            with torch.no_grad():
+                if getattr(wm, 'use_sp', False):
+                    mu_exec, _ = wm(win, a_full_exec.reshape(1, -1), sp_fut.unsqueeze(0))
+                else:
+                    mu_exec, _ = wm(win, a_full_exec.reshape(1, -1))
+        else:
+            mu_exec = mu
         for j in range(n_exec):
             gi_j = gi + j
             if gi_j + W + 1 >= N: break
@@ -215,7 +254,7 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
             if rng is not None:  # 过程扰动 (两策略共享同一扰动序列)
                 d_state = 0.9 * d_state + rng.normal(0, DIST_AMP)
             pid_t = mu_pid[0, j].item() + (d_state if rng is not None else 0.0)
-            y_j = mu[0, j].item()
+            y_j = mu_exec[0, j].item()
             if rng is not None:
                 y_j = y_j + d_state
             next_row = torch.FloatTensor(test_raw[gi_j+W]).unsqueeze(0).unsqueeze(0).to(DEVICE)
@@ -224,10 +263,10 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
             mpc_temp.append(y_j)
             pid_temp.append(pid_t)
             t_set_traj.append(t_set.item())
-            mpc_actions.append(a_plan[j].cpu().numpy())
+            mpc_actions.append(a_exec[j].cpu().numpy())
             pid_actions.append(pid_a)
-        a_last = a_plan[n_exec - 1]
-        a_init = a_plan  # warm-start
+        a_last = a_exec[n_exec - 1]
+        a_init = a_plan  # warm-start (整段继承)
     return (np.array(mpc_temp), np.array(pid_temp), np.array(t_set_traj),
             np.array(mpc_actions), np.array(pid_actions))
 
