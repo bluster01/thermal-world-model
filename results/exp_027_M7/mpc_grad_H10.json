@@ -1,0 +1,53 @@
+{
+  "model": "M7",
+  "planner": "grad",
+  "n_tracks": 2,
+  "H": 10,
+  "alpha": 0.5,
+  "eta": 0.05,
+  "e_steps": 30,
+  "agg": {
+    "rmse_mpc": 0.5569352423494903,
+    "rmse_pid": 1.048055274711753,
+    "temp_std_mpc": 0.5676438160957747,
+    "temp_std_pid": 0.9563688635826111,
+    "temp_range_mpc": 2.64788818359375,
+    "temp_range_pid": 3.833282470703125,
+    "act_tv_mpc": 0.25465037673711777,
+    "act_tv_pid": 0.30315256118774414,
+    "viol_mpc": 0.0,
+    "viol_pid": 0.0,
+    "overtemp_mpc": 0.0,
+    "overtemp_pid": 0.0
+  },
+  "per_track": [
+    {
+      "rmse_mpc": 0.6377094059127241,
+      "rmse_pid": 1.0886312290661815,
+      "temp_std_mpc": 0.6966111621557286,
+      "temp_std_pid": 0.987452507019043,
+      "temp_range_mpc": 2.8642578125,
+      "temp_range_pid": 3.9051513671875,
+      "act_tv_mpc": 0.3276052474975586,
+      "act_tv_pid": 0.3226831555366516,
+      "viol_mpc": 0,
+      "viol_pid": 0,
+      "overtemp_mpc": 0,
+      "overtemp_pid": 0
+    },
+    {
+      "rmse_mpc": 0.4761610787862566,
+      "rmse_pid": 1.007479320357325,
+      "temp_std_mpc": 0.43867647003582083,
+      "temp_std_pid": 0.9252852201461792,
+      "temp_range_mpc": 2.4315185546875,
+      "temp_range_pid": 3.76141357421875,
+      "act_tv_mpc": 0.18169550597667694,
+      "act_tv_pid": 0.28362196683883667,
+      "viol_mpc": 0,
+      "viol_pid": 0,
+      "overtemp_mpc": 0,
+      "overtemp_pid": 0
+    }
+  ]
+}
