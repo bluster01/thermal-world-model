@@ -22,7 +22,7 @@ sys.argv = ['exp_027_dwm_mpc.py']
 from exp_027_dwm_mpc import W, H_OUT, DEVICE, test_raw, VALVE_IDX, SP_IDX, TARGET_IDX
 sys.argv = _argv
 
-N_TRACKS = int(sys.argv[1]) if len(sys.argv) > 1 else 50
+N_TRACKS = int(sys.argv[1]) if len(sys.argv) > 1 else 10
 H_PLAN = int(sys.argv[2]) if len(sys.argv) > 2 else 10
 ALPHA_FF = float(sys.argv[3]) if len(sys.argv) > 3 else 0.82  # 前馈增益 (SP→二级阀)
 LAMBDA_SP = 2.0      # SP 变化惩罚
@@ -87,29 +87,39 @@ def plan_joint(x_hist, sp_now, t_set, a_last):
         a_eff = a_eff.clamp(0, 100)
     return a.detach(), dsp.detach(), sp_full.detach(), a_eff.detach()
 
-def simulate(track_idx, n_steps=120):
+def simulate(track_idx, n_steps=120, m_step=6):
+    """多步执行: 规划一次执行 m_step 步 (对齐动作时标 60s)"""
     win = torch.FloatTensor(test_raw[track_idx:track_idx+W]).unsqueeze(0).to(DEVICE)
     sp_now = torch.tensor(float(test_raw[track_idx+W, SP_IDX]), device=DEVICE)
     a_last = torch.FloatTensor(test_raw[track_idx+W, VALVE_IDX]).to(DEVICE)
     mpc_t, pid_t, mpc_sp, pid_sp, mpc_a = [], [], [], [], []
-    for k in range(n_steps):
+    for k in range(0, n_steps, m_step):
         gi = track_idx + W + k
-        pid_t.append(test_raw[gi, TARGET_IDX]); pid_sp.append(test_raw[gi, SP_IDX])
+        if gi + m_step >= track_idx + W + n_steps + m_step: break
+        for jj in range(m_step):
+            gij = gi + jj
+            if gij >= track_idx + W + n_steps: break
+            pid_t.append(test_raw[gij, TARGET_IDX]); pid_sp.append(test_raw[gij, SP_IDX])
         t_set = torch.tensor(np.mean(win[0, :, TARGET_IDX].cpu().numpy()), device=DEVICE)
         a_plan, dsp_plan, sp_full, a_eff = plan_joint(win, sp_now, t_set, a_last)
-        # 执行第一步
-        sp_new = sp_now + dsp_plan[0]
-        sp_now = sp_new.clamp(550, 580)
-        a1 = a_eff[0]
-        a_last = a1
+        # WM 预测 m_step 步温度 (闭环)
         with torch.no_grad():
             mu, _ = wm(win, a_eff.reshape(1, -1), sp_full.unsqueeze(0))
-            y1 = mu[0, 0].item()
-        next_row = torch.FloatTensor(test_raw[gi]).unsqueeze(0).unsqueeze(0).to(DEVICE)
-        next_row[0, 0, TARGET_IDX] = y1
-        next_row[0, 0, SP_IDX] = sp_now.item()
-        win = torch.cat([win[:, 1:, :], next_row], 1)
-        mpc_t.append(y1); mpc_sp.append(sp_now.item()); mpc_a.append(a1.cpu().numpy())
+        # 多步执行: 依次推进
+        for j in range(min(m_step, len(mu[0]))):
+            gij = gi + j
+            if gij >= track_idx + W + n_steps: break
+            y_j = mu[0, j].item()
+            # SP 逐步更新 (第一步执行 ΔSP, 后续保持)
+            if j == 0:
+                sp_now = (sp_now + dsp_plan[0]).clamp(550, 580)
+            next_row = torch.FloatTensor(test_raw[gij]).unsqueeze(0).unsqueeze(0).to(DEVICE)
+            next_row[0, 0, TARGET_IDX] = y_j
+            next_row[0, 0, SP_IDX] = sp_now.item()
+            win = torch.cat([win[:, 1:, :], next_row], 1)
+            mpc_t.append(y_j); mpc_sp.append(sp_now.item())
+            mpc_a.append(a_eff[j].cpu().numpy())
+        a_last = a_eff[min(m_step, len(a_eff)) - 1]
     return mpc_t, pid_t, mpc_sp, pid_sp, np.array(mpc_a)
 
 np.random.seed(42)

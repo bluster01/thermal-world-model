@@ -73,35 +73,38 @@ def plan_sp(wm, x_hist, sp_now, t_set):
         _, sp_traj = build_obj_sp(x_hist, dsp, sp_now, t_set)
     return sp_traj, dsp.detach()
 
-def simulate_sp(wm, track_idx, n_steps=120):
-    """闭环: 每步 MPC-B 出 SP → M10 预测温度 → 窗口推进"""
+def simulate_sp(wm, track_idx, n_steps=120, m_step=6):
+    """多步执行: 规划一次执行 m_step 步 (对齐动作时标)"""
     W_ = W
     win = torch.FloatTensor(test_raw[track_idx:track_idx+W_]).unsqueeze(0).to(DEVICE)
     sp_now = torch.tensor(float(test_raw[track_idx+W_, SP_IDX]), device=DEVICE)
-    t_set = sp_now.clone()
     mpc_t, mpc_sp, pid_t, pid_sp = [], [], [], []
-    for k in range(n_steps):
+    for k in range(0, n_steps, m_step):
         gi = track_idx + W_ + k
-        # PID 参考 (真实)
-        pid_t.append(test_raw[gi, TARGET_IDX]); pid_sp.append(test_raw[gi, SP_IDX])
+        for jj in range(m_step):
+            gij = gi + jj
+            if gij >= track_idx + W_ + n_steps: break
+            pid_t.append(test_raw[gij, TARGET_IDX]); pid_sp.append(test_raw[gij, SP_IDX])
         # MPC-B 规划
         t_set = torch.tensor(float(test_raw[gi, SP_IDX]), device=DEVICE)  # 目标=真实SP轨迹(运行人员意图)
-        sp_traj, _ = plan_sp(wm, win, sp_now, t_set)
-        # 执行第一步 → 更新 SP (给 PI 回路)
-        sp_now = sp_now + (sp_traj[0] - sp_now) * 1.0  # 全量执行 (可调系数)
-        sp_now = sp_now.clamp(550, 580)
-        # WM 闭环预测温度 (M11, 用 MPC 的 SP 轨迹)
+        sp_traj, dsp = plan_sp(wm, win, sp_now, t_set)
+        # WM 闭环预测 m_step 步温度
         with torch.no_grad():
             sp_full = torch.cat([sp_traj, sp_traj[-1:].repeat(H_OUT - H_PLAN)]) if H_PLAN < H_OUT else sp_traj[:H_OUT]
             a_fut = win.new_zeros(1, H_OUT * 2)  # M11 无阀位动作, 占位
             mu, _ = wm(win, a_fut, sp_full.unsqueeze(0))
-            y1 = mu[0, 0].item()
-        # 窗口推进 (温度列替换为预测, SP 列替换为 MPC 的 SP)
-        next_row = torch.FloatTensor(test_raw[gi]).unsqueeze(0).unsqueeze(0).to(DEVICE)
-        next_row[0, 0, TARGET_IDX] = y1
-        next_row[0, 0, SP_IDX] = sp_now.item()
-        win = torch.cat([win[:, 1:, :], next_row], 1)
-        mpc_t.append(y1); mpc_sp.append(sp_now.item())
+        # 多步执行
+        for j in range(min(m_step, len(mu[0]))):
+            gij = gi + j
+            if gij >= track_idx + W_ + n_steps: break
+            y_j = mu[0, j].item()
+            if j == 0:
+                sp_now = (sp_now + dsp[0]).clamp(550, 580)
+            next_row = torch.FloatTensor(test_raw[gij]).unsqueeze(0).unsqueeze(0).to(DEVICE)
+            next_row[0, 0, TARGET_IDX] = y_j
+            next_row[0, 0, SP_IDX] = sp_now.item()
+            win = torch.cat([win[:, 1:, :], next_row], 1)
+            mpc_t.append(y_j); mpc_sp.append(sp_now.item())
     return mpc_t, pid_t, mpc_sp, pid_sp
 
 # ===== 主跑 =====

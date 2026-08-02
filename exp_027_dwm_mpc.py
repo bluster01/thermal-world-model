@@ -152,9 +152,12 @@ def plan_cem(wm, x_hist, t_set, a_last, sp_fut=None):
     return a_mean.detach(), [Js.min().item()]
 
 
+M_STEP = 6  # 多步执行: 每步执行 a_plan[0:M_STEP], 窗口推进 M_STEP 步 (对齐动作时标 60s)
+
 def simulate(wm, track_idx, planner, n_steps=120, seed=42):
     """反事实仿真: 每步策略动作 → WM 闭环预测温度 → 窗口推进 (receding horizon)
     协议 (plan.md §2.1): PID 组=真实阀位→真实温度(基准); WM-MPC 组=MPC 动作→WM 预测温度。
+    多步执行: 每次规划执行 M_STEP 步 (动作效应时标 60s, 短程 ŷ₁ 对动作响应≈0 需对齐)
     公平性: 两条轨迹都在 WM+真实非温度状态推进下跑, 模型误差对两策略一视同仁。
     track_idx: test 集起始索引
     返回: (mpc_temp, pid_temp, t_set_traj, mpc_actions, pid_actions)
@@ -168,13 +171,10 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
     a_init = None
     # 初始窗口: 真实
     win = torch.FloatTensor(test_raw[i:i+W]).unsqueeze(0).to(DEVICE)
-    for t in range(n_steps):
+    for t in range(0, n_steps, M_STEP):
         gi = i + t
-        if gi + W + 1 >= N: break
-        # PID 真实动作/温度 (下一步)
-        pid_a = test_raw[gi+W, VALVE_IDX]
-        pid_t = test_raw[gi+W, TARGET_IDX]
-        # MPC 规划 (基于当前窗口)
+        if gi + W + M_STEP >= N: break
+        # MPC 规划 (基于当前窗口, 每次 M_STEP 步执行一次)
         t_set = torch.tensor(float(test_raw[gi+W, SP_IDX]), dtype=torch.float32, device=DEVICE)  # 真实 SP (当前值)
         sp_fut = torch.FloatTensor(test_raw[gi+W:gi+W+H_OUT, SP_IDX]).to(DEVICE)  # 未来 SP 轨迹
         if not SP_TRAJ:
@@ -183,8 +183,7 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
             a_plan, Js = plan_grad(wm, win, t_set, a_last, a_init, sp_fut)
         else:
             a_plan, Js = plan_cem(wm, win, t_set, a_last, sp_fut)
-        a1 = a_plan[0]
-        # WM 闭环: MPC 动作序列(填充到H_OUT) → 预测第一步温度
+        # WM 闭环: MPC 动作序列 → 预测 M_STEP 步温度
         with torch.no_grad():
             if H_PLAN < H_OUT:
                 a_full = torch.cat([a_plan, a_plan[-1:].repeat(H_OUT - H_PLAN, 1)], 0)
@@ -194,18 +193,22 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
                 mu, _ = wm(win, a_full.reshape(1, -1), sp_fut.unsqueeze(0))
             else:
                 mu, _ = wm(win, a_full.reshape(1, -1))
-            y1 = mu[0, 0].item()
-        # 窗口推进: 真实数据下一行 (温度列替换为模型预测)
-        next_row = torch.FloatTensor(test_raw[gi+W]).unsqueeze(0).unsqueeze(0).to(DEVICE)  # [1,1,40]
-        next_row[0, 0, TARGET_IDX] = y1
-        win = torch.cat([win[:, 1:, :], next_row], 1)
-        # 记录
-        mpc_temp.append(y1)
-        pid_temp.append(pid_t)
-        t_set_traj.append(t_set.item())
-        mpc_actions.append(a1.cpu().numpy())
-        pid_actions.append(pid_a)
-        a_last = a1
+        # 多步执行: 依次执行 a_plan[0..M_STEP-1], 窗口逐步推进 (对应预测温度)
+        for j in range(M_STEP):
+            gi_j = gi + j
+            if gi_j + W + 1 >= N: break
+            pid_a = test_raw[gi_j+W, VALVE_IDX]
+            pid_t = test_raw[gi_j+W, TARGET_IDX]
+            y_j = mu[0, j].item()
+            next_row = torch.FloatTensor(test_raw[gi_j+W]).unsqueeze(0).unsqueeze(0).to(DEVICE)
+            next_row[0, 0, TARGET_IDX] = y_j
+            win = torch.cat([win[:, 1:, :], next_row], 1)
+            mpc_temp.append(y_j)
+            pid_temp.append(pid_t)
+            t_set_traj.append(t_set.item())
+            mpc_actions.append(a_plan[j].cpu().numpy())
+            pid_actions.append(pid_a)
+        a_last = a_plan[M_STEP - 1]
         a_init = a_plan  # warm-start
     return (np.array(mpc_temp), np.array(pid_temp), np.array(t_set_traj),
             np.array(mpc_actions), np.array(pid_actions))

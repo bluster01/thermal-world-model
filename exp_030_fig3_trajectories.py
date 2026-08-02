@@ -35,25 +35,25 @@ for row, i in enumerate(pick):
     ax = axes[row, 0]
     ax.plot(t, pid_t, 'k-', lw=1.2, label='PID (真实)')
     ax.plot(t, mpc_t, 'C0-', lw=1.2, label='DWM-MPC (闭环)')
-    ax.plot(t, tset, 'r--', lw=0.8, alpha=0.7, label='设定值 (窗口均值)')
-    ax.set_ylabel('主汽温 (°C)')
+    ax.plot(t, tset, 'r--', lw=0.8, alpha=0.7, label='Setpoint SP (actual)')
+    ax.set_ylabel('Main steam temp (°C)')
     ax.legend(fontsize=8)
-    ax.set_title(f'轨迹 {row+1} (起点 {i})', fontsize=9)
+    ax.set_title(f'Track {row+1} (start {i})', fontsize=9)
     # 右: 动作 (二级阀)
     ax = axes[row, 1]
     ax.plot(t, pid_a[:, 1], 'k-', lw=1.2, label='PID 二级阀')
     ax.plot(t, mpc_a[:, 1], 'C1-', lw=1.2, label='MPC 二级阀')
-    ax.set_ylabel('二级减温阀 (%)')
+    ax.set_ylabel('Secondary attemperator valve (%)')
     ax.legend(fontsize=8)
-    ax.set_title(f'执行器动作 {row+1}', fontsize=9)
+    ax.set_title(f'Actuator {row+1}', fontsize=9)
     rmse_mpc = np.sqrt(np.mean((mpc_t - tset)**2)); rmse_pid = np.sqrt(np.mean((pid_t - tset)**2))
     ax.text(0.02, 0.95, f'RMSE: MPC {rmse_mpc:.2f} vs PID {rmse_pid:.2f}',
             transform=ax.transAxes, fontsize=8, va='top')
 
 for ax in axes[:, 0]:
-    ax.set_xlabel('时间 (s)')
+    ax.set_xlabel('Time (s)')
 for ax in axes[:, 1]:
-    ax.set_xlabel('时间 (s)')
+    ax.set_xlabel('Time (s)')
 plt.tight_layout()
 plt.savefig('figures/fig3_mpc_trajectories.png', dpi=300)
 print("Saved: figures/fig3_mpc_trajectories.png")
