@@ -28,11 +28,11 @@ MODEL_ID = sys.argv[1] if len(sys.argv) > 1 else 'M7'   # 世界模型
 PLANNER = sys.argv[2] if len(sys.argv) > 2 else 'grad'  # grad | cem
 N_TRACKS = int(sys.argv[3]) if len(sys.argv) > 3 else 50
 H_PLAN = int(sys.argv[4]) if len(sys.argv) > 4 else 10  # 规划视野 (≤ H_OUT=18)
+ALPHA = float(sys.argv[5]) if len(sys.argv) > 5 else 0.5  # 终端价值系数 (α 扫描用)
 
 W = cfg.WINDOW_SIZE
 N_FEAT = 40
 T_SET_MODE = 'window_mean'   # 温度目标: 窗口均值 (每样本自适应)
-ALPHA = 0.5                  # 终端价值系数 (启发式 T1)
 ETA = 0.05                   # 梯度规划步长
 E_STEPS = 30                 # 内层梯度步数
 LAMBDA1 = 0.1                # 动作变化惩罚 (平滑性)
@@ -241,7 +241,7 @@ def main():
            'alpha': ALPHA, 'eta': ETA, 'e_steps': E_STEPS, 'agg': agg,
            'per_track': all_m}
     os.makedirs(f"results/exp_027_{MODEL_ID}", exist_ok=True)
-    fn = f"results/exp_027_{MODEL_ID}/mpc_{PLANNER}_H{H_PLAN}.json"
+    fn = f"results/exp_027_{MODEL_ID}/mpc_{PLANNER}_H{H_PLAN}_a{ALPHA}.json"
     json.dump(out, open(fn, 'w'), indent=2, default=float)
     print(f"Saved: {fn} (耗时 {(time.time()-t0)/60:.1f}min)")
 
