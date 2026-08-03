@@ -50,6 +50,7 @@ RISK_LAMBDA = 0.0            # 风险敏感代价权重: J += λ·Σ relu(CVaR_�
 CVAR_ALPHA = 0.95            # CVaR 分位 (正态假设: k_α = φ(Φ⁻¹(α))/(1−α))
 CVAR_K = 2.0627              # α=0.95 → k=2.0627 (φ(1.6449)/0.05)
 RISK_SIGMA_ADD = 0.0         # 额外扰动不确定性叠加: σ_total=√(σ_wm²+σ_add²) (扰动世界必须加, 否则风险项看不见扰动)
+BENCH_SP_EACH = True         # 评测基准: True=每步真实SP (2026-08-03修正) / False=块起点SP (旧)
 N_CEM_SAMPLES = 200          # CEM 采样数
 N_CEM_ELITE = 20             # 精英数
 CEM_ITERS = 5
@@ -303,7 +304,7 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
             win = torch.cat([win[:, 1:, :], next_row], 1)
             mpc_temp.append(y_j)
             pid_temp.append(pid_t)
-            t_set_traj.append(t_set.item())
+            t_set_traj.append(float(test_raw[gi_j + W, SP_IDX]) if BENCH_SP_EACH else t_set.item())
             mpc_actions.append(a_exec[j].cpu().numpy())
             pid_actions.append(pid_a)
         a_last = a_exec[n_exec - 1]
