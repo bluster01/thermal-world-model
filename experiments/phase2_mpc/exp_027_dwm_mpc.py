@@ -60,8 +60,11 @@ CEM_SIGMA_MIN = 0.05
 CLIP_DELTA = 5.0             # |Δa| ≤ 5%/step 硬约束
 T_MIN, T_MAX = 540., 575.    # 软约束区间
 # ── 压线控制 (2026-08-03 用户要求: 贴线运行 + 阀位留安全裕度) ──
-ASYMM_RATIO = 1.0            # 非对称温度代价: 超温权重/欠温权重 (1.0=对称原行为; >1=超温重罚/欠温轻罚)
-LAMBDA_U = 0.0               # 阀位安全裕度惩罚 (0=关; >0: 接近 U_LO/U_HI 时惩罚, 留余量)
+# 压线语义 (冒烟 exp_074 证实): 超温重罚→操作点下移→平均温度反而降 (mean_err -0.23→-0.40)。
+# 正确结构 = 欠温重罚 (掉温=效率损失, 平均气温考核) + 超温 571-575 轻罚 + T_MAX=575 软约束兜底安全。
+W_OVER = 1.0               # 超温权重 (e>0; 575 由软约束兜底, 这里只需轻)
+W_UNDER = 1.0              # 欠温权重 (e<0; >1=压线: 掉温重罚, 平均气温顶上去)
+LAMBDA_U = 0.0             # 阀位安全裕度惩罚 (0=关; >0: 接近 U_LO/U_HI 时惩罚, 留余量)
 U_LO = np.array([2.0, 0.0])  # 阀位安全带下界 (per-valve; 数据 p5≈[0.2,-0.75], 取整留余量)
 U_HI = np.array([43.0, 32.0])  # 阀位上界 (数据 p95≈[43.6,32.6], 校准 2026-08-03)
 
@@ -92,11 +95,12 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
         target = sp_fut[:H_PLAN]
     else:
         target = t_set
-    # 非对称压线代价: 超温重罚 / 欠温轻罚 (用户: 贴线运行, 提高平均气温)
-    # ⚠️ 注意: 超温权重越大, 最优操作点越下移 (见 exp_074 分析) — 需与阀位裕度/软约束联合权衡
-    if ASYMM_RATIO > 1.0:
+    err = (mu - target) ** 2
+    # 非对称压线代价: 欠温重罚/超温轻罚 (用户: 贴线运行, 提高平均气温)
+    # 冒烟证据 (exp_074): 超温重罚→操作点下移→均值降; 欠温重罚→均值顶上去 (压线)
+    if W_UNDER != 1.0 or W_OVER != 1.0:
         e = mu - target
-        w_e = torch.where(e > 0, torch.full_like(e, ASYMM_RATIO), torch.ones_like(e))
+        w_e = torch.where(e > 0, torch.full_like(e, W_OVER), torch.full_like(e, W_UNDER))
         err = w_e * e ** 2
     J = (w * err).sum() / H_PLAN
     # 风险敏感项: CVaR_α 超温尾部 (概率 WM 的 aleatoric σ, 正态假设)
