@@ -18,12 +18,24 @@ sys.argv = ['exp_027_dwm_mpc.py']
 import exp_027_dwm_mpc as M
 sys.argv = _argv
 from experiments.phase2_mpc.exp_072_rl_train import Policy
+from experiments.phase2_mpc.exp_075_sac_wm import Actor as SacActor
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 OUT = 'results/exp_073_policy'
 os.makedirs(OUT, exist_ok=True)
 
 def load_policy(method, seed):
+    if method == 'sac':
+        ck = torch.load(f'results/exp_075_sac_wm/checkpoints/sac_seed{seed}.pth',
+                        map_location=DEVICE, weights_only=False)
+        pi = SacActor().to(DEVICE)
+        pi.load_state_dict(ck['actor']); pi.eval()
+        d = np.load('results/exp_071_rl_data/train.npz')
+        am = torch.FloatTensor(M.test_raw[:, M.VALVE_IDX].mean(0)).to(DEVICE)
+        astd = torch.FloatTensor(M.test_raw[:, M.VALVE_IDX].std(0) + 1e-6).to(DEVICE)
+        sm = torch.FloatTensor(d['s'].mean(0)).squeeze().to(DEVICE)
+        ss = torch.FloatTensor(d['s'].std(0) + 1e-6).squeeze().to(DEVICE)
+        return pi, am, astd, sm, ss, 'sac'
     ck = torch.load(f'results/exp_072_rl/checkpoints/{method}_seed{seed}.pth',
                     map_location=DEVICE, weights_only=False)
     pi = Policy().to(DEVICE)
@@ -32,9 +44,9 @@ def load_policy(method, seed):
     astd = torch.FloatTensor(ck['astd']).to(DEVICE)
     sm = torch.FloatTensor(ck['sm']).squeeze().to(DEVICE)
     ss = torch.FloatTensor(ck['ss']).squeeze().to(DEVICE)
-    return pi, am, astd, sm, ss
+    return pi, am, astd, sm, ss, 'mlp'
 
-def roll_policy(wm, pi, am, astd, sm, ss, track_idx, dist_amp, n_steps=120):
+def roll_policy(wm, pi, am, astd, sm, ss, kind, track_idx, dist_amp, n_steps=120):
     """策略闭环: 返回 (temp, tset, actions)"""
     i = track_idx
     win = torch.FloatTensor(M.test_raw[i:i+M.W]).unsqueeze(0).to(DEVICE)
@@ -46,7 +58,11 @@ def roll_policy(wm, pi, am, astd, sm, ss, track_idx, dist_amp, n_steps=120):
     for t in range(n_steps):
         gi_j = i + t
         s = (win[0, -1, :40] - sm) / ss
-        a_norm = pi(s.unsqueeze(0)).squeeze(0)            # tanh [-1,1]
+        if kind == 'sac':
+            with torch.no_grad():
+                a_norm = pi.act_det(s.unsqueeze(0)).squeeze(0)
+        else:
+            a_norm = pi(s.unsqueeze(0)).squeeze(0)
         a_raw = a_norm * astd + am
         a_raw = a_raw.clamp(amin_t, amax_t)
         a_full = a_raw.unsqueeze(0).repeat(M.H_OUT, 1).unsqueeze(0)
@@ -66,14 +82,14 @@ def roll_policy(wm, pi, am, astd, sm, ss, track_idx, dist_amp, n_steps=120):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
-    ap.add_argument('--method', required=True, choices=['iql', 'td3bc'])
+    ap.add_argument('--method', required=True, choices=['iql', 'td3bc', 'sac'])
     ap.add_argument('--seed', type=int, default=42)
     ap.add_argument('--smoke', action='store_true')
     args = ap.parse_args()
     SMOKE = args.smoke
     M.SP_TRAJ = 0; M.BENCH_SP_EACH = True
     wm = M.load_wm()
-    pi, am, astd, sm, ss = load_policy(args.method, args.seed)
+    pi, am, astd, sm, ss, kind = load_policy(args.method, args.seed)
     N_TRACKS = 2 if SMOKE else 50
     SEEDS = [42] if SMOKE else [42, 7, 13]
     t0 = time.time()
@@ -84,7 +100,7 @@ if __name__ == '__main__':
             starts = np.random.choice(range(len(M.test_raw) - M.W - M.H_OUT - 120),
                                       N_TRACKS, replace=False)
             for s in starts:
-                temps, tsets, acts = roll_policy(wm, pi, am, astd, sm, ss, int(s), da)
+                temps, tsets, acts = roll_policy(wm, pi, am, astd, sm, ss, kind, int(s), da)
                 e = temps - tsets
                 rm = float(np.sqrt(np.mean(e ** 2)))
                 iae = float(np.trapz(np.abs(e)))
