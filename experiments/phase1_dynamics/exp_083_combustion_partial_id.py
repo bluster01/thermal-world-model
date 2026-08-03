@@ -53,13 +53,13 @@ def ridge_arx(y, u, d, p=P, lam=RIDGE):
     D = np.zeros((T, nd)) if d is None else d
     cols = []
     for i in range(1, p + 1):
-        cols.append(y[i:T - p + i])
+        cols.append(y[p - i:T - i])                       # y_{t-i}
     for j in range(nu):
         for i in range(1, p + 1):
-            cols.append(u[i:T - p + i, j])
+            cols.append(u[p - i:T - i, j])                # u_j_{t-i}
     for j in range(nd):
         for i in range(1, p + 1):
-            cols.append(D[i:T - p + i, j])
+            cols.append(D[p - i:T - i, j])                # d_j_{t-i}
     X = np.column_stack(cols + [np.ones(T - p)])
     yt = y[p:T]
     XtX = X.T @ X

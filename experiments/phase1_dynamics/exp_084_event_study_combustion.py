@@ -109,8 +109,8 @@ def main():
     m_ss, ci_ss, n_ss = avg_curve(steady, 'steady', sign=+1)
     m_ac, ci_ac, n_ac = avg_curve(active, 'active', sign=+1)
     # 开阀/关阀拆分统计
-    m_open, ci_open, n_open = avg_curve(np.ones(len(ev), bool), 'open', sign=+1)
-    m_close, ci_close, n_close = avg_curve(np.ones(len(ev), bool), 'close', sign=-1)
+    m_open, ci_open, n_open = avg_curve(ev_dir > 0, 'open', sign=+1)
+    m_close, ci_close, n_close = avg_curve(ev_dir < 0, 'close', sign=-1)
 
     # 关键指标
     w60 = slice(6, 10)
