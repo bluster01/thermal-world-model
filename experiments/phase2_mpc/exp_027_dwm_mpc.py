@@ -129,7 +129,9 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
     J = J + 2.0 * over
     # 阀位安全裕度: 接近 U_LO/U_HI 时惩罚 (留余量应对扰动; 用户: 阀门动作有上限, 留够安全余度)
     if LAMBDA_U > 0:
-        u_pen = F.relu(a_seq - U_HI).pow(2).sum() + F.relu(U_LO - a_seq).pow(2).sum()
+        u_lo = torch.as_tensor(U_LO, dtype=torch.float32, device=DEVICE)
+        u_hi = torch.as_tensor(U_HI, dtype=torch.float32, device=DEVICE)
+        u_pen = F.relu(a_seq - u_hi).pow(2).sum() + F.relu(u_lo - a_seq).pow(2).sum()
         J = J + LAMBDA_U * u_pen
     return J
 
@@ -197,7 +199,9 @@ def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last, sp_fut=None):
     over = F.relu(mu - T_MAX).pow(2).sum(1) + F.relu(T_MIN - mu).pow(2).sum(1)
     J = J + 2.0 * over
     if LAMBDA_U > 0:  # 批量路径阀位裕度 (CEM)
-        u_pen = F.relu(a_seqs - U_HI).pow(2).sum((1, 2)) + F.relu(U_LO - a_seqs).pow(2).sum((1, 2))
+        u_lo = torch.as_tensor(U_LO, dtype=torch.float32, device=DEVICE)
+        u_hi = torch.as_tensor(U_HI, dtype=torch.float32, device=DEVICE)
+        u_pen = F.relu(a_seqs - u_hi).pow(2).sum((1, 2)) + F.relu(u_lo - a_seqs).pow(2).sum((1, 2))
         J = J + LAMBDA_U * u_pen
     return J
 
