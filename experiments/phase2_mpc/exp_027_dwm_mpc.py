@@ -59,6 +59,11 @@ CEM_ITERS = 5
 CEM_SIGMA_MIN = 0.05
 CLIP_DELTA = 5.0             # |Δa| ≤ 5%/step 硬约束
 T_MIN, T_MAX = 540., 575.    # 软约束区间
+# ── 压线控制 (2026-08-03 用户要求: 贴线运行 + 阀位留安全裕度) ──
+ASYMM_RATIO = 1.0            # 非对称温度代价: 超温权重/欠温权重 (1.0=对称原行为; >1=超温重罚/欠温轻罚)
+LAMBDA_U = 0.0               # 阀位安全裕度惩罚 (0=关; >0: 接近 U_LO/U_HI 时惩罚, 留余量)
+U_LO = np.array([2.0, 0.0])  # 阀位安全带下界 (per-valve; 数据 p5≈[0.2,-0.75], 取整留余量)
+U_HI = np.array([43.0, 32.0])  # 阀位上界 (数据 p95≈[43.6,32.6], 校准 2026-08-03)
 
 
 def load_wm():
@@ -87,7 +92,12 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
         target = sp_fut[:H_PLAN]
     else:
         target = t_set
-    err = (mu - target) ** 2
+    # 非对称压线代价: 超温重罚 / 欠温轻罚 (用户: 贴线运行, 提高平均气温)
+    # ⚠️ 注意: 超温权重越大, 最优操作点越下移 (见 exp_074 分析) — 需与阀位裕度/软约束联合权衡
+    if ASYMM_RATIO > 1.0:
+        e = mu - target
+        w_e = torch.where(e > 0, torch.full_like(e, ASYMM_RATIO), torch.ones_like(e))
+        err = w_e * e ** 2
     J = (w * err).sum() / H_PLAN
     # 风险敏感项: CVaR_α 超温尾部 (概率 WM 的 aleatoric σ, 正态假设)
     #   CVaR_t = mu_t + k_α·σ_t; 风险 = relu(CVaR_t − T_MAX)² — 超温尾部概率进规划目标
@@ -113,6 +123,10 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
     # 软约束: 超区间惩罚
     over = F.relu(mu - T_MAX).pow(2).sum() + F.relu(T_MIN - mu).pow(2).sum()
     J = J + 2.0 * over
+    # 阀位安全裕度: 接近 U_LO/U_HI 时惩罚 (留余量应对扰动; 用户: 阀门动作有上限, 留够安全余度)
+    if LAMBDA_U > 0:
+        u_pen = F.relu(a_seq - U_HI).pow(2).sum() + F.relu(U_LO - a_seq).pow(2).sum()
+        J = J + LAMBDA_U * u_pen
     return J
 
 
@@ -174,10 +188,13 @@ def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last, sp_fut=None):
     if FIX_MODE == 'overlap' and OVERLAP_REF is not None:  # CEM 路径同款重叠一致性
         m = min(M_STEP, a_seqs.shape[1], len(OVERLAP_REF) - M_STEP)
         if m > 0:
-            ref = OVERLAP_REF[M_STEP:M_STEP + m].unsqueeze(0).unsqueeze(0)
+            ref = OVERLAP_REF[M_STEP:M_STEP + m]  # [m, 2] 广播到 [N, m, 2] (2026-08-03修复: 原双unsqueeze形状错)
             J = J + LAMBDA3 * ((a_seqs[:, :m] - ref) ** 2).sum((1, 2))
     over = F.relu(mu - T_MAX).pow(2).sum(1) + F.relu(T_MIN - mu).pow(2).sum(1)
     J = J + 2.0 * over
+    if LAMBDA_U > 0:  # 批量路径阀位裕度 (CEM)
+        u_pen = F.relu(a_seqs - U_HI).pow(2).sum((1, 2)) + F.relu(U_LO - a_seqs).pow(2).sum((1, 2))
+        J = J + LAMBDA_U * u_pen
     return J
 
 
@@ -346,6 +363,13 @@ def metrics(mpc_t, pid_t, t_set_traj, mpc_a, pid_a):
     m['itae_pid'] = float(np.trapz(np.arange(len(pid_t)) * np.abs(pid_t - t_set_traj)))
     m['overtemp_int_mpc'] = float(np.trapz(np.maximum(mpc_t - T_MAX, 0.0)))
     m['overtemp_int_pid'] = float(np.trapz(np.maximum(pid_t - T_MAX, 0.0)))
+    # 压线指标 (2026-08-03): 平均温度 / 平均偏差 (正=贴线上方) / 阀位距安全带距离 (越大越安全)
+    m['mean_temp_mpc'] = float(mpc_t.mean())
+    m['mean_temp_pid'] = float(pid_t.mean())
+    m['mean_err_mpc'] = float((mpc_t - t_set_traj).mean())
+    m['mean_err_pid'] = float((pid_t - t_set_traj).mean())
+    m['valve_margin_mpc'] = float(np.minimum(U_HI - mpc_a, mpc_a - U_LO).min(1).mean())
+    m['valve_margin_pid'] = float(np.minimum(U_HI - pid_a, pid_a - U_LO).min(1).mean())
     return m
 
 

@@ -16,6 +16,7 @@ from experiments.phase1_dynamics import exp_025_unified_benchmark as E
 sys.argv = _argv
 
 LAMBDA_A = float(os.environ.get('LAMBDA_A', 0.5))
+EPISODE_LEN = int(os.environ.get('EPISODE_LEN', 500))  # 切段: 无限长轨迹 γ=0.99 自举发散 (IQL V/Q 爆炸, 2026-08-03)
 OUT = 'results/exp_071_rl_data'
 os.makedirs(OUT, exist_ok=True)
 
@@ -31,9 +32,11 @@ def build(raw, name):
     da = np.abs(np.diff(raw[:, vidx], axis=0)).sum(1)    # |Δa| (a_t − a_{t-1})
     r = (-np.abs(e) - LAMBDA_A * da).astype(np.float32)  # 奖励
     s_next = raw[1:, :len(cols)].astype(np.float32)
-    np.savez(f'{OUT}/{name}.npz', s=s, a=a, r=r, s_next=s_next)
+    done = np.zeros(n - 1, dtype=np.float32)
+    done[EPISODE_LEN - 1::EPISODE_LEN] = 1.0             # 每 EPISODE_LEN 步切段
+    np.savez(f'{OUT}/{name}.npz', s=s, a=a, r=r, s_next=s_next, done=done)
     print(f"{name}: {len(s)} transitions | 状态 {s.shape[1]}维 | 动作 {a.shape[1]}维 | "
-          f"r 均值 {r.mean():.4f} | e 均值 {e.mean():.2f}°C | |Δa| 均值 {da.mean():.4f}")
+          f"r 均值 {r.mean():.4f} | e 均值 {e.mean():.2f}°C | |Δa| 均值 {da.mean():.4f} | 段长 {EPISODE_LEN}")
 
 if __name__ == '__main__':
     build(E.train_raw, 'train')

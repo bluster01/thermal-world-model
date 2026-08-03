@@ -53,45 +53,54 @@ def train_iql(seed, steps=1000 if '--smoke' in sys.argv else 300000, bs=256):
     s = (d['s'] - sm) / ss; s2 = (d['s_next'] - sm) / ss
     a = (d['a'] - am) / astd
     r = d['r']; r = (r - r.mean()) / (r.std() + 1e-6)  # 奖励归一化
+    done = d['done']
     sv = (dv['s'] - sm) / ss
     n = len(s)
     torch.manual_seed(seed); np.random.seed(seed)
     qf = MLP(D, 1).to(DEVICE); qf_t = MLP(D, 1).to(DEVICE); qf_t.load_state_dict(qf.state_dict())
     vf = MLP(D, 1).to(DEVICE)
     pi = Policy().to(DEVICE)
-    optq = torch.optim.Adam(qf.parameters(), lr=3e-4)
-    optv = torch.optim.Adam(vf.parameters(), lr=3e-4)
-    optp = torch.optim.Adam(pi.parameters(), lr=3e-4)
+    # 2026-08-03 修复: lr 1e-4 (3e-4 发散) + grad clip 1.0 (慢性尖峰自举正反馈)
+    optq = torch.optim.Adam(qf.parameters(), lr=1e-4)
+    optv = torch.optim.Adam(vf.parameters(), lr=1e-4)
+    optp = torch.optim.Adam(pi.parameters(), lr=1e-4)
     tau, gamma, beta, TAU_T = 0.7, 0.99, 3.0, 5e-3
-    S, A, R, S2 = (torch.FloatTensor(x).to(DEVICE) for x in [s, a, r, s2])
+    S, A, R, S2, DN = (torch.FloatTensor(x).to(DEVICE) for x in [s, a, r, s2, done])
     t0 = time.time()
     for it in range(steps):
         idx = np.random.randint(0, n, bs)
-        sb, ab, rb, s2b = S[idx], A[idx], R[idx], S2[idx]
+        sb, ab, rb, s2b, db = S[idx], A[idx], R[idx], S2[idx], DN[idx]
         # V: expectile (目标 detach, V 保梯度 — 2026-08-03修复: 原diff整体detach导致无梯度)
         with torch.no_grad():
-            v_target = rb + gamma * vf(s2b)         # IQL 标准: target = r + γV(s')
+            v_target = rb + gamma * vf(s2b) * (1 - db)   # done 截断 (切段协议)
         v = vf(sb)
         diff = v_target - v
         w = torch.where(diff > 0, tau, 1 - tau)
         loss_v = (w * diff ** 2).mean()
-        optv.zero_grad(); loss_v.backward(); optv.step()
-        # Q: in-sample TD (target = r + γV)
+        optv.zero_grad(); loss_v.backward()
+        torch.nn.utils.clip_grad_norm_(vf.parameters(), 1.0)
+        optv.step()
+        # Q: in-sample TD (target = r + γV, done 截断)
         with torch.no_grad():
-            q_target = rb + gamma * vf(s2b)
+            q_target = rb + gamma * vf(s2b) * (1 - db)
         loss_q = F.mse_loss(qf(sb), q_target)
-        optq.zero_grad(); loss_q.backward(); optq.step()
+        optq.zero_grad(); loss_q.backward()
+        torch.nn.utils.clip_grad_norm_(qf.parameters(), 1.0)
+        optq.step()
         with torch.no_grad():
             for p, pt in zip(qf.parameters(), qf_t.parameters()):
                 pt.data.mul_(1 - TAU_T).add_(TAU_T * p.data)
-        # π: AWR
+        # π: AWR (adv 批内标准化 — 2026-08-03修复: 原 clamp(10)+β3 在 Q/V 尖峰时 exp(30) 溢出)
         with torch.no_grad():
             adv = qf(sb) - vf(sb)
-            w_awr = torch.exp(beta * adv.clamp(max=10))
+            adv = (adv - adv.mean()) / (adv.std() + 1e-6)
+            w_awr = torch.exp(beta * adv.clamp(max=3))
         pa = pi(sb)
         log_pi = -0.5 * ((pa - ab) ** 2).sum(1)
         loss_p = -(w_awr * log_pi).mean()
-        optp.zero_grad(); loss_p.backward(); optp.step()
+        optp.zero_grad(); loss_p.backward()
+        torch.nn.utils.clip_grad_norm_(pi.parameters(), 1.0)
+        optp.step()
         if it % 50000 == 0:
             with torch.no_grad():
                 val_q = qf(torch.FloatTensor(sv).to(DEVICE)).mean().item()
