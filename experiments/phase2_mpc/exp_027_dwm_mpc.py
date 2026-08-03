@@ -221,7 +221,8 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
     d_state = 0.0
     # 初始窗口: 真实
     win = torch.FloatTensor(test_raw[i:i+W]).unsqueeze(0).to(DEVICE)
-    for t in range(0, n_steps, M_STEP):
+    t = 0
+    while t < n_steps:  # 2026-08-03 修正: 原 for t in range(0,n_steps,M_STEP) 固定20块, H_PLAN<M_STEP 时 n_exec 截断导致轨迹变短 (H=1→20步)
         gi = i + t
         if gi + W + M_STEP >= N: break
         # MPC 规划 (基于当前窗口, 每次 M_STEP 步执行一次)
@@ -246,7 +247,7 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
             else:
                 mu, _ = wm(win, a_full.reshape(1, -1))
         # 多步执行: 依次执行 a_plan[0..M_STEP-1], 窗口逐步推进 (对应预测温度)
-        n_exec = min(M_STEP, len(a_plan), len(mu[0]))
+        n_exec = min(M_STEP, len(a_plan), len(mu[0]), n_steps - t)
         # 边界跳变修复: 构造实际执行块 a_exec (none/hard: 执行=计划; blend/inert: 执行≠计划)
         prev_plan = a_init  # 旧计划 (warm-start 继承来源), 首块为 None
         blended = FIX_MODE == 'blend' and prev_plan is not None and len(prev_plan) > M_STEP
@@ -309,6 +310,7 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
             pid_actions.append(pid_a)
         a_last = a_exec[n_exec - 1]
         a_init = a_plan  # warm-start (整段继承)
+        t += n_exec
     return (np.array(mpc_temp), np.array(pid_temp), np.array(t_set_traj),
             np.array(mpc_actions), np.array(pid_actions))
 
