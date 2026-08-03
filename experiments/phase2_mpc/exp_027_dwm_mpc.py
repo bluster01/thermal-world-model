@@ -51,6 +51,8 @@ CVAR_ALPHA = 0.95            # CVaR 分位 (正态假设: k_α = φ(Φ⁻¹(α))
 CVAR_K = 2.0627              # α=0.95 → k=2.0627 (φ(1.6449)/0.05)
 RISK_SIGMA_ADD = 0.0         # 额外扰动不确定性叠加: σ_total=√(σ_wm²+σ_add²) (扰动世界必须加, 否则风险项看不见扰动)
 BENCH_SP_EACH = True         # 评测基准: True=每步真实SP (2026-08-03修正) / False=块起点SP (旧)
+SIM_COLLECT_SIGMA = False    # 收集每步预测σ (置信带用, exp_066; 收集到 SIM_SIGMA_BUF)
+SIM_SIGMA_BUF = []
 N_CEM_SAMPLES = 200          # CEM 采样数
 N_CEM_ELITE = 20             # 精英数
 CEM_ITERS = 5
@@ -221,6 +223,8 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
     d_state = 0.0
     # 初始窗口: 真实
     win = torch.FloatTensor(test_raw[i:i+W]).unsqueeze(0).to(DEVICE)
+    if SIM_COLLECT_SIGMA:
+        SIM_SIGMA_BUF.clear()
     t = 0
     while t < n_steps:  # 2026-08-03 修正: 原 for t in range(0,n_steps,M_STEP) 固定20块, H_PLAN<M_STEP 时 n_exec 截断导致轨迹变短 (H=1→20步)
         gi = i + t
@@ -243,9 +247,9 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
             else:
                 a_full = a_plan[:H_OUT]
             if getattr(wm, 'use_sp', False):
-                mu, _ = wm(win, a_full.reshape(1, -1), sp_fut.unsqueeze(0))
+                mu, lv = wm(win, a_full.reshape(1, -1), sp_fut.unsqueeze(0))
             else:
-                mu, _ = wm(win, a_full.reshape(1, -1))
+                mu, lv = wm(win, a_full.reshape(1, -1))
         # 多步执行: 依次执行 a_plan[0..M_STEP-1], 窗口逐步推进 (对应预测温度)
         n_exec = min(M_STEP, len(a_plan), len(mu[0]), n_steps - t)
         # 边界跳变修复: 构造实际执行块 a_exec (none/hard: 执行=计划; blend/inert: 执行≠计划)
@@ -285,14 +289,16 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
                 a_full_exec = torch.cat([a_exec, a_plan[n_exec:]], 0)[:H_OUT]
             with torch.no_grad():
                 if getattr(wm, 'use_sp', False):
-                    mu_exec, _ = wm(win, a_full_exec.reshape(1, -1), sp_fut.unsqueeze(0))
+                    mu_exec, lv_exec = wm(win, a_full_exec.reshape(1, -1), sp_fut.unsqueeze(0))
                 else:
-                    mu_exec, _ = wm(win, a_full_exec.reshape(1, -1))
+                    mu_exec, lv_exec = wm(win, a_full_exec.reshape(1, -1))
         else:
-            mu_exec = mu
+            mu_exec, lv_exec = mu, lv
         for j in range(n_exec):
             gi_j = gi + j
             if gi_j + W + 1 >= N: break
+            if SIM_COLLECT_SIGMA:
+                SIM_SIGMA_BUF.append(float(torch.exp(lv_exec[0, j] * 0.5).item()))
             pid_a = test_raw[gi_j+W, VALVE_IDX]
             if rng is not None:  # 过程扰动 (两策略共享同一扰动序列)
                 d_state = 0.9 * d_state + rng.normal(0, DIST_AMP)
