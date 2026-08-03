@@ -1,0 +1,22 @@
+% Main comparison table (Applied Energy style)
+% *: policy TV per step (total TV / 119 steps); MPC TV = total variation per trajectory
+\begin{table}[t]
+\centering\small
+\caption{Closed-loop comparison on main steam temperature control (150 trajectories from 3 start sets, paired Wilcoxon $p<10^{-12}$ for MPC-family vs PID; disturbed world: process disturbance $\sigma=0.3$). Bold: best per metric.}
+\label{tab:baseline}
+\begin{tabular}{lccc cccc}
+\toprule
+Method & WM type & Controller & RMSE$_{dist}$ & RMSE$_{clean}$ & TV$_{dist}$ & Overtemp (s) & Train (min)\\
+\midrule
+PID & — & — & 2.661 & 1.704 & 0.338 & 1 & 0.0 \\
+Linear MPC (ΔT-ARX) & ARX-ident. & grad & 5.499 & 1.692 & 0.244 & 1682 & 0.01 \\
+PETS-style (Ens+CEM) & 3×M7 ens. & CEM & 2.603 & 1.132 & 0.648 & 156 & 27 \\
+Ensemble + grad & 3×M7 ens. & grad & 2.383 & 1.057 & 0.246 & 112 & 27 \\
+Det. WM (M5) + grad & MSE det. & grad & 2.423 & 1.051 & 0.208 & 182 & 10 \\
+DWM-MPC (M7, ours) & β-NLL prob. & grad & 2.502 & 1.106 & 0.278 & 1 & 10 \\
+TD3+BC (offline) & — & policy & 9.31 & 1.803 & 0.31* & 2756 & 45 \\
+IQL (offline) & — & policy & 9.311 & 1.803 & 0.31* & 2754 & 40 \\
+SAC in learned WM & — & policy & 9.12 & 1.825 & 1.15* & 2685 & 25 \\
+\bottomrule
+\end{tabular}
+\end{table}
