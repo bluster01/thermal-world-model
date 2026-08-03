@@ -42,6 +42,11 @@ SP_IDX = 36                # 数据列: 二级减温调节阀设定 (主汽温 S
 ETA = 0.05                   # 梯度规划步长
 E_STEPS = 30                 # 内层梯度步数
 LAMBDA1 = 0.1                # 动作变化惩罚 (平滑性)
+LAMBDA1_2ND = 0.0            # 二阶平滑 (Δ²a², 抑制驻波/standing wave; 2026-08-03)
+EXEC_SMA = int(os.environ.get('EXEC_SMA', '1'))  # 执行端因果移动平均窗 (>1: 滤驻波留趋势; 2026-08-03)
+EXEC_KF = float(os.environ.get('EXEC_KF', '0.0'))  # 执行端卡尔曼速度过程噪声 (>0: 启用; 用户建议 2026-08-03)
+OFFSET_GAIN = float(os.environ.get('OFFSET_GAIN', '0.0'))  # offset-free 补偿增益 (治模型系统偏差; 2026-08-03)
+OFFSET_EMA = float(os.environ.get('OFFSET_EMA', '0.3'))    # 偏差估计 EMA 系数
 LAMBDA2 = 0.05               # 动作偏离 last 惩罚
 LAMBDA3 = 0.1                # 重叠一致性惩罚 (FIX_MODE='overlap': 新计划头部偏离旧计划尾部)
 OVERLAP_REF = None           # 旧计划引用 (simulate 每次重规划前设置; 首块 None)
@@ -54,6 +59,9 @@ BENCH_SP_EACH = True         # 评测基准: True=每步真实SP (2026-08-03修�
 SIM_COLLECT_SIGMA = False    # 收集每步预测σ (置信带用, exp_066; 收集到 SIM_SIGMA_BUF)
 SIM_SIGMA_BUF = []
 N_CEM_SAMPLES = 200          # CEM 采样数
+INT_LAMBDA = float(os.environ.get('INT_LAMBDA', '0.0'))  # 积分项权重 (等效PI积分, 治静差; 2026-08-03)
+INT_GAIN = float(os.environ.get('INT_GAIN', '0.0'))      # 跨规划周期积分增益 (SP偏置=PI的I项; 2026-08-03)
+DT = 10                      # 采样间隔 (s) — 合成 SP 阶跃时间轴 (2026-08-03)
 N_CEM_ELITE = 20             # 精英数
 CEM_ITERS = 5
 CEM_SIGMA_MIN = 0.05
@@ -103,6 +111,10 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
         w_e = torch.where(e > 0, torch.full_like(e, W_OVER), torch.full_like(e, W_UNDER))
         err = w_e * e ** 2
     J = (w * err).sum() / H_PLAN
+    # 积分项 (等效 PI 积分作用, 治静差, 2026-08-03): (Σ原始偏差/H)² — 持续偏差累积迫使动作
+    if INT_LAMBDA > 0:
+        e_lin = mu - target
+        J = J + INT_LAMBDA * (e_lin.sum() / H_PLAN) ** 2
     # 风险敏感项: CVaR_α 超温尾部 (概率 WM 的 aleatoric σ, 正态假设)
     #   CVaR_t = mu_t + k_α·σ_t; 风险 = relu(CVaR_t − T_MAX)² — 超温尾部概率进规划目标
     if RISK_LAMBDA > 0 and lv is not None:
@@ -117,6 +129,10 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
     # 平滑 + 偏离
     if a_seq.shape[0] > 1:
         J = J + LAMBDA1 * ((a_seq[1:] - a_seq[:-1]) ** 2).sum()
+    # 二阶平滑 (惩罚加速度 Δ²a, 抑制高频驻波/standing wave, 保留低频趋势; 2026-08-03)
+    if LAMBDA1_2ND > 0 and a_seq.shape[0] > 2:
+        d2 = a_seq[2:] - 2.0 * a_seq[1:-1] + a_seq[:-2]
+        J = J + LAMBDA1_2ND * (d2 ** 2).sum()
     J = J + LAMBDA2 * ((a_seq - a_last) ** 2).sum()
     # 重叠一致性: 新计划头部 (执行段) 软钉在旧计划未执行段 (平滑切换, 非blend式陈旧执行)
     if FIX_MODE == 'overlap' and OVERLAP_REF is not None:
@@ -182,6 +198,9 @@ def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last, sp_fut=None):
         target = t_set
     err = (mu - target) ** 2
     J = (w * err).sum(1) / H_PLAN
+    if INT_LAMBDA > 0:  # 积分项 (等效 PI 积分, 与 build_objective 一致)
+        e_lin = mu - target
+        J = J + INT_LAMBDA * (e_lin.sum(1) / H_PLAN) ** 2
     if RISK_LAMBDA > 0 and lv is not None:  # CEM 路径同款风险项
         sig = torch.exp(lv[:, :H_PLAN] * 0.5)
         cvar = mu + CVAR_K * sig
@@ -228,12 +247,15 @@ DIST_AMP = 0.3  # 过程扰动幅度 (°C/步 随机游走, 模拟负荷/燃料�
 def _dist_rng(seed):
     return np.random.default_rng(seed)
 
-def simulate(wm, track_idx, planner, n_steps=120, seed=42):
+def simulate(wm, track_idx, planner, n_steps=120, seed=42, sp_step=None):
     """反事实仿真: 每步策略动作 → WM 闭环预测温度 → 窗口推进 (receding horizon)
     协议 (plan.md §2.1): PID 组=真实阀位→真实温度(基准); WM-MPC 组=MPC 动作→WM 预测温度。
     多步执行: 每次规划执行 M_STEP 步 (动作效应时标 60s, 短程 ŷ₁ 对动作响应≈0 需对齐)
     公平性: 两条轨迹都在 WM+真实非温度状态推进下跑, 模型误差对两策略一视同仁。
     track_idx: test 集起始索引
+    sp_step: (step_time_s, step_amp) 合成 SP 阶跃注入 (阶跃响应测试, 2026-08-03):
+             SP(t) = SP_base + amp·1(t ≥ step_time), SP_base = 窗口末真实 SP (恒定基准)
+             评测基准 t_set_traj 同步用合成 SP
     返回: (mpc_temp, pid_temp, t_set_traj, mpc_actions, pid_actions)
     """
     global OVERLAP_REF  # 模块级引用: build_objective 的重叠一致性项需要 (函数内赋值默认局部)
@@ -250,21 +272,43 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
     win = torch.FloatTensor(test_raw[i:i+W]).unsqueeze(0).to(DEVICE)
     if SIM_COLLECT_SIGMA:
         SIM_SIGMA_BUF.clear()
+    sp_base = float(test_raw[i+W-1, SP_IDX]) if sp_step is not None else None
+    int_state = 0.0          # 积分状态 (等效 PI 的 I 项, 跨规划周期累积; 2026-08-03)
+    t_set_eff_prev = None
+    # 执行端卡尔曼滤波状态 (位置+速度, 跨块连续; 2026-08-03) — 滤驻波且不延迟趋势
+    a0 = test_raw[i+W-1, VALVE_IDX]
+    kf_state = [{'p': float(a0[ch]), 'v': 0.0, 'P': np.eye(2)} for ch in range(2)]
+    d_est = 0.0   # offset-free 模型偏差估计 (d = y_meas − y_pred, EMA; 2026-08-03)
     t = 0
     while t < n_steps:  # 2026-08-03 修正: 原 for t in range(0,n_steps,M_STEP) 固定20块, H_PLAN<M_STEP 时 n_exec 截断导致轨迹变短 (H=1→20步)
         gi = i + t
         if gi + W + M_STEP >= N: break
         # MPC 规划 (基于当前窗口, 每次 M_STEP 步执行一次)
-        t_set = torch.tensor(float(test_raw[gi+W, SP_IDX]), dtype=torch.float32, device=DEVICE)  # 真实 SP (当前值)
-        sp_fut = torch.FloatTensor(test_raw[gi+W:gi+W+H_OUT, SP_IDX]).to(DEVICE)  # 未来 SP 轨迹
-        if not SP_TRAJ:
-            sp_fut = None  # 标量目标模式: 用当前 SP
+        if sp_step is not None:  # 合成 SP: 恒定基准 + 阶跃
+            t_now = t * DT
+            step_on = t_now >= sp_step[0]
+            sp_now = sp_base + (sp_step[1] if step_on else 0.0)
+            t_set = torch.tensor(sp_now, dtype=torch.float32, device=DEVICE)
+            fut_base = np.full(H_OUT, sp_now)
+            sp_fut = torch.FloatTensor(fut_base).to(DEVICE)
+            if SP_TRAJ:
+                t_on = np.arange(H_OUT) * DT + t_now
+                fut = np.where(t_on >= sp_step[0], sp_base + sp_step[1], sp_base)
+                sp_fut = torch.FloatTensor(fut).to(DEVICE)
+        else:  # 真实 SP (默认)
+            t_set = torch.tensor(float(test_raw[gi+W, SP_IDX]), dtype=torch.float32, device=DEVICE)  # 真实 SP (当前值)
+            sp_fut = torch.FloatTensor(test_raw[gi+W:gi+W+H_OUT, SP_IDX]).to(DEVICE)  # 未来 SP 轨迹
+            if not SP_TRAJ:
+                sp_fut = None  # 标量目标模式: 用当前 SP
+        # 积分状态: 用上次累积值计算 SP 偏置 (等效 PI 的 I 项, 治静差; 2026-08-03)
+        t_set_eff = t_set - OFFSET_GAIN * d_est + INT_GAIN * int_state   # offset-free: 模型偏差补偿
+        t_set_eff_prev = float(t_set_eff)
         if planner == 'grad':
             OVERLAP_REF = a_init  # 旧计划引用 (重叠一致性用; 首块 None)
-            a_plan, Js = plan_grad(wm, win, t_set, a_last, a_init, sp_fut)
+            a_plan, Js = plan_grad(wm, win, t_set_eff, a_last, a_init, sp_fut)
         else:
             OVERLAP_REF = a_init
-            a_plan, Js = plan_cem(wm, win, t_set, a_last, sp_fut)
+            a_plan, Js = plan_cem(wm, win, t_set_eff, a_last, sp_fut)
         # WM 闭环: MPC 动作序列 → 预测 M_STEP 步温度
         with torch.no_grad():
             if H_PLAN < H_OUT:
@@ -298,6 +342,36 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
                 a_prev_ex = a_exec[j]
         else:
             a_exec = a_plan[:n_exec]
+        # 执行端因果移动平均 (滤高频驻波/锯齿, 保留低频趋势; 2026-08-03) — 与 inert 的区别: 不延迟趋势, 只砍锯齿
+        if EXEC_SMA > 1 and a_exec is not None:
+            w = EXEC_SMA
+            a_sm = []
+            for j in range(n_exec):
+                lo = max(0, j - w + 1)
+                a_sm.append(a_exec[lo:j + 1].mean(0))
+            a_exec = torch.stack(a_sm)
+        # 执行端卡尔曼滤波 (位置+速度, 跨块连续; 用户建议 2026-08-03) — 滤驻波且跟踪趋势斜坡
+        if EXEC_KF > 0:
+            q_vel, r = EXEC_KF, 1.0
+            F = np.array([[1.0, 1.0], [0.0, 1.0]])
+            H = np.array([1.0, 0.0]).reshape(1, 2)
+            a_kf = []
+            for j in range(n_exec):
+                z = a_plan[j].cpu().numpy()
+                row = []
+                for ch in range(2):
+                    st = kf_state[ch]
+                    x = F @ np.array([st['p'], st['v']])
+                    P = F @ st['P'] @ F.T + np.diag([0.01, q_vel])
+                    S = float(H @ P @ H.T + r)
+                    K = P @ H.T / S
+                    innov = z[ch] - float(H @ x)
+                    x = x + K.flatten() * innov
+                    P = (np.eye(2) - K @ H) @ P
+                    st['p'], st['v'], st['P'] = float(x[0]), float(x[1]), P
+                    row.append(st['p'])
+                a_kf.append(row)
+            a_exec = torch.FloatTensor(a_kf).to(DEVICE)
         # PID 参考: 真实动作 + WM 闭环预测 (同一扰动世界, 公平协议)
         with torch.no_grad():
             a_pid_full = torch.FloatTensor(test_raw[gi:gi+H_OUT, VALVE_IDX]).unsqueeze(0).to(DEVICE)
@@ -336,11 +410,22 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42):
             win = torch.cat([win[:, 1:, :], next_row], 1)
             mpc_temp.append(y_j)
             pid_temp.append(pid_t)
-            t_set_traj.append(float(test_raw[gi_j + W, SP_IDX]) if BENCH_SP_EACH else t_set.item())
+            if sp_step is not None and BENCH_SP_EACH:  # 合成 SP 基准
+                t_j = (gi_j - i) * DT
+                t_set_traj.append(sp_base + (sp_step[1] if t_j >= sp_step[0] else 0.0))
+            else:
+                t_set_traj.append(float(test_raw[gi_j + W, SP_IDX]) if BENCH_SP_EACH else t_set.item())
             mpc_actions.append(a_exec[j].cpu().numpy())
             pid_actions.append(pid_a)
         a_last = a_exec[n_exec - 1]
         a_init = a_plan  # warm-start (整段继承)
+        # 积分状态更新: 块内每执行步累积偏差 (等效 PI 积分; 2026-08-03)
+        if INT_GAIN > 0 and t > 0:
+            for j in range(n_exec):
+                int_state = float(np.clip(int_state + (float(mpc_temp[-n_exec + j]) - t_set_eff_prev), -10.0, 10.0))
+        # offset-free 模型偏差估计: d = y_meas − y_pred = 扰动状态 (EMA; 2026-08-03)
+        if OFFSET_GAIN > 0:
+            d_est = float(OFFSET_EMA * d_state + (1 - OFFSET_EMA) * d_est)
         t += n_exec
     return (np.array(mpc_temp), np.array(pid_temp), np.array(t_set_traj),
             np.array(mpc_actions), np.array(pid_actions))
