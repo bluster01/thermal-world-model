@@ -45,6 +45,10 @@ LAMBDA1 = 0.1                # 动作变化惩罚 (平滑性)
 LAMBDA1_2ND = 0.0            # 二阶平滑 (Δ²a², 抑制驻波/standing wave; 2026-08-03)
 EXEC_SMA = int(os.environ.get('EXEC_SMA', '1'))  # 执行端因果移动平均窗 (>1: 滤驻波留趋势; 2026-08-03)
 EXEC_KF = float(os.environ.get('EXEC_KF', '0.0'))  # 执行端卡尔曼速度过程噪声 (>0: 启用; 用户建议 2026-08-03)
+EXEC_DEADZONE = float(os.environ.get('EXEC_DEADZONE', '0.0'))  # 执行死区 (变化<thr 保持; 2026-08-03)
+PID_KP = float(os.environ.get('PID_KP', '40.0'))   # 真 PID 增益 (阶跃对比用; 2026-08-03)
+PID_KI = float(os.environ.get('PID_KI', '8.0'))
+PID_KD = float(os.environ.get('PID_KD', '0.0'))
 OFFSET_GAIN = float(os.environ.get('OFFSET_GAIN', '0.0'))  # offset-free 补偿增益 (治模型系统偏差; 2026-08-03)
 OFFSET_EMA = float(os.environ.get('OFFSET_EMA', '0.3'))    # 偏差估计 EMA 系数
 LAMBDA2 = 0.05               # 动作偏离 last 惩罚
@@ -247,6 +251,51 @@ DIST_AMP = 0.3  # 过程扰动幅度 (°C/步 随机游走, 模拟负荷/燃料�
 def _dist_rng(seed):
     return np.random.default_rng(seed)
 
+def _simulate_pid(wm, track_idx, n_steps=250, sp_step=None, seed=42):
+    """真 PID 闭环 (2026-08-03): 每步 e=SP−T → u=Kp·e+Ki·∫e+Kd·de → WM 预测 → 回填
+    与 MPC 同一虚拟世界协议 (WM+扰动), 公平对比阶跃响应控制参数"""
+    np.random.seed(seed + track_idx)
+    i = int(track_idx)
+    rng = _dist_rng(seed + track_idx) if DIST_AMP > 0 else None
+    d_state = 0.0
+    win = torch.FloatTensor(test_raw[i:i+W]).unsqueeze(0).to(DEVICE)
+    sp_base = float(test_raw[i+W-1, SP_IDX]) if sp_step is not None else None
+    pid_I, pid_e_prev = 0.0, 0.0
+    a_cur = float(test_raw[i+W-1, VALVE_IDX[1]])
+    mpc_temp, pid_temp, t_set_traj, mpc_actions = [], [], [], []
+    for t in range(n_steps):
+        gi = i + t
+        if gi + W + 1 >= len(test_raw): break
+        sp_now = float(test_raw[gi+W, SP_IDX])
+        if sp_step is not None:
+            sp_now = sp_base + (sp_step[1] if t * DT >= sp_step[0] else 0.0)
+        y_meas = float(win[0, -1, TARGET_IDX])
+        e = sp_now - y_meas
+        pid_I = float(np.clip(pid_I + e * DT, -300.0, 300.0))
+        u = PID_KP * e + PID_KI * pid_I + PID_KD * (e - pid_e_prev) / DT
+        pid_e_prev = e
+        a_cur = float(np.clip(a_cur + 0.5 * (u - a_cur), 0.0, 45.0))  # 一阶惯性执行 (阀门实际速率)
+        a_full = torch.full((1, H_OUT * 2), float(test_raw[gi+W-1, VALVE_IDX[0]]), device=DEVICE)
+        a_full[0, 1::2] = a_cur
+        with torch.no_grad():
+            if getattr(wm, 'use_sp', False):
+                mu, _ = wm(win, a_full, torch.FloatTensor([sp_now] * H_OUT).unsqueeze(0).to(DEVICE))
+            else:
+                mu, _ = wm(win, a_full)
+        y_j = float(mu[0, 0])
+        if rng is not None:
+            d_state = 0.9 * d_state + rng.normal(0, DIST_AMP)
+            y_j = y_j + d_state
+        next_row = torch.FloatTensor(test_raw[gi+W]).unsqueeze(0).unsqueeze(0).to(DEVICE)
+        next_row[0, 0, TARGET_IDX] = y_j
+        win = torch.cat([win[:, 1:, :], next_row], 1)
+        mpc_temp.append(y_j)
+        pid_temp.append(float(test_raw[gi+W, TARGET_IDX]))
+        t_set_traj.append(sp_now)
+        mpc_actions.append(np.array([a_full[0, 0].item(), a_cur]))
+    return (np.array(mpc_temp), np.array(pid_temp), np.array(t_set_traj),
+            np.array(mpc_actions), np.zeros((len(mpc_temp), 2)))
+
 def simulate(wm, track_idx, planner, n_steps=120, seed=42, sp_step=None):
     """反事实仿真: 每步策略动作 → WM 闭环预测温度 → 窗口推进 (receding horizon)
     协议 (plan.md §2.1): PID 组=真实阀位→真实温度(基准); WM-MPC 组=MPC 动作→WM 预测温度。
@@ -342,14 +391,6 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42, sp_step=None):
                 a_prev_ex = a_exec[j]
         else:
             a_exec = a_plan[:n_exec]
-        # 执行端因果移动平均 (滤高频驻波/锯齿, 保留低频趋势; 2026-08-03) — 与 inert 的区别: 不延迟趋势, 只砍锯齿
-        if EXEC_SMA > 1 and a_exec is not None:
-            w = EXEC_SMA
-            a_sm = []
-            for j in range(n_exec):
-                lo = max(0, j - w + 1)
-                a_sm.append(a_exec[lo:j + 1].mean(0))
-            a_exec = torch.stack(a_sm)
         # 执行端卡尔曼滤波 (位置+速度, 跨块连续; 用户建议 2026-08-03) — 滤驻波且跟踪趋势斜坡
         if EXEC_KF > 0:
             q_vel, r = EXEC_KF, 1.0
@@ -372,6 +413,25 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42, sp_step=None):
                     row.append(st['p'])
                 a_kf.append(row)
             a_exec = torch.FloatTensor(a_kf).to(DEVICE)
+        # 执行端因果移动平均 (2026-08-03; KF之后: 测残余锯齿是否还需SMA — 理论上滞后>收益)
+        if EXEC_SMA > 1 and a_exec is not None:
+            w = EXEC_SMA
+            a_sm = []
+            for j in range(n_exec):
+                lo = max(0, j - w + 1)
+                a_sm.append(a_exec[lo:j + 1].mean(0))
+            a_exec = torch.stack(a_sm)
+        # 死区: 相对上一执行动作变化 < 阈值 → 保持 (抑制残余锯齿; 2026-08-03)
+        if EXEC_DEADZONE > 0:
+            a_dz_ref = a_last
+            a_dz = []
+            for j in range(n_exec):
+                if torch.abs(a_exec[j] - a_dz_ref).max() < EXEC_DEADZONE:
+                    a_dz.append(a_dz_ref)
+                else:
+                    a_dz.append(a_exec[j])
+                    a_dz_ref = a_exec[j]
+            a_exec = torch.stack(a_dz)
         # PID 参考: 真实动作 + WM 闭环预测 (同一扰动世界, 公平协议)
         with torch.no_grad():
             a_pid_full = torch.FloatTensor(test_raw[gi:gi+H_OUT, VALVE_IDX]).unsqueeze(0).to(DEVICE)
