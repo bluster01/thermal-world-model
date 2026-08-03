@@ -12,11 +12,11 @@ plt.rcParams.update({'font.size': 11, 'axes.grid': True, 'grid.alpha': 0.3,
                      'axes.spines.top': False, 'axes.spines.right': False,
                      'figure.dpi': 150})
 
-# ============ Fig 1: H_PLAN sweep ============
+# ============ Fig 1: H_PLAN sweep (修正版: exp_059c 完整120步) ============
 H = list(range(1, 19))
 rmse, iae, itae, tv, jump, ovt = [], [], [], [], [], []
 for h in H:
-    d = json.load(open(f'results/exp_059b_hplan_newbench/h{h}.json'))
+    d = json.load(open(f'results/exp_059c_hplan_fixed/h{h}.json'))
     a = d['agg']
     rmse.append(a['rmse_mpc']); iae.append(a['iae_mpc']); itae.append(a['itae_mpc'])
     tv.append(a['act_tv_mpc']); jump.append(a['jump_mean']); ovt.append(a['overtemp_int_mpc'])
