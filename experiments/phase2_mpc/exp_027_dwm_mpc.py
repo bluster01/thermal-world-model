@@ -46,6 +46,10 @@ LAMBDA2 = 0.05               # 动作偏离 last 惩罚
 LAMBDA3 = 0.1                # 重叠一致性惩罚 (FIX_MODE='overlap': 新计划头部偏离旧计划尾部)
 OVERLAP_REF = None           # 旧计划引用 (simulate 每次重规划前设置; 首块 None)
 HARD_DELTA = 0.0             # 边界硬约束幅值 (与 FIX_MODE 独立, 支持 overlap+hard 组合; 0=关)
+RISK_LAMBDA = 0.0            # 风险敏感代价权重: J += λ·Σ relu(CVaR_α(超温尾部)−T_MAX)² (0=关)
+CVAR_ALPHA = 0.95            # CVaR 分位 (正态假设: k_α = φ(Φ⁻¹(α))/(1−α))
+CVAR_K = 2.0627              # α=0.95 → k=2.0627 (φ(1.6449)/0.05)
+RISK_SIGMA_ADD = 0.0         # 额外扰动不确定性叠加: σ_total=√(σ_wm²+σ_add²) (扰动世界必须加, 否则风险项看不见扰动)
 N_CEM_SAMPLES = 200          # CEM 采样数
 N_CEM_ELITE = 20             # 精英数
 CEM_ITERS = 5
@@ -73,7 +77,7 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
         a_full = torch.cat([a_seq, tail], 0)
     else:
         a_full = a_seq[:H_OUT]
-    mu, _ = wm(x_hist, a_full.reshape(1, -1))
+    mu, lv = wm(x_hist, a_full.reshape(1, -1))
     mu = mu[0, :H_PLAN]                       # [H] 单目标
     # 目标: 标量 t_set (默认) 或未来 SP 轨迹 (方案1: SP 前馈目标)
     if sp_fut is not None:
@@ -82,6 +86,15 @@ def build_objective(wm, x_hist, a_seq, t_set, a_last, sp_fut=None):
         target = t_set
     err = (mu - target) ** 2
     J = (w * err).sum() / H_PLAN
+    # 风险敏感项: CVaR_α 超温尾部 (概率 WM 的 aleatoric σ, 正态假设)
+    #   CVaR_t = mu_t + k_α·σ_t; 风险 = relu(CVaR_t − T_MAX)² — 超温尾部概率进规划目标
+    if RISK_LAMBDA > 0 and lv is not None:
+        sig = torch.exp(lv[0, :H_PLAN] * 0.5)          # 物理空间 σ (denorm_out 返回 lv=2logσ)
+        if RISK_SIGMA_ADD > 0:                          # 扰动方差叠加 (扰动世界的总不确定性)
+            sig = torch.sqrt(sig ** 2 + RISK_SIGMA_ADD ** 2)
+        cvar = mu + CVAR_K * sig
+        risk = F.relu(cvar - T_MAX)
+        J = J + RISK_LAMBDA * (risk ** 2).sum()
     # 终端价值 (启发式 T1)
     J = J + ALPHA * err[-1]
     # 平滑 + 偏离
@@ -138,7 +151,7 @@ def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last, sp_fut=None):
     else:
         a_full = a_seqs[:, :H_OUT, :]
     x_rep = x_hist.repeat(N, 1, 1)
-    mu, _ = wm(x_rep, a_full.reshape(N, -1))
+    mu, lv = wm(x_rep, a_full.reshape(N, -1))
     mu = mu[:, :H_PLAN]
     if sp_fut is not None:
         target = sp_fut[:H_PLAN]
@@ -146,6 +159,11 @@ def build_objective_batch(wm, x_hist, a_seqs, t_set, a_last, sp_fut=None):
         target = t_set
     err = (mu - target) ** 2
     J = (w * err).sum(1) / H_PLAN
+    if RISK_LAMBDA > 0 and lv is not None:  # CEM 路径同款风险项
+        sig = torch.exp(lv[:, :H_PLAN] * 0.5)
+        cvar = mu + CVAR_K * sig
+        risk = F.relu(cvar - T_MAX)
+        J = J + RISK_LAMBDA * (risk ** 2).sum(1)
     J = J + ALPHA * err[:, -1]
     if H_PLAN > 1:
         J = J + LAMBDA1 * ((a_seqs[:, 1:] - a_seqs[:, :-1]) ** 2).sum((1, 2))
@@ -312,6 +330,13 @@ def metrics(mpc_t, pid_t, t_set_traj, mpc_a, pid_a):
     # 超温 (>575)
     m['overtemp_mpc'] = int((mpc_t > T_MAX).sum())
     m['overtemp_pid'] = int((pid_t > T_MAX).sum())
+    # 积分指标 (dx=1步=10s; 单位 °C·10s) — 论文补充指标 (IAE/ITAE/超温积分)
+    m['iae_mpc'] = float(np.trapz(np.abs(mpc_t - t_set_traj)))
+    m['iae_pid'] = float(np.trapz(np.abs(pid_t - t_set_traj)))
+    m['itae_mpc'] = float(np.trapz(np.arange(len(mpc_t)) * np.abs(mpc_t - t_set_traj)))
+    m['itae_pid'] = float(np.trapz(np.arange(len(pid_t)) * np.abs(pid_t - t_set_traj)))
+    m['overtemp_int_mpc'] = float(np.trapz(np.maximum(mpc_t - T_MAX, 0.0)))
+    m['overtemp_int_pid'] = float(np.trapz(np.maximum(pid_t - T_MAX, 0.0)))
     return m
 
 
