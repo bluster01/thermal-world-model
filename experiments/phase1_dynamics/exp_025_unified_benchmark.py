@@ -567,14 +567,16 @@ def eval_sigma_calib(model, raw, n=300):
 
 
 def main():
-    np.random.seed(42); torch.manual_seed(42)  # 训练固定 seed (公平性)
+    SEED = int(os.environ.get('TRAIN_SEED', '42'))  # 训练 seed (2026-08-04: 多seed支持, 默认42不变)
+    np.random.seed(SEED); torch.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
     model = build_model(MODEL_ID).to(DEVICE)
     prob = model.probabilistic
     tr, va, te = get_data(MODEL_ID)
-    print(f"Config: {MODEL_ID} | Params: {sum(p.numel() for p in model.parameters()):,} | "
+    print(f"Config: {MODEL_ID} seed={SEED} | Params: {sum(p.numel() for p in model.parameters()):,} | "
           f"probabilistic={prob} | RevIN={getattr(model,'use_revin',False)}")
 
-    exp_dir = f"results/exp_025_{MODEL_ID}"
+    exp_dir = f"results/exp_025_{MODEL_ID}" + ("" if SEED == 42 else f"_s{SEED}")
     os.makedirs(f"{exp_dir}/checkpoints", exist_ok=True)
 
     crit = BetaNLLLoss(beta=BETA) if prob else MSELoss_()
