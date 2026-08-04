@@ -214,7 +214,107 @@
 
 ---
 
-## E. 引用与 Phase 1 结论的对应关系
+## E. Phase 2 叙事重构新增引用 (objective mismatch + 工业WM定位)
+
+### 14. Objective Mismatch in Model-based RL
+- **标题**: Objective Mismatch in Model-based Reinforcement Learning
+- **作者**: Alex Lambert, Amos Storkey, Joao Messias
+- **会议**: ICML 2020 Workshop on Object-Oriented Learning
+- **arXiv**: 2102.03023
+- **引用理由**: §IV/V 核心理论框架 — 预测精度 ≠ 控制效用; 世界模型训练目标 (一步预测似然) 与下游目标 (闭环控制性能) 不相关
+- **BibTeX**:
+```bibtex
+@inproceedings{lambert2020mismatch,
+  title={Objective Mismatch in Model-based Reinforcement Learning},
+  author={Lambert, Alex and Storkey, Amos and Messias, Joao},
+  booktitle={ICML Workshop on Object-Oriented Learning},
+  year={2020}
+}
+```
+
+### 15. Predicting Closed-Loop Performance of Latent World Models
+- **标题**: Predicting Closed-Loop Performance of Latent World Models: Offline Checkpoint Selection for MPC and Model-Based RL Under Non-Markovian Rewards in LunarLander
+- **arXiv**: 2607.01736 (2026)
+- **引用理由**: §V — 开环预测精度与闭环控制性能脱节的实证; validation loss 持续改善但闭环性能已崩溃
+- **BibTeX**:
+```bibtex
+@article{2026closedloop,
+  title={Predicting Closed-Loop Performance of Latent World Models},
+  journal={arXiv preprint arXiv:2607.01736},
+  year={2026}
+}
+```
+
+### 16. Closing the Train-Test Gap in World Models
+- **标题**: Closing the Train-Test Gap in World Models for Gradient-Based Planning
+- **arXiv**: 2512.09929 (2025)
+- **引用理由**: §V — 训练数据 (运行员自然轨迹) vs 规划动作分布的差异; compounding error on out-of-distribution trajectories
+- **BibTeX**:
+```bibtex
+@article{2025traintest,
+  title={Closing the Train-Test Gap in World Models for Gradient-Based Planning},
+  journal={arXiv preprint arXiv:2512.09929},
+  year={2025}
+}
+```
+
+### 17. Actionable World Models for Industrial Process Control
+- **标题**: Learning Actionable World Models for Industrial Process Control
+- **会议**: IEEE SDS 2025
+- **arXiv**: 2503.01411
+- **引用理由**: §VI — 工业世界模型做预测+建议而非闭环控制的范式; JEPA + contrastive learning + disentangled representations; 注塑成型案例
+- **BibTeX**:
+```bibtex
+@inproceedings{2025actionable,
+  title={Learning Actionable World Models for Industrial Process Control},
+  booktitle={IEEE International Conference on System, Design and Service},
+  year={2025},
+  note={arXiv:2503.01411}
+}
+```
+
+### 18. How Should World Models Be Evaluated for Embodied Decision-Making
+- **标题**: How Should World Models Be Evaluated for Embodied Decision-Making? A Decision-Making-Centric Position
+- **arXiv**: 2606.15032 (2026)
+- **引用理由**: §V — L0-L7 评估阶梯 (视觉合理性→策略优化效用); 开环 vs 闭环评估; interventional action fidelity
+- **BibTeX**:
+```bibtex
+@article{2026eval,
+  title={How Should World Models Be Evaluated for Embodied Decision-Making?},
+  journal={arXiv preprint arXiv:2606.15032},
+  year={2026}
+}
+```
+
+### 19. Predictive but Not Plannable: RC-aux
+- **标题**: Predictive but Not Plannable: RC-aux for Latent World Models
+- **arXiv**: 2605.07278 (2026)
+- **引用理由**: §V — 预测准确 ≠ 可规划; 时空 mismatch (短程训练 vs 长程搜索); reachability-correction auxiliary objective
+- **BibTeX**:
+```bibtex
+@article{2026rcaux,
+  title={Predictive but Not Plannable: RC-aux for Latent World Models},
+  journal={arXiv preprint arXiv:2605.07278},
+  year={2026}
+}
+```
+
+### 20. Imagined Rollouts are Kinematic, Not Dynamic
+- **标题**: Imagined Rollouts are Kinematic, Not Dynamic: A Diagnosis of Long-Horizon World-Model Failure
+- **arXiv**: 2607.05966 (2026)
+- **引用理由**: §V — WM rollout 是运动学 (kinematic) 而非动力学 (dynamic); 长程 rollout 失败诊断; 摩擦不变性实验
+- **BibTeX**:
+```bibtex
+@article{2026kinematic,
+  title={Imagined Rollouts are Kinematic, Not Dynamic: A Diagnosis of Long-Horizon World-Model Failure},
+  journal={arXiv preprint arXiv:2607.05966},
+  year={2026}
+}
+```
+
+---
+
+## F. 引用与 Phase 1 结论的对应关系
 
 | Phase 1 结论 | 对应引用 | 消融/实验 |
 |---|---|---|
@@ -229,3 +329,10 @@
 | PETS 集成方法 | Chua et al. 2018 (PETS) | Phase 2: 3×M7+CEM |
 | 世界模型通用性 | Hafner et al. 2025 (DreamerV3) | 背景参考 |
 | 可微 MPC 框架 | Drgona et al. 2023 (Neuromancer) | 方法论参考 |
+| 预测精度≠控制效用 | Lambert et al. 2020 (Objective Mismatch) | §IV/V: S3 因果反演 + 闭环不显著 |
+| 开环≠闭环性能 | arXiv 2607.01736 (Closed-Loop Perf) | §V: validation loss 持续改善但闭环崩溃 |
+| 训练vs规划分布差异 | arXiv 2512.09929 (Train-Test Gap) | §V: 小幅动作正确, 大幅阶跃反演 |
+| 工业WM预测+建议范式 | arXiv 2503.01411 (Actionable WM) | §VI: 监督模式定位 |
+| WM评估阶梯 | arXiv 2606.15032 (WM Evaluation) | §V: L0-L7, 开环vs闭环 |
+| 预测≠可规划 | arXiv 2605.07278 (RC-aux) | §V: 时空mismatch |
+| WM rollout≠动力学 | arXiv 2607.05966 (Kinematic) | §V: 长程rollout失败 |

@@ -76,3 +76,86 @@
 3. **训练必须包含多步 rollout** — 不能只训一步预测
 4. **物理约束可嵌入训练** — 温度上下限、阀位速率
 5. **MPC 显式嵌入世界模型** — 不是分离的预测+优化
+
+---
+
+## 4. Objective Mismatch — 预测精度 ≠ 控制效用 (Phase 2 叙事重构新增)
+
+### 4.1 Lambert et al. 2020 — 理论框架
+
+**标题**: Objective Mismatch in Model-based Reinforcement Learning
+**arXiv**: 2102.03023
+
+- 世界模型训练目标 (一步预测似然) 与下游目标 (闭环控制性能) 不相关
+- 全局精确的模型既非充分也非必要; 任务局部精确即可
+- **本项目对应**: WM 开环 MAE 0.31°C (精度好), 但 S3 持续阶跃因果反演 (控制效用差) — 典型 objective mismatch
+
+### 4.2 Closed-Loop Performance Prediction — 实证
+
+**arXiv**: 2607.01736 (2026)
+
+- validation loss 和多步 RMSE 持续改善, 但闭环性能早已崩溃
+- 最强预测因子是 Reward Observability Fraction (ROF), 不是预测精度
+- **本项目对应**: 不能用开环 MAE 作为闭环 MPC 有效性的判据
+
+### 4.3 Train-Test Gap — 分布差异
+
+**arXiv**: 2512.09929 (2025)
+
+- 训练数据 = 专家/行为策略轨迹; 测试时 = 规划器产生的动作序列 → OOD
+- 规划轨迹的预测误差系统性高于专家轨迹
+- **本项目对应**: 训练数据 = 运行员自然操作; MPC 大幅阶跃超出分布 → 退化到共因方向; 小幅动作 (<10%) 在分布内 → 方向正确
+
+### 4.4 RC-aux — 预测准确 ≠ 可规划
+
+**arXiv**: 2605.07278 (2026)
+
+- 短程预测训练 vs 长程规划搜索 → 时空 mismatch
+- Euclidean 距离不反映有限步可达性
+- **本项目对应**: WM 短程预测好, 但长程 rollout (H=18) 下因果方向退化
+
+### 4.5 Kinematic Not Dynamic — rollout 诊断
+
+**arXiv**: 2607.05966 (2026)
+
+- WM imagined rollout 是运动学 (kinematic) 而非动力学 (dynamic)
+- 摩擦不变性: 物理响应随摩擦变化, WM rollout 不变
+- **本项目对应**: WM rollout 在大幅扰动下不反映真实物理响应
+
+### 4.6 WM Evaluation Ladder — 评估框架
+
+**arXiv**: 2606.15032 (2026)
+
+- L0-L7 评估阶梯: 视觉合理性 → 干预推理 → 策略评估 → 策略优化
+- 开环评估 (L1) vs 闭环评估 (L4): 很多 WM 开环强、闭环骤降
+- **本项目对应**: Phase 1 = L1-L2 (开环预测+因果敏感性); Phase 2 = L4 (闭环) 发现边界
+
+---
+
+## 5. 工业 WM 定位 — 预测+建议而非闭环控制 (Phase 2 叙事重构新增)
+
+### 5.1 Actionable World Models for Industrial Process Control
+
+**arXiv**: 2503.01411 (2025), IEEE SDS 2025
+
+- JEPA + contrastive learning 学习 action-aware 表示
+- 不做闭环控制, 而是: 预测动作后果 → 为操作员提供 control action 建议
+- 注塑成型案例: 80 样本训练, 实时调整控制参数
+- **本项目对应**: §25.6 转向"预测驱动+监督模式"的文献先例
+
+### 5.2 工业神经网络控制器现状
+
+**来源**: noga.es/en/blog/nn-controllers-real-industrial-deployments (2025)
+
+- 全球确认在真实工业系统上闭环运行的 NN 控制器 ≈ 10 个
+- Digital twin = 离线仿真, 不闭环; Soft sensor = 监督角色, 有时闭环
+- "MPC already works. The business case for NN control must compare against best-in-class MPC, not against a poorly tuned PID baseline."
+- **本项目对应**: WM 应定位为 digital twin / soft sensor 层 (预测+监督), 不是 NN controller 层
+
+### 5.3 Graph Spatiotemporal WM Rolling MPC (已有, 重新定位)
+
+**作者**: Junling Liu et al., Electronics 2026
+
+- 历史窗口 + 自回归展开 + 物理一致性约束 + MPC 显式嵌入
+- 24步预测 NRMSE=4.28%, 月运营成本降低 6.07%
+- **重新定位**: 从"我们的 MPC 也可以做到"变为"多能耦合场景的 WM-MPC 参考, 但火电主汽温动作通道弱因果, 需要不同策略"
