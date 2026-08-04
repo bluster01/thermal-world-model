@@ -98,6 +98,7 @@ def main():
     ap.add_argument('--costs', nargs='+', default=['a', 'b', 'c', 'd'])
     ap.add_argument('--no-dist', action='store_true', help='无扰动场景')
     ap.add_argument('--hybrid', action='store_true', help='附加 S1b: M5均值+M7σ 混合臂')
+    ap.add_argument('--hplan', type=int, default=10, help='H_PLAN (定稿 18, S2 结论)')
     args = ap.parse_args()
 
     n_tracks = 2 if args.smoke else N_TRACKS
@@ -132,7 +133,7 @@ def main():
                 continue
             arm = f"{mid}/cost_{cv}"
             rows = run_arm(arm, lambda m=mid, c=cost: MPCController(
-                wms[m], c, h_plan=H_PLAN, m_step=M_STEP),
+                wms[m], c, h_plan=args.hplan, m_step=M_STEP),
                 world, starts_by_seed, dist_on, n_steps)
             all_rows += rows
             summary[arm] = summarize(rows)
@@ -145,7 +146,7 @@ def main():
         cost = CostConfig('c', sigma_add=DIST_SIGMA if dist_on else 0.0)
         hyb = HybridWM(wms['M5'], wms['M7'])
         rows = run_arm('M5mu+M7sig/cost_c', lambda: MPCController(
-            hyb, cost, h_plan=H_PLAN, m_step=M_STEP),
+            hyb, cost, h_plan=args.hplan, m_step=M_STEP),
             world, starts_by_seed, dist_on, n_steps)
         all_rows += rows
         summary['M5mu+M7sig/cost_c'] = summarize(rows)
@@ -170,7 +171,7 @@ def main():
               f"→ {w['winner']} (p={w['p']:.2e})")
 
     out = dict(protocol=dict(world=WORLD_IDS, controllers=CONTROLLERS,
-                             h_plan=H_PLAN, m_step=M_STEP, n_steps=n_steps,
+                             h_plan=args.hplan, m_step=M_STEP, n_steps=n_steps,
                              dist=dict(on=dist_on, sigma=DIST_SIGMA, rho=DIST_RHO,
                                        mode='physical'),
                              start_seeds=seeds, n_tracks=n_tracks),
