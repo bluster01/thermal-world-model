@@ -29,3 +29,7 @@ Thumbs.db
 
 # Environment
 .env
+
+# 大文件不入库 (>100MB GitHub 上限)
+results/exp_071_rl_data/
+*.npz
