@@ -49,6 +49,13 @@ EXEC_DEADZONE = float(os.environ.get('EXEC_DEADZONE', '0.0'))  # 执行死区 (�
 PID_KP = float(os.environ.get('PID_KP', '40.0'))   # 真 PID 增益 (阶跃对比用; 2026-08-03)
 PID_KI = float(os.environ.get('PID_KI', '8.0'))
 PID_KD = float(os.environ.get('PID_KD', '0.0'))
+# ── 安全 MPC (2026-08-03, 现场投切边界必需): 状态密度检测 + PID 回退 ──
+SAFE_Z_THR = float(os.environ.get('SAFE_Z_THR', '0.0'))   # 触发回退的 z-score 阈值 (0=关)
+SAFE_HOLD = int(os.environ.get('SAFE_HOLD', '3'))         # 连续 N 块低置信才回退 (滞回)
+SAFE_RELEASE = int(os.environ.get('SAFE_RELEASE', '5'))   # 连续 M 块高置信才重新投 MPC
+SAFE_FEATS = [TARGET_IDX, SP_IDX, VALVE_IDX[0], VALVE_IDX[1]]  # 置信度特征
+DIST_MEAN = {}; DIST_STD = {}   # 全段分布统计 (数据加载后填充; 2026-08-03)
+SAFE_LOG = []                   # (t, score, feature, action_mode) 回退记录
 OFFSET_GAIN = float(os.environ.get('OFFSET_GAIN', '0.0'))  # offset-free 补偿增益 (治模型系统偏差; 2026-08-03)
 OFFSET_EMA = float(os.environ.get('OFFSET_EMA', '0.3'))    # 偏差估计 EMA 系数
 LAMBDA2 = 0.05               # 动作偏离 last 惩罚
@@ -251,6 +258,17 @@ DIST_AMP = 0.3  # 过程扰动幅度 (°C/步 随机游走, 模拟负荷/燃料�
 def _dist_rng(seed):
     return np.random.default_rng(seed)
 
+def _safe_score(win_np):
+    """状态置信度: 窗口关键特征均值 vs 全段分布的 z-score 最大绝对值
+    返回 (score, 最差特征名) — 现场投切边界判定 (2026-08-03)"""
+    zs = {}
+    for fi in SAFE_FEATS:
+        m = float(np.mean(win_np[:, fi])); s = float(np.std(win_np[:, fi]))
+        zm = (m - DIST_MEAN[fi]) / (DIST_STD[fi] + 1e-8)
+        zs[fi] = abs(zm)
+    fi_worst = max(zs, key=zs.get)
+    return zs[fi_worst], fi_worst
+
 def _simulate_pid(wm, track_idx, n_steps=250, sp_step=None, seed=42):
     """真 PID 闭环 (2026-08-03): 每步 e=SP−T → u=Kp·e+Ki·∫e+Kd·de → WM 预测 → 回填
     与 MPC 同一虚拟世界协议 (WM+扰动), 公平对比阶跃响应控制参数"""
@@ -328,6 +346,12 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42, sp_step=None):
     a0 = test_raw[i+W-1, VALVE_IDX]
     kf_state = [{'p': float(a0[ch]), 'v': 0.0, 'P': np.eye(2)} for ch in range(2)]
     d_est = 0.0   # offset-free 模型偏差估计 (d = y_meas − y_pred, EMA; 2026-08-03)
+    # 安全 MPC 状态 (2026-08-03)
+    if not DIST_MEAN:
+        for fi in SAFE_FEATS:
+            DIST_MEAN[fi] = float(np.mean(test_raw[:, fi]))
+            DIST_STD[fi] = float(np.std(test_raw[:, fi]))
+    low_cnt = high_cnt = 0; safe_active = False; safe_I = 0.0
     t = 0
     while t < n_steps:  # 2026-08-03 修正: 原 for t in range(0,n_steps,M_STEP) 固定20块, H_PLAN<M_STEP 时 n_exec 截断导致轨迹变短 (H=1→20步)
         gi = i + t
@@ -352,10 +376,32 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42, sp_step=None):
         # 积分状态: 用上次累积值计算 SP 偏置 (等效 PI 的 I 项, 治静差; 2026-08-03)
         t_set_eff = t_set - OFFSET_GAIN * d_est + INT_GAIN * int_state   # offset-free: 模型偏差补偿
         t_set_eff_prev = float(t_set_eff)
-        if planner == 'grad':
+        # ── 安全 MPC: 状态置信度检测 → PID 回退 (滞回; 2026-08-03 现场投切边界) ──
+        safe_fallback = False
+        if SAFE_Z_THR >= 0:
+            score, fi_w = _safe_score(test_raw[gi:gi+W])
+            if SAFE_Z_THR > 0:
+                if score > SAFE_Z_THR:
+                    low_cnt += 1; high_cnt = 0
+                else:
+                    high_cnt += 1; low_cnt = 0
+                if low_cnt >= SAFE_HOLD: safe_active = True
+                if high_cnt >= SAFE_RELEASE: safe_active = False
+            SAFE_LOG.append((t, score, fi_w, 'SAFE' if safe_active else 'MPC'))
+            if safe_active:
+                y_m = float(win[0, -1, TARGET_IDX])
+                e_s = float(t_set_eff) - y_m
+                safe_I = float(np.clip(safe_I + e_s * DT, -300.0, 300.0))
+                u_s = float(np.clip(PID_KP * e_s + PID_KI * safe_I, 0.0, 45.0))
+                # 平滑接管: 相对上一执行动作限幅 (同 MPC 的 HARD_DELTA), 避免跳变触发模型失真
+                u_s = float(np.clip(u_s, float(a_last[1]) - 5.0, float(a_last[1]) + 5.0))
+                a_exec = torch.stack([torch.full((n_exec,), float(a_last[0]), device=DEVICE),
+                                      torch.full((n_exec,), u_s, device=DEVICE)], 1)
+                safe_fallback = True
+        if planner == 'grad' and not safe_fallback:
             OVERLAP_REF = a_init  # 旧计划引用 (重叠一致性用; 首块 None)
             a_plan, Js = plan_grad(wm, win, t_set_eff, a_last, a_init, sp_fut)
-        else:
+        elif not safe_fallback:
             OVERLAP_REF = a_init
             a_plan, Js = plan_cem(wm, win, t_set_eff, a_last, sp_fut)
         # WM 闭环: MPC 动作序列 → 预测 M_STEP 步温度
@@ -392,7 +438,7 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42, sp_step=None):
         else:
             a_exec = a_plan[:n_exec]
         # 执行端卡尔曼滤波 (位置+速度, 跨块连续; 用户建议 2026-08-03) — 滤驻波且跟踪趋势斜坡
-        if EXEC_KF > 0:
+        if EXEC_KF > 0 and not safe_fallback:
             q_vel, r = EXEC_KF, 1.0
             F = np.array([[1.0, 1.0], [0.0, 1.0]])
             H = np.array([1.0, 0.0]).reshape(1, 2)
@@ -414,7 +460,7 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42, sp_step=None):
                 a_kf.append(row)
             a_exec = torch.FloatTensor(a_kf).to(DEVICE)
         # 执行端因果移动平均 (2026-08-03; KF之后: 测残余锯齿是否还需SMA — 理论上滞后>收益)
-        if EXEC_SMA > 1 and a_exec is not None:
+        if EXEC_SMA > 1 and a_exec is not None and not safe_fallback:
             w = EXEC_SMA
             a_sm = []
             for j in range(n_exec):
@@ -422,7 +468,7 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42, sp_step=None):
                 a_sm.append(a_exec[lo:j + 1].mean(0))
             a_exec = torch.stack(a_sm)
         # 死区: 相对上一执行动作变化 < 阈值 → 保持 (抑制残余锯齿; 2026-08-03)
-        if EXEC_DEADZONE > 0:
+        if EXEC_DEADZONE > 0 and not safe_fallback:
             a_dz_ref = a_last
             a_dz = []
             for j in range(n_exec):
@@ -440,8 +486,10 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42, sp_step=None):
             else:
                 mu_pid, _ = wm(win, a_pid_full.reshape(1, -1))
         # 执行≠计划时: 用实际执行动作重算 WM 温度 (闭环一致性, 否则评测的是未执行的动作)
-        if blended or FIX_MODE.startswith('inert'):
-            if H_PLAN < H_OUT:
+        if blended or FIX_MODE.startswith('inert') or safe_fallback:
+            if safe_fallback:  # 回退块: 全序列用回退动作 (不混旧规划残留)
+                a_full_exec = torch.cat([a_exec, a_exec[-1:].repeat(H_OUT - n_exec, 1)], 0)
+            elif H_PLAN < H_OUT:
                 tail = a_plan[-1:].repeat(H_OUT - H_PLAN, 1)
                 a_full_exec = torch.cat([a_exec, a_plan[n_exec:], tail], 0)
             else:
@@ -478,7 +526,7 @@ def simulate(wm, track_idx, planner, n_steps=120, seed=42, sp_step=None):
             mpc_actions.append(a_exec[j].cpu().numpy())
             pid_actions.append(pid_a)
         a_last = a_exec[n_exec - 1]
-        a_init = a_plan  # warm-start (整段继承)
+        a_init = a_plan if not safe_fallback else None  # warm-start (整段继承; safe回退无规划)
         # 积分状态更新: 块内每执行步累积偏差 (等效 PI 积分; 2026-08-03)
         if INT_GAIN > 0 and t > 0:
             for j in range(n_exec):
