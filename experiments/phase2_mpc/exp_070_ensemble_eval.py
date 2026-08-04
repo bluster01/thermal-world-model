@@ -22,7 +22,7 @@ from experiments.phase1_dynamics import exp_025_unified_benchmark as E
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 SMOKE = '--smoke' in sys.argv
-OUT_DIR = 'results/exp_070_ensemble'
+OUT_DIR = os.environ.get('OUT_DIR', 'results/exp_070_ensemble')
 os.makedirs(OUT_DIR, exist_ok=True)
 CK_DIR = 'results/exp_069_ensemble/checkpoints'
 

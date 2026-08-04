@@ -20,7 +20,7 @@ sys.argv = _argv
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 SMOKE = '--smoke' in sys.argv
-OUT_DIR = 'results/exp_074_det_wm'
+OUT_DIR = os.environ.get('OUT_DIR', 'results/exp_074_det_wm')
 os.makedirs(OUT_DIR, exist_ok=True)
 
 def load_m5():

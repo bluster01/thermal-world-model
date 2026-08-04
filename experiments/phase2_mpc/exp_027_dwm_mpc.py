@@ -41,7 +41,7 @@ T_SET_MODE = 'real_sp'     # 温度目标: 数据中真实设定值 (二级减�
 SP_IDX = 36                # 数据列: 二级减温调节阀设定 (主汽温 SP, SP−PV 均值+0.49°C 验证)
 ETA = 0.05                   # 梯度规划步长
 E_STEPS = 30                 # 内层梯度步数
-LAMBDA1 = 0.1                # 动作变化惩罚 (平滑性)
+LAMBDA1 = float(os.environ.get('LAMBDA1', '0.1'))   # 动作变化惩罚 (平滑性) — env可覆盖 (2026-08-04 最终配置=0)
 LAMBDA1_2ND = 0.0            # 二阶平滑 (Δ²a², 抑制驻波/standing wave; 2026-08-03)
 EXEC_SMA = int(os.environ.get('EXEC_SMA', '1'))  # 执行端因果移动平均窗 (>1: 滤驻波留趋势; 2026-08-03)
 EXEC_KF = float(os.environ.get('EXEC_KF', '0.0'))  # 执行端卡尔曼速度过程噪声 (>0: 启用; 用户建议 2026-08-03)
@@ -58,7 +58,7 @@ DIST_MEAN = {}; DIST_STD = {}   # 全段分布统计 (数据加载后填充; 202
 SAFE_LOG = []                   # (t, score, feature, action_mode) 回退记录
 OFFSET_GAIN = float(os.environ.get('OFFSET_GAIN', '0.0'))  # offset-free 补偿增益 (治模型系统偏差; 2026-08-03)
 OFFSET_EMA = float(os.environ.get('OFFSET_EMA', '0.3'))    # 偏差估计 EMA 系数
-LAMBDA2 = 0.05               # 动作偏离 last 惩罚
+LAMBDA2 = float(os.environ.get('LAMBDA2', '0.05'))   # 动作偏离 last 惩罚 — env可覆盖 (2026-08-04 最终配置=0)
 LAMBDA3 = 0.1                # 重叠一致性惩罚 (FIX_MODE='overlap': 新计划头部偏离旧计划尾部)
 OVERLAP_REF = None           # 旧计划引用 (simulate 每次重规划前设置; 首块 None)
 HARD_DELTA = 0.0             # 边界硬约束幅值 (与 FIX_MODE 独立, 支持 overlap+hard 组合; 0=关)
