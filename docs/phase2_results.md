@@ -1,5 +1,23 @@
 # Phase 2 Results — DWM-MPC (论文素材汇总 v2, 多步执行修正版)
 
+> ## ⛔ DEPRECATED (2026-08-04) — 本文档所有闭环数值不可作为论文依据
+>
+> 主协议 `exp_027_dwm_mpc.py` 的 `simulate()` 存在 4 项结构性缺陷, 使 MPC 获得三重不公平优势:
+> **P0-A** PID 组为历史阀位录像回放而非反馈控制 (看不见扰动) ·
+> **P0-B** 用被测世界模型自评分 (M5/M7 在各自世界里跑, RMSE 不可比) ·
+> **P0-C** 扰动为输出端标量偏置而非物理通道注入 (人为放大线性 MPC 崩溃) ·
+> **P0-D** 窗口推进未回填实际执行阀位。
+>
+> 受影响结论包括但不限于: "MPC vs PID −21.1%"、"主模型切换 M5 (exp_094)"、
+> "线性 MPC 扰动崩溃 4.555"、全部 H_PLAN / M_STEP / 平滑策略扫描。
+>
+> - 缺陷分析与修复: `docs/supplementary_experiments.md` (前置章节)
+> - 结论冲突全景: `docs/experiment_audit.md`
+> - 新协议实现: `experiments/phase2_mpc/eval_protocol.py` (35 项回归测试)
+> - 归档数据: `archive/deprecated_protocol/`
+>
+> 本文档保留作为**方法论演进记录**, 重跑 S1–S7 后另立新结果文档。
+
 **模型**: M7 (Direct WM, 849K params, RevIN+PerVarTCN+VarAttn+动作concat, β=−0.3)
 **数据**: 伊敏6号机 10s采样, 主汽温, 40维
 **执行协议**: 多步执行 M_STEP=6 (60s 动作段, 对齐动作效应时标 60-120s)
