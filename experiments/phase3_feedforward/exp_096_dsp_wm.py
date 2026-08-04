@@ -8,7 +8,7 @@ M5 结构复用: DirectWM(18步, prob=False, action_dim=1→act_in=H_OUT)
 训练 ~30min (800K 样本, MSE loss), 同 exp_025 pipeline
 用法: python exp_096_dsp_wm.py [--smoke]
 """
-import os, sys, time
+import os, sys, time, json
 import numpy as np
 import torch, torch.nn as nn
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -51,6 +51,7 @@ opt = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
 N_TRAIN = len(train_raw)
 
 t0 = time.time()
+best_mae, best_ep, curve = None, None, []
 for ep in range(NEPOCH):
     model.train()
     idxs = np.random.permutation(N_TRAIN - W - H_OUT)
@@ -79,9 +80,17 @@ for ep in range(NEPOCH):
             mu, _ = model(xh, af)
             tt = test_raw[i+W:i+W+H_OUT, E.TARGET_IDX]
             te_errs.append(np.abs(mu[0].cpu().numpy() - tt).mean())
-    print(f"  ep {ep+1:3d} | train loss {losses/n:.4f} | test MAE {np.mean(te_errs):.4f}°C | {time.time()-t0:.0f}s")
+    te_mae = float(np.mean(te_errs))
+    print(f"  ep {ep+1:3d} | train loss {losses/n:.4f} | test MAE {te_mae:.4f}°C | {time.time()-t0:.0f}s")
+    # 保存 best test MAE 的 checkpoint (best_model.pth 名实相符)
+    if best_mae is None or te_mae < best_mae:
+        best_mae, best_ep = te_mae, ep + 1
+        os.makedirs('results/exp_096_dsp_wm/checkpoints', exist_ok=True)
+        torch.save({'model_state_dict': model.state_dict(), 'epoch': ep + 1},
+                   'results/exp_096_dsp_wm/checkpoints/best_model.pth')
+    curve.append((ep + 1, losses / n, te_mae))
 
-os.makedirs('results/exp_096_dsp_wm/checkpoints', exist_ok=True)
-torch.save({'model_state_dict': model.state_dict(), 'epoch': NEPOCH},
-           'results/exp_096_dsp_wm/checkpoints/best_model.pth')
-print(f"\n[done] saved results/exp_096_dsp_wm/checkpoints/best_model.pth")
+os.makedirs('results/exp_096_dsp_wm', exist_ok=True)
+with open('results/exp_096_dsp_wm/metrics.json', 'w') as f:
+    json.dump({'best_epoch': best_ep, 'best_test_mae': best_mae, 'curve': curve}, f, indent=2)
+print(f"\n[done] best ep {best_ep} MAE {best_mae:.4f}°C | saved results/exp_096_dsp_wm/checkpoints/best_model.pth + metrics.json")
