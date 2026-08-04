@@ -39,7 +39,7 @@ for _p in (_ROOT, os.path.join(_ROOT, 'src')):
 
 import config as cfg  # noqa: E402
 from experiments.phase1_dynamics.exp_025_unified_benchmark import (  # noqa: E402
-    build_model, test_raw, VALVE_IDX, TARGET_IDX, H_OUT, NUMERIC_COLS)
+    TimeXerWM, build_model, test_raw, VALVE_IDX, TARGET_IDX, H_OUT, NUMERIC_COLS)
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -162,7 +162,10 @@ class WorldSim:
         a_flat = a_future.reshape(1, -1)
         outs = []
         for m in self.models:
-            if getattr(m, 'use_sp', False) and sp_fut is not None:
+            # TimeXerWM 期望 [B,H,2] (forward 内 permute(0,2,1)); DirectWM 系内部 reshape(B,-1) 两者兼容
+            if isinstance(m, TimeXerWM):
+                mu, _ = m(win, a_future.unsqueeze(0))
+            elif getattr(m, 'use_sp', False) and sp_fut is not None:
                 mu, _ = m(win, a_flat, sp_fut.unsqueeze(0))
             else:
                 mu, _ = m(win, a_flat)
