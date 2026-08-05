@@ -196,9 +196,10 @@ L5 H/权重解耦 2×2 × 5 seeds            1-2 天 GPU
 |------|------|------|
 | `experiments/phase3_feedforward/causal_eval.py` | 共享模块: `build_action` / 事件筛选 / CEM 匹配 / DiD / L2 指标 / L3 探针 | 已建 |
 | `experiments/phase3_feedforward/exp_103_protocol_recheck.py` | P0.2 往返测试 + 修正编码重测 4 个 ckpt (无需重训) | 已建 |
+| `experiments/phase3_feedforward/causal_arch.py` | §6 架构: `ResidualCausalWM` (A1/A2/A3/C1) + `TimeXerCausalWM` (B1) + `g(x,0)=0` 不变量自检 | 已建 |
+| `experiments/phase3_feedforward/exp_106_causal_arch.py` | §6 训练/消融, 7 变体 × 多 seed, 双 ckpt | 已建 |
 | `exp_104_did_groundtruth.py` | L1 DiD 真值 + ceiling, 落 `results/cfe_groundtruth/` | 待建 |
 | `exp_105_leakage_probe.py` | L3 LEAK / PLACEBO / DO_vs_SEE | 待建 |
-| `exp_106_injection_ablation.py` | L4 A0-A6 因子化 | 待建 |
 
 ---
 
@@ -239,3 +240,72 @@ a = CE.build_action(raw41, s, W, H, I_DSP, 0.0)     # SP 保持基线
 3. `experiment_audit.md` — 新增条目: 训练/评测动作编码不一致 (跨 9 个脚本)
 4. `docs/phase3_sandbox_design.md` — 沙盒精度/消融判定 (MAE 0.301, 消融 Δ≈0) 的评测通路同样受影响, 需标注
 5. commit `dcd4d2c` 的"主模型定案 = M9DSP H=60"与 `b31a9e9` 的 case 图 v3 — 需在重测后确认或撤回
+
+---
+
+## 6. 强动作因果架构候选
+
+实现: `experiments/phase3_feedforward/causal_arch.py`, 训练脚本 `exp_106_causal_arch.py`
+
+### 6.1 为何现有架构必然弱因果
+
+| 缺陷 | 位置 | 机制 |
+|------|------|------|
+| **1 动作旁路** | `exp_025.TimeXerLayer.forward` | `act_attn`/`exog_attn` 只更新 `glb` 1 个 token, 而 head 是 `Linear((np+1)*d, H*2)` = 12 token 展平 → 动作仅占 head 输入 **1/12**, 另 11 个 patch token 是主汽温自身历史的恒等残差通路。最省力解 = 内生外推 + 压低 GLB 权重 |
+| **2 加性注入** | `DirectWM` `cat([s_repr,a_feat])`; TimeXer 残差相加 | 只能表达 `f(state)+g(action)`。但 exp_099 观测响应比例中位 0.17 且分布宽 = `K(state)×action` 乘性增益 → **加性结构数学上无法表示**, 加宽加深无效 |
+| **3 无时间约束** | `head: Linear(..., H*2)` | 并行吐 H 步, 无单调性/时间常数约束 → 响应剖面可任意非单调 (exp_101 远步衰减) |
+| **4 动作冗余** | x_hist 含绝对 SP (idx 36) | SP 可由负荷/温度趋势预测 → 动作通道增量信息低 → 梯度饥饿。**任何带旁路的架构都会饿死动作通道** |
+
+> 注: M9b 把 head 从 GLB-only 改成 FlattenHead ("消除 GLB 信息瓶颈") —— **而那个瓶颈恰恰是因果的强制通路**。v2 提精度砍因果, 与 Phase 1 exp_011 的 objective mismatch 主题同构。
+
+### 6.2 候选架构
+
+| ID | 架构 | 对付 | 实现 |
+|----|------|------|------|
+| **A1** | 残差分解 `T̂ = f_free(x) + g(x,a)`, **架构性保证 `g(x,0) ≡ 0`** | 1, 4 | `ResidualCausalWM` |
+| **A2** | 乘性门控 `g = W_out(φ(x) ⊙ ψ(a))` | 2 | `InterventionMLP` |
+| **A3** | 一阶惯性级联, 网络只出 `K(x), τ(x)` | 2, 3 | `InterventionPhysics` |
+| **C1** | 增量累积输出 (归一化空间锚定 `T[o-1]`) | 3 | `cumsum_out=True` |
+| **B1** | head 退回 GLB-only, 强制动作通路 | 1 | `TimeXerCausalWM(head_mode='glb')` |
+
+**`g(x,0) ≡ 0` 的精确实现** (恒等式, 非正则):
+动作分支全程 `bias=False` + `GELU(0)=0` → `ψ(0)=0`; 输出投影 `bias=False` → `g_out(φ ⊙ 0) = 0`。
+物理分支对 `u = cumsum(a)` 严格线性 → `a=0 ⇒ u=0 ⇒ r≡0`。
+
+由此 **`pred(x,a) − pred(x,0)` 恒等于一个专用子网络的输出**:
+- 有独立梯度, free path 吸收不了 (直击缺陷 4)
+- **可直接用 L1 的 DiD 真值监督** → 评测真值变训练信号, 消灭 D3 的 objective mismatch
+- 可加物理约束 (符号/单调/增益上下界)
+- `intervention_effect()` 可直接读出因果响应, 无需做差
+
+### 6.3 关键实现细节 (已验证)
+
+| 项 | 问题 | 处理 |
+|----|------|------|
+| C1 梯度放大 | cumsum 使梯度范数 28000 (非 cumsum 的 200×), 被 clip=1.0 压死 | free_head 末层零初始化 → 初始预测 = `T[o-1]` 持久化 (强基线), 梯度降至 500 |
+| C1 二次积分 | 物理分支输出的**已是响应量级** `r(k)`, 再 cumsum 会二次积分 | cumsum **只作用于 free 分支** |
+| A3 τ 初值 | `sigmoid(0)=0.5 → τ=201` 步 (2010s), 600s 仅到 4% → `K` 梯度饿死 | 按 exp_099 的 600s≈97% 反推 `τ_init=18` 步 |
+
+A3 初始化后的响应剖面 (`K=1.0, τ=[18,18]`, 未训练):
+
+| | 60s | 180s | 300s | 600s |
+|---|---|---|---|---|
+| A3 初值 | 0.052 | 0.278 | 0.507 | 0.839 |
+| 物理 (exp_099) | — | 0.17 | — | 0.97 |
+
+**模型开局就在物理附近且严格单调**, 只需学增益异质性 —— 这是 A3 相对 A1mlp (开局 ≈0) 的先验优势。
+
+### 6.4 变体表 (`exp_106 --variant`)
+
+`A1mlp` / `A1phys` / `A1both` / `A1mlp_cs` / `A1physcs` / `B1glb` / `B1flat`
+
+协议全变体固定 (W=96, BS=256, STEPS=500/ep, AdamW 1e-3/1e-5, β=0, ReduceLROnPlateau),
+动作一律走 `CE.build_action`, 事件只取 test 区间, 双 ckpt (`best_mae.pth` / `best_causal.pth`)。
+
+关键对比: **`B1glb` vs `B1flat`** 只差 head → "精度 vs 因果"权衡的直接证据 (论文缺的那张图);
+**`A1phys` vs `A1mlp`** 隔离物理先验的价值; **`*_cs` vs 无后缀** 隔离 C1。
+
+### 6.5 已修的另一处审查问题
+
+`exp_100/101/102` 的 134 个事件在**全量数据**上筛选, 含训练区间 → 因果指标有训练集泄漏。
+`CE.select_events` 新增 `lo/hi/W` 区间过滤, `exp_106` 传 `lo=n_val_end, W=W`。旧结果重测时须一并修正。

@@ -66,8 +66,14 @@ def assert_train_eval_identity(train_raw, raw41, W, H, i_dsp, n_probe=200, seed=
 
 # ---------------------------------------------------------------- 事件筛选
 def select_events(raw, i_sp, i_ld, H, thr=THR_DSP, gap=GAP,
-                  load_stable=LOAD_STABLE, sp_hold=SP_HOLD, hold_len=61):
-    """处理组: SP 阶跃事件。返回 (onsets[list], dsp_vals[ndarray])。"""
+                  load_stable=LOAD_STABLE, sp_hold=SP_HOLD, hold_len=61,
+                  lo=None, hi=None, W=None):
+    """处理组: SP 阶跃事件。返回 (onsets[list], dsp_vals[ndarray])。
+
+    lo/hi: 限定 onset 落在 [lo, hi) 区间。**必须显式传入 test 区间**, 否则事件
+           会横跨训练集 — exp_100/101/102 未做此过滤, 因果指标含训练集泄漏。
+    W:     若给出, 额外要求 onset-W >= lo (历史窗口也不越界进训练集)。
+    """
     N = len(raw)
     d = np.abs(np.diff(raw[:, i_sp]))
     onsets = []
@@ -77,6 +83,10 @@ def select_events(raw, i_sp, i_ld, H, thr=THR_DSP, gap=GAP,
     keep = []
     for o in onsets:
         if o + max(H, hold_len) >= N or o < 1:
+            continue
+        if lo is not None and (o < lo or (W is not None and o - W < lo)):
+            continue
+        if hi is not None and o + max(H, hold_len) >= hi:
             continue
         if np.abs(np.diff(raw[max(0, o - 20):min(N, o + 20), i_ld])).max() > load_stable:
             continue
