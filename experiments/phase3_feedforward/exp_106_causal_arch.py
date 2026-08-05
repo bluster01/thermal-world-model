@@ -171,7 +171,8 @@ class SafeBetaNLL(torch.nn.Module):
 
 
 def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=False,
-              patience=20, min_delta=1e-4, h_override=None, loss_type='nll'):
+              patience=20, min_delta=1e-4, h_override=None, loss_type='nll',
+              freeze_free_epochs=0, lambda_gain=0.0):
     H = h_override if h_override is not None else VARIANTS[variant]['H']
     torch.manual_seed(seed); np.random.seed(seed)
     rng = np.random.default_rng(seed)
@@ -182,12 +183,29 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
         outdir += '_flatw'
     if loss_type != 'nll':
         outdir += f'_{loss_type}'
+    if freeze_free_epochs > 0:
+        outdir += f'_ff{freeze_free_epochs}'
+    if lambda_gain > 0:
+        outdir += f'_lg{lambda_gain}'
     os.makedirs(os.path.join(outdir, 'checkpoints'), exist_ok=True)
 
     model = build_model(variant, H).to(DEVICE)
     n_param = sum(p.numel() for p in model.parameters())
     CA.check_zero_action_identity(model, N_FEAT, H, DEVICE)
-    print(f"[{variant} s{seed}] {n_param/1e6:.2f}M params | g(x,0)=0 自检 PASS")
+    print(f"[{variant} s{seed}] {n_param/1e6:.2f}M params | g(x,0)=0 自检 PASS"
+          + (f" | freeze-free {freeze_free_epochs}ep" if freeze_free_epochs else ""))
+
+    # P3A: 冻结 free 分支参数
+    free_params, interv_params = [], []
+    for name, p in model.named_parameters():
+        if hasattr(model, 'free_head') and ('free_head' in name or 'tcn' in name or 'varattn' in name):
+            free_params.append(p)
+        else:
+            interv_params.append(p)
+    if freeze_free_epochs > 0:
+        for p in free_params:
+            p.requires_grad = False
+        print(f"  [P3A] 冻结 {len(free_params)} free参数, {len(interv_params)} interv参数活跃")
 
     BS, STEPS = 256, 500
     NEPOCH = 4 if smoke else (epochs or E.cfg.EPOCHS)
@@ -204,10 +222,27 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
     tw = torch.ones(H, device=DEVICE) if flat_weight else \
         torch.from_numpy(np.linspace(1.0, 0.6, H).astype(np.float32)).to(DEVICE)
 
+    # P3B: 增益校准 — 载入 DiD 真值
+    R_true_t = None
+    if lambda_gain > 0:
+        gt_npz_path = 'results/cfe_groundtruth_p2/did_response.npz'
+        if os.path.exists(gt_npz_path):
+            gt_npz = np.load(gt_npz_path)
+            R_true_t = torch.from_numpy(gt_npz[f'R_true{H}'].astype(np.float32)).to(DEVICE)
+            print(f"  [P3B] λ_gain={lambda_gain} | R_true loaded ({H} steps)")
+        else:
+            print(f"  [P3B] WARNING: {gt_npz_path} not found, gain loss disabled")
+            lambda_gain = 0.0
+
     best = dict(mae=None, mae_ep=None, cfi=None, cfi_ep=None)
     curve, wait = [], 0
     t0 = time.time()
     for ep in range(1, NEPOCH + 1):
+        # P3A: 解冻 free 分支
+        if freeze_free_epochs > 0 and ep == freeze_free_epochs + 1:
+            for p in free_params:
+                p.requires_grad = True
+            print(f"  [P3A] ep{ep}: 解冻 free 分支 ({len(free_params)} 参数)")
         model.train()
         losses = []
         for _ in range(STEPS):
@@ -217,6 +252,16 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
                 loss = crit(mu, lv, y, tw)
             else:
                 loss = crit(mu, y)  # MAE/Huber: 只用 mu
+
+            # P3B: 增益校准 loss
+            if lambda_gain > 0 and R_true_t is not None:
+                mu0, _ = model(x, torch.zeros_like(a))
+                g = mu - mu0                           # [B, H] 反事实差
+                a_mag = a[:, 0].abs().mean()           # batch平均 |ΔSP|
+                ideal_g = a_mag * R_true_t.mean()      # scalar: 预期总响应
+                actual_g = g.mean()                    # scalar: 实际总响应
+                loss_gain = (actual_g - ideal_g).abs()
+                loss = loss + lambda_gain * loss_gain
             opt.zero_grad(); loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
@@ -279,6 +324,10 @@ def main():
                     help='exp_104 的 DiD 真值; 不存在则退化为 sign(ΔSP) 口径')
     ap.add_argument('--loss', default='nll', choices=['nll', 'mae', 'huber'],
                     help='P3: 损失函数 (nll/mae/huber)')
+    ap.add_argument('--freeze-free-epochs', type=int, default=0,
+                    help='P3A: 前N epoch冻结free分支, 强逼干预分支先学')
+    ap.add_argument('--lambda-gain', type=float, default=0.0,
+                    help='P3B: 增益校准 loss 权重 λ (0=关闭)')
     ap.add_argument('--smoke', action='store_true')
     args = ap.parse_args()
 
@@ -304,7 +353,9 @@ def main():
     for v in variants:
         for s in seeds:
             allres.append(train_one(v, s, args.smoke, gt, args.epochs, args.flat_weight,
-                                   h_override=args.h, loss_type=args.loss))
+                                   h_override=args.h, loss_type=args.loss,
+                                   freeze_free_epochs=args.freeze_free_epochs,
+                                   lambda_gain=args.lambda_gain))
 
     with open(os.path.join(OUT_ROOT, 'summary.json'), 'w') as f:
         json.dump(allres, f, indent=2, ensure_ascii=False)
