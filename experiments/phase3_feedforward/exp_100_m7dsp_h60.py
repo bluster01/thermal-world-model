@@ -58,18 +58,28 @@ class SafeBetaNLL(E.BetaNLLLoss):
 class M7DSP(E.DirectWM):
     def __init__(self):
         super().__init__(use_action=True, use_patch=True, per_variable=True,
-                         use_varattn=True, beta_mode='fixed')   # 概率默认 True, β=-0.3 fixed
+                         use_varattn=True, beta_mode='fixed')   # 概率默认 True, β 见训练段
         d = E.cfg.D_MODEL
         self.action_enc = nn.Sequential(
             nn.Linear(H, d * 2), nn.GELU(), nn.Dropout(E.cfg.DROPOUT))
 
+    def forward(self, x_hist, a_future=None):
+        mu, lv = super().forward(x_hist, a_future)
+        if lv is not None:
+            # denorm 内 exp(lv/2) 数值保护: 未 clamp 的 lv 上溢(>88) → inf → 梯度 nan
+            # (H=60 下 β<0 膨胀正反馈早期即剧烈, debug_nan_h60 定位 ep2 batch453)
+            lv = torch.clamp(lv, -6., 20.)
+        return mu, lv
+
 model = M7DSP().to(DEVICE)
 n_param = sum(p.numel() for p in model.parameters())
-print(f"[model] M7-DSP H={H}: {n_param/1e6:.2f}M params (probabilistic, beta fixed -0.3)")
+print(f"[model] M7-DSP H={H}: {n_param/1e6:.2f}M params (probabilistic, beta={BETA})")
 
-# ===== 训练 (同 exp_025 M7 协议) =====
+# ===== 训练 (同 exp_025 M7 协议, β 适配) =====
 BS, STEPS = 256, 500
-BETA = -0.3
+# β=-0.3 (H=18 定案) 在 H=60 下膨胀正反馈数值不稳定 (exp lv 上溢 nan, debug_nan_h60 定位)
+# → β=0 (标准高斯 NLL): 保留概率架构, 去掉 σ 加权正则; σ 头由 NLL 天然平衡
+BETA = 0.0
 crit = SafeBetaNLL(beta=BETA)
 opt = torch.optim.AdamW(model.parameters(), lr=E.cfg.LEARNING_RATE, weight_decay=E.cfg.WEIGHT_DECAY)
 sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, mode='min', patience=5, factor=0.5)
