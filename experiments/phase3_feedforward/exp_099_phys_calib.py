@@ -22,6 +22,8 @@ sys.argv = ['exp_025_unified_benchmark.py']
 from experiments.phase1_dynamics import exp_025_unified_benchmark as E
 sys.argv = _argv
 
+import causal_eval as CE
+
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 W = E.cfg.WINDOW_SIZE
 H_OUT = E.H_OUT
@@ -63,7 +65,7 @@ def pred(s, a_override=None):
         return None
     win = torch.FloatTensor(raw[s:s+W]).unsqueeze(0).to(DEVICE)
     if a_override is None:
-        a = np.diff(raw41[s+W-1:s+W+H_OUT, 40])
+        a = CE.build_action(raw41, s, W, H_OUT, 40)
     else:
         a = a_override
     a_f = torch.FloatTensor(a).reshape(1, -1).to(DEVICE)
@@ -132,7 +134,7 @@ for K, tau in ((1.0, 180.0), (1.0, 120.0), (1.0, 240.0), (0.7, 180.0), (1.3, 180
     maes, maes_cal, corr_new = [], [], []
     for r in rows:
         s = r['onset'] - W
-        a_seq = np.diff(raw41[s+W-1:s+W+H_OUT, 40])
+        a_seq = CE.build_action(raw41, s, W, H_OUT, 40)
         pr = phys_resp(a_seq, K, tau)
         p = r['resid'] + r['prev_T']  # 重建预测? 不需要 — 直接用残差
         # 修正后残差 = 原残差 − 物理响应 (响应加到预测上)

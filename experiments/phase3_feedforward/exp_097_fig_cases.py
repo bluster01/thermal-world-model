@@ -21,6 +21,8 @@ sys.argv = ['exp_025_unified_benchmark.py']
 from experiments.phase1_dynamics import exp_025_unified_benchmark as E
 sys.argv = _argv
 
+import causal_eval as CE
+
 mpl.rcParams.update({
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans", "sans-serif"],
@@ -83,7 +85,7 @@ def predict(model, s, kind):
             a_f = torch.FloatTensor(a).reshape(1, -1).to(DEVICE)
             mu, _ = model(win, a_f)
         else:
-            a = np.diff(raw41[s+W-1:s+W+H_OUT, 40])
+            a = CE.build_action(raw41, s, W, H_OUT, 40)
             a_f = torch.FloatTensor(a).reshape(1, -1).to(DEVICE)
             mu, _ = model(win, a_f)
     return mu[0].cpu().numpy()

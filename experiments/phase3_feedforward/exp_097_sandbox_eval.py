@@ -16,6 +16,8 @@ exp_097_sandbox_eval.py — 沙盒 vs 现场预测精度 + ΔSP 通道消融 (20
 import os, sys, json
 import numpy as np
 import torch, torch.nn as nn
+import causal_eval as CE
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -101,7 +103,7 @@ def predict(model, s, kind):
             a_f = torch.FloatTensor(a).reshape(1, -1).to(DEVICE)      # [1, 36]
             mu, _ = model(win, a_f)
         else:
-            a = np.diff(raw41[s+W-1:s+W+H_OUT, I_DSP])               # [H] 实际 ΔSP
+            a = CE.build_action(raw41, s, W, H_OUT, I_DSP)               # [H] 实际 ΔSP
             a_f = torch.FloatTensor(a).reshape(1, -1).to(DEVICE)      # [1, 18]
             mu, _ = model(win, a_f)
     return mu[0].cpu().numpy()  # [H]

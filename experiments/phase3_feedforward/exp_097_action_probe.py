@@ -21,6 +21,8 @@ sys.argv = ['exp_025_unified_benchmark.py']
 from experiments.phase1_dynamics import exp_025_unified_benchmark as E
 sys.argv = _argv
 
+import causal_eval as CE
+
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 W = E.cfg.WINDOW_SIZE
 H_OUT = E.H_OUT
@@ -67,7 +69,7 @@ def pred_dsp(s, a_override=None):
         return None
     win = torch.FloatTensor(raw[s:s+W]).unsqueeze(0).to(DEVICE)
     if a_override is None:
-        a = np.diff(raw41[s+W-1:s+W+H_OUT, 40])
+        a = CE.build_action(raw41, s, W, H_OUT, 40)
     else:
         a = a_override
     a_f = torch.FloatTensor(a).reshape(1, -1).to(DEVICE)
@@ -96,7 +98,7 @@ for o in kept:
     s = o - W
     p_real = pred_dsp(s)
     p_zero = pred_dsp(s, np.zeros(H_OUT))
-    p_neg  = pred_dsp(s, -np.abs(np.diff(raw41[s+W-1:s+W+H_OUT, 40])))  # 反方向
+    p_neg  = pred_dsp(s, -np.abs(CE.build_action(raw41, s, W, H_OUT, 40)))  # 反方向
     if p_real is None or p_zero is None: continue
     dT = p_real[-1] - p_zero[-1]                       # 动作引起的末点温差
     ds = raw[o, I_SP] - raw[o-1, I_SP]                 # 实际 ΔSP

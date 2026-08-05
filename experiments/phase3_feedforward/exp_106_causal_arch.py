@@ -135,9 +135,10 @@ def eval_causal(model, H, gt=None):
                          dir_dsp=float((np.sign(resp_c) == np.sign(dvk)).mean()))
     out = dict(n_ev=int(len(dvk)), profile=prof)
     if gt is not None:
-        R = np.array(gt['R_true'], dtype=np.float32)
-        ceil = np.array(gt['sgn_ceiling'], dtype=np.float32)
-        r = np.array(gt['r'], dtype=np.float32)
+        gtk = gt.get(f'H{H}', gt)   # exp_104 JSON: {H60: {...}, H18: {...}}; 退化用顶层级
+        R = np.array(gtk['R_true'], dtype=np.float32)
+        ceil = np.array(gtk['sgn_ceiling'], dtype=np.float32)
+        r = np.array(gtk.get('r', np.zeros((len(m), H))), dtype=np.float32)
         if len(r) == len(m):                        # 事件集一致才配对
             ks = [(k, l) for k, l in PROFILE_K if k < H]
             out['cfe'] = CE.causal_metrics(m, r, R, ceil, ks)

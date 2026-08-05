@@ -21,6 +21,8 @@ sys.argv = ['exp_025_unified_benchmark.py']
 from experiments.phase1_dynamics import exp_025_unified_benchmark as E
 sys.argv = _argv
 
+import causal_eval as CE
+
 SMOKE = '--smoke' in sys.argv
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 DTYPE = torch.float32
@@ -128,7 +130,7 @@ def pred(s, a_override=None):
         return None
     win = torch.FloatTensor(raw[s:s+W]).unsqueeze(0).to(DEVICE)
     if a_override is None:
-        a = np.diff(raw41[s+W-1:s+W+H_OUT, I_DSP])
+        a = CE.build_action(raw41, s, W, H_OUT, I_DSP)
     else:
         a = a_override
     a_f = torch.FloatTensor(a).reshape(1, -1).to(DEVICE)
