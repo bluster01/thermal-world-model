@@ -144,7 +144,7 @@ def pred(s, a_override=None):
         a = np.diff(raw41[s+W-1:s+W+H, I_DSP])
     else:
         a = a_override
-    a_f = torch.FloatTensor(a).reshape(1, -1).to(DEVICE)
+    a_f = torch.FloatTensor(a).reshape(1, H, 1).to(DEVICE)   # [1, H, 1] (TimeXer permute 需 3 维)
     with torch.no_grad():
         mu, _ = model(win, a_f)
     return mu[0].cpu().numpy()
