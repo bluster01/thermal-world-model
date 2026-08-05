@@ -23,21 +23,38 @@ dsp 列  [0, 0, 2, 0, 0, 0, 0, 0]
 评测 a  [2,-2, 0, 0, 0, 0]      隐含 SP 净变  0   ← 偶极子, 自相消
 ```
 
-**影响范围**: `exp_097_action_probe` L70, `exp_097_sandbox_eval` L104,
-`exp_098` L131, `exp_100` L163, `exp_101` L144, `exp_102` L144。
+**影响范围 — 9 个脚本** (grep `np.diff(raw41`):
+
+| 脚本 | 行 | 性质 |
+|------|-----|------|
+| `exp_097_action_probe.py` | 70, 99 | 诊断 (99 行 `p_neg` 同样错) |
+| `exp_097_sandbox_eval.py` | 104 | 评测 |
+| `exp_097_fig_cases.py` | 86 | **论文图 v1** |
+| `exp_097_fig_cases_v2.py` | 69 | **论文图 v2** |
+| `exp_097_fig_cases_v3.py` | 75 | **论文图 v3 (主模型 M9DSP H=60, commit b31a9e9)** |
+| `exp_098_dsp_dropout.py` | 131 | 评测 |
+| `exp_099_phys_calib.py` | 66, 135 | 诊断 |
+| `exp_100_m7dsp_h60.py` | 163 | 评测 |
+| `exp_101/102_m9dsp_*.py` | 144 | 评测 |
+
+注: 各脚本的**训练段**都是正确的一阶差分, 故**权重本身有效, 无需重训**; 只有推理/评测/出图通路需要修正后重跑。
 
 **受污染的结论** (全部需重测):
 
-| 数字 | 出处 | 状态 |
+| 数字 / 结论 | 出处 | 状态 |
 |------|------|------|
 | M5-DSP 响应 0.05°C / 方向 75% | exp_097 | 作废 |
-| action dropout 无效 (0.060°C) | exp_098 | 作废 |
+| action dropout 无效 (0.060°C, 方向 67%) | exp_098 | 作废 |
+| 残差-ΔSP 相关 −0.327 / 欠响应 0.096°C/°C / "B 方案不可行" | exp_099_phys_calib | 作废 |
 | M7-DSP 600s 0.212°C / 方向 45% | exp_100 | 作废 |
 | M9DSP H=60 180s 方向 89% / 600s 41% | exp_101 | 作废 |
-| M9DSP H=18 180s 方向 65% | exp_102 | 作废 |
-| "瓶颈 = 观测数据共因混杂非窗口长度" | exp_100 v3 结论 | **推理前提失效** |
+| M9DSP H=18 180s 方向 65% / "末端降权假说" | exp_102 | 作废 |
+| "瓶颈 = 观测数据共因混杂非窗口长度" | exp_100 v3 | **推理前提失效** |
+| "主模型定案 = M9DSP H=60" | exp_102 commit | **定案依据失效, 需重判** |
+| case 图 v1/v2/v3 的 WM 预测曲线 | exp_097_fig_cases* | **需重画** |
 
 MAE 数字 (0.301 / 0.348 / 0.361) 受影响小 (MAE 对动作通道不敏感), 但偏悲观。
+方向类指标 (`dir_60` 等基于 `pred(real a)` 的) 也受影响, 因为 `pred` 本身喂了错动作。
 
 `docs/narrative_restructure.md` §IV 的证据链在重测前不得引用。
 
@@ -185,8 +202,40 @@ L5 H/权重解耦 2×2 × 5 seeds            1-2 天 GPU
 
 ---
 
+## 4.1 逐行修复清单 (Linux 侧直接执行)
+
+统一替换: 所有 `a = np.diff(raw41[s+W-1 : s+W+H, I_DSP])` →
+
+```python
+import causal_eval as CE
+a = CE.build_action(raw41, s, W, H, I_DSP)          # 真实 ΔSP
+a = CE.build_action(raw41, s, W, H, I_DSP, 0.0)     # SP 保持基线
+```
+
+| 文件 | 行 | 备注 |
+|------|-----|------|
+| `exp_097_action_probe.py` | 70, 99 | 99 行 `p_neg` 应为 `-np.abs(CE.build_action(...))` |
+| `exp_097_sandbox_eval.py` | 104 | |
+| `exp_097_fig_cases.py` | 86 | 修完重跑出图 |
+| `exp_097_fig_cases_v2.py` | 69 | 修完重跑出图 |
+| `exp_097_fig_cases_v3.py` | 75 | 修完重跑出图 (主模型图, 优先级最高) |
+| `exp_098_dsp_dropout.py` | 131 | |
+| `exp_099_phys_calib.py` | 66, 135 | |
+| `exp_100_m7dsp_h60.py` | 163 | 训练段无需改 |
+| `exp_101_m9dsp_h60.py` | 144 | 训练段无需改 |
+| `exp_102_m9dsp_h18.py` | 144 | 训练段无需改 |
+
+同时在各训练脚本的数据取样处也改为调用 `CE.build_action`, 消除"两份代码"的复发可能
+(训练段当前语义正确, 但仍是独立实现)。
+
+`exp_103_protocol_recheck.py` 会先跑 `CE.assert_train_eval_identity` 做门禁, 不过不许出数。
+
+---
+
 ## 5. 需要修订的既有文档 (与重测结果无关)
 
 1. `docs/narrative_restructure.md` §IV — 全部动作增益数字加"协议待修正"标注, 重测后重写
 2. `docs/varattn_causality_analysis.md` §3.2 — 敏感性表补 n=1 说明; 该表用阀位动作 (非 ΔSP), 不受本 bug 影响, 但仍是 n=1
-3. `experiment_audit.md` — 新增条目: 训练/评测动作编码不一致 (跨 6 个脚本)
+3. `experiment_audit.md` — 新增条目: 训练/评测动作编码不一致 (跨 9 个脚本)
+4. `docs/phase3_sandbox_design.md` — 沙盒精度/消融判定 (MAE 0.301, 消融 Δ≈0) 的评测通路同样受影响, 需标注
+5. commit `dcd4d2c` 的"主模型定案 = M9DSP H=60"与 `b31a9e9` 的 case 图 v3 — 需在重测后确认或撤回
