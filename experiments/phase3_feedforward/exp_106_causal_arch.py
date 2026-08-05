@@ -171,11 +171,15 @@ class SafeBetaNLL(torch.nn.Module):
 
 
 def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=False,
-              patience=20, min_delta=1e-4):
-    H = VARIANTS[variant]['H']
+              patience=20, min_delta=1e-4, h_override=None):
+    H = h_override if h_override is not None else VARIANTS[variant]['H']
     torch.manual_seed(seed); np.random.seed(seed)
     rng = np.random.default_rng(seed)
     outdir = os.path.join(OUT_ROOT, f'{variant}_s{seed}')
+    if h_override is not None:
+        outdir = os.path.join(OUT_ROOT, f'{variant}_H{h_override}_s{seed}')
+    if flat_weight:
+        outdir += '_flatw'
     os.makedirs(os.path.join(outdir, 'checkpoints'), exist_ok=True)
 
     model = build_model(variant, H).to(DEVICE)
@@ -259,6 +263,7 @@ def main():
     ap.add_argument('--all', action='store_true', help='跑全部变体')
     ap.add_argument('--epochs', type=int, default=None)
     ap.add_argument('--flat-weight', action='store_true', help='L5: 时间权重全 1')
+    ap.add_argument('--h', type=int, default=None, help='L5: 覆盖 H (默认取 VARIANTS 定义)')
     ap.add_argument('--gt', default='results/cfe_groundtruth/did_response.json',
                     help='exp_104 的 DiD 真值; 不存在则退化为 sign(ΔSP) 口径')
     ap.add_argument('--smoke', action='store_true')
@@ -285,7 +290,8 @@ def main():
     allres = []
     for v in variants:
         for s in seeds:
-            allres.append(train_one(v, s, args.smoke, gt, args.epochs, args.flat_weight))
+            allres.append(train_one(v, s, args.smoke, gt, args.epochs, args.flat_weight,
+                                   h_override=args.h))
 
     with open(os.path.join(OUT_ROOT, 'summary.json'), 'w') as f:
         json.dump(allres, f, indent=2, ensure_ascii=False)
