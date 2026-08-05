@@ -257,10 +257,11 @@ def model_response(wrapper, onsets, dsp_vals, x_hist_fn=None):
 
 
 # ---------------------------------------------------------------- L2 指标
-def causal_metrics(m, r, R_true, sgn_ceiling, ks):
+def causal_metrics(m, r, R_true, sgn_ceiling, ks, gain_ceiling=None):
     """L2 指标。m/r: [n, H] 模型响应与逐事件真值 (已对齐同一组事件)。
 
     ks: 报告时刻索引 list[(k, label)]
+    gain_ceiling: [H] split-half 增益上限, 用于归一化 gain
     """
     mbar = m.mean(0)
     out = {'profile': {}}
@@ -269,10 +270,12 @@ def causal_metrics(m, r, R_true, sgn_ceiling, ks):
         sgn_agg = float((np.sign(m[:, k]) == np.sign(R_true[k])).mean())
         ceil = float(sgn_ceiling[k])
         sgn_norm = (sgn_pair - .5) / (ceil - .5) if ceil > .5 else np.nan
-        gain = float(mbar[k] / R_true[k]) if abs(R_true[k]) > 1e-8 else np.nan
+        gain_raw = float(mbar[k] / R_true[k]) if abs(R_true[k]) > 1e-8 else np.nan
+        gc = float(gain_ceiling[k]) if gain_ceiling is not None and abs(gain_ceiling[k]) > 1e-8 else 1.0
+        gain = gain_raw / gc  # 归一化: 1.0 = 达到噪声上限
         out['profile'][lab] = dict(
             k=int(k), sgn_pair=sgn_pair, sgn_agg=sgn_agg, sgn_ceiling=ceil,
-            sgn_norm=float(sgn_norm), gain=gain,
+            sgn_norm=float(sgn_norm), gain=gain, gain_raw=gain_raw, gain_ceiling=gc,
             resp_model=float(mbar[k]), resp_true=float(R_true[k]))
     kmax = ks[-1][0]
     sl = slice(0, kmax + 1)
@@ -297,12 +300,83 @@ def _ttp(curve):
 
 
 def cfi(mt, k_ref_label):
-    """复合因果分 CFI ∈ (-inf, 1]。用于 P0.5 的 best-CFI checkpoint 选择。"""
+    """复合因果分 CFI (已废弃, 受 n_ev=15 噪声限制 — 见 docs/exp_107_review.md).
+    请用 cfi_agg() 替代."""
     p = mt['profile'][k_ref_label]
     sgn = p['sgn_norm'] if np.isfinite(p['sgn_norm']) else 0.0
-    g = p['gain']
+    g = p['gain_raw']  # 未归一化 (向后兼容)
     g_term = min(g, 1.0 / g) if (np.isfinite(g) and g > 0) else 0.0
     sh = mt['shape_corr'] if np.isfinite(mt['shape_corr']) else 0.0
     kmax = max(v['k'] for v in mt['profile'].values())
     ttp = 1.0 - min(abs(mt['ttp_err']) / max(kmax, 1), 1.0)
     return float(0.35 * np.clip(sgn, 0, 1) + 0.30 * g_term + 0.20 * np.clip(sh, 0, 1) + 0.15 * ttp)
+
+
+def cfi_agg(mt, ks, early_penalty_weight=0.15):
+    """跨时程聚合 CFI (P1修, 替代单点 cfi).
+
+    只对 120s+ 时刻聚合 gain/sgn; 30s/60s 仅做符号检查 (true resp <0.03 接近噪声底).
+    gain 按 gain_ceiling 归一化后取加权平均 (权重=1/|1-gain_ceiling|).
+    早期符号翻转加硬惩罚.
+
+    Returns: dict with cfi, gain_mean, gain_span, early_sign_ok, n_contrib
+    """
+    # 分离早期 (仅符号检查) 和聚合段 (120s+)
+    early_labs = {'30s', '60s'}
+    agg_labs = [lab for _, lab in ks if lab not in early_labs]
+
+    gains, weights = [], []
+    early_ok = True
+    for _, lab in ks:
+        p = mt['profile'][lab]
+        if lab in early_labs:
+            # 仅检查符号: resp_true≈0.03 接近噪声底, gain 比值不可用
+            resp_m = p['resp_model']
+            resp_t = p['resp_true']
+            if abs(resp_t) > 0.01:
+                if np.sign(resp_m) != np.sign(resp_t):
+                    early_ok = False
+        else:
+            g = p['gain']
+            if np.isfinite(g) and g > -10:
+                gains.append(g)
+                # 权重: 增益天花板越接近 1.0 → 该时刻测量越可靠
+                w = 1.0 / max(abs(1.0 - p.get('gain_ceiling', 1.0)), 0.05)
+                weights.append(w)
+
+    if not gains:
+        return dict(cfi=float('nan'), gain_mean=float('nan'), gain_span=float('nan'),
+                    early_sign_ok=early_ok, n_contrib=0)
+
+    gains = np.array(gains); weights = np.array(weights)
+    gain_mean = float(np.average(gains, weights=weights))
+    gain_span = float(gains.max() - gains.min()) if len(gains) > 1 else 0.0
+
+    # gain 项: 偏离 1.0 越远分越低
+    g_err = abs(gain_mean - 1.0)
+    g_score = max(0.0, 1.0 - g_err)
+
+    # 符号项: 聚合段的 sgn_norm 均值
+    sgns = [p['sgn_norm'] for _, lab in ks if lab in agg_labs
+            and np.isfinite(mt['profile'][lab].get('sgn_norm', np.nan))]
+    sgn_score = np.clip(np.mean(sgns), 0, 1) if sgns else 0.0
+
+    # 形状项
+    sh = mt['shape_corr'] if np.isfinite(mt['shape_corr']) else 0.0
+    sh_score = np.clip(sh, 0, 1)
+
+    # 时标项
+    kmax = max(v['k'] for v in mt['profile'].values())
+    ttp_score = 1.0 - min(abs(mt.get('ttp_err', 0)) / max(kmax, 1), 1.0)
+
+    # 聚合
+    cfi_val = 0.30 * g_score + 0.25 * sgn_score + 0.20 * sh_score + 0.10 * ttp_score
+
+    # 早期符号翻转硬惩罚
+    if not early_ok:
+        cfi_val -= early_penalty_weight
+    cfi_val = max(0.0, min(1.0, cfi_val))
+
+    return dict(cfi=float(cfi_val), gain_mean=gain_mean, gain_span=gain_span,
+                g_score=g_score, sgn_score=sgn_score, sh_score=sh_score, ttp_score=ttp_score,
+                early_sign_ok=early_ok, n_contrib=len(gains))

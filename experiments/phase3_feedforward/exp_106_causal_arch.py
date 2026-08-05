@@ -171,7 +171,7 @@ class SafeBetaNLL(torch.nn.Module):
 
 
 def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=False,
-              patience=20, min_delta=1e-4, h_override=None):
+              patience=20, min_delta=1e-4, h_override=None, loss_type='nll'):
     H = h_override if h_override is not None else VARIANTS[variant]['H']
     torch.manual_seed(seed); np.random.seed(seed)
     rng = np.random.default_rng(seed)
@@ -180,6 +180,8 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
         outdir = os.path.join(OUT_ROOT, f'{variant}_H{h_override}_s{seed}')
     if flat_weight:
         outdir += '_flatw'
+    if loss_type != 'nll':
+        outdir += f'_{loss_type}'
     os.makedirs(os.path.join(outdir, 'checkpoints'), exist_ok=True)
 
     model = build_model(variant, H).to(DEVICE)
@@ -189,7 +191,13 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
 
     BS, STEPS = 256, 500
     NEPOCH = 4 if smoke else (epochs or E.cfg.EPOCHS)
-    crit = SafeBetaNLL(beta=0.0)
+    if loss_type == 'mae':
+        crit = torch.nn.L1Loss()
+    elif loss_type == 'huber':
+        crit = torch.nn.SmoothL1Loss()
+    else:
+        crit = SafeBetaNLL(beta=0.0)
+    use_nll = (loss_type == 'nll')
     opt = torch.optim.AdamW(model.parameters(), lr=E.cfg.LEARNING_RATE,
                             weight_decay=E.cfg.WEIGHT_DECAY)
     sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, mode='min', patience=5, factor=0.5)
@@ -205,7 +213,10 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
         for _ in range(STEPS):
             x, a, y = make_batch(H, BS, rng)
             mu, lv = model(x, a)
-            loss = crit(mu, lv, y, tw)
+            if use_nll:
+                loss = crit(mu, lv, y, tw)
+            else:
+                loss = crit(mu, y)  # MAE/Huber: 只用 mu
             opt.zero_grad(); loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
@@ -266,6 +277,8 @@ def main():
     ap.add_argument('--h', type=int, default=None, help='L5: 覆盖 H (默认取 VARIANTS 定义)')
     ap.add_argument('--gt', default='results/cfe_groundtruth/did_response.json',
                     help='exp_104 的 DiD 真值; 不存在则退化为 sign(ΔSP) 口径')
+    ap.add_argument('--loss', default='nll', choices=['nll', 'mae', 'huber'],
+                    help='P3: 损失函数 (nll/mae/huber)')
     ap.add_argument('--smoke', action='store_true')
     args = ap.parse_args()
 
@@ -291,7 +304,7 @@ def main():
     for v in variants:
         for s in seeds:
             allres.append(train_one(v, s, args.smoke, gt, args.epochs, args.flat_weight,
-                                   h_override=args.h))
+                                   h_override=args.h, loss_type=args.loss))
 
     with open(os.path.join(OUT_ROOT, 'summary.json'), 'w') as f:
         json.dump(allres, f, indent=2, ensure_ascii=False)
