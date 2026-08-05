@@ -170,7 +170,8 @@ class SafeBetaNLL(torch.nn.Module):
         return nll.mean()
 
 
-def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=False):
+def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=False,
+              patience=20, min_delta=1e-4):
     H = VARIANTS[variant]['H']
     torch.manual_seed(seed); np.random.seed(seed)
     rng = np.random.default_rng(seed)
@@ -179,7 +180,7 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
 
     model = build_model(variant, H).to(DEVICE)
     n_param = sum(p.numel() for p in model.parameters())
-    CA.check_zero_action_identity(model, N_FEAT, H, DEVICE)     # 训练前不变量自检
+    CA.check_zero_action_identity(model, N_FEAT, H, DEVICE)
     print(f"[{variant} s{seed}] {n_param/1e6:.2f}M params | g(x,0)=0 自检 PASS")
 
     BS, STEPS = 256, 500
@@ -188,12 +189,11 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
     opt = torch.optim.AdamW(model.parameters(), lr=E.cfg.LEARNING_RATE,
                             weight_decay=E.cfg.WEIGHT_DECAY)
     sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, mode='min', patience=5, factor=0.5)
-    # 时间权重: flat_weight=True 时全 1 (L5 解耦用), 否则同 exp_100-102
     tw = torch.ones(H, device=DEVICE) if flat_weight else \
         torch.from_numpy(np.linspace(1.0, 0.6, H).astype(np.float32)).to(DEVICE)
 
     best = dict(mae=None, mae_ep=None, cfi=None, cfi_ep=None)
-    curve = []
+    curve, wait = [], 0
     t0 = time.time()
     for ep in range(1, NEPOCH + 1):
         model.train()
@@ -213,12 +213,15 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
         curve.append(dict(ep=ep, loss=float(np.mean(losses)), mae=mae, cfi=cfi))
 
         tag = []
-        if best['mae'] is None or mae < best['mae']:
+        if best['mae'] is None or mae < best['mae'] - min_delta:
             best.update(mae=mae, mae_ep=ep)
             torch.save({'model_state_dict': model.state_dict(), 'ep': ep, 'mae': mae,
                         'cfi': cfi, 'variant': variant, 'seed': seed, 'H': H},
                        os.path.join(outdir, 'checkpoints', 'best_mae.pth'))
             tag.append('*MAE')
+            wait = 0
+        else:
+            wait += 1
         if np.isfinite(cfi) and (best['cfi'] is None or cfi > best['cfi']):
             best.update(cfi=cfi, cfi_ep=ep)
             torch.save({'model_state_dict': model.state_dict(), 'ep': ep, 'mae': mae,
@@ -227,7 +230,11 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
             tag.append('*CFI')
         g600 = cz['profile'].get('600s', cz['profile'].get('180s', {})).get('gain_norm', float('nan'))
         print(f"  ep{ep:3d} loss {np.mean(losses):7.4f} | MAE {mae:.4f} | CFI {cfi:.3f} "
-              f"| gain {g600:+.3f} {' '.join(tag)}")
+              f"| gain {g600:+.3f} | wait {wait:2d} {' '.join(tag)}")
+
+        if not smoke and wait >= patience:
+            print(f"  → 早停: MAE 连续 {patience} epoch 无改善 (best {best['mae']:.4f}@ep{best['mae_ep']})")
+            break
 
     CA.check_zero_action_identity(model, N_FEAT, H, DEVICE)     # 训练后不变量仍须成立
     res = dict(variant=variant, seed=seed, H=H, n_param=int(n_param),
