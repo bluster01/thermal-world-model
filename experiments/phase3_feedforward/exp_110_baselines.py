@@ -164,11 +164,21 @@ configs = [
 
 print(f"{'Model':25s} | {'H':>2s} | {'MAE':>7s} | {'CFI_agg':>7s} | {'gain_mean':>9s} | {'span':>6s} | {'early':>5s} | {'SHAPE':>6s}")
 print("-" * 100)
+all_results = []
 for name, ckpt, H, is_new in configs:
     r = eval_model(name, ckpt, H, is_new)
     if r:
+        all_results.append(r)
         print(f"{name:25s} | {r['H']:2d} | {r['mae']:7.4f} | {r['cfi_agg']:7.3f} | "
               f"{r['gain_mean']:9.3f} | {r['gain_span']:6.3f} | "
               f"{'OK' if r['early_sign_ok'] else 'FAIL':>5s} | {r['shape']:+6.3f}")
     else:
         print(f"{name:25s} | SKIP")
+
+# Save results
+import json, os
+OUT = 'results/baselines_exp110'
+os.makedirs(OUT, exist_ok=True)
+with open(f'{OUT}/results.json', 'w') as f:
+    json.dump(all_results, f, indent=2, ensure_ascii=False)
+print(f"\nSaved {len(all_results)} results to {OUT}/results.json")
