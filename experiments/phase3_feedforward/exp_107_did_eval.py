@@ -87,11 +87,11 @@ def eval_one(name, ckpt_type, H):
     ev_k = np.array(ev)[keep]
     dv_k = dv[keep]
     
-    # 对齐 DiD 真值的事件 (按 onset 匹配)
-    gt_onsets = gt[f'onsets{H // 10}0']
-    gt_r = gt[f'r{H // 10}0']
-    gt_R = gt[f'R_true{H // 10}0']
-    gt_ceil = gt[f'sgn_ceiling{H // 10}0']
+    # 对齐 DiD 真值的事件 (按 onset 匹配) — NPZ keys: r{H}, onsets{H}, R_true{H}, etc.
+    gt_r = gt[f'r{H}']
+    gt_onsets = gt[f'onsets{H}']
+    gt_R = gt[f'R_true{H}']
+    gt_ceil = gt[f'sgn_ceiling{H}']
     
     # 建 onset→index 映射
     onset_to_i = {int(o): i for i, o in enumerate(gt_onsets)}
@@ -108,7 +108,8 @@ def eval_one(name, ckpt_type, H):
     r_a = np.array(r_aligned, dtype=np.float32)
     
     cfe = CE.causal_metrics(m_a, r_a, gt_R, gt_ceil, PROFILE_K)
-    cfi = CE.cfi(cfe, '600s')
+    agg = CE.cfi_agg(cfe, PROFILE_K)
+    cfi = agg['cfi']
     
     # 也跑旧口径 (sign(ΔSP)) 便于对照
     prof_old = {}
@@ -119,7 +120,7 @@ def eval_one(name, ckpt_type, H):
             dir_dsp=float((np.sign(resp_c) == np.sign(dv_k[:len(m_a)])).mean()))
     
     return dict(name=name, ckpt=ckpt_type, H=H, n_ev=len(m_a),
-                cfe=cfe, cfi=cfi, prof_old=prof_old,
+                cfe=cfe, cfi=cfi, cfi_agg=agg,
                 ep=int(sd.get('ep', -1)), mae=float(sd.get('mae', np.nan)))
 
 # ===================================================== 跑全部
