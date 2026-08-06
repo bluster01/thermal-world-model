@@ -1,0 +1,1984 @@
+Applied Energy 189 (2017) 654–666
+
+Contents lists available at ScienceDirect
+
+Applied Energy
+journal homepage: www.elsevier.com/locate/apenergy
+
+A dynamic mathematical model of an ultra-supercritical coal fired
+once-through boiler-turbine unit q
+He Fan, Yu-fei Zhang, Zhi-gang Su ⇑, Ben Wang
+School of Energy and Environment, Southeast University, Sipailou #2, Nanjing 210096, China
+
+h i g h l i g h t s
+
+g r a p h i c a l a b s t r a c t
+
+ A mathematical model of an
+
+ultra-supercritical unit is developed.
+ The analysis of open-loop
+
+experiments is described.
+ Parameter identification based on
+
+immune genetic algorithm is
+presented.
+ The closed-loop validation is
+performed and compared with the
+previous study.
+
+a r t i c l e
+
+i n f o
+
+Article history:
+Received 16 August 2016
+Received in revised form 7 November 2016
+Accepted 18 November 2016
+
+Keywords:
+Once-through boiler
+IGA
+Mathematical model
+Dynamic
+Power plant
+
+q
+
+a b s t r a c t
+It is challenging and interesting to establish a precise dynamic model of an OTB (once-through boiler)
+power plant unit in order to meet large scale load demands from the power grid. This study proposes
+to establish such a dynamic mathematical model of an ultra-supercritical OTB unit under dry operating
+conditions. More precisely, the dynamic model structure was derived from mass and energy conservation
+laws as well as thermodynamic principles under some reasonable simplifications and assumptions. Then
+an IGA (immune genetic algorithm) was improved to identify the parameters, combined with running
+data. After this, to further enhance model performance, the dynamic mathematical model was extended
+to be the one with different sets of parameters and functions under different monotonous load ranges.
+Additionally, open- and closed-loop experiments were conducted in order to further validate the developed model. The experimental results show that the model outputs can approach the actual running data
+over a wide operating range with appropriate accuracy. More importantly, the dynamic model captures
+the essential dynamic characteristics of the unit. Therefore, the model can be feasible and applicable for
+simulation analysis and testing control algorithms.
+Ó 2016 Elsevier Ltd. All rights reserved.
+
+This research has been supported by National Science Foundation of China (Grant Number: 51676034).
+
+⇑ Corresponding author.
+
+E-mail addresses: zhangyufly@seu.edu.cn (Y.-f. Zhang), zhigangsu@seu.edu.cn (Z.-g. Su).
+http://dx.doi.org/10.1016/j.apenergy.2016.11.074
+0306-2619/Ó 2016 Elsevier Ltd. All rights reserved.
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+
+655
+
+Nomenclature
+uB
+r0 B
+
+s
+
+rB
+M
+c0
+cB
+fH
+fW
+fR
+p
+
+q
+
+D
+h
+T
+Q2
+e
+c
+m
+k0
+k1
+k2
+n
+
+g
+
+ut
+Ne
+Hn
+
+vt
+
+Q1
+
+fuel flow rate command (kg/s)
+mass flow rate of fuel in the mill (kg/s)
+delay time of the pulverizing process (s)
+mass flow rate of fuel in the furnace (kg/s)
+amount of coal in the mill (kg)
+milling inertia time (s)
+output coefficient of the mill
+correction coefficient of the coal grind ability
+correction coefficient of the moisture content of coal
+correction coefficient of coal fineness
+steam pressure (MPa)
+density (kg/m3)
+mass flow rate (kg/s)
+specific enthalpy (kJ/kg)
+temperature (°C)
+heat transferred from tubes to the medium (kJ/s)
+drag coefficient
+specific heat capacity (kJ/(kg°C))
+mass (kg)
+the heat released from burning l kg pulverized coal
+the tube constant
+steam turbine gain
+index coefficient
+efficiency of the steam turbine
+throttle valve opening(0 6 ut 6 1)
+active power (MW)
+heat removed by circulating water (kJ/s)
+total working fluid volume in boiler (m3)
+heat absorbed by tube in furnace (kJ/s)
+
+Subscripts
+a
+average value
+in
+working fluid in tube
+fw
+feed water flow
+st
+throttle steam flow
+m
+the state in the separator
+
+1. Introduction
+Coal-fired power plants play a highly significant role in Chinese
+power generation, even though renewable energy will be rapidly
+developed in recent years [1]. Meanwhile, it is estimated that the
+consumption of China’s primary energy will reach 4.8 billion tons
+of standard coal in 2020, and the fossil fuel can account for 70%
+of the power demand [2]. In the process of coal burning, many
+air pollutants may be released, namely, sulfur dioxide (SO2), nitrogen oxides (NOx), and inhalable particle whose diameter is less
+than 10 lm (PM10), extremely dangerous to human health and
+the global climate [3–7]. Due to the huge environmental pollution
+caused by coal burning in every year, Chinese government promises to reduce the CO2 emission per unit of GDP by 60–65% in
+2030, compared with that of 2005 [2]. Therefore, it is a pressing
+need for coal fired power plants in China to find an effective solution to meet above requirements.
+Ultra-supercritical coal fired technology is a considerable
+option, and owns high operating efficiency and low CO2 emissions
+per megawatt (MW) generation. According to the statistical data,
+the operating efficiency of ultra-supercritical units is beyond 45%,
+more than around 10% compared with the same level of the current
+subcritical coal fired units in China. Furthermore, in terms of the
+environmental protection, the release of CO2 and SO2 can be
+reduced by 145 (g/kW h) and 0.4 (g/kW h), respectively [8]. In
+addition, the ultra-supercritical unit has faster speed of load
+
+r
+j
+j1
+r1
+r2
+
+the state in reheater
+the state in metal
+the state in metal at outlet of the heated tube
+the state at inlet of reheater
+the state at outlet of reheater
+
+Superscript
+–
+the average value
+Abbreviations
+OTB
+once-through boiler
+DBT
+drum boiler-turbine
+CCS
+coordinated control system
+IGA
+immune genetic algorithm
+GA
+genetic algorithm
+Units
+%
+percent
+MW
+megawatt
+g/kWh gram per kWh
+kWh
+kilowatt hour
+kg/s
+kilogram per second
+t/h
+ton per hour
+MPa
+megapascal
+kg/m3
+kilogram per cubic metre
+kJ/kg
+kilojoule per kilogram
+°C
+degree Celsius
+kJ/s
+kilojoule per second
+m3
+cubic metre
+s
+second
+kJ/(kg°C) kilojoule per kilogram degree
+kg
+kilogram
+kJ
+kilojoule
+lm
+micron
+
+response than that of the subcritical unit for less metal content.
+Nowadays, there are more than eighty ultra-supercritical coal fired
+plants serving in China, and the plants have prominently significant roles in supplying electricity and maintaining frequency stability of the power network.
+Certainly, severe operating conditions have to be in company
+with a series of technological bottlenecks, such as complex startup process and less operating reliability. Especially, renewable
+energy (i.e., wind and solar energy.) will be recently energetically
+developed due to their non-polluting and sustainable merits [2].
+Nevertheless, their unstable and random features may pose a
+threat to the operating stability of the power grid. Therefore, confronted with these pressures, ultra-supercritical coal fired units are
+obliged to adjust unit load quickly in order to meet the real-time
+power demand.
+In ultra-supercritical units, the CCS (coordinated control system) is used to solve the above problems. However, for any control
+systems, the satisfactory control performance is dependent on the
+accuracy and validity of the process model.
+In previous studies, the modelling methods can be roughly
+summarized into three categories. The first is mechanism modelling, which is developed based on fundamental physical laws
+so as to master the dynamic behaviours of thermodynamic variables [9–16]. Due to the clear physical structure, the state variables
+in model are observable. Therefore, this kind of model is also called
+white box model. After obtaining the model structure, it is neces-
+
+656
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+
+sary to optimize the unknown parameters by means of running
+data and optimization algorithms [17–20]. Particularly, once the
+mechanism model has been successfully developed, it is able to
+reflect the rich dynamic behaviours correctly, regardless of various
+inputs. Due to simplifications and few uncertainties, the accuracy
+of the white box model is not satisfactory enough. Liu et al. [14]
+developed an ultra-supercritical once-through unit model with
+simple structure in mechanism modelling method, in order to
+meet the requirement for designing the overall control system,
+through a series of simplifications and assumptions. On the other
+hand, some studies were also performed on DBT (drum boilerturbine) units [21–24]. Sunil et al. [25] presented a dynamic model
+simulator of drum boilers, derived from the first principles and a
+comprehensive method of combining lumped and distributed
+modelling used for relevant components.
+Then, the second modelling method contains the model using
+fuzzy [26–28], artificial neural networks [29–32] and neural and
+fuzzy networks [33–35] strategies. Due to the unclear structure,
+they are also called the black box model, which can be obtained
+combined with running data and training procedures. As the operational data is taken fully advantage of, the calculated values can
+agree well with the measured. However, if confronted with novel
+inputs, the predicting capability of the black may worsen. Liu
+et al. [33] presented a model of an ultra-supercritical OTB unit,
+and two different structures of neural networks (i.e., multilayer
+perceptron network and neural fuzzy network) were applied to
+model the unit using running data. The results showed the model
+built in neural fuzzy network had the satisfactory accuracy and
+performance.
+The third is the grey box model [36–38], a combination of the
+white and black box model. Considering the few inaccurate relations among variables, some unknown parameters are added in
+model so as to further capture the unclear relations hidden in running data, and those parameters are finally identified by training
+procedures like the black. De Ridder and Coomans [37] established
+a grey-box compartmental model, including the heat loss, internal
+heat exchange, convection and mixing dynamics. Then, the
+Markov-Chain-Monte-Carlo method was used for determining
+the parameters in model.
+Due to the clear physical structure, the white box model is
+firstly chosen in this study. After determining the model structure,
+the next step is to optimize the unknown parameters.
+GA (genetic algorithm) has successfully been used for parameter identification [14,39–42], but it is of the high possibility that
+the solution estimated by GA converges to the local optima due
+to the similarity of individuals and weak global searching ability.
+IGA (immune genetic algorithm) [43,44], a combination of the
+immune mechanism and genetic algorithm, can effectively enrich
+the population diversity and avoid local optima. The antibodies,
+similar to the chromosomes in GA, can promote or restrain themselves effectively to improve population diversity using a selection
+operator based on the concentration of the antibodies. Moreover,
+immune selection, immune mutation and the mechanism of the
+elite reservation can strengthen the ability of global optimization.
+In short, IGA is more suitable for parameter identification than GA.
+Xue et al. [45] optimized the enterprise information system structure using an improved IGA based on the binary tree, the niche
+algorithm and self-adaptive operators. Then the relevant results
+finally were validated by experiments.
+In this research, a dynamic mathematical model was first developed for an ultra-supercritical OTB unit under dry operating conditions. To our best knowledge, there has been no relevant studies
+except this paper [14] in recent years. Due to its irregular structure
+and the lack of closed-loop validations, this model can be further
+improved. Therefore, we established the model with higher accuracy and reasonable structure based on the previous study [14].
+
+The whole outline of the paper is presented as follows. The
+lumped parameter model of the OTB unit, including the coalpulverized system and the boiler-turbine system, is developed by
+means of mass and energy fundamental laws and nonlinear regression analysis in Section 2. During real operation, the parameters in
+model are varied with time and operating conditions, and many
+groups of parameters need to be identified. Therefore, the procedure for parameter identification based on the improved IGA is
+described in Section 3. In Section 4, open-loop experiments by step
+response are performed to verify the validity of model, and then
+the calculated outputs are compared against operational data to
+testify the accuracy. After this, a detailed discussion is presented
+in Section 5, in order to analyse the reasons behind modelling
+errors and comparison between this study and the previous [14].
+At last, the paper is summarized in Section 6.
+2. System description
+In this study, a 1000 MW ultra-supercritical power plant unit
+was researched. The plant adopts single-reheat turbine configuration and tower shape boiler arrangement, introduced from Alstom
+Power Company. Then there are three superheaters and two reheaters in boiler. Also, there are four low pressure feed water heaters,
+three high pressure feeder heaters and a deaerator in turbine system, and they can improve cycle thermal efficiency and feed water
+temperature. Lastly, at nominal condition, the main operating values are shown in Table 1.
+2.1. Coal-pulverized system
+The coal-pulverized system is a combination of devices and
+connected tubes, including coal feeder, coal mill, and primary air
+pipe. The system can transform the raw coal into the pulverized
+coal, then delivers it to a furnace for suspension combustion. As
+shown in Fig. 1, the coal feeder can transport the raw coal stored
+in the bunker to the coal mill through the coal feeder. Then the
+raw coal can be broken, ground and dried in the coal mill, and
+the qualified pulverized coal is filtered by the coal powder separator in the coal mill. Lastly, it is directly transported to the furnace
+for burning.
+For the major dynamic behaviours of the coal pulverized system, the main characteristics can be summarized as: time delay
+and accumulation time.
+The time delay mainly existing in the primary air tube and the
+coal feeder, etc., can be expressed as
+
+r0B ¼ uB ess
+
+ð1Þ
+
+The accumulation time of the coal-pulverized system majorly
+exists in the coal mill. Thus, the mass balance in mill is
+
+dM=dt ¼ r0B  rB
+
+ð2Þ
+
+According to the characteristic of the mill, mass flow rate of pulverized coal can be given by:
+Table 1
+Plant data at nominal condition.
+Item
+
+Value
+
+Nominal power (MW)
+Fuel flow (t/h)
+Excessive air ratio
+Feed water temperature (°C)
+Superheated steam flow (t/h)
+Steam temperature at superheater outlet (°C)
+Steam pressure at superheater outlet (MPa)
+Pressure at economizer inlet (MPa)
+Condenser back pressure (MPa)
+
+1000
+408.6
+1.2
+291.8
+2924
+605
+27.8
+31.9
+5.2
+
+657
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+
+The Boiler secon
+Economizer,waterwall+separator+Superheater
+
+Feedwater(Dfw)
+Heat (Q2)
+
+From regenerave
+heang system
+
+cjmj
+
+Superheated
+steam(Dst)
+To turbine
+
+Tst
+Tj
+Tj1
+Heat ﬂux(Q1)
+
+Fig. 2. Simplified diagram of the once-through boiler.
+
+economizer and waterwall, the steam separator, and the superheater. Feed water from a regenerative heating system flows
+through the heated section, and finally turns into the qualified
+superheated steam.
+
+Fig. 1. Simplified diagram of the coal-pulverized system.
+
+r B ¼ cB MfH f W f R ¼ ð1=c0 ÞM
+
+ð3Þ
+
+The above product of coefficients - cB, f H, f W, f R can be substituted for the inverse of c0, called milling inertia time. Combined
+with Eqs. (1)–(3), the transfer function of the coal-pulverized system can be expressed as:
+
+r B ¼ uB ess =ðc0 s þ 1Þ
+
+ð4Þ
+
+2.2. Boiler-turbine system
+2.2.1. Simplifications and assumptions
+In a boiler-turbine system, the pulverized coal mixed with primary air, burns fully in a furnace to heat the working fluid so as to
+obtain the steam with high temperature and pressure. Therefore,
+there are many components in boiler, including economizers,
+superheaters and reheaters. Afterwards, the qualified steam
+expands in turbine to work and then generate electricity via generator. The certain simplifications and assumptions are as follows:
+1. Flue gas:
+(1) Neglect the axial heat conduction between flue, tube, and
+working fluid.
+(2) The dynamic change of the flue gas is neglected.
+(3) Heat converted to the tube by gas is proportional to the heat
+generated by fuel combustion.
+(4) Ignore the variation of the coal quality.
+2. Economizer, waterwall, and superheater:
+(1) There are uniform fluid properties in the cross section of
+tube.
+(2) Regard the economizer, the waterwall, the steam separator
+and the superheater, as a whole heated tube with the same
+volume.
+(3) Total feed water flow, including spray water, enters directly
+into the whole heated tube on the assumption that the
+superheated steam temperature remains steady within a
+safe range.
+Fig. 2 presents a simplified block diagram of the ultrasupercritical OTB unit, composed of three major sections: the
+
+2.2.2. The boiler section
+To simplify the model structure, this study adopts the lumped
+parameter method to establish the model. The paper [23] provided
+that the portion of the energy stored in working fluid is much smaller for a larger plant. Then, the energy stored in metal has great
+influence on steam during dynamic load variations. The global mass
+and energy balance equations of the OTB can be written as
+
+v t ðdqa =dtÞ ¼ Dfw  Dst
+
+ð5Þ
+
+v t ½dðqa ha Þ=dt ¼ Dfw hfw  Dst hst þ Q 2
+
+ð6Þ
+
+Remark 1. h = u + pv. When 1 kg working fluid flows into a
+thermodynamic system, thermodynamic energy, u, stored in fluid
+also enters into the system. The pushing work, pv, received from
+the external working unit, is also brought into system. Thus,
+v t ½dðqa ha Þ=dt can represent the change of the energy stored in
+working fluid.
+The metal energy balance equation is
+
+cj mj ðdT j =dtÞ ¼ Q 1  Q 2
+c3 ¼ cj mj
+Q 1 ¼ k0 rB
+
+ð7Þ
+
+Q 2 ¼ k1 Dnin ðT j  T in Þ
+The function, Q2 = k1Dn(Tj  T) [50], is the equation of the heat
+released from metal. The coefficient k1, mainly depends on the
+property of working fluid in condition that the shape of tube inner
+wall and roughness are constant. In this case, the fluid density is
+nearly constant, and approximately n  0.8.
+Remark 2. cj mj ðdT j =dtÞ represents the variation of energy stored
+in tube metal. Compared with the previous research [14], this
+study contains the metal energy effect, indicating that the developed model is more reasonable.
+It is important for the lumped parameter model to choose a
+proper lumped parameter point. Generally, the meddle point and
+the outlet point are usually chosen as the representative points.
+If the meddle point is selected, the complexity of model will be
+enhanced. The other point is much simpler, but it is usually applicable for single-phase fluid due to no phase transition. However,
+the working fluid in whole heated tube is composed of four phases,
+namely, unsaturated water, saturated water, saturated steam, and
+superheated steam. For various states, the difference in thermodynamic property is noticeable. Therefore, it is necessary to select a
+new position in tube as the lumped parameter point.
+
+658
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+
+The steam pressure in the separator can strongly track load
+change [21]. Likewise, the steam enthalpy in the separator can
+reflect the change of the ratio of fuel to water sensitively. Then
+the ratio needs to be controlled within a safe range to maintain
+the temperature of superheated steam near the set value. Therefore, the steam state in the separator can be selected as the lumped
+parameter, and the mass and energy balance equations are:
+
+s1 ðdqm =dtÞ ¼ Dfw  Dst
+
+ð8Þ
+
+s2 ½dðqm hm Þ=dt ¼ Dfw hfw  Dst hst þ Q 2
+
+ð9Þ
+
+where s1 and s2 are dynamic parameters.
+Moreover, for convenience, the state at outlet of the tube is chosen as the lumped parameter in metal model. Thus, the metal
+energy equation is written as
+
+cj1 mj1 ðdT j1 =dtÞ ¼ k0 r B  k1 Dnst ðT j1  T st Þ
+
+ð10Þ
+
+The unit active power can reveal the energy balance between unit
+plant and power grid, and the main steam pressure is also a signal of
+balance between boiler and turbine. Additionally, the turbine valve
+opening can accelerate the speed of the load response, as it can take
+fully advantage of storage energy to coordinate the dynamic difference between boiler and turbine. The timely control for coal quantity
+and feed water flow can recover the storage energy so that steam
+volume can agree well with load demands. Therefore, steam
+enthalpy and pressure in the separator, fuel flow in a furnace and
+metal temperature at output of tube are chosen as state variables.
+Then the steam enthalpy in the separator, the main steam pressure
+and the unit load are selected as outputs. The fuel quantity order, the
+feed water flow and the throttle valve opening are regarded as
+inputs. Eqs. (8) and (9) calculate the partial derivatives with respect
+to pm and hm. Then they can be rewritten as Eqs. (11) and (12)
+
+b11 ðdpm =dtÞ þ b12 ðdhm =dtÞ ¼ Dfw  Dst
+
+ð11Þ
+
+steam volume flow rate after absorbing heat. Therefore, Tian [46]
+provided a relatively accurate equation that
+
+D2v 0 þ z2 Dv 0 Q 0 ¼ z1 Dp
+
+ð16Þ
+
+where, Dv0 is the initial volume flow rate of steam in superheater;
+Dp = pm  pst, is the pressure drop in superheater; z1 and z2 are
+the coefficients relating to tube resistance and specific heat of
+steam; Q0 is the heat absorbed by superheated steam flowing
+through the tube.
+According to the equation, Dv0 = Dm0v0, v0 and Dm0 are the specific volume and the mass flow rate of steam in the separator,
+respectively. Eq. (16) can be converted into the following equation
+h
+i
+Q 20 v 20 ðDm0 =Q 0 Þ2 þ z2 v 0 Dm0 =Q 0 ¼ z1 Dp
+ð17Þ
+Approximately, Dm0/Q0 can be expressed as a function of the
+ratio of fuel to water, and hm can reflect the variation of ratio of fuel
+to water sensitively. During regular operation, the fluctuation of hm
+is relatively small, which can be roughly viewed as a constant.
+With respect to the energy balance, Q0 is nearly proportional to
+the Ne, i.e. the unit active power. Likewise, Pm, i.e. the steam pressure in the separator, can track the change of Ne effectively [21].
+Then v0 can be expressed as a function of pm and hm. Therefore,
+the above equation can be rewritten as
+
+Dp ¼ gðpm Þ
+
+ð18Þ
+
+where gðÞ is a some function.
+2.2.3. The turbine section
+The equation [47] of the mass flow, density and pressure of the
+steam at inlet of turbine is
+a a
+Dst ¼ kut p1
+st qst ;
+
+0 6 a 6 0:5
+
+ð19Þ
+
+where
+
+where k and a are coefficients needed to be determined, and a is
+related with superheat degree. Its range is from 0 to 0.5, and a = 0
+corresponds to saturated steam state; also, a = 0.5 corresponds to
+ideal superheated steam state.
+As steam density can be expressed as a function of pressure and
+enthalpy, Eq. (19) can be rewritten as follows:
+
+b11 ¼ s1 ð@ qm =@pm Þ
+
+Dst ¼ ut f ðpst ; hst Þ
+
+b21 ðdpm =dtÞ þ b22 ðdhm =dtÞ ¼ Dfw hfw  lDst hm þ k1 Dnst ðT j1  T st Þ
+ð12Þ
+
+b12 ¼ s1 ð@ qm =@hm Þ
+
+ð20Þ
+
+Combined with Eqs. (11) and (12), the following equations can
+be given by
+
+where f ðÞ is a some function of pst and Tst.
+Fig. 3 shows a simplified block diagram of the turbine and
+regenerative system.
+Compared with boiler section, turbine and regenerative system
+has a faster dynamic response, and the inertia time is approximately from ten to twenty seconds. The unit power can be
+expressed as
+
+c1 ðdpm =dtÞ ¼ ðhfw  d1 ÞDfw þ ðd1  lhm ÞDst þ k1 Dnst ðT j  T st Þ
+
+ð13Þ
+
+Ne ¼ g½Dst hst  ðqn hn þ qn1 hn1 þ qn2 hn2 Þ
+
+c2 ðdhm =dtÞ ¼ ðhfw  d2 ÞDfw þ ðd2  lhm ÞDst þ k1 Dnst ðT j  T st Þ
+
+ð14Þ
+
+b21 ¼ s2 hm ð@ qm =@pm Þ
+
+b22 ¼ s2 ½hm ð@ qm =@hm Þ þ qm 
+l ¼ hst =hm
+
+ð21Þ
+
+where q0 and h0 are the mass flow rate (kg/s) and specific enthalpy
+(kJ/kg) of the exhaust steam out of the low pressure cylinder,
+respectively; qi and hi (1 6 i 6 n) are the mass flow rate (kg/s) and
+
+c1 ¼ b21  ðb11 b22 =b12 Þ
+c2 ¼ b22  b12 b21 =b11
+c3 ¼ cj1 mj1
+
+Superheated
+steam
+
+The equation of the differential pressure and the steam flow in
+superheater section is usually expressed as
+
+ð15Þ
+
+However, this equation only considers the pressure drop resulting from the mass flow rate, neglecting the factor, the increase of
+
+Spray water
+
+Heater #n-1
+
+d2 ¼ b21 =b11
+
+High pressure
+cylinder
+#n-1
+#n
+Extracted Extracted
+steam
+Feedwater steam
+(To economizer)
+Heater #n
+
+d1 ¼ b22 =b12
+
+Exhausted
+steam
+
+Steam
+
+Acve
+power
+Middle,Low
+pressure cylinder
+Exhausted
+Enthalpy
+steam absorbed by the
+
+Reheater #1
+Extracted
+steam
+Heater #1
+
+where
+
+Dp ¼ D2st =e
+
+Dr hr1 þ Dr2 hr2  ðqn3 hn3 þ . . . þ q0 h0 Þ
+
+circulang water
+
+Fig. 3. Simplified block diagram of turbine and regenerative system.
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+
+specific enthalpy (kJ/kg) of the extracted steam into heater #i,
+respectively.
+Assuming that there is no mass loss in thermal cycle, then Eq.
+(21) can be rewritten as
+
+Ne ¼ g½Dst hst  ðDst hfw þ Hn Þ þ Dr ðhr2  hr1 Þ
+
+ð22Þ
+
+In general, Hn is proportional to Ne. i.e., Hn = gNe.
+Then
+
+Ne ¼ g½Dst hst  Dst hfw þ Dr ðhr2  hr1 Þ  ggNe
+
+ð23Þ
+
+ð24Þ
+
+where D() is a specific function.
+As mentioned earlier, the steam pressure in the separator can
+track the change of load. Then there is a function between Ne and
+pm. Thus, Eq. (24) can be rewritten as
+
+Pðpm Þ ¼ Dr ðhr2  hr1 Þ=½Dst ðhst  hfw Þ
+
+ð25Þ
+
+During regular operation, hfw, the enthalpy of feed water, also
+follows the change of the unit load. There is a functional relationship between hfw and pm, namely, hfw = h(pm).
+Thus, Eq. (23) can be rewritten as
+
+Ne ¼ k2 Dst ðhst  hfw Þ
+
+ð26Þ
+
+where k2 ¼ g½1 þ Pðpm Þ=ð1 þ ggÞ. That is k2 = k(pm), and k() is the
+specific function.
+2.3. Summary
+Above all, the dynamic nonlinear model can be expressed as
+
+X_ ¼ AðXÞ þ BðXÞU
+
+ð27Þ
+
+Y ¼ CðXÞ þ DðXÞU
+where
+
+2
+
+3
+
+2
+
+3
+
+2 3 2
+3
+2 3 2
+3
+u1
+uB
+y1
+pst
+6x 7 6p 7
+6 27 6 m7
+6 7 6
+7
+6 7 6
+7
+X¼6 7¼6
+7; U ¼ 4 u2 5 ¼ 4 Dfw 5; Y ¼ 4 y2 5 ¼ 4 hm 5
+4 x3 5 4 h m 5
+u3
+ut
+y3
+Ne
+Tj
+x4
+x1
+
+rB
+
+x_ 1 ¼ ð1=c0 Þx1 þ ðess =c0 Þu1
+x_ 2 ¼ ½ðhfw  d1 Þ=c1 u2 þ ½ðd1  lx3 Þ=c1 f ðx2  gðx2 Þ; lx3 Þu3
+n
+
+þ ½k1 ðx4  T st Þf ðx2  gðx2 Þ; lx3 Þ=c1 un3
+x_ 3 ¼ ½ðhfw  d2 Þ=c2 u2 þ ½ðd2  lx3 Þ=c2 f ðx2  gðx2 Þ; lx3 Þu3
+n
+
+þ ½k1 ðx4  T st Þf ðx2  gðx2 Þ; lx3 Þ=c2 un3
+n
+x_ 4 ¼ ðk0 =c3 Þx1  ½k1 ðx4  T st Þf ðx2  gðx2 Þ; lx3 Þ=c3 un3
+
+y1 ¼ x2  gðx2 Þ
+y2 ¼ x3
+y3 ¼ k2 ðlx3  hfw Þf ðx2  gðx2 Þ; lx3 Þu3
+Table 2
+The ratio of Dr(hr2  hr1) to Dst(hst  hfw) at different steady
+conditions.
+The load (MW)
+
+Dr ðhr2  hr1 Þ=½Dst ðhst  hfw Þ
+
+1000
+800
+600
+500
+
+0.198
+0.195
+0.191
+0.183
+
+3. Parameter identification
+In this section, there are four unknown static parameters-k0, k2,
+l, hfw, seven unknown dynamic parameters-s, c0, c1, c2, c3, d1, d2, and
+three unknown functions-f(), g(), Q2 need to identify.
+3.1. Static parameter identification
+
+Table 2 [48] provides the ratio of heat absorbed by steam in
+superheater to the one in reheater.
+Obviously, with the unit load increasing, the ratio also monotonically increases. Thus, there is a function between unit load
+and the ratio, which can be expressed as
+
+DðNe Þ ¼ Dr ðhr2  hr1 Þ=½Dst ðhst  hfw Þ
+
+659
+
+The static parameters can be calculated, combined with nonlinear regression analysis and steady data, which varies within the
+certain error (i.e. 2% in this paper), namely, staying in steady state.
+According to Eqs. (4)–(7), the steady equations can be given by
+
+0 ¼ uB  r B
+0 ¼ Dfw  Dst
+
+
+
+n
+
+ 
+0 ¼ Dfw hfw  lDst hm þ k1 Dst T j1  T st
+
+
+n
+0 ¼ k0 r B  k1 Dst T j1  T st
+
+ð28Þ
+ð29Þ
+ð30Þ
+ð31Þ
+
+The superscript ⁄ represents the variables are in steady state.
+Combined with Eq. (26), the calculating equations of static
+parameters are as follows:
+
+
+
+
+l ¼ hst =hm
+
+
+
+
+k0 ¼ Dfw lhm  hfw =uB
+h 
+i
+
+
+k2 ¼ Ne = Dst hst  hfw
+
+
+n
+
+k0 uB = T j  T st ¼ k1 Dst
+
+ð32Þ
+ð33Þ
+ð34Þ
+ð35Þ
+
+k1, n can be obtained by nonlinear regression analysis.
+Note that the parameters in model, especially dynamic parameters, change with operating conditions and time [49]. Then, the
+factors, i.e. time and operating conditions, are considered in this
+study, in order to adapt to practical conditions. Thus, the running
+data is divided into nine groups to determine static and dynamic
+parameters and unknown functions according to data
+characteristic.
+The steady-state values are shown in Table 3.
+Here, l means the ratio of hst to hm, namely, determined by heat
+distribution between waterwall and superheater. Actually,
+different operating conditions influence the value of l, here, the
+load section ramps up from 600 MW to 872 MW, and l = 1.2886.
+Moreover, k0 has corresponding relation with respect to pulverized
+coal flow in a furnace. By regression analysis, the function
+between k0 and the coal quantity in a furnace, rB, was given by
+k0 = 1.948r2B  364.56rB + 32,500. On the other hand, k2, its significance is the unit load that corresponds to 1 kJ energy brought into
+the turbine by superheated steam. In practice, k2 follows the
+change of unit power. According to the steady data, the function
+of k2 was determined as k2 = 0.0003638p0.153246
+by regression
+m
+analysis.
+According to steady data at different conditions, the equation
+was expressed as
+
+Q 2 ¼ 5198:755D0:757
+ðT j  T st Þ; T st ¼ 586:9411
+st
+Likewise, the function of hfw was given as hfw = 575.276p0.24566
+.
+m
+According to steady data, the function of Dp was expressed as
+1:065
+Dp ¼ gðpm Þ ¼ 0:04pm
+
+ð37Þ
+
+In addition, the equation, referring to the paper [49], was
+obtained by dynamic running data over a wide operating
+range, and the 1stOpt, a optimization software. Thus, the function
+– f (pst, hst), was given as
+
+660
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+
+Table 3
+Steady-state values at different steady conditions.
+Ne (MW)
+
+hfw (kJ/kg)
+
+hst (kJ/kg)
+
+hm (kJ/kg)
+
+Dfw (kg/s)
+
+uB (kg/s)
+
+Dst (kg/s)
+
+Pst (MPa)
+
+Pm (MPa)
+
+ut
+
+Tst (°C)
+
+Tj (°C)
+
+601.3
+781.2
+855.9
+896.0
+920.9
+950.6
+1000.9
+
+1143.7
+1220.3
+1249.8
+1263.5
+1263.4
+1280.6
+1299.4
+
+3508.4
+3530.9
+3490.6
+3507.7
+3499.2
+3489.0
+3480.4
+
+2746.1
+2755.5
+2722.5
+2775.8
+2677.6
+2708.3
+2765.4
+
+457.7
+585.9
+644.2
+686.4
+698.9
+729.8
+777.0
+
+62.5
+87.0
+94.0
+99.2
+101.3
+106.0
+112.8
+
+453.8
+586.7
+643.3
+688.0
+698.5
+731.3
+778.9
+
+15.7
+20.1
+22.5
+23.4
+23.6
+24.7
+26.2
+
+16.5
+21.2
+23.6
+24.7
+24.9
+26.0
+27.7
+
+0.658
+0.666
+0.652
+0.668
+0.672
+0.669
+0.668
+
+573.8
+597.6
+591.0
+599.9
+597.5
+597.5
+599.3
+
+575.7
+599.8
+593.1
+602.0
+599.8
+599.6
+601.4
+
+0:743
+
+f ðpst ; hst Þ ¼ 5145:ð854 þ 13:47pst þ 0:4hst  0:003pst hst Þ
+
+4. Modelling verification
+
+ð38Þ
+3.2. Dynamic parameter identification
+
+In steady conditions, Table 4 shows the comparison between
+the measured and the calculated values, and relative errors.
+
+In this section, the dynamic parameters were identified, combined with the improved IGA and operational data, and the sampling period is 10 s.
+For IGA training procedure, the error E was determined as
+follows
+
+E¼
+
+4.1. Steady state validation
+
+N
+X
+ðjDpst =pst0 j þ jDpm =pm0 j þ jDNe =Ne0 j þ jDr B =rB0 j þ jDhm =hm0 jÞ
+i¼1
+
+ð39Þ
+
+Remark 4. Relative errors refer to the ratio of deviation between
+the measured and the calculated values to those at the normal
+condition, i. e. Pst0 = 25.36 MPa, Ne0 = 1000 MW, rB0 = 120.78 kg/s,
+hm0 = 2984.32 kJ/kg, and Pm0 = 29.86 MPa.
+The result, shown in Table 4, illustrated that the general errors
+were pretty small, and the minimum was 0; the maximum was
+3.47%. This indicates that the model has the great steady
+performance.
+4.2. Dynamic model validation
+
+Remark 3. Dpst, DNe, Dhm, DrB, Dpm represent the errors between
+the calculated and measured values of corresponding state variables. Likewise, pst0, Ne0, hm0, rB0, pm0, indicate the variables lying in
+the nominal condition.
+
+An antibody consists of s, c0, c1, c2, c3, d1, d2 in developed model.
+Running data over a wide operating range was used for parameter
+optimization in order to achieve a precise antibody. As shown in
+Fig. 4, the optimization procedure is composed of three stages in
+total. The first stage is initializing algorithm configuration. The second stage, including the three operations, i.e. immune selection,
+immune crossover and immune mutation, similar to GA, called
+genetic section. The third stage is the most important part during
+optimization process, called immune section, including high antibody mutation and large scale mutation of optimal antibody. After
+the mutation, the fitness value and concentration are calculated.
+Then a certain amount of antibodies are generated from the mutation of the optimal antibody, in order to enhance the diversity of
+population and global search speed. If the optimal antibody in current generation is equal to the one in former generation, the large
+scale mutation of the optimal antibody will be executed. The radius
+of mutation in multi-dimension space gradually increases till
+escaping the premature point or meeting max iteration times.
+The operator combines the merits of binary and real number coding. Finally, the new antibodies generate under the inoculation of
+memory cells and the next evolution continues.
+After the closed-loop identification, the dynamic parameters are
+as follows:
+
+s ¼ 167; c0 ¼ 121; c1 ¼ 1326462; c2 ¼ 63028;
+c3 ¼ 10152; d1 ¼ 933; d2 ¼ 2354:
+
+ð40Þ
+
+The above part is obtained using dynamic running data that
+ranges from 600 MW to 872 MW, and the complete are
+listed in Appendix A. The ranges of three inputs are: uB2[50 kg/s,
+120 kg/s], Dfw2[400 kg/s, 800 kg/s], ut2[60%, 70%].
+
+4.2.1. The analysis of open-loop characteristic
+Open-loop experiments that step disturbance is acted on every
+input were performed, in order to validate the developed model,
+shown in Figs. 5–7.
+Remark 5. Considering the fact that, the open-loop experiment is
+out of the regular closed-loop operation. Therefore, the parameters
+varied with the operating conditions, hfw = h (pm) and k2 = k (pm),
+can be viewed as constants staying in corresponding steady
+conditions.
+The analysis of open-loop characteristics is described as follows.
+Fig. 5 shows the responses of model under the step disturbance
+acting on the coal quantity order. After a period of time delay, the
+heat absorbed by steam gradually increases due to the inertia
+effect. Then the steam pressure and enthalpy rise up to the corresponding level as well. Therefore, the unit power reaches up to the
+higher level compared with the original level.
+Fig. 6 shows the responses of model under the step disturbance
+acting on the feed water flow. The steam in heated tube gets
+squeezed along with step increase of feed water flow. Thus, the
+more steam is pushed into turbine to work, and the unit load
+increases. As the pulverized coal flow is unchanged, the load gradually declines to the original level after the squeeze. When the feed
+water flow increases, the main steam pressure increases subsequently due to squeeze effect. As the volume flow reduces and
+the main steam temperature drops, the main steam pressure declines to the lower level than the original level. In addition, the length
+of the unsaturated section increases, and the heat absorbed by
+steam decreases. Then, the steam enthalpy in the separator declines as well.
+Fig. 7 shows the responses of model under the step disturbance
+acting on the throttle valve opening. Firstly, the main steam pressure declines immediately resulting from abrupt change of the
+opening. This leads to storage energy quickly releasing so that
+the decline of the main steam pressure lessens, and the unit power
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+
+661
+
+Fig. 4. The training procedure of the OTB model.
+
+increases correspondingly. As the fuel flow rate is unchanged, the
+unit power recovers to the original level after the release. The main
+steam pressure gradually decreases to the steady level. Meanwhile,
+the steam enthalpy in the separator declines slightly owing to the
+mild variation of steam flow, and lastly recovers to the original
+level in pace with steam flow due to the unchanged ratio of fuel
+to water.
+From the above analysis, the open-loop dynamic responses of
+the developed model are reasonable, consistent with the practical
+operation, indicating the model is correct in essence.
+4.2.2. The validation of closed-loop operation
+In this section, two sets of the closed-loop running data with
+different trends are used for model validation. Namely, the load
+ramps up from 600 MW to 872 MW, and the load ramps down
+
+from 954 MW to 880 MW. Then, the relevant errors are shown in
+Table 5.
+As shown in Figs. 8–13 and Table 5, the calculated values were
+in strongly accordance with the measured values, and the max relative average error was not beyond 1.27%. This indicates that the
+developed model owns the satisfactory accuracy under wide
+dynamic closed-loop operating conditions.
+4.2.3. Comparison
+In this section, the modelling method was compared with the
+previous [14], in order to prove the higher accuracy of the developed model. The relevant results are shown in Figs. 14–16, and
+the average relative errors are listed in Table 6.
+As mentioned above, it showed that the calculated values in this
+research were closer to the measured than those in previous work
+
+662
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+
+Table 4
+The comparison between the measured and the calculated values at steady conditions.
+Inputs
+
+Measurements
+
+Dfw (kg/s)
+
+uB (kg/s)
+
+ut
+
+Ne (MW)
+
+hm (kJ/kg)
+
+pst (MPa)
+
+pm (MPa)
+
+rB (kg/s)
+
+57.7
+585.9
+644.2
+686.4
+698.9
+729.8
+777.0
+
+62.5
+87.0
+93.9
+99.1
+101.3
+106.0
+112.8
+
+0.658
+0.666
+0.652
+0.668
+0.672
+0.669
+0.668
+
+601.3
+781.2
+855.9
+896.0
+920.9
+950.6
+1000.9
+
+2746.1
+2755.5
+2722.5
+2775.8
+2677.6
+2708.3
+2765.4
+
+15.7
+20.1
+22.5
+23.4
+23.6
+24.7
+26.2
+
+16.5
+21.2
+23.6
+24.7
+24.9
+26.0
+27.7
+
+62.5
+87.0
+93.8
+99.2
+101.3
+106.0
+112.8
+
+Calculations
+
+Errors (%)
+
+Ne (MW)
+
+hm (kJ/kg)
+
+pst (MPa)
+
+pm (MPa)
+
+rB (kg/s)
+
+DNe/Ne0
+
+Dhm/hm0
+
+Dpst/pst0
+
+Dpm/pm0
+
+DrB/rB0
+
+601.9
+780.4
+852.4
+899.3
+912.3
+945.3
+998.4
+
+2717
+2726
+2710
+2786
+2781
+2773
+2768
+
+15.2
+19.5
+21.8
+23.1
+23.4
+24.6
+26.3
+
+15.9
+20.5
+22.9
+24.4
+24.6
+25.9
+27.7
+
+62.5
+87.0
+93.9
+99.2
+101.3
+106.0
+112.8
+
+0.064
+0.081
+0.347
+0.330
+0.861
+0.529
+0.250
+
+0.98
+0.99
+0.42
+0.34
+3.47
+2.17
+0.09
+
+1.98
+2.57
+2.70
+1.16
+0.94
+0.69
+0.09
+
+1.74
+2.37
+2.26
+1.04
+0.81
+0.56
+0.08
+
+0.0260
+0.0055
+0.0600
+0.0000
+0.0950
+0.0260
+0.0110
+
+DN e =N e0
+
+DP st =P st0
+
+Dhm =hm0
+
+Table 5
+Relative error of the calculated outputs.
+Range (MW)
+600–872
+
+Max
+Avg
+
+2.98
+1.11
+
+3.31
+0.98
+
+2.14
+0.81
+
+954–880
+
+Max
+Avg
+
+4.26
+0.51
+
+4.64
+1.27
+
+2.26
+0.91
+
+Fig. 5. The step increase of coal quantity order.
+
+Fig. 8. Comparison on unit load.
+
+Fig. 6. The step increase of feed water.
+
+Fig. 9. Comparison on steam enthalpy in separator.
+
+Fig. 7. The step increase of throttle valve opening.
+
+[14]. The result in table also showed that the average relative
+errors were reduced by nearly 50%. Therefore, the developed model
+has higher accuracy.
+
+5. Results and discussion
+In this section, the model validation under regular operation
+was investigated and further analysed, and the dynamic operational data from 600 MW to 1000 MW was applied to prove the
+accuracy and performance.
+
+663
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+Table 6
+The comparison of two modelling methods in average relative errors.
+Method
+
+The average relative error (%)
+
+The modelling method in this paper
+The previous [14]
+
+Fig. 10. Comparison on main steam pressure.
+
+DPst/Pst0
+
+DNe/Ne0
+
+Dhm/hm0
+
+0.93
+1.70
+
+0.71
+1.38
+
+0.71
+1.65
+
+Second, fitting error. The steady data was applied to determine
+the functional relations by means of nonlinear regression analysis.
+In fact, the obtained functions only grasp the major relations with
+less accuracy. This is why we optimized the nine groups of parameters in order to obtain the higher accuracy.
+Third, simplifications and assumptions. For example, dynamic
+parameters staying in the specific region are viewed as constants
+and ignore the variation of coal quality, etc.
+The modelling method in this paper was compared with the
+previous [14]. As it is seen in Figs. 14–16 and Table 6, the average
+relative errors in this study were much less than those in the previous [14] due to the excellent optimization procedure, correct
+structure and varying parameters, etc. Therefore, the developed
+model has the higher accuracy and satisfactory performance.
+As for applicability, this model is only suitable for the dry operating condition. In this stage, the steam separator is just regarded
+
+Fig. 11. Comparison on unit load.
+
+Fig. 14. Comparison on unit load.
+
+Fig. 12. Comparison on steam enthalpy in separator.
+
+Fig. 15. Comparison on steam enthalpy in separator.
+
+Fig. 13. Comparison on main steam pressure.
+
+As mentioned in Figs. 8–13, the calculated outputs can strongly
+track the measured values. However, the errors can’t be avoided
+and the reasons are as follows:
+First, noise. The noise hidden in the running data needs to be
+considered. It can unreasonably enlarge the max relative error
+shown in Table 5.
+
+Fig. 16. Comparison on the main steam pressure.
+
+664
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+
+as the tube filled fully with steam. Therefore, the boiler section can
+be treated as a whole heated tube, and the above modelling analysis is reasonable.
+Likewise, in terms of usefulness, the developed model can be
+used for simulation analysis and testing control algorithms. Due to
+the reasonable structure and efficient training procedure for parameter identification, the developed model of the OTB unit is able to
+reflect the dynamic behaviours correctly and accurately under the
+dry operating condition like open-loop experiments in this study.
+In addition, due to its correct structure and high accuracy, the model
+can be viewed as a controlled object to test various control algorithms based on model so as to compare the different control performance and then provide the reference for design of CCS.
+Lastly, the major contributions in this study are to put forward a
+dynamic model of an ultra-supercritical OTB unit and an efficient
+training procedure for parameter identification. Moreover, the
+parameters in model are not unique, mainly up to special
+operational data.
+
+s ¼ 167; c0 ¼ 121; c1 ¼ 1326462; c2 ¼ 63028;
+c3 ¼ 10152; d1 ¼ 933; d2 ¼ 2354:
+3) Unknown functions
+
+Dp ¼ gðpm Þ ¼ 0:04p1:065
+m
+Q 2 ¼ 5198:755D0:757
+ðT j  T st Þ; T st ¼ 586:941
+st
+f ðpst ; hst Þ ¼ 5145pst :
+ð854 þ 13:47pst þ 0:4hst  0:003pst hst Þ
+
+0:743
+
+4) Relative errors
+
+av g : Dpst =pst0 ¼ 1:04%; DNe =Ne0 ¼ 1:12%;
+
+Dhm =hm0 ¼ 0:78%
+(2) The load ramps down from 872 MW to 781 MW, and time
+range is from 7060 s to 18,000 s.
+1) The steady parameters
+
+6. Conclusion
+In this research, a dynamic mathematical model of the ultrasupercritical OTB unit was developed under the dry operating condition, derived from the mass and energy conservation laws and
+thermodynamic fundamental principles through reasonable simplifications and assumptions. Afterwards, dynamic parameters
+were identified, combined with the training procedure based on
+the improved IGA and running data acquired from an ultrasupercritical plant unit. Through open-loop experiments and
+closed-loop validations, the developed model can correctly reveal
+the dynamic characteristics of the OTB unit. After simulation analysis, the structure derived is correct in nature. Then the comparison
+between the models developed in this study and previous work [14]
+was performed to prove the higher accuracy under same dynamic
+operating conditions. Therefore, the model can be used for simulation analysis and testing control algorithms. Additionally, the training procedure for parameter identification was proposed to find an
+accurate solution so that the model had the satisfactory steady and
+dynamic performance. Similarly, the procedure can be applied to
+identify the parameters in other models such as superheaters. In
+future, the model for an ultra-supercritical OTB unit under wet or
+start-up conditions, should be investigated.
+Acknowledgments
+Thanks for the many kind supports and helps from reviewers
+and editors as well as my roommate, Xiao-ming Wan, regarding
+paper structure and writing skills.
+Appendix A
+The complete are as follows.
+(1) The load ramps up from 600 MW to 872 MW, and time range is
+from 0 s to 7050 s.
+1) The steady parameters
+
+l ¼ 1:2886
+
+l ¼ 1:2847
+hfw ¼ 609:745p0:2272
+m
+k0 ¼ 1:948r2B  364:56r B þ 32500
+k2 ¼ 0:0003638p0:153246
+m
+2) Dynamic parameters
+
+s ¼ 228; c0 ¼ 446; c1 ¼ 1358150; c2 ¼ 10713;
+c3 ¼ 27594; d1 ¼ 189; d2 ¼ 1738:
+3) Unknown functions
+
+Dp ¼ gðpm Þ ¼ 0:03865p1:0755
+m
+Q 2 ¼ 5198:755D0:757
+ðT j  T st Þ; T st ¼ 595
+st
+f ðpst ; hst Þ ¼ 5159:65pst :
+ð854 þ 13:47pst þ 0:4hst  0:003pst hst Þ
+
+0:743
+
+4) Relative errors
+
+av g : Dpst =pst0 ¼ 1:01%; DNe =Ne0 ¼ 0:843%;
+
+Dhm =hm0 ¼ 0:8237%
+(3) The load ramps up from 781.3 MW to 933.5 MW, and time
+range is from 18,010 s to 26,010 s.
+1) The steady parameters
+
+l ¼ 1:2845
+hfw ¼ 619:2944p0:222
+m
+k0 ¼ 1:742r2B  332:8r B þ 31316:7
+k2 ¼ 0:0004228p0:10282
+m
+2) Dynamic parameters
+
+s ¼ 131; c0 ¼ 203; c1 ¼ 1364352; c2 ¼ 97838;
+c3 ¼ 35295; d1 ¼ 1136; d2 ¼ 1837:
+3) Unknown functions
+
+hfw ¼ 575:276p0:24566
+m
+
+Dp ¼ gðpm Þ ¼ 0:0329p1:12764
+m
+
+k0 ¼ 1:948r 2B  364:56r B þ 32500
+
+Q 2 ¼ 3917:67D0:797
+ðT j  T st Þ; T st ¼ 596:2
+st
+
+k2 ¼ 0:0003638p0:153246
+m
+
+f ðpst ; hst Þ ¼ 5181:22:
+
+2) Dynamic parameters
+
+pst ð854 þ 13:47pst þ 0:4hst  0:003pst hst Þ
+
+0:743
+
+665
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+
+4) Relative errors
+
+2) Dynamic parameters
+
+av g : Dpst =pst0 ¼ 0:75%; DNe =Ne0 ¼ 0:63%;
+
+Dhm =hm0 ¼ 0:69%
+
+s ¼ 290; c0 ¼ 618; c1 ¼ 828239; c2 ¼ 35767;
+c3 ¼ 44660; d1 ¼ 106; d2 ¼ 3381:
+
+(4) The load ramps down from 933.4 MW to 861.5 MW, and time
+range is from 26,020 s to 37,620 s.
+1) The steady parameters
+
+3) Unknown functions
+
+Dp ¼ gðpm Þ ¼ 0:00837p1:55317
+m
+Q 2 ¼ 4288:73D0:783
+ðT j  T st Þ; T st ¼ 596:3
+st
+
+l ¼ 1:3
+
+f ðpst ; hst Þ ¼ 5217:4pst :
+
+hfw ¼ 573:128p0:2465
+m
+
+0:743
+
+ð854 þ 13:47pst þ 0:4hst  0:003pst hst Þ
+
+k0 ¼ 1:195r 2B  246:517r B þ 28044:26
+k2 ¼ 0:0004417p0:0888
+m
+
+4) Relative errors
+
+av g : Dpst =pst0 ¼ 0:3%; DNe =Ne0 ¼ 0:34%;
+
+2) Dynamic parameters
+
+s ¼ 271; c0 ¼ 276; c1 ¼ 398652; c2 ¼ 29544;
+c3 ¼ 17080; d1 ¼ 1191; d2 ¼ 2151:
+
+Dhm =hm0 ¼ 0:55%
+(7) The load ramps up from 858.4 MW to 953.7 MW, and time
+range is from 50,080 s to 57,760 s.
+
+3) Unknown functions
+
+Dp ¼ gðpm Þ ¼ 0:00837p1:55317
+m
+Q 2 ¼ 4288:73D0:783 ðT j  T st Þ; T st ¼ 594:3
+st
+
+f ðpst ; hst Þ ¼ 5193:23pst :
+0:743
+
+ð854 þ 13:47pst þ 0:4hst  0:003pst hst Þ
+4) Relative errors
+
+av g : Dpst =pst0 ¼ 0:9%; DN e =Ne0 ¼ 0:91%;
+
+Dhm =hm0 ¼ 0:77%
+
+1) The steady parameters
+
+l ¼ 1:2878
+hfw ¼ 573:128p0:2465
+m
+k0 ¼ 1:195r 2B  246:517r B þ 28044:26
+k2 ¼ 0:0004417p0:0888
+m
+2) Dynamic parameters
+
+(5) The load ramps up from 861.5 MW to 950.3 MW, and time
+range is from 37,630 s to 44,240 s.
+
+s ¼ 78; c0 ¼ 140; c1 ¼ 163361; c2 ¼ 23917;
+c3 ¼ 3137; d1 ¼ 1010; d2 ¼ 1330:
+3) Unknown functions
+
+1) The steady parameters
+
+Dp ¼ gðpm Þ ¼ 0:00837p1:55317
+m
+Q 2 ¼ 4288:73D0:783 ðT j  T st Þ; T st ¼ 594:88
+
+l ¼ 1:2917
+hfw ¼ 573:128p0:2465
+m
+
+st
+
+f ðpst ; hst Þ ¼ 5198:165pst :
+
+k0 ¼ 1:195r 2B  246:517r B þ 28044:26
+
+0:743
+
+ð854 þ 13:47pst þ 0:4hst  0:003pst hst Þ
+
+k2 ¼ 0:0004417p0:0888
+m
+
+4) Relative errors
+
+2) Dynamic parameters
+
+s ¼ 290; c0 ¼ 546; c1 ¼ 1348217; c2 ¼ 61678;
+c3 ¼ 72647; d1 ¼ 121; d2 ¼ 2098:
+
+av g : Dpst =pst0 ¼ 0:86%; DNe =Ne0 ¼ 0:26%;
+Dhm =hm0 ¼ 0:58%
+(8) The load ramps down from 953.6 MW to 879.9 MW, and time
+range is from 57,770 s to 70,070 s.
+
+3) Unknown functions
+
+Dp ¼ gðpm Þ ¼ 0:00837p1:55317
+m
+Q 2 ¼ 4288:73D0:783 ðT j  T st Þ; T st ¼ 591:685
+st
+
+f ðpst ; hst Þ ¼ 5194:32pst :
+0:743
+
+ð854 þ 13:47pst þ 0:4hst  0:003pst hst Þ
+4) Relative errors
+
+av g : Dpst =pst0 ¼ 1:01%; DNe =Ne0 ¼ 0:98%;
+
+Dhm =hm0 ¼ 0:96%
+(6) The load ramps down from 950.7 MW to 858.4 MW, and time
+range is from 44,250 s to 50,070 s.
+
+1) The steady parameters
+
+l ¼ 1:2638
+hfw ¼ 573:128p0:2465
+m
+k0 ¼ 1:195r 2B  246:517r B þ 28044:26
+k2 ¼ 0:0004417p0:0888
+m
+2) Dynamic parameters
+
+s ¼ 287; c0 ¼ 770; c1 ¼ 905022; c2 ¼ 18920;
+c3 ¼ 20971; d1 ¼ 716; d2 ¼ 2512:
+
+1) The steady parameters
+
+l ¼ 1:2846
+hfw ¼ 573:128p0:2465
+m
+k0 ¼ 1:195r 2B  246:517r B þ 28044:26
+k2 ¼ 0:0004417p0:0888
+m
+
+3) Unknown functions
+
+Dp ¼ gðpm Þ ¼ 0:00837p1:55317
+m
+Q 2 ¼ 4288:73D0:783 ðT j  T st Þ; T st ¼ 594:4
+st
+
+f ðpst ; hst Þ ¼ 5201:16pst :
+0:743
+
+ð854 þ 13:47pst þ 0:4hst  0:003pst hst Þ
+
+666
+
+H. Fan et al. / Applied Energy 189 (2017) 654–666
+
+4) Relative errors
+
+av g : Dpst =pst0 ¼ 1:29%; DNe =Ne0 ¼ 0:56%;
+
+Dhm =hm0 ¼ 0:91%
+(9) The load ramps up from 879.9 MW to 1001.8 MW, and time
+range is from 70,080 s to 77,870 s.
+1) The steady parameters
+
+l ¼ 1:2575
+hfw ¼ 560:92p0:2531
+m
+k0 ¼ 1:5134r 2B  358:826r B þ 36239:83
+k2 ¼ 0:00046p0:07457
+m
+2) Dynamic parameters
+
+s ¼ 88; c0 ¼ 127; c1 ¼ 819477; c2 ¼ 10539;
+c3 ¼ 2558; d1 ¼ 119; d2 ¼ 1453:
+3) Unknown functions
+
+Dp ¼ gðpm Þ ¼ 0:036p1:1046
+m
+Q 2 ¼ 3833:65D0:8 ðT j  T st Þ; T st ¼ 598:625
+st
+
+f ðpst ; hst Þ ¼ 5248:91pst :
+0:743
+
+ð854 þ 13:47pst þ 0:4hst  0:003pst hst Þ
+4) Relative errors
+
+av g : Dpst =pst0 ¼ 0:94%; DNe =Ne0 ¼ 0:88%;
+Dhm =hm0 ¼ 0:75%
+
+References
+[1] He Y, Xu Y, Pang Y, et al. A regulatory policy to promote renewable energy
+consumption in China: review and future evolutionary path. Renewable
+Energy 2016;89:695–705.
+[2] Zhao ZY, Chen YL, Chang RD. How to stimulate renewable energy power
+generation effectively? – China’s incentive approaches and lessons. Renewable
+Energy 2016;92:147–56.
+[3] Zhao Y, Wang SX, Duan L, Lei Y, Cao PF, Hao JM. Primary air pollutant emissions
+of coal-fired power plants in China: current status and future prediction.
+Atmos Environ 2008;42:8442–52.
+[4] Díaz-Ramírez M, Sebastián F, Royo J, Rezeau A. Influencing factors on NOx
+emission level during grate conversion of three pelletized energy crops. Appl
+Energy 2014;115:360–73.
+[5] Liu GK, Li ZQ, Chen ZC, Zhu XY, Zhu QY. Effect of the anthracite ratio of blended
+coals on the combustion and NOx emission characteristics of a retrofitted
+down-fired 660-MWe utility boiler. Appl Energy 2012;95:196–201.
+[6] Si J, Liu X, Xu M, Sheng L, Zhou Z, Wang C, et al. Effect of kaolin additive on
+PM2.5 reduction during pulverized coal combustion: importance of sodium and
+its occurrence in coal. Appl Energy 2014;114:434–44.
+[7] Loeffler D, Anderson N. Emissions tradeoffs associated with cofiring forest
+biomass with coal: a case study in Colorado, USA. Appl Energy 2014;113:67–77.
+[8] Basu S, Debnath A. Power plant instrumentation and control handbook: a
+guide to thermal power plants. Academic Press; 2015. p. 875–87.
+[9] Hu Y, Zeng DL, Liu JZ, et al. Dynamic model for controller design of condensate
+throttling systems. ISA Trans 2015;58:622–8.
+[10] Wang D, Zhou Y, Zhou H. A mathematical model suitable for simulation of fast
+cut back of coal-fired boiler-turbine plant. Appl Therm Eng 2016;108:546–54.
+[11] Oko E, Wang M. Dynamic modelling, validation and analysis of coal-fired
+subcritical power plant. Fuel 2014;135:292–300.
+[12] Sun L, Li D, Lee KY, et al. Control-oriented modeling and analysis of direct
+energy balance in coal-fired boiler-turbine unit. Control Eng Pract
+2016;55:38–55.
+[13] Shen Y, Yang D, Shen Z, et al. Modeling and analysis of flow instability of the
+water wall in a 600 MW supercritical W-shaped boiler. Appl Therm Eng
+2016;99:325–33.
+[14] Liu JZ, Yan S, Zeng DL, et al. A dynamic model used for controller design of a
+coal fired once-through boiler-turbine unit. Energy 2015;93:2069–78.
+[15] Starkloff R, Alobaid F, Karner K, et al. Development and validation of a dynamic
+simulation model for a large coal-fired power plant. Appl Therm Eng
+2015;91:496–506.
+[16] Tică A, Guéguen H, Dumur D, et al. Design of a combined cycle power plant
+model for optimization. Appl Energy 2012;98:256–65.
+[17] Sindareh-Esfahani P, Ghaffari A, Ahmadi P. Thermodynamic modeling based
+optimization for thermal systems in heat recovery steam generator during
+cold start-up operation. Appl Therm Eng 2014;69(1):286–96.
+
+[18] Zheng Yu-xin, Liao Ying. Parameter identification of nonlinear dynamic
+systems using an improved particle swarm optimization. Optik-Int J Light
+Electron Opt 2016;127(19):7865–74.
+[19] Mao Y, Ding F. A novel parameter separation based identification algorithm for
+Hammerstein systems. Appl Math Lett 2016;60:21–7.
+[20] Ferranti F, Rolain Y. A local identification method for linear parameter-varying
+systems based on interpolation of state-space matrices and least-squares
+approximation. Mech Syst Signal Process 2017;82:478–89.
+[21] Åström KJ, Eklund K. A simplified non-linear model of a drum boiler-turbine
+unit. Int J Control 1972;16(1):145–69.
+[22] De Mello FP. Boiler models for system dynamic performance studies. IEEE
+Trans Power Syst 1991;6(1):66–74.
+[23] Åström KJ, Bell RD. Drum-boiler dynamics. Automatica 2000;36(3):363–78.
+[24] Adams J, Clark DR, Louis JR, et al. Mathematical modeling of once-through
+boiler dynamics. IEEE Trans Power Apparatus Syst 1965;84(2):146–56.
+[25] Sunil PU, Barve J, Nataraj PSV. Boiler model and simulation for control design
+and validation. IFAC Proc Vol 2014;47(1):936–40.
+[26] Wu X, Shen J, Li Y, et al. Hierarchical optimization of boiler–turbine unit using
+fuzzy stable model predictive control. Control Eng Pract 2014;30:112–23.
+[27] Wu X, Shen J, Li Y, et al. Data-driven modeling and predictive control for
+boiler–turbine unit using fuzzy clustering and subspace methods. ISA Trans
+2014;53(3):699–708.
+[28] Liu X, Kong X. Nonlinear fuzzy model predictive iterative learning control for
+drum-type boiler–turbine system. J Process Control 2013;23(8):1023–40.
+[29] Rostek K, Morytko Ł, Jankowska A. Early detection and prediction of
+leaks in fluidized-bed boilers using artificial neural networks. Energy
+2015;89:914–23.
+[30] Dhanuskodi R, Kaliappan R, Suresh S, et al. Artificial neural networks model for
+predicting wall temperature of supercritical boilers. Appl Therm Eng
+2015;90:749–53.
+[31] Strušnik D, Golob M, Avsec J. Artificial neural networking model for the
+prediction of high efficiency boiler steam generation and distribution. Simul
+Model Pract Theory 2015;57:58–70;
+Strušnik D, Golob M, Avsec J. Artificial neural networking model for the
+prediction of high efficiency boiler steam generation and distribution. Simul
+Model Pract Theory 2015;57:58–70.
+[32] Tunckaya Y, Koklukaya E. Comparative prediction analysis of 600 MWe coalfired power plant production rate using statistical and neural-based models. J
+Energy Inst 2015;88(1):11–8.
+[33] Liu XJ, Kong XB, Hou GL, et al. Modeling of a 1000 MW power plant ultra
+super-critical boiler system using fuzzy-neural network methods. Energy
+Convers Manage 2013;65:518–27.
+[34] Han HG, Ge LM, Qiao JF. An adaptive second order fuzzy neural network for
+nonlinear system modeling. Neurocomputing 2016;214:837–47.
+[35] Jahromi AT, Er MJ, Li X, et al. Sequential fuzzy clustering based dynamic fuzzy
+neural network for fault diagnosis and prognosis. Neurocomputing
+2016;196:31–41.
+[36] Afram A, Janabi-Sharifi F. Gray-box modeling and validation of residential
+HVAC system for control system design. Appl Energy 2015;137:134–50.
+[37] De Ridder F, Coomans M. Grey-box model and identification procedure for
+domestic thermal storage vessels. Appl Therm Eng 2014;67(1):147–58.
+[38] Farooq AA, Afram A, Schulz N, et al. Grey-box modeling of a low pressure
+electric boiler for domestic hot water system. Appl Therm Eng
+2015;84:257–67.
+[39] Priya K, Babu TS, Balasubramanian K, et al. A novel approach for fuel cell
+parameter estimation using simple genetic algorithm. Sustainable Energy
+Technol Assess 2015;12:46–52.
+[40] Chisari C, Bedon C, Amadio C. Dynamic and static identification of baseisolated bridges using genetic algorithms. Eng Struct 2015;102:80–92.
+[41] Sarode KD, Kumar VR, Kulkarni BD. Embedded multiple shooting methodology
+in a genetic algorithm framework for parameter estimation and state
+identification of complex systems. Chem Eng Sci 2015;134:605–18.
+[42] Chaibakhsh A, Ghaffari A, Moosavian SAA. A simulated model for a oncethrough boiler by parameter adjustment based on genetic algorithms. Simul
+Model Pract Theory 2007;15(9):1029–51.
+[43] Chen F, Tang B, Chen R. A novel fault diagnosis model for gearbox based on
+wavelet support vector machine with immune genetic algorithm.
+Measurement 2013;46(1):220–32.
+[44] Souza SSF, Romero R, Pereira J, et al. Artificial immune algorithm applied to
+distribution system reconfiguration with variable demand. Int J Electr Power
+Energy Syst 2016;82:561–8.
+[45] Xue C, Dong L, Liu J. Enterprise information system structure optimization
+based on time property with improved immune genetic algorithm and binary
+tree. Comput Math Appl 2012;63(7):1155–68.
+[46] Liang Tian. Research of unit plant nonlinearity dynamic model. Beijing,
+China: North China Electric Power University; 2005 (in Chinese).
+[47] Leva A, Maffezzoni C, Benelli G. Validation of drum boiler models through
+complete dynamic tests. Control Eng Pract 1999;7:11–26.
+[48] Yan Shu. A non-linear control model of ultra-supercritical unit. Beijing
+(China): North China Electric Power University; 2013 (in Chinese).
+[49] Yan Shu, Zeng Deliang, Liu Jizhen. A simplified non-linear model of a oncethrough boiler-turbine unit and its application. Proc CSEE 2012;11:126–34 (in
+Chinese).
+[50] Chenyue Zhang. Boiler dynamic characteristics and mathematical
+model. Water Conservancy and Electric Power; 1987. 13 (in Chinese).
+
+
