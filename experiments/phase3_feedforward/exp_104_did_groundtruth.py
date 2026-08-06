@@ -104,6 +104,8 @@ print(f"\nSaving to {OUT}/")
 results = {
     'H60': {
         'n_ev': int(did60['n_ev']),
+        'r': did60['r'].tolist(),
+        'onsets': did60['onsets'].tolist(),
         'R_true': did60['R_true'].tolist(),
         'ci_lo': did60['ci_lo'].tolist(),
         'ci_hi': did60['ci_hi'].tolist(),
@@ -120,6 +122,8 @@ results = {
     },
     'H18': {
         'n_ev': int(did18['n_ev']),
+        'r': did18['r'].tolist(),
+        'onsets': did18['onsets'].tolist(),
         'R_true': did18['R_true'].tolist(),
         'ci_lo': did18['ci_lo'].tolist(),
         'ci_hi': did18['ci_hi'].tolist(),
