@@ -75,12 +75,13 @@ def eval_model(name, ckpt_path, H, is_new_arch=False):
     sd = torch.load(ckpt_path, map_location=DEVICE, weights_only=True)
 
     if is_new_arch:
+        nl = 3 if 'nl3' in name else 2
         if 'physcs' in name:
             model = CA.ResidualCausalWM(N_FEAT, TARGET_IDX, H, intervention='phys',
-                                        cumsum_out=True, probabilistic=True).to(DEVICE).eval()
+                                        cumsum_out=True, probabilistic=True, n_lag=nl).to(DEVICE).eval()
         elif 'phys' in name:
             model = CA.ResidualCausalWM(N_FEAT, TARGET_IDX, H, intervention='phys',
-                                        cumsum_out=False, probabilistic=True).to(DEVICE).eval()
+                                        cumsum_out=False, probabilistic=True, n_lag=nl).to(DEVICE).eval()
         elif 'mlp' in name:
             model = CA.ResidualCausalWM(N_FEAT, TARGET_IDX, H, intervention='mlp',
                                         cumsum_out=False, probabilistic=True).to(DEVICE).eval()
@@ -153,6 +154,9 @@ configs = [
     # P3B: gain calibration
     ('A1phys ff10+lg0.5 (best_mae)',   f'{BASE_NEW}/A1phys_s0_ff10_lg0.5/checkpoints/best_mae.pth', 60, True),
     ('A1phys ff10+lg0.5 (best_causal)',f'{BASE_NEW}/A1phys_s0_ff10_lg0.5/checkpoints/best_causal.pth', 60, True),
+    # n_lag ablation
+    ('A1phys ff10 nl3 (best_mae)',   f'{BASE_NEW}/A1phys_s0_ff10_nl3/checkpoints/best_mae.pth', 60, True),
+    ('A1phys ff10 nl3 (best_causal)',f'{BASE_NEW}/A1phys_s0_ff10_nl3/checkpoints/best_causal.pth', 60, True),
     ('A1physcs (best_causal)', f'{BASE_NEW}/A1physcs_s0/checkpoints/best_causal.pth', 60, True),
     ('A1physcs (best_mae)',    f'{BASE_NEW}/A1physcs_s0/checkpoints/best_mae.pth', 60, True),
     ('B1glb (best_causal)',  f'{BASE_NEW}/B1glb_s0/checkpoints/best_causal.pth', 60, True),

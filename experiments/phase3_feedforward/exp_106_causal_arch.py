@@ -64,12 +64,13 @@ PROFILE_K = [(2, '30s'), (5, '60s'), (11, '120s'), (17, '180s'),
              (29, '300s'), (41, '420s'), (59, '600s')]
 
 
-def build_model(variant, H):
+def build_model(variant, H, n_lag=2):
     v = VARIANTS[variant]
     if v['kind'] == 'res':
         return CA.ResidualCausalWM(N_FEAT, TARGET_IDX, H,
                                    intervention=v['intervention'],
-                                   cumsum_out=v['cumsum_out'], probabilistic=True)
+                                   cumsum_out=v['cumsum_out'], probabilistic=True,
+                                   n_lag=n_lag)
     return CA.TimeXerCausalWM(N_FEAT, TARGET_IDX, H,
                               head_mode=v['head_mode'], probabilistic=True)
 
@@ -172,7 +173,7 @@ class SafeBetaNLL(torch.nn.Module):
 
 def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=False,
               patience=20, min_delta=1e-4, h_override=None, loss_type='nll',
-              freeze_free_epochs=0, lambda_gain=0.0):
+              freeze_free_epochs=0, lambda_gain=0.0, n_lag=2):
     H = h_override if h_override is not None else VARIANTS[variant]['H']
     torch.manual_seed(seed); np.random.seed(seed)
     rng = np.random.default_rng(seed)
@@ -187,9 +188,11 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
         outdir += f'_ff{freeze_free_epochs}'
     if lambda_gain > 0:
         outdir += f'_lg{lambda_gain}'
+    if n_lag != 2:
+        outdir += f'_nl{n_lag}'
     os.makedirs(os.path.join(outdir, 'checkpoints'), exist_ok=True)
 
-    model = build_model(variant, H).to(DEVICE)
+    model = build_model(variant, H, n_lag=n_lag).to(DEVICE)
     n_param = sum(p.numel() for p in model.parameters())
     CA.check_zero_action_identity(model, N_FEAT, H, DEVICE)
     print(f"[{variant} s{seed}] {n_param/1e6:.2f}M params | g(x,0)=0 自检 PASS"
@@ -328,6 +331,8 @@ def main():
                     help='P3A: 前N epoch冻结free分支, 强逼干预分支先学')
     ap.add_argument('--lambda-gain', type=float, default=0.0,
                     help='P3B: 增益校准 loss 权重 λ (0=关闭)')
+    ap.add_argument('--n-lag', type=int, default=2,
+                    help='物理分支惯性级联阶数 (default=2)')
     ap.add_argument('--smoke', action='store_true')
     args = ap.parse_args()
 
@@ -355,7 +360,8 @@ def main():
             allres.append(train_one(v, s, args.smoke, gt, args.epochs, args.flat_weight,
                                    h_override=args.h, loss_type=args.loss,
                                    freeze_free_epochs=args.freeze_free_epochs,
-                                   lambda_gain=args.lambda_gain))
+                                   lambda_gain=args.lambda_gain,
+                                   n_lag=args.n_lag))
 
     with open(os.path.join(OUT_ROOT, 'summary.json'), 'w') as f:
         json.dump(allres, f, indent=2, ensure_ascii=False)
