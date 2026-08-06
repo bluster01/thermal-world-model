@@ -39,3 +39,5 @@ Thumbs.db
 # 大文件不入库 (>100MB GitHub 上限)
 results/exp_071_rl_data/
 *.npz
+!results/cfe_groundtruth/*.npz
+!results/cfe_groundtruth_p2/*.npz
