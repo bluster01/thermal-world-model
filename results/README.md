@@ -3,6 +3,8 @@
 > 命名: `results/exp_0XX_<描述>/`（目录，含 agg JSON + checkpoints）或 `exp_0XX_<描述>.json`（单文件）。
 > 同一实验不同协议必须分目录或加后缀（如 `exp_051_boundary_fix_H10/`）。
 
+> 当前项目口径以 `docs/PROJECT_STATUS.md` 为准。这里记录结果位置，不表示所有历史结论仍有效。
+
 ## Phase 1 — 世界模型 (文档: docs/phase1_report.md, phase1_conclusions_audit.md)
 
 | 目录/文件 | 内容 |
@@ -54,3 +56,17 @@
 | exp_037_sp_ff.json | SP 前馈拟合 |
 | exp_038_sp_valve.json | SP→阀位→温度 通道分析 |
 | exp_039_joint_ff/ exp_040_pipeline_const_*.json | 联合优化 (结论: 阀位>联合>SP) |
+
+## CFE / 因果架构 — 当前候选与评测
+
+| 目录/文件 | 内容 | 当前解释 |
+|---|---|---|
+| `cfe_groundtruth/` | 第一版 DiD 响应真值 | 小事件集，主要用于协议开发 |
+| `cfe_groundtruth_p2/` | 扩展 DiD 响应真值 | 当前跨时程 CFE 的主要代理真值 |
+| `exp_106_causal_arch/` | A1/A3/B1 训练结果与多变体 | A1phys 为候选，不是最终模型 |
+| `exp_107_did_eval/did_eval.json` | 跨时程 DiD/CFI 评测 | 替代只看 600s 单点的旧口径 |
+| `baselines_exp110/results.json` | M5/M7/M9、A1phys 与 B1 完整基线 | 用于横向审查 |
+| `exp_111_koopman_free/summary.json` | Koopman free-head 初步对照 | 预实验 |
+| `exp_112_koopman_full/summary.json` | 3 seeds × 50 epochs 的 MLP/Koopman/null 对照 | 只关闭 Koopman free-head 具体实现 |
+
+Fan 2017/2020/2021 灰箱 ODE、Fan-state controlled Koopman 和时变灰箱路线目前没有结果目录，尚未实现与验证。
