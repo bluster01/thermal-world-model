@@ -58,19 +58,25 @@ VARIANTS = {
     'A1physcs': dict(kind='res', intervention='phys', cumsum_out=True,  H=60),
     'B1glb':    dict(kind='timexer', head_mode='glb',     H=60),
     'B1flat':   dict(kind='timexer', head_mode='flatten', H=60),
+    'A1phys_koopman': dict(kind='res', intervention='phys', cumsum_out=False, H=60,
+                           free_head_type='koopman'),
+    'A1phys_null': dict(kind='res', intervention='phys', cumsum_out=False, H=60,
+                        free_head_type=None),
 }
 
 PROFILE_K = [(2, '30s'), (5, '60s'), (11, '120s'), (17, '180s'),
              (29, '300s'), (41, '420s'), (59, '600s')]
 
 
-def build_model(variant, H, n_lag=2):
+def build_model(variant, H, n_lag=2, alpha_init=0.0):
     v = VARIANTS[variant]
     if v['kind'] == 'res':
+        kw = dict(free_head_type=v.get('free_head_type', 'mlp'),
+                  alpha_init=alpha_init)
         return CA.ResidualCausalWM(N_FEAT, TARGET_IDX, H,
                                    intervention=v['intervention'],
                                    cumsum_out=v['cumsum_out'], probabilistic=True,
-                                   n_lag=n_lag)
+                                   n_lag=n_lag, **kw)
     return CA.TimeXerCausalWM(N_FEAT, TARGET_IDX, H,
                               head_mode=v['head_mode'], probabilistic=True)
 
@@ -173,7 +179,7 @@ class SafeBetaNLL(torch.nn.Module):
 
 def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=False,
               patience=20, min_delta=1e-4, h_override=None, loss_type='nll',
-              freeze_free_epochs=0, lambda_gain=0.0, n_lag=2):
+              freeze_free_epochs=0, lambda_gain=0.0, n_lag=2, alpha_init=0.0):
     H = h_override if h_override is not None else VARIANTS[variant]['H']
     torch.manual_seed(seed); np.random.seed(seed)
     rng = np.random.default_rng(seed)
@@ -190,13 +196,16 @@ def train_one(variant, seed, smoke=False, gt=None, epochs=None, flat_weight=Fals
         outdir += f'_lg{lambda_gain}'
     if n_lag != 2:
         outdir += f'_nl{n_lag}'
+    if alpha_init != 0.0:
+        outdir += f'_ai{alpha_init}'
     os.makedirs(os.path.join(outdir, 'checkpoints'), exist_ok=True)
 
-    model = build_model(variant, H, n_lag=n_lag).to(DEVICE)
+    model = build_model(variant, H, n_lag=n_lag, alpha_init=alpha_init).to(DEVICE)
     n_param = sum(p.numel() for p in model.parameters())
     CA.check_zero_action_identity(model, N_FEAT, H, DEVICE)
     print(f"[{variant} s{seed}] {n_param/1e6:.2f}M params | g(x,0)=0 自检 PASS"
-          + (f" | freeze-free {freeze_free_epochs}ep" if freeze_free_epochs else ""))
+          + (f" | freeze-free {freeze_free_epochs}ep" if freeze_free_epochs else "")
+          + (f" | alpha_init={alpha_init}" if alpha_init != 0.0 else ""))
 
     # P3A: 冻结 free 分支参数
     free_params, interv_params = [], []

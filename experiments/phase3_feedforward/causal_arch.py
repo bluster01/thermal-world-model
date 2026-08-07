@@ -131,6 +131,66 @@ class InterventionBoth(nn.Module):
         return self.phys(s_repr_flat, a) + self.res_scale * self.res(s_repr_flat, a)
 
 
+# ==================================================================== Koopman Free Head
+class KoopmanFreeHead(nn.Module):
+    """Koopman 线性潜在动力学替代 MLP free_head。
+
+    编码 s_flat → z0, 然后 z_{t+1} = K·z_t 线性演化 H 步。
+    解码每个 z_t 到 (μ, log σ²) 预测。
+
+    关键约束: 潜在空间是**线性的** → CANNOT 吸收非线性干预效应
+    → 强制干预分支 (InterventionPhysics/MLP) 在阶跃事件中承担主要信号。
+
+    K = diag(tanh(α_i)) → |λ_i| < 1 保证稳定性。
+    """
+
+    def __init__(self, d_state, d_latent, H, probabilistic=True, alpha_init=0.0):
+        super().__init__()
+        self.H, self.probabilistic = H, probabilistic
+        self.d_latent = d_latent
+
+        self.state_encoder = nn.Sequential(
+            nn.Linear(d_state, d_latent * 4), nn.GELU(),
+            nn.Linear(d_latent * 4, d_latent * 2), nn.GELU(),
+            nn.Linear(d_latent * 2, d_latent))
+
+        # Koopman 特征值 (对角化, 实特征值便于可解释性)
+        # λ_i = tanh(α_i) → |λ_i| < 1 (稳定)
+        # alpha_init=3.0 → λ≈0.995 匹配热惯性 ~1000s 先验
+        self.alpha = nn.Parameter(torch.full((d_latent,), alpha_init))
+
+        out_dim = 2 if probabilistic else 1
+        self.decoder = nn.Sequential(
+            nn.Linear(d_latent, d_latent * 2), nn.GELU(),
+            nn.Linear(d_latent * 2, out_dim))
+        # 零初始化末层: 初始预测 = 0 (锚定恒等), 与 InterventionPhysics 的
+        # 零 action→零响应 对称, 同时避免大初始梯度。
+        nn.init.zeros_(self.decoder[-1].weight)
+        nn.init.zeros_(self.decoder[-1].bias)
+
+    def forward(self, s_flat):
+        B = s_flat.shape[0]
+        z = self.state_encoder(s_flat)                       # [B, d_latent]
+        K_diag = torch.tanh(self.alpha)                       # |λ_i| < 1
+        K = torch.diag(K_diag)
+
+        preds = []
+        for _ in range(self.H):
+            z = z @ K.T                                       # z_{t+1} = K·z_t (线性!)
+            pred = self.decoder(z)                            # [B, out_dim]
+            preds.append(pred)
+
+        out = torch.stack(preds, dim=1)                       # [B, H, out_dim]
+        if self.probabilistic:
+            return out.reshape(B, self.H * 2)                 # 匹配 MLP 输出 [B, H*2]
+        return out.reshape(B, self.H)
+
+    @torch.no_grad()
+    def eigenvalues(self):
+        """返回 Koopman 特征值 (供可解释性: 衰减率 ↔ 热惯性)。"""
+        return torch.tanh(self.alpha).cpu().numpy()
+
+
 def make_intervention(mode, d_state, d, H, n_lag=2):
     if mode == 'mlp':
         return InterventionMLP(d_state, d, H)
@@ -182,14 +242,16 @@ class ResidualCausalWM(CausalWMBase):
         free_action_blind: True=f_free 完全看不到动作 (标准 A1);
                            False 保留 (调试用, 会破坏可归因性)
     """
-
     def __init__(self, n_feat, target_idx, H, intervention='mlp', n_lag=2,
-                 cumsum_out=False, probabilistic=True, free_action_blind=True):
+                 cumsum_out=False, probabilistic=True, free_action_blind=True,
+                 free_head_type='mlp', d_latent=64, alpha_init=0.0):
         super().__init__(n_feat, target_idx)
         d = cfg.D_MODEL
         W = cfg.WINDOW_SIZE
         self.H, self.probabilistic, self.cumsum_out = H, probabilistic, cumsum_out
         self.intervention_mode = intervention
+        self.free_head_type = free_head_type
+
         assert free_action_blind, "free_action_blind=False 会破坏 A1 可归因性"
 
         self.patch = PatchEmbedding(W, cfg.PATCH_LEN, cfg.STRIDE, d)
@@ -198,16 +260,26 @@ class ResidualCausalWM(CausalWMBase):
         self.varattn = VariableAttention(d, cfg.N_HEADS, cfg.DROPOUT)
         d_state = n_feat * d
 
-        self.free_head = nn.Sequential(
-            nn.Linear(d_state, d * 4), nn.GELU(), nn.Dropout(cfg.DROPOUT),
-            nn.Linear(d * 4, d * 4), nn.GELU(), nn.Dropout(cfg.DROPOUT),
-            nn.Linear(d * 4, H * 2 if probabilistic else H))
+        if free_head_type is None:
+            # 零自由分支: 纯干预驱动 T̂ = g(x,a), 验证 free_head 是否必须
+            # free_head 输出恒为 0 (通过 register_buffer 避免参数化)
+            self.free_head = None
+        elif free_head_type == 'koopman':
+            self.free_head = KoopmanFreeHead(d_state, d_latent, H, probabilistic,
+                                             alpha_init=alpha_init)
+        else:
+            self.free_head = nn.Sequential(
+                nn.Linear(d_state, d * 4), nn.GELU(), nn.Dropout(cfg.DROPOUT),
+                nn.Linear(d * 4, d * 4), nn.GELU(), nn.Dropout(cfg.DROPOUT),
+                nn.Linear(d * 4, H * 2 if probabilistic else H))
         self.interv = make_intervention(intervention, d_state, d, H, n_lag)
         if cumsum_out:
             # free_head 末层零初始化: 初始预测 = anchor 持久化 (强基线),
             # 同时消除 cumsum 带来的 ~200x 梯度放大 (每个增量影响所有后续步)。
-            nn.init.zeros_(self.free_head[-1].weight)
-            nn.init.zeros_(self.free_head[-1].bias)
+            # KoopmanFreeHead 末层已零初始化, 跳过分支; None 也跳过。
+            if free_head_type and free_head_type != 'koopman':
+                nn.init.zeros_(self.free_head[-1].weight)
+                nn.init.zeros_(self.free_head[-1].bias)
 
     def encode(self, x_hist):
         B = x_hist.shape[0]; d = cfg.D_MODEL
@@ -220,12 +292,17 @@ class ResidualCausalWM(CausalWMBase):
     def forward(self, x_hist, a_future=None):
         B = x_hist.shape[0]
         x_n, s_flat = self.encode(x_hist)
-        raw = self.free_head(s_flat)
-        if self.probabilistic:
-            raw = raw.reshape(B, self.H, 2)
-            free_n, lv_n = raw[..., 0], raw[..., 1]
+        if self.free_head is not None:
+            raw = self.free_head(s_flat)
+            if self.probabilistic:
+                raw = raw.reshape(B, self.H, 2)
+                free_n, lv_n = raw[..., 0], raw[..., 1]
+            else:
+                free_n, lv_n = raw.reshape(B, self.H), None
         else:
-            free_n, lv_n = raw.reshape(B, self.H), None
+            # 零自由分支: 纯干预驱动, free_n=0, lv_n 用常数 log-var (σ=1°C)
+            free_n = torch.zeros(B, self.H, device=x_hist.device)
+            lv_n = torch.full((B, self.H), -1.0, device=x_hist.device) if self.probabilistic else None
 
         a = a_future.reshape(B, self.H)
         g_n = self.interv(s_flat, a)                       # g(x,0) ≡ 0
