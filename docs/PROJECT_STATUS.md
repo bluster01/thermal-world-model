@@ -4,7 +4,7 @@
 
 ## 一句话状态
 
-项目已完成预测基线、MPC 方法探索和第一轮因果评测，但**尚未完成模型定性**。当前 A1phys 是值得保留的候选基线，不是最终模型；Fan 2017/2020/2021 灰箱方程与三类可微动力学表达尚未在统一协议下验证。
+项目已完成预测基线、MPC 方法探索和第一轮观测事件评测，但**尚未完成模型定性，也没有独立 lockbox 结论**。历史 test 时段已被多轮开发与逐 epoch 选模访问；A1phys 仅保留为监督层 baseline，Fan20 主汽温骨架及三类动态表达尚未在统一协议下验证。
 
 ## 证据分级
 
@@ -19,13 +19,15 @@
 
 | 结论 | 等级 | 主要依据 |
 |---|---|---|
-| 主汽温对减温动作存在明显迟延，短时可能不呈现最终物理方向 | A | 真实事件研究；`phase1_report.md` |
-| 绝对阀位比差分阀位更适合作为动作条件 | A/B | exp_012 及后续统一基线 |
-| RevIN 与 per-variable TCN 对预测基线重要 | B | exp_025 统一消融；现有多数组件仍为单 seed |
+| 历史 supervisory tag 的观测响应存在迟延，短时不应强制最终方向 | B/C | `phase1_report.md`；tag/estimand 与匹配协议仍待重审 |
+| 绝对阀位在旧预测协议中优于差分阀位 | C | exp_012 及后续旧基线；需在新 split、同 estimand 下复核 |
+| RevIN 与 per-variable TCN 在旧预测消融中有正面信号 | C | exp_025；主要为单 seed/test 已参与开发 |
 | 开环预测精度不能证明干预因果或闭环控制效用 | A/B | CFE 审计、Phase 2 最终审查 |
-| `g(x,0)=0` 的结构恒等式能隔离显式干预分支 | B | `causal_arch.py` 不变量与 exp_106/107 |
-| A1phys 的两级惯性结构比若干动作注入变体更稳定 | B | DiD/CFE、P2 事件与 exp_110/112；仍需更多 seed 和物理路线对照 |
-| 当前 Koopman free-head 不优于 MLP free-head | B | exp_112，3 seeds × 50 epochs |
+| `g(x,0)=0` 是显式动作分支的代码恒等式 | C | `causal_arch.py`；它不提供因果识别，也不保证全模型零动作输出 |
+| A1phys 的两级惯性结构在当前旧协议中值得保留 | C | exp_106/110/112；存在 test 选模、观测 reference 与 action estimand 问题 |
+| 当前 Koopman free-head 的 MAE pilot 未优于 MLP free-head | C | exp_112，3 seeds、最多 50 epochs 且均早停；test-selected，仅限该实现 |
+
+目前没有满足“未参与开发的 test + 协议审计 + 统计不确定性”的 A 级模型比较。已有 A/A-B 事实不能自动升级任何模型。
 
 ## 尚未定性的候选模型
 
@@ -42,27 +44,36 @@ T_hat(x, a) = f_free(x) + g_phys(x, a)
 g_phys(x, 0) = 0
 ```
 
-`g_phys` 使用工况相关增益和两级一阶惯性。它是灰箱先验，不含质量守恒、能量守恒、焓值传递和完整锅炉状态方程，因此不能称为物理模型。
+`g_phys` 使用工况相关增益和两级一阶惯性。它是监督层 ΔSP 到闭环主汽温响应的灰箱先验，不含 controller/actuator、质量守恒、能量守恒、焓值传递和完整锅炉状态方程，因此不能称为 Fan plant 物理模型。
 
-exp_112 三 seed 汇总：
+exp_112 三 seed 的**探索性、test-selected** MAE 汇总（每 seed 逐 epoch 取 test 最小值后再求均值）：
 
-| 变体 | 最佳 MAE 均值 | 最佳 CFI 均值 | 判断 |
+| 变体 | 最佳 MAE 均值 | 与 MLP 差值 | 可用判断 |
 |---|---:|---:|---|
-| A1phys + MLP free-head | 0.8467 | 0.869 | 当前参考候选 |
-| A1phys + Koopman free-head | 0.8902 | 0.821 | 未优于 MLP；关闭此具体实现 |
-| A1phys without free-head | 1.5467 | 0.773 | free dynamics 不可删除 |
+| A1phys + MLP free-head | 0.8467 | — | 旧协议参考 |
+| A1phys + Koopman free-head | 0.8902 | +0.0435 °C | 该实现的负面 pilot；不能关闭路线 |
+| A1phys without free-head | 1.5467 | +0.7000 °C | 旧协议的 3 个探索性 seed 均更高；无独立 CI |
 
-表中的“最佳 CFI”来自训练过程中选择的 checkpoint，不能替代独立测试集最终估计；结果只用于架构筛选。
+exp_112 指向的 `results/cfe_groundtruth_p2/did_response.json` 在仓库不存在，且训练期 test-only 事件数与 P2 val+test 事件数不匹配，因此所谓 0.869/0.821 “最佳 CFI”实际是每 seed 对 16 个 test 事件逐 epoch 取最大 `sign(ΔSP)+gain` fallback 后的均值，而不是 P2 CFE/DiD。脚本还分别保存 test-selected `best_mae` 与 `best_causal`。这些 CFI 数字撤销证据资格，MAE 也不能作独立测试估计。
 
 ### 3. Fan 灰箱模型
 
 | 骨架 | 关键状态/机制 | 数据覆盖 | 实现状态 |
 |---|---|---|---|
-| Fan 2017 | 4 状态非线性 ODE、金属蓄热 | 多数直接/间接可观测；缺 `ut` | 未实现 |
-| Fan 2020 | 7 状态、两级喷水、分段焓值与 SST | 与当前任务最匹配；喷水流量只有阀位/指令代理 | 未实现 |
-| Fan 2021 | 宽负荷、能量不匹配、节流损失、时变参数 | 给水/燃料/负荷覆盖较好；缺 `ut` | 未实现 |
+| Fan 2017 | 4 状态非线性 ODE、显式金属蓄热 | Fan20 已含制粉动态；`Tj` 未观测，加入后须避免热量双计 | 金属组件候选，未实现 |
+| Fan 2020 | 7 状态、两级喷水、分段焓值与 SST | 与任务最匹配；喷水质量流量、给水压力和部分测点仍缺/不确定 | 中央骨架，未实现 |
+| Fan 2021 | 4 状态宽负荷 CCS、整炉能量不匹配、节流损失、时变参数 | 不直接含 SST/喷水；mismatch 需映射到 Fan20 分段热量，throttle 只作用完整 CCS | 组件候选，未实现 |
 
-详细变量映射见 `伊敏40列_vs_Fan模型变量对照.md`。映射“存在”不等于数据可用，仍需验证单位、传感器质量、时间对齐和代理变量的物理一致性。
+详细变量映射见 [`伊敏40列_vs_Fan模型变量对照.md`](伊敏40列_vs_Fan模型变量对照.md)。映射“存在”不等于数据可用；阀位不能直接当 `kg/s` 喷水流量，主汽压不能直接当给水压力，`T3` 需要测点图核实，`ut` 不得用可能泄漏结果的负荷变化率替代。
+
+## 动作层级与研究对象
+
+Phase 4 冻结两个不可混榜的任务：
+
+1. **plant-level**：喷水流量或经核验的有效阀位代理 → Fan20 plant → `Tst`；
+2. **supervisory-level**：监督层 SP/ΔSP → controller/actuator → valve/spray → plant → `Tst`。
+
+exp_025 使用实际绝对阀位，exp_106/A1phys 使用 `二级减温调节阀设定` 的一阶差分，Fan20 使用两级喷水质量流量。它们目前不是同一 estimand，禁止放在同一模型冠军表中。
 
 ## 三类可微动力学路线的真实状态
 
@@ -80,9 +91,12 @@ exp_112 三 seed 汇总：
 |---|---|---|
 | M7 是最终模型 | 降级 | 只在预测基线与旧协议中领先，未与 Fan 灰箱路线比较 |
 | DWM-MPC 比 PID 更好 | X | 同构 plant、动作弱因果、部分协议不公平，不能外推 |
-| 单点 600 s CFI 足以选模型 | X | 会奖励“末点对、过程错”；现采用跨时程聚合 |
+| 单点 600 s CFI 足以选模型 | X | 会奖励“末点对、过程错”；历史聚合 CFI 仍有量纲/权重问题，Phase 4 只作分解诊断、不选模 |
 | Koopman 路线整体关闭 | X | exp_112 只评估 Koopman free-head |
 | A1phys 已是物理模型 | X | 当前仅含低阶惯性先验，没有守恒方程 |
+| P2 DiD/CFE 是因果 ground truth | X | 闭环观测匹配缺关键混杂、balance/pre-trend/placebo；应称观测事件响应参考 |
+| exp_112 的 0.869/0.821 是 P2 CFI | X | GT 文件/事件长度不匹配，实际走同名 fallback |
+| Fan 三篇是三个平行 SST 全模型 | X | Fan20 直接覆盖 SST；Fan17/21 更适合作为嵌套机制 |
 
 ## 当前工程状态
 
@@ -93,16 +107,21 @@ exp_112 三 seed 汇总：
 - `data/伊敏6号机` 是 Linux 符号链接，Windows 检出不可直接使用。
 - 现有测试主要覆盖 Phase 2 评测协议，不覆盖 CFE、A1phys 或 Fan 方程。
 - 当前 `pytest` 在收集阶段失败：`tests/test_eval_protocol.py` 注入的基线模块桩缺少 `TimeXerWM`，而 `eval_protocol.py` 已新增该导入；这是既有测试桩漂移，不是本次文档整理引入。
+- `eval_protocol.py` 的 PID 物理方向、零误差工作点和导数项实现存在 P0 缺陷；旧控制结果不得恢复证据等级。
+- `exp_106/112` 在 test 上逐 epoch 评估并选 checkpoint；`exp_109/110` 又合并 val+test 构造/筛选事件。
+- 148 个 Python 文件中有 88 个没有 `if __name__ == '__main__'` guard；多个实验依赖导入副作用、全局变量与 `sys.path/sys.argv` 修改。
+- 当前代码对 NaN 静默置零、丢弃时间信息，尚无 episode/gap-aware 窗口与 split manifest。
 - 在模型路线定性前，不进行大规模源码迁移或历史目录重排。
 
 ## 下一判决点
 
-只有在以下条件同时满足后，才讨论“主模型”定性：
+只有依次通过以下 Gate，才讨论“主模型”定性：
 
-1. Fan 三种骨架完成数据可观测性审计。
-2. 至少一个 Fan-structured 可微模型可以端到端训练。
-3. 候选路线共享数据、预算、损失与评测协议。
-4. 报告预测、CFE 干预、物理残差、宽负荷 OOD 和计算代价。
-5. 核心对比至少 5 seeds，并使用独立测试集进行最终选择。
+1. Gate 0：tag/action、episode/split、validation-only 选模、fail-closed metrics 和测试地基；
+2. Gate 1：IAPWS 与 Fan20-SST 方程闭合、合成恢复、数值稳定和可辨识性；
+3. Gate 2：Fan17/21 仅作为嵌套组件的最小消融；
+4. Gate 3：固定物理内容后公平比较 ODE、controlled Koopman、time-varying gray-box；
+5. Gate 4：rolling folds、负荷/action worst-group 与 cluster-aware 统计；
+6. Gate 5：5 seeds、一个 canonical checkpoint；有新数据时一次批量 locked-final，无新数据时明确标注 internal-final。
 
-具体执行顺序见 [CURRENT_TASKS.md](CURRENT_TASKS.md)。
+活队列见根目录 [`TODO.md`](../TODO.md)，完整判决规则见 [`PHASE4_EXPERIMENT_PLAN.md`](PHASE4_EXPERIMENT_PLAN.md)。

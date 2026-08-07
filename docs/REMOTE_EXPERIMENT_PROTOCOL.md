@@ -2,6 +2,8 @@
 
 > 本协议区分实验研发、算力执行与结果审计，避免把“代码可运行”误写成“模型已验证”。
 
+> Phase 4 的 batch 顺序、task 分层和预算以 [`PHASE4_EXPERIMENT_PLAN.md`](PHASE4_EXPERIMENT_PLAN.md) 为准；活状态只更新根目录 [`TODO.md`](../TODO.md)。Task P 与 Task S 使用不同 manifests、events、结果路径和排行榜。
+
 ## 职责边界
 
 ### 本地工作区
@@ -41,16 +43,18 @@
 每次正式实验至少提供：
 
 ```yaml
-experiment_id: exp_xxx
-git_commit: <40-char SHA>
-branch: main
-script: experiments/<phase>/exp_xxx_name.py
-command: python experiments/<phase>/exp_xxx_name.py <args>
+task: plant  # plant | supervisory
+experiment_id: phase4_r1_fan20
+required_git_tag: phase4-r1-v1
+git_commit: <runtime verifies and records 40-char SHA>
+script: scripts/phase4/run.py
+command: python scripts/phase4/run.py --matrix configs/phase4/matrix_r1.yaml
 working_directory: <repo-root>
-data_id: <dataset name/version/fingerprint>
-seeds: [0, 1, 2, 3, 4]
-expected_output: results/exp_xxx_name/
-primary_metrics: [mae, cfi_agg]
+data_id: <data/split/dev-event hashes; final event-builder hash>
+seeds: [0, 1, 2]
+expected_output: results/phase4/plant/<experiment>/<config_hash>/fold_<k>/seed_<s>/
+primary_metric: ForecastScore
+diagnostic_metrics: [event_curve_wmae, physics_residuals]
 stop_rule: <predeclared failure/early-stop rule>
 estimated_runtime: <estimate>
 ```
@@ -88,11 +92,11 @@ checkpoint 体积过大时可不提交 Git，但应保留文件名、大小、SH
 2. 是否存在 NaN、OOM、早停异常、断点续训或部分 seed 缺失。
 3. checkpoint 是否由验证集选择，测试集是否只在最终阶段使用。
 4. 关键指标能否从逐事件/逐样本结果重新聚合得到。
-5. 是否同时报告预测、干预、物理、OOD 和计算成本。
+5. 是否分别报告预测、观测事件响应、物理、OOD 和计算成本；CFI 不参与 checkpoint 选择。
 6. 负面结果是否可能来自数值积分、单位、动作编码或结果覆盖错误。
 7. 结论范围是否严格小于等于实验覆盖范围。
 
-审计完成后更新 `docs/PROJECT_STATUS.md`、`docs/CURRENT_TASKS.md` 和 `results/README.md`。只有改变项目主判断时才更新根 README。
+审计完成后更新根 `TODO.md`、`docs/PROJECT_STATUS.md` 和 `results/README.md`。`docs/CURRENT_TASKS.md` 是历史任务说明，不再维护。只有改变项目主判断时才更新根 README。
 
 ## 失败处理
 

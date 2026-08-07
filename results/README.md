@@ -3,7 +3,7 @@
 > 命名: `results/exp_0XX_<描述>/`（目录，含 agg JSON + checkpoints）或 `exp_0XX_<描述>.json`（单文件）。
 > 同一实验不同协议必须分目录或加后缀（如 `exp_051_boundary_fix_H10/`）。
 
-> 当前项目口径以 `docs/PROJECT_STATUS.md` 为准。这里记录结果位置，不表示所有历史结论仍有效。
+> 当前项目口径以 [`TODO.md`](../TODO.md)、[`SUPERVISOR_REVIEW_2026-08-07.md`](../docs/SUPERVISOR_REVIEW_2026-08-07.md) 和 [`PROJECT_STATUS.md`](../docs/PROJECT_STATUS.md) 为准。这里记录结果位置，不表示历史数字是独立测试结果或仍支持当时结论。
 
 ## Phase 1 — 世界模型 (文档: docs/phase1_report.md, phase1_conclusions_audit.md)
 
@@ -21,7 +21,7 @@
 | exp_020_n4sid.json | N4SID 线性基线 |
 | exp_022_direct_wm exp_023_direct_aligned | Direct WM (多步direct) |
 | exp_024_sigma_persistence.json | σ 持续性 |
-| exp_025_* (M0-M11, B1-B6, scaler) | **统一基准消融 → M7 定稿** (results/exp_025_M7/) |
+| exp_025_* (M0-M11, B1-B6, scaler) | 历史统一基准消融 → M7 预测 baseline（非全项目定稿） |
 | exp_026* exp_028 | 可微性校验 (backprop-through-WM) |
 
 ## Phase 2 — DWM-MPC (文档: docs/phase2_results.md §1-12)
@@ -57,16 +57,20 @@
 | exp_038_sp_valve.json | SP→阀位→温度 通道分析 |
 | exp_039_joint_ff/ exp_040_pipeline_const_*.json | 联合优化 (结论: 阀位>联合>SP) |
 
-## CFE / 因果架构 — 当前候选与评测
+## CFE / 观测事件架构 — 历史原型
+
+> P0 审计：这些目录没有提供因果 ground truth。exp_106/112 逐 epoch 使用 test 选 checkpoint；exp_109/110 合并 val+test 事件；同名 CFI 存在不同量纲与 silent fallback。正式 Phase 4 不直接复用其 best 数字。
 
 | 目录/文件 | 内容 | 当前解释 |
 |---|---|---|
-| `cfe_groundtruth/` | 第一版 DiD 响应真值 | 小事件集，主要用于协议开发 |
-| `cfe_groundtruth_p2/` | 扩展 DiD 响应真值 | 当前跨时程 CFE 的主要代理真值 |
-| `exp_106_causal_arch/` | A1/A3/B1 训练结果与多变体 | A1phys 为候选，不是最终模型 |
-| `exp_107_did_eval/did_eval.json` | 跨时程 DiD/CFI 评测 | 替代只看 600s 单点的旧口径 |
-| `baselines_exp110/results.json` | M5/M7/M9、A1phys 与 B1 完整基线 | 用于横向审查 |
+| `cfe_groundtruth/` | 第一版匹配 DiD 响应 | 小事件集；观测闭环 protocol prototype |
+| `cfe_groundtruth_p2/` | 扩展匹配 DiD 响应，79 个 val+test 事件 | 观测事件响应参考；不是 ground truth，且 val/test 混合 |
+| `exp_106_causal_arch/` | A1/A3/B1 训练结果与多变体 | test-selected 历史探索；A1phys 仅保留 baseline 身份 |
+| `exp_107_did_eval/did_eval.json` | 跨时程 DiD/CFI 评测 | 历史诊断；不能替代独立 test |
+| `baselines_exp110/results.json` | M5/M7/M9、A1phys 与 B1 基线 | val+test 事件筛选的历史横向审查 |
 | `exp_111_koopman_free/summary.json` | Koopman free-head 初步对照 | 预实验 |
-| `exp_112_koopman_full/summary.json` | 3 seeds × 50 epochs 的 MLP/Koopman/null 对照 | 只关闭 Koopman free-head 具体实现 |
+| `exp_112_koopman_full/summary.json` | 3 seeds、50-epoch cap（9 runs 均早停）的 MLP/Koopman/null 对照 | MAE 是 test-selected pilot；CFI 实际为 n=16 fallback，不能关闭任何路线 |
 
-Fan 2017/2020/2021 灰箱 ODE、Fan-state controlled Koopman 和时变灰箱路线目前没有结果目录，尚未实现与验证。
+`cfe_groundtruth_p2/` 只入库 `did_response.npz`；exp_112 写死读取不存在的 `did_response.json`，且其 test-only 事件长度与 P2 不同，所以结果里的 0.869/0.821 不是 P2 CFI。`final_causal` 无 `cfe` 字段也印证了 fallback。
+
+Fan20-SST 灰箱主干、Fan17/21 嵌套组件、Fan-state controlled Koopman 和时变灰箱路线目前没有正式结果目录，尚未实现与验证。Phase 4 新结果应写入 content-addressed、不可覆盖目录，并保留 raw predictions 与 manifest。

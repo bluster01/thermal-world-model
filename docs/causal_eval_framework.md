@@ -1,5 +1,7 @@
 # CFE: 因果保真度评测框架 (2026-08-05)
 
+> **历史协议 / 不可直接用于 Phase 4 判决。** 2026-08-07 总审确认：P2 matching 只能作为观测闭环事件响应参考，不是因果 ground truth；exp_106/112 在 test 上选模；exp_112 因 GT 文件/事件数不匹配走 silent fallback；同名 CFI 量纲也不一致。当前修订要求见 [`SUPERVISOR_REVIEW_2026-08-07.md`](SUPERVISOR_REVIEW_2026-08-07.md) 与 [`PHASE4_EXPERIMENT_PLAN.md`](PHASE4_EXPERIMENT_PLAN.md)。
+
 > 动机: 架构实验 (exp_096-102) 之间不可比, 且评测通路存在决定性协议错误。
 > 原则: 先建立过硬的评测框架, 再做架构消融。
 

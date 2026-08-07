@@ -1,5 +1,7 @@
 # 完整代码与结果审查 v2 (2026-08-06)
 
+> **历史审查 / 部分结论已被 2026-08-07 总审推翻。** 特别是 exp_112 的 P2 CFI 实际为 n=16 fallback，exp_106/112 使用 test 逐 epoch 选模，P2 又混合 val+test；因此本文的 CFI 排名、best-causal 和“定稿”措辞不进入当前证据层。见 [`SUPERVISOR_REVIEW_2026-08-07.md`](SUPERVISOR_REVIEW_2026-08-07.md)。
+
 > 审查范围: commit 19156f7..492a0d5 全部新增/修改文件 + result.json 交叉验证
 > v1 (已删除) 的 Windows 端视角问题已消除: NPZ 入库 + JSON 自包含 + exp_110 结果存盘
 

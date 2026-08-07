@@ -1,5 +1,7 @@
 # Neural ODE + Deep Koopman + Koopa · 三篇关键论文
 
+> **概念调研，不是路线证据。** Neural ODE、controlled Koopman、time-varying modeling 是动态表达；Fan17/20/21 提供的是不同物理内容。Phase 4 必须先固定同一 Fan20-centered physical specification，再公平比较表达，不能用本文直接决定主模型。
+
 > 来源：微信公众号「时序之心」第13期推荐，结合 thermal-world-model 项目分析
 
 ---

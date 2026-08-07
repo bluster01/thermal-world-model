@@ -1,6 +1,8 @@
 # 当前任务
 
-> 更新：2026-08-07。目标不是继续堆模型，而是建立能公平判定 Fan 灰箱与三类可微动力学路线的实验闭环。
+> **历史任务设计 / 已被新计划取代。** 本文保留 2026-08-07 早期梳理，不能作为活队列。当前任务只在根目录 [`TODO.md`](../TODO.md) 维护；判决协议见 [`PHASE4_EXPERIMENT_PLAN.md`](PHASE4_EXPERIMENT_PLAN.md)，审查依据见 [`SUPERVISOR_REVIEW_2026-08-07.md`](SUPERVISOR_REVIEW_2026-08-07.md)。
+
+> 原目标：建立能公平判定 Fan 灰箱与三类可微动力学路线的实验闭环。新计划进一步把 Fan20 设为 central SST skeleton、Fan17/21 设为嵌套组件，并拆分 plant/supervisory 两个 estimand。
 
 ## 执行分工与状态机
 
@@ -23,7 +25,7 @@ designed → implemented → smoke_passed → ready_for_remote
 - `M7 / DirectWM`：纯数据驱动预测 baseline。
 - `A1phys`：带两级惯性干预先验的灰箱 baseline，不称“物理模型”。
 - `Koopman-free`：exp_112 的具体 free-head 变体，不代表 controlled Koopman 全路线。
-- `Fan17 / Fan20 / Fan21`：三个待实现的物理骨架。
+- `Fan20`：主汽温 central plant skeleton；`Fan17 / Fan21`：待验证的嵌套机制，不是三个平行 SST 全模型。
 
 **验收**：根 README、项目状态和后续实验标题不再出现无范围限定的“最终模型”或“路线关闭”。
 

@@ -1,5 +1,7 @@
 # 论文叙事重构方案 (2026-08-05)
 
+> **历史叙事 / 已撤回作为论文方案。** 文中的“因果响应实证”“现场实证”和相关 CFI 数字没有达到当前 Supervisor 的识别、独立测试和产物标准；仓库也没有足以核验“已投运现场实证”的 artifact。新论文主线与证据边界见 [`SUPERVISOR_REVIEW_2026-08-07.md`](SUPERVISOR_REVIEW_2026-08-07.md) 和 [`PHASE4_EXPERIMENT_PLAN.md`](PHASE4_EXPERIMENT_PLAN.md)。
+
 > 基于: phase2_final_audit.md (数据审查) + §25.6 (方向决策) + 文献调研
 
 ---

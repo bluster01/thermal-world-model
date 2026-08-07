@@ -1,20 +1,24 @@
 # 文档地图
 
-文档按“当前口径、核心证据、物理路线、历史阶段”阅读。旧文档记录实验发生时的判断，若与 `PROJECT_STATUS.md` 冲突，以后者为准。
+文档按“活任务、Supervisor 判决、Phase 4 协议、历史证据”阅读。旧文档记录实验发生时的判断；若与根目录 `TODO.md`、`SUPERVISOR_REVIEW_2026-08-07.md` 或 `PROJECT_STATUS.md` 冲突，以新审查为准。
 
 ## 当前入口
 
+- [../TODO.md](../TODO.md)：项目唯一活任务队列与本地/Linux 状态机。
+- [SUPERVISOR_REVIEW_2026-08-07.md](SUPERVISOR_REVIEW_2026-08-07.md)：代码、结果、论文与方法论总审。
+- [PHASE4_EXPERIMENT_PLAN.md](PHASE4_EXPERIMENT_PLAN.md)：主汽温世界模型的 Gate、实验、统计与停止规则。
 - [PROJECT_STATUS.md](PROJECT_STATUS.md)：可信结论、候选模型、作废结论与下一判决点。
-- [CURRENT_TASKS.md](CURRENT_TASKS.md)：Fan 骨架、三类可微路线和统一评测任务。
+- [CURRENT_TASKS.md](CURRENT_TASKS.md)：2026-08-07 早期任务设计；当前执行以根 TODO 为准。
 - [REMOTE_EXPERIMENT_PROTOCOL.md](REMOTE_EXPERIMENT_PROTOCOL.md)：本地研发与 Linux 正式实验的交接协议。
+- [plans/2026-08-07-phase4-implementation.md](plans/2026-08-07-phase4-implementation.md)：Phase 4 测试驱动代码实施计划。
 - [plans/2026-08-07-project-reorganization-design.md](plans/2026-08-07-project-reorganization-design.md)：本次保守整理设计。
 
 ## 因果评测与当前架构
 
-- [causal_eval_framework.md](causal_eval_framework.md)：L0-L7 因果评测框架。
+- [causal_eval_framework.md](causal_eval_framework.md)：L0-L7 历史评测框架；CFE ground-truth/选模口径已被总审降级。
 - [exp_107_review.md](exp_107_review.md)：单点 CFI、事件数和 checkpoint 选择问题。
 - [session_2026-08-05_causal_arch_eval.md](session_2026-08-05_causal_arch_eval.md)：A1/A3/B1 第一轮结果。
-- [session_2026-08-06_review_v2.md](session_2026-08-06_review_v2.md)：修正后的完整审查与当时任务。
+- [session_2026-08-06_review_v2.md](session_2026-08-06_review_v2.md)：当时审查记录；exp_112/CFI 结论已被 2026-08-07 总审修正。
 
 ## Fan 与可微动力学
 
@@ -56,6 +60,7 @@
 
 ## 历史文档使用规则
 
-1. 引用数字时同时记录实验编号、数据切分、预测时域和 checkpoint 口径。
+1. 引用数字时同时记录实验编号、data/split/event hash、预测时域、seed 和唯一 checkpoint 口径。
 2. 带“最终”“定稿”“路线关闭”的旧标题只在其原实验范围内成立。
 3. 如果结论被审计文档修正，论文和新 README 只采用修正后的口径。
+4. CFE/DiD 只称 matched observational event-response reference，除非未来满足明确的因果识别设计。
