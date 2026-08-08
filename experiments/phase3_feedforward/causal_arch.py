@@ -80,7 +80,7 @@ class InterventionPhysics(nn.Module):
     K(x) 可画成负荷的函数, 与 DiD 分层真值逐箱对比。
     """
 
-    def __init__(self, d_state, d, H, n_lag=2, tau_min=2.0, tau_max=400.0, tau_init=18.0):
+    def __init__(self, d_state, d, H, n_lag=2, tau_min=2.0, tau_max=400.0, tau_init=18.0, k_init=1.0):
         super().__init__()
         self.H, self.n_lag = H, n_lag
         self.tau_min, self.tau_max = tau_min, tau_max
@@ -89,7 +89,7 @@ class InterventionPhysics(nn.Module):
         self.tau_head = nn.Linear(d, n_lag)                  # 各级时间常数
         nn.init.zeros_(self.tau_head.weight)
         nn.init.zeros_(self.k_head.weight)
-        nn.init.constant_(self.k_head.bias, 1.0)             # 初始增益 1.0 (物理稳态)
+        nn.init.constant_(self.k_head.bias, k_init)
         # tau 按物理时标初始化: exp_099 测得 600s 响应 ≈97% → 2 级级联需 tau≈18 步。
         # 若用 sigmoid(0)=0.5 的默认零 bias, tau=201 步(2010s), 600s 仅走到 4%,
         # 响应几乎为 0 → K 的梯度饿死, A3 分支训不起来。
@@ -121,9 +121,9 @@ class InterventionPhysics(nn.Module):
 class InterventionBoth(nn.Module):
     """A3 物理主干 + A1 小残差修正 (物理形式不足时兜底)。"""
 
-    def __init__(self, d_state, d, H, n_lag=2, res_scale=0.1):
+    def __init__(self, d_state, d, H, n_lag=2, res_scale=0.1, k_init=1.0):
         super().__init__()
-        self.phys = InterventionPhysics(d_state, d, H, n_lag)
+        self.phys = InterventionPhysics(d_state, d, H, n_lag, k_init=k_init)
         self.res = InterventionMLP(d_state, d, H)
         self.res_scale = res_scale
 
@@ -191,13 +191,13 @@ class KoopmanFreeHead(nn.Module):
         return torch.tanh(self.alpha).cpu().numpy()
 
 
-def make_intervention(mode, d_state, d, H, n_lag=2):
+def make_intervention(mode, d_state, d, H, n_lag=2, k_init=1.0):
     if mode == 'mlp':
         return InterventionMLP(d_state, d, H)
     if mode == 'phys':
-        return InterventionPhysics(d_state, d, H, n_lag)
+        return InterventionPhysics(d_state, d, H, n_lag, k_init=k_init)
     if mode == 'both':
-        return InterventionBoth(d_state, d, H, n_lag)
+        return InterventionBoth(d_state, d, H, n_lag, k_init=k_init)
     raise ValueError(f"未知 intervention mode: {mode}")
 
 
@@ -244,13 +244,15 @@ class ResidualCausalWM(CausalWMBase):
     """
     def __init__(self, n_feat, target_idx, H, intervention='mlp', n_lag=2,
                  cumsum_out=False, probabilistic=True, free_action_blind=True,
-                 free_head_type='mlp', d_latent=64, alpha_init=0.0):
+                 free_head_type='mlp', d_latent=64, alpha_init=0.0,
+                 clamp_interv=0.0, k_init=1.0):
         super().__init__(n_feat, target_idx)
         d = cfg.D_MODEL
         W = cfg.WINDOW_SIZE
         self.H, self.probabilistic, self.cumsum_out = H, probabilistic, cumsum_out
         self.intervention_mode = intervention
         self.free_head_type = free_head_type
+        self.clamp_interv = clamp_interv
 
         assert free_action_blind, "free_action_blind=False 会破坏 A1 可归因性"
 
@@ -272,7 +274,7 @@ class ResidualCausalWM(CausalWMBase):
                 nn.Linear(d_state, d * 4), nn.GELU(), nn.Dropout(cfg.DROPOUT),
                 nn.Linear(d * 4, d * 4), nn.GELU(), nn.Dropout(cfg.DROPOUT),
                 nn.Linear(d * 4, H * 2 if probabilistic else H))
-        self.interv = make_intervention(intervention, d_state, d, H, n_lag)
+        self.interv = make_intervention(intervention, d_state, d, H, n_lag, k_init=k_init)
         if cumsum_out:
             # free_head 末层零初始化: 初始预测 = anchor 持久化 (强基线),
             # 同时消除 cumsum 带来的 ~200x 梯度放大 (每个增量影响所有后续步)。
@@ -306,6 +308,8 @@ class ResidualCausalWM(CausalWMBase):
 
         a = a_future.reshape(B, self.H)
         g_n = self.interv(s_flat, a)                       # g(x,0) ≡ 0
+        if self.clamp_interv > 0:
+            g_n = torch.clamp(g_n, -self.clamp_interv, self.clamp_interv)
 
         if self.cumsum_out:
             # C1: free 分支输出解释为归一化空间的逐步增量, 锚定 onset 前一步真实值。

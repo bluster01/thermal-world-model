@@ -4,15 +4,14 @@ exp_201_valve_action.py — Phase 3.5: 阀位 action 的双分支模型验证
 ===================================================================
 设计稿: docs/PHASE35_DESIGN.md
 
-核心假设: 结构分解 (f_free + g_plant) 能让 g_plant 从混杂数据中学到
-         正确的 plant-level 物理方向 (阀位↑→降温, ∂T/∂valve < 0)
-
-与 Phase 1 阀位实验的区别: 架构 —— 双分支有地方分流混杂和因果
+Fix v2: action 从绝对阀位改为 Δvalve（一阶差分），使 cumsum(Δvalve)
+       恢复阀位偏差轨迹，物理含义与ΔSP→cumsum→SP偏差一致。
+       外加 g_plant 输出 clamp[-15, +15]°C 防止递归发散。
 
 用法:
   python exp_201_valve_action.py --variant A1phys_valve --seed 0 --ff 10
-  python exp_201_valve_action.py --variant M7_valve --seed 0
-  python exp_201_valve_action.py --all --seeds 0,1,2
+  python exp_201_valve_action.py --variant A1phys_valve_noff --seed 0 --ff 0
+  python exp_201_valve_action.py --variant A1phys_null_valve --seed 0
 """
 
 import os, sys, json, time, argparse
@@ -32,34 +31,28 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 W = E_cfg.WINDOW_SIZE  # 96
 H = 60
 
-# Data splits (same as exp_106)
 n_train = 495407
-n_val_end = 601566  # test starts here
+n_val_end = 601566
 
-# Valve column
-I_V2 = NUMERIC_COLS.index('二级减温调节门阀位')  # valve position
-I_SP = NUMERIC_COLS.index('二级减温调节阀设定')   # for event selection only
+I_V2 = NUMERIC_COLS.index('二级减温调节门阀位')   # valve position
+I_SP = NUMERIC_COLS.index('二级减温调节阀设定')    # for event selection only
 
 OUT_ROOT = 'results/exp_201_valve_action'
 
-PROFILE_K = [(2, '30s'), (5, '60s'), (11, '120s'), (17, '180s'),
-             (29, '300s'), (41, '420s'), (59, '600s')]
-
-# ─── Data construction: valve as action ───
+# ─── Data: Δvalve as action ───
 raw = data_all
-valve_col = raw[:, I_V2].copy()
+dvalve_col = np.diff(raw[:, I_V2], prepend=raw[0, I_V2])  # Δvalve
+dsp_col    = np.diff(raw[:, I_SP], prepend=raw[0, I_SP])    # ΔSP (events only)
+raw42 = np.concatenate([raw, dvalve_col[:, None], dsp_col[:, None]], 1)
+I_ACTION = 40  # Δvalve column
+I_DSP    = 41  # ΔSP column (events only)
 
-# Build raw42: append valve (absolute) as column 40, + ΔSP as column 41 (for events)
-dsp_col = np.diff(raw[:, I_SP], prepend=raw[0, I_SP])
-raw42 = np.concatenate([raw, valve_col[:, None], dsp_col[:, None]], 1)
-I_ACTION = 40  # valve position
-I_DSP = 41     # ΔSP (for event selection only)
 train_raw = raw42[:n_train]
-test_raw = raw42[n_val_end:]
+test_raw  = raw42[n_val_end:]
 
-# ─── Action construction ───
+# ─── Action construction: Δvalve (like ΔSP in exp_106) ───
 def build_valve_action(raw42, s, W_val, H_val, override=None):
-    """Read valve position (absolute) as action, not ΔSP."""
+    """Read Δvalve as action. The model's forward() will cumsum it internally."""
     if override is not None:
         a = np.asarray(override, dtype=np.float32)
         if a.ndim == 0: a = np.full(H_val, float(a), dtype=np.float32)
@@ -84,45 +77,47 @@ def eval_mae(model, H_val, n=200, seed=0):
     idxs = rng.integers(0, len(test_raw) - W - H_val, size=n)
     errs = []
     for i in idxs:
-        x = torch.from_numpy(test_raw[i:i + W, :N_FEAT]).float().unsqueeze(0).to(DEVICE)
-        a = torch.from_numpy(build_valve_action(test_raw, int(i), W, H_val))
-        mu, _ = model(x, a.reshape(1, H_val, 1).to(DEVICE))
-        errs.append(np.abs(mu[0].cpu().numpy() - test_raw[i + W:i + W + H_val, TARGET_IDX]).mean())
+        i_int = int(i)
+        x = torch.from_numpy(test_raw[i_int:i_int + W, :N_FEAT]).float().unsqueeze(0).to(DEVICE)
+        a = build_valve_action(test_raw, i_int, W, H_val)
+        mu, _ = model(x, torch.from_numpy(a).float().reshape(1, H_val, 1).to(DEVICE))
+        gt = test_raw[i_int + W:i_int + W + H_val, TARGET_IDX]
+        errs.append(np.abs(mu[0].cpu().numpy() - gt).mean())
     return float(np.mean(errs))
 
 
 @torch.no_grad()
-def eval_jacobian(model, H_val, n=100, seed=42, delta=1.0):
-    """Finite-difference direction test: ∂T̂/∂valve via ±delta perturbation."""
+def eval_jacobian(model, H_val, n=100, seed=42, delta=0.1):
+    """Finite-difference direction test. valve↑ → T↓ = correct physics"""
     model.eval()
     rng = np.random.default_rng(seed)
     idxs = rng.integers(0, len(test_raw) - W - H_val, size=n)
-    neg_frac = 0; pos_frac = 0; zero_frac = 0
+    neg = pos = zero = 0
     for i in idxs:
-        x = torch.from_numpy(test_raw[i:i + W, :N_FEAT]).float().unsqueeze(0).to(DEVICE)
-        a = build_valve_action(test_raw, int(i), W, H_val)
+        i_int = int(i)
+        x = torch.from_numpy(test_raw[i_int:i_int + W, :N_FEAT]).float().unsqueeze(0).to(DEVICE)
+        a = build_valve_action(test_raw, i_int, W, H_val)
         a_up = a.copy(); a_up += delta
         a_dn = a.copy(); a_dn -= delta
         mu_up, _ = model(x, torch.from_numpy(a_up).float().reshape(1, H_val, 1).to(DEVICE))
         mu_dn, _ = model(x, torch.from_numpy(a_dn).float().reshape(1, H_val, 1).to(DEVICE))
-        diff = (mu_up - mu_dn).mean().item()  # avg T difference across horizon
-        if abs(diff) < 1e-6:
-            zero_frac += 1
-        elif diff < 0:
-            neg_frac += 1  # valve↑ → T↓ = correct physics
-        else:
-            pos_frac += 1
-    return dict(neg=neg_frac/n, pos=pos_frac/n, zero=zero_frac/n, n=n)
+        diff = (mu_up - mu_dn).mean().item()
+        if abs(diff) < 1e-6: zero += 1
+        elif diff < 0: neg += 1
+        else: pos += 1
+    return dict(neg=neg/n, pos=pos/n, zero=zero/n, n=n)
 
 
-# ─── Model construction ───
+# ─── Model ───
 def build_model(variant):
     if variant in ('A1phys_valve', 'A1phys_valve_noff', 'A1phys_null_valve'):
         return CA.ResidualCausalWM(N_FEAT, TARGET_IDX, H,
                                    intervention='phys', cumsum_out=False,
                                    probabilistic=True, n_lag=2,
                                    free_head_type='mlp' if variant != 'A1phys_null_valve' else None,
-                                   alpha_init=0.0)
+                                   alpha_init=0.0,
+                                   clamp_interv=15.0,      # ±15°C output bound
+                                   k_init=0.01)              # valve K ≈ 0.01× SP K
     else:
         raise ValueError(f'Unknown variant: {variant}')
 
@@ -140,7 +135,6 @@ class SafeBetaNLL(torch.nn.Module):
         return nll.mean()
 
 
-# ─── Training ───
 def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0):
     if smoke: epochs = 3
     torch.manual_seed(seed); np.random.seed(seed)
@@ -154,8 +148,7 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0):
     model = build_model(variant).to(DEVICE)
     print(f'{variant} seed={seed}: {sum(p.numel() for p in model.parameters()):,} params')
 
-    # Freeze free branch for first N epochs (A1phys only)
-    if freeze_free_epochs > 0 and hasattr(model, 'free_head'):
+    if freeze_free_epochs > 0 and hasattr(model, 'free_head') and model.free_head is not None:
         for p in model.free_head.parameters(): p.requires_grad = False
 
     opt = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-5)
@@ -169,10 +162,9 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0):
     curve = []
 
     for ep in range(1, max_epochs + 1):
-        # Unfreeze after freeze period
-        if freeze_free_epochs > 0 and ep == freeze_free_epochs + 1 and hasattr(model, 'free_head'):
+        if freeze_free_epochs > 0 and ep == freeze_free_epochs + 1 and hasattr(model, 'free_head') and model.free_head is not None:
             for p in model.free_head.parameters(): p.requires_grad = True
-            for pg in opt.param_groups: pg['lr'] = 1e-3  # reset LR
+            for pg in opt.param_groups: pg['lr'] = 1e-3
 
         model.train()
         opt.zero_grad()
@@ -202,11 +194,10 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0):
             print(f'  ep{ep:3d} loss={loss.item():.4f} mae={mae:.4f} '
                   f'jac:neg={jac["neg"]:.1%} pos={jac["pos"]:.1%} z={jac["zero"]:.1%}')
 
-        if (ep - best_mae_ep > patience and ep > freeze_free_epochs + 5):
+        if (ep - best_mae_ep > patience and ep > max(freeze_free_epochs, 0) + 5):
             print(f'  early stop at ep {ep}')
             break
 
-    # Final evaluation
     model.load_state_dict(torch.load(os.path.join(outdir, 'best_cfi.pth')))
     final_mae = eval_mae(model, H, n=200, seed=99)
     final_jac = eval_jacobian(model, H, n=100, seed=99)
@@ -220,11 +211,10 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0):
         json.dump(result, f, indent=2, default=float)
 
     print(f'  DONE: best_mae={best_mae:.4f} best_cfi={best_cfi:.4f} '
-          f'final_jac_neg={final_jac["neg"]:.1%}')
+          f'final_mae={final_mae:.4f} final_jac_neg={final_jac["neg"]:.1%}')
     return result
 
 
-# ─── Main ───
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--variant', default='A1phys_valve')
@@ -235,7 +225,7 @@ if __name__ == '__main__':
     ap.add_argument('--seeds', default='0')
     args = ap.parse_args()
 
-    variants = [args.variant] if not args.all else ['A1phys_valve', 'M7_valve']
+    variants = [args.variant] if not args.all else ['A1phys_valve', 'A1phys_valve_noff', 'A1phys_null_valve']
     seeds = [args.seed] if not args.all else [int(s) for s in args.seeds.split(',')]
 
     for v in variants:
