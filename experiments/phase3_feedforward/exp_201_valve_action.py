@@ -8,8 +8,14 @@ Fix v2: action 从绝对阀位改为 Δvalve（一阶差分），使 cumsum(Δva
        恢复阀位偏差轨迹，物理含义与ΔSP→cumsum→SP偏差一致。
        外加 g_plant 输出 clamp[-15, +15]°C 防止递归发散。
 
+Fix v3 (abs mode): --action-mode abs 用绝对阀位(去训练集中位数)作为 action，
+       integrate=False 不做 cumsum。保留绝对工作点信息(阀门开度-流量非线性:
+       30% 处 +1% 与 80% 处 +1% 流量增量不同, Δvalve 表示无法区分)。
+       去中位数保证 g(x,0)=0 语义: 阀位处于典型开度时干预项为 0。
+
 用法:
   python exp_201_valve_action.py --variant A1phys_valve --seed 0 --ff 10
+  python exp_201_valve_action.py --variant A1phys_valve --seed 0 --ff 10 --action-mode abs
   python exp_201_valve_action.py --variant A1phys_valve_noff --seed 0 --ff 0
   python exp_201_valve_action.py --variant A1phys_null_valve --seed 0
 """
@@ -39,31 +45,37 @@ I_SP = NUMERIC_COLS.index('二级减温调节阀设定')    # for event selectio
 
 OUT_ROOT = 'results/exp_201_valve_action'
 
-# ─── Data: Δvalve as action ───
+# ─── Data: Δvalve or absolute valve as action ───
 raw = data_all
 dvalve_col = np.diff(raw[:, I_V2], prepend=raw[0, I_V2])  # Δvalve
 dsp_col    = np.diff(raw[:, I_SP], prepend=raw[0, I_SP])    # ΔSP (events only)
-raw42 = np.concatenate([raw, dvalve_col[:, None], dsp_col[:, None]], 1)
-I_ACTION = 40  # Δvalve column
-I_DSP    = 41  # ΔSP column (events only)
+v_med_train = float(np.median(raw[:n_train, I_V2]))        # 训练集阀位中位数 (abs 模式参考点)
+absvalve_col = raw[:, I_V2] - v_med_train                  # 绝对阀位去中位数
+raw42 = np.concatenate([raw, dvalve_col[:, None], absvalve_col[:, None], dsp_col[:, None]], 1)
+I_DVALVE = 40  # Δvalve column
+I_AVALVE = 41  # absolute valve (centered) column
+I_DSP    = 42  # ΔSP column (events only)
 
 train_raw = raw42[:n_train]
 test_raw  = raw42[n_val_end:]
 
-# ─── Action construction: Δvalve (like ΔSP in exp_106) ───
-def build_valve_action(raw42, s, W_val, H_val, override=None):
-    """Read Δvalve as action. The model's forward() will cumsum it internally."""
+# ─── Action construction ───
+def build_valve_action(raw42, s, W_val, H_val, override=None, mode='delta'):
+    """Read Δvalve (delta) or centered absolute valve (abs) as action.
+    Delta mode: model's forward() cumsums internally → valve deviation trajectory.
+    Abs mode: integrate=False → u = a directly, absolute opening level retained."""
     if override is not None:
         a = np.asarray(override, dtype=np.float32)
         if a.ndim == 0: a = np.full(H_val, float(a), dtype=np.float32)
         return a
-    return raw42[s + W_val:s + W_val + H_val, I_ACTION].astype(np.float32)
+    icol = I_DVALVE if mode == 'delta' else I_AVALVE
+    return raw42[s + W_val:s + W_val + H_val, icol].astype(np.float32)
 
 
-def make_batch(H_val, bs, rng):
+def make_batch(H_val, bs, rng, mode='delta'):
     idxs = rng.integers(0, len(train_raw) - W - H_val, size=bs)
     X = np.stack([train_raw[i:i + W, :N_FEAT] for i in idxs])
-    A = np.stack([build_valve_action(train_raw, int(i), W, H_val) for i in idxs])
+    A = np.stack([build_valve_action(train_raw, int(i), W, H_val, mode=mode) for i in idxs])
     Y = np.stack([train_raw[i + W:i + W + H_val, TARGET_IDX] for i in idxs])
     return (torch.from_numpy(X).float().to(DEVICE),
             torch.from_numpy(A).float().unsqueeze(-1).to(DEVICE),
@@ -71,7 +83,7 @@ def make_batch(H_val, bs, rng):
 
 
 @torch.no_grad()
-def eval_mae(model, H_val, n=200, seed=0):
+def eval_mae(model, H_val, n=200, seed=0, mode='delta'):
     model.eval()
     rng = np.random.default_rng(seed)
     idxs = rng.integers(0, len(test_raw) - W - H_val, size=n)
@@ -79,7 +91,7 @@ def eval_mae(model, H_val, n=200, seed=0):
     for i in idxs:
         i_int = int(i)
         x = torch.from_numpy(test_raw[i_int:i_int + W, :N_FEAT]).float().unsqueeze(0).to(DEVICE)
-        a = build_valve_action(test_raw, i_int, W, H_val)
+        a = build_valve_action(test_raw, i_int, W, H_val, mode=mode)
         mu, _ = model(x, torch.from_numpy(a).float().reshape(1, H_val, 1).to(DEVICE))
         gt = test_raw[i_int + W:i_int + W + H_val, TARGET_IDX]
         errs.append(np.abs(mu[0].cpu().numpy() - gt).mean())
@@ -87,8 +99,10 @@ def eval_mae(model, H_val, n=200, seed=0):
 
 
 @torch.no_grad()
-def eval_jacobian(model, H_val, n=100, seed=42, delta=0.1):
-    """Finite-difference direction test. valve↑ → T↓ = correct physics"""
+def eval_jacobian(model, H_val, n=100, seed=42, delta=0.1, mode='delta'):
+    """Finite-difference direction test. valve↑ → T↓ = correct physics
+    delta mode: δ=0.1/step, cumsum → 6% cumulative valve deviation.
+    abs mode:   δ=5.0 whole-window valve +5% (opening level retained)."""
     model.eval()
     rng = np.random.default_rng(seed)
     idxs = rng.integers(0, len(test_raw) - W - H_val, size=n)
@@ -96,7 +110,7 @@ def eval_jacobian(model, H_val, n=100, seed=42, delta=0.1):
     for i in idxs:
         i_int = int(i)
         x = torch.from_numpy(test_raw[i_int:i_int + W, :N_FEAT]).float().unsqueeze(0).to(DEVICE)
-        a = build_valve_action(test_raw, i_int, W, H_val)
+        a = build_valve_action(test_raw, i_int, W, H_val, mode=mode)
         a_up = a.copy(); a_up += delta
         a_dn = a.copy(); a_dn -= delta
         mu_up, _ = model(x, torch.from_numpy(a_up).float().reshape(1, H_val, 1).to(DEVICE))
@@ -109,15 +123,19 @@ def eval_jacobian(model, H_val, n=100, seed=42, delta=0.1):
 
 
 # ─── Model ───
-def build_model(variant):
+def build_model(variant, mode='delta'):
     if variant in ('A1phys_valve', 'A1phys_valve_noff', 'A1phys_null_valve'):
+        # delta mode: K_init=0.01 (valve K ≈ 0.01× SP K, u ∈ ±4%)
+        # abs mode:   K_init=0.002 (u ∈ ±30% centered, sig ≈ ±0.06 normalized)
+        k_init = 0.01 if mode == 'delta' else 0.002
         return CA.ResidualCausalWM(N_FEAT, TARGET_IDX, H,
                                    intervention='phys', cumsum_out=False,
                                    probabilistic=True, n_lag=2,
                                    free_head_type='mlp' if variant != 'A1phys_null_valve' else None,
                                    alpha_init=0.0,
                                    clamp_interv=15.0,      # ±15°C output bound
-                                   k_init=0.01)              # valve K ≈ 0.01× SP K
+                                   k_init=k_init,
+                                   integrate=(mode == 'delta'))
     else:
         raise ValueError(f'Unknown variant: {variant}')
 
@@ -135,17 +153,18 @@ class SafeBetaNLL(torch.nn.Module):
         return nll.mean()
 
 
-def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0):
+def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0, mode='delta'):
     if smoke: epochs = 3
     torch.manual_seed(seed); np.random.seed(seed)
     rng = np.random.default_rng(seed)
 
     suffix = f'_s{seed}'
     if freeze_free_epochs > 0: suffix += f'_ff{freeze_free_epochs}'
+    if mode != 'delta': suffix += f'_{mode}'
     outdir = os.path.join(OUT_ROOT, f'{variant}{suffix}')
     os.makedirs(outdir, exist_ok=True)
 
-    model = build_model(variant).to(DEVICE)
+    model = build_model(variant, mode=mode).to(DEVICE)
     print(f'{variant} seed={seed}: {sum(p.numel() for p in model.parameters()):,} params')
 
     if freeze_free_epochs > 0 and hasattr(model, 'free_head') and model.free_head is not None:
@@ -168,7 +187,7 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0):
 
         model.train()
         opt.zero_grad()
-        X, A, Y = make_batch(H, 256, rng)
+        X, A, Y = make_batch(H, 256, rng, mode=mode)
         mu, lv = model(X, A)
         loss = criterion(mu, lv, Y)
         loss.backward()
@@ -177,8 +196,9 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0):
         scheduler.step(loss.item())
 
         if ep % 5 == 0 or ep == 1:
-            mae = eval_mae(model, H, n=50, seed=seed)
-            jac = eval_jacobian(model, H, n=30, seed=seed)
+            mae = eval_mae(model, H, n=50, seed=seed, mode=mode)
+            jac = eval_jacobian(model, H, n=30, seed=seed,
+                                delta=0.1 if mode == 'delta' else 5.0, mode=mode)
             cfi_fallback = 0.5 * jac['neg'] + 0.5 * (1.0 if mae < 1.5 else 0.5)
 
             curve.append(dict(ep=ep, loss=loss.item(), mae=mae, cfi=cfi_fallback,
@@ -199,10 +219,12 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0):
             break
 
     model.load_state_dict(torch.load(os.path.join(outdir, 'best_cfi.pth')))
-    final_mae = eval_mae(model, H, n=200, seed=99)
-    final_jac = eval_jacobian(model, H, n=100, seed=99)
+    final_mae = eval_mae(model, H, n=200, seed=99, mode=mode)
+    final_jac = eval_jacobian(model, H, n=100, seed=99,
+                              delta=0.1 if mode == 'delta' else 5.0, mode=mode)
 
-    result = dict(variant=variant, seed=seed, H=H,
+    result = dict(variant=variant, seed=seed, H=H, mode=mode,
+                  v_med_train=v_med_train,
                   best=dict(mae=best_mae, mae_ep=best_mae_ep, cfi=best_cfi, cfi_ep=best_cfi_ep),
                   final=dict(mae=final_mae, jac_neg=final_jac['neg'],
                              jac_pos=final_jac['pos'], jac_zero=final_jac['zero']),
@@ -223,6 +245,8 @@ if __name__ == '__main__':
     ap.add_argument('--smoke', action='store_true')
     ap.add_argument('--all', action='store_true')
     ap.add_argument('--seeds', default='0')
+    ap.add_argument('--action-mode', default='delta', choices=['delta', 'abs'],
+                    help='delta: Δvalve + cumsum (v3 baseline); abs: absolute valve, no cumsum')
     args = ap.parse_args()
 
     variants = [args.variant] if not args.all else ['A1phys_valve', 'A1phys_valve_noff', 'A1phys_null_valve']
@@ -230,5 +254,5 @@ if __name__ == '__main__':
 
     for v in variants:
         for s in seeds:
-            print(f'\n{"="*60}\n{v} seed={s}\n{"="*60}')
-            train_one(v, s, smoke=args.smoke, freeze_free_epochs=args.ff)
+            print(f'\n{"="*60}\n{v} seed={s} mode={args.action_mode}\n{"="*60}')
+            train_one(v, s, smoke=args.smoke, freeze_free_epochs=args.ff, mode=args.action_mode)
