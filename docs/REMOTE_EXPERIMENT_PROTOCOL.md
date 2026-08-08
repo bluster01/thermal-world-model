@@ -2,7 +2,7 @@
 
 > 本协议区分实验研发、算力执行与结果审计，避免把“代码可运行”误写成“模型已验证”。
 
-> Phase 4 的 batch 顺序、task 分层和预算以 [`PHASE4_EXPERIMENT_PLAN.md`](PHASE4_EXPERIMENT_PLAN.md) 为准；活状态只更新根目录 [`TODO.md`](../TODO.md)。Task P 与 Task S 使用不同 manifests、events、结果路径和排行榜。
+> 当前活动批次是 Phase 3.5，精确命令以 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 为准；活状态只更新根目录 [`TODO.md`](../TODO.md)。Phase 4 已暂停。
 
 ## 职责边界
 
@@ -43,18 +43,18 @@
 每次正式实验至少提供：
 
 ```yaml
-task: plant  # plant | supervisory
-experiment_id: phase4_r1_fan20
-required_git_tag: phase4-r1-v1
+task: valve_level_phase3_5
+experiment_id: phase3_5_development
+required_git_tag: <supervisor-provided tag>
 git_commit: <runtime verifies and records 40-char SHA>
-script: scripts/phase4/run.py
-command: python scripts/phase4/run.py --matrix configs/phase4/matrix_r1.yaml
+script: experiments/phase3_5/run_matrix.py
+command: python experiments/phase3_5/run_matrix.py --cache-a <A> --cache-b <B> --device cuda --execute --evaluate-validation
 working_directory: <repo-root>
-data_id: <data/split/dev-event hashes; final event-builder hash>
+data_id: <A/B raw SHA256 and cache manifests>
 seeds: [0, 1, 2]
-expected_output: results/phase4/plant/<experiment>/<config_hash>/fold_<k>/seed_<s>/
-primary_metric: ForecastScore
-diagnostic_metrics: [event_curve_wmae, physics_residuals]
+expected_output: results/phase3_5/runs/<side>_<config>_s<seed>/
+primary_metric: validation_integrated_mae
+diagnostic_metrics: [IRF-WMAE, direction, lag, dose_monotonicity, SP_negative_control]
 stop_rule: <predeclared failure/early-stop rule>
 estimated_runtime: <estimate>
 ```

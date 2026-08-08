@@ -1,10 +1,26 @@
 # 项目状态
 
-> 更新：2026-08-07。本文是项目现状的权威入口；历史文档保留当时结论，不自动代表当前判断。
+> 更新：2026-08-09。本文是项目现状的权威入口；历史文档保留当时结论，不自动代表当前判断。
 
 ## 一句话状态
 
-项目已完成预测基线、MPC 方法探索和第一轮观测事件评测，但**尚未完成模型定性，也没有独立 lockbox 结论**。历史 test 时段已被多轮开发与逐 epoch 选模访问；A1phys 仅保留为监督层 baseline，Fan20 主汽温骨架及三类动态表达尚未在统一协议下验证。
+项目已完成预测基线、MPC 方法探索和第一轮观测事件评测，但**尚未完成模型定性，也没有独立 lockbox 结论**。Phase 4 已暂停，当前唯一活动阶段是 Phase 3.5：以实际绝对阀位为代理动作，重新验证 A1phys 的预测能力、真实阀门响应、模型响应和 SP 未执行负对照。框架已通过本地测试，尚无正式训练结果。
+
+## Phase 3.5 当前状态
+
+| 项目 | 状态 | 当前边界 |
+|---|---|---|
+| 原始数据口径 | 已完成只读探索，待 Linux manifest | A/B 为异步稀疏 historian；不能把原始行称为 10 s 样本 |
+| 动作定义 | 已冻结 | 主动作是实际二级减温阀反馈开度；SP 是监督层信号；喷水流量不作真值 |
+| 数据框架 | 已实现 | causal LOCF 10 s grid、staleness、SHA256、60/20/20 split 内窗口 |
+| A1phys-V | 已实现 | 历史阀位可作处理前状态；未来阀位只进入受约束干预分支 |
+| exp_201 pilot | 已回传并审计降级 | A 侧固定 `R=50`：ff10 三 seed 为 100%×3，no-freeze 三 seed 均值约 98.3%；原始绝对阀位多为 60–75%。均为 test-selected，且手工先验未标定，不能作正式证据 |
+| 核心实验 | 已实现，未运行 | E1–E5 全部属于论文主文核心验证 |
+| 训练选择 | 已修正 | validation-only canonical checkpoint；test 显式解锁并写 ledger |
+| 统计 | 已实现，待事件审计 | A/B 分报；UTC 日块 bootstrap；seed 仅表示优化波动 |
+| 正式结果 | 尚无 | 当前不能声称“完全物理响应”或 Phase 3.5 模型胜出 |
+
+Phase 3.5 的目标不是证明质量/能量守恒，而是建立分层物理一致性：阀门动作可辨认、经验温度响应可复核、模型反事实响应能复现该曲线、SP 未执行时模型不制造阀门效应。完整协议见 [`PHASE3_5_EXPERIMENT_DESIGN.md`](PHASE3_5_EXPERIMENT_DESIGN.md)。
 
 ## 证据分级
 
@@ -35,7 +51,7 @@
 
 它是强预测基线和大量后续实验的基础设施，但动作响应存在条件期望与干预效应混淆。保留为纯数据驱动 baseline，不再称“最终模型”。
 
-### 2. A1phys
+### 2. 历史 A1phys 与 Phase 3.5 A1phys-V
 
 当前形式为：
 
@@ -44,7 +60,7 @@ T_hat(x, a) = f_free(x) + g_phys(x, a)
 g_phys(x, 0) = 0
 ```
 
-`g_phys` 使用工况相关增益和两级一阶惯性。它是监督层 ΔSP 到闭环主汽温响应的灰箱先验，不含 controller/actuator、质量守恒、能量守恒、焓值传递和完整锅炉状态方程，因此不能称为 Fan plant 物理模型。
+旧 `g_phys` 使用工况相关增益和两级一阶惯性，是监督层 ΔSP 到闭环主汽温响应的灰箱先验。Phase 3.5 新实现改为实际绝对阀位轨迹，并允许 A/B 侧独立的单调有效开度映射；constant-valve 路径严格为零、开阀长期增益非正。它仍不含质量守恒、能量守恒、焓值传递和完整锅炉状态方程，因此只能称 physics-guided gray-box，不能称 Fan plant 物理模型。
 
 exp_112 三 seed 的**探索性、test-selected** MAE 汇总（每 seed 逐 epoch 取 test 最小值后再求均值）：
 
@@ -68,12 +84,12 @@ exp_112 指向的 `results/cfe_groundtruth_p2/did_response.json` 在仓库不存
 
 ## 动作层级与研究对象
 
-Phase 4 冻结两个不可混榜的任务：
+项目区分两个不可混榜的任务：
 
 1. **plant-level**：喷水流量或经核验的有效阀位代理 → Fan20 plant → `Tst`；
 2. **supervisory-level**：监督层 SP/ΔSP → controller/actuator → valve/spray → plant → `Tst`。
 
-exp_025 使用实际绝对阀位，exp_106/A1phys 使用 `二级减温调节阀设定` 的一阶差分，Fan20 使用两级喷水质量流量。它们目前不是同一 estimand，禁止放在同一模型冠军表中。
+exp_025 使用实际绝对阀位，exp_106/旧 A1phys 使用 `二级减温调节阀设定` 的一阶差分，Fan20 使用两级喷水质量流量。它们不是同一 estimand，禁止放在同一模型冠军表中。Phase 3.5 只比较阀门级配置；SP 仅作执行链负对照。
 
 ## 三类可微动力学路线的真实状态
 
@@ -102,11 +118,10 @@ exp_025 使用实际绝对阀位，exp_106/A1phys 使用 `二级减温调节阀�
 
 - 工作边界：本地负责实验设计、代码实现、测试与结果审计；Linux 远端负责真实数据/GPU 上的正式运行。
 - “已实现”不等于“已验证”：只有远端结果返回并完成本地审计，实验才能进入结论层。
-- 活跃逻辑主要在 `experiments/phase3_feedforward/`，`src/` 仍是早期原型。
+- 当前正式逻辑位于 `src/phase35/` 与 `experiments/phase3_5/`；`phase3_feedforward/` 只作历史追溯。
 - 仓库没有锁定依赖或可复现环境文件。
 - `data/伊敏6号机` 是 Linux 符号链接，Windows 检出不可直接使用。
-- 现有测试主要覆盖 Phase 2 评测协议，不覆盖 CFE、A1phys 或 Fan 方程。
-- 当前 `pytest` 在收集阶段失败：`tests/test_eval_protocol.py` 注入的基线模块桩缺少 `TimeXerWM`，而 `eval_protocol.py` 已新增该导入；这是既有测试桩漂移，不是本次文档整理引入。
+- Phase 3.5 已新增数据、模型、事件、训练、统计、汇总和 CLI smoke 专项测试；当前 25 项通过。全仓历史测试仍有 `TimeXerWM` 测试桩收集错误，不能由专项测试代替或隐去。
 - `eval_protocol.py` 的 PID 物理方向、零误差工作点和导数项实现存在 P0 缺陷；旧控制结果不得恢复证据等级。
 - `exp_106/112` 在 test 上逐 epoch 评估并选 checkpoint；`exp_109/110` 又合并 val+test 构造/筛选事件。
 - 148 个 Python 文件中有 88 个没有 `if __name__ == '__main__'` guard；多个实验依赖导入副作用、全局变量与 `sys.path/sys.argv` 修改。
@@ -115,13 +130,12 @@ exp_025 使用实际绝对阀位，exp_106/A1phys 使用 `二级减温调节阀�
 
 ## 下一判决点
 
-只有依次通过以下 Gate，才讨论“主模型”定性：
+当前只推进 Phase 3.5：
 
-1. Gate 0：tag/action、episode/split、validation-only 选模、fail-closed metrics 和测试地基；
-2. Gate 1：IAPWS 与 Fan20-SST 方程闭合、合成恢复、数值稳定和可辨识性；
-3. Gate 2：Fan17/21 仅作为嵌套组件的最小消融；
-4. Gate 3：固定物理内容后公平比较 ODE、controlled Koopman、time-varying gray-box；
-5. Gate 4：rolling folds、负荷/action worst-group 与 cluster-aware 统计；
-6. Gate 5：5 seeds、一个 canonical checkpoint；有新数据时一次批量 locked-final，无新数据时明确标注 internal-final。
+1. Linux 生成 A/B cache 与 source SHA256/staleness manifest；
+2. 运行 42 个 development runs，只打开 validation；
+3. 本地审计 E1–E5、匹配 balance/pretrend、独立日块数和参数塌缩；
+4. 每侧最多冻结两个候选并补到 5 seeds；
+5. 一次批量 test，随后本地复算和论文收口。
 
-活队列见根目录 [`TODO.md`](../TODO.md)，完整判决规则见 [`PHASE4_EXPERIMENT_PLAN.md`](PHASE4_EXPERIMENT_PLAN.md)。
+若事件/日块不足，物理响应结论标记 `INCONCLUSIVE`，不以预测 MAE 替代。活队列见根目录 [`TODO.md`](../TODO.md)。Phase 4 Gate 计划保留但暂停。

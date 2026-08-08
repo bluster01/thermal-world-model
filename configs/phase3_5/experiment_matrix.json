@@ -1,0 +1,89 @@
+{
+  "protocol_version": "phase3.5-v1",
+  "sides": ["A", "B"],
+  "seeds": [0, 1, 2],
+  "defaults": {
+    "window": 96,
+    "horizon": 60,
+    "d_model": 32,
+    "n_heads": 4,
+    "dropout": 0.1,
+    "loss": "huber",
+    "batch_size": 128,
+    "steps_per_epoch": 200,
+    "epochs": 50,
+    "patience": 10,
+    "min_delta": 0.0001,
+    "learning_rate": 0.001,
+    "weight_decay": 0.00001,
+    "freeze_free_epochs": 0,
+    "max_train_anchors": 0,
+    "max_eval_anchors": 4096
+  },
+  "experiments": [
+    {
+      "config_id": "free_only",
+      "action_mode": "none",
+      "opening_map": "identity",
+      "rate_branch": false,
+      "free_head": true
+    },
+    {
+      "config_id": "delta_no_baseline",
+      "action_mode": "delta_no_baseline",
+      "opening_map": "identity",
+      "rate_branch": false,
+      "free_head": true
+    },
+    {
+      "config_id": "delta_with_baseline",
+      "action_mode": "delta_with_baseline",
+      "opening_map": "identity",
+      "rate_branch": false,
+      "free_head": true
+    },
+    {
+      "config_id": "absolute_identity",
+      "action_mode": "absolute",
+      "opening_map": "identity",
+      "rate_branch": false,
+      "free_head": true
+    },
+    {
+      "config_id": "absolute_equal_percentage_r50",
+      "action_mode": "absolute",
+      "opening_map": "equal_percentage_r50",
+      "rate_branch": false,
+      "free_head": true
+    },
+    {
+      "config_id": "absolute_nonlinear",
+      "action_mode": "absolute",
+      "opening_map": "monotone",
+      "rate_branch": false,
+      "free_head": true
+    },
+    {
+      "config_id": "absolute_nonlinear_rate",
+      "action_mode": "absolute_plus_delta",
+      "opening_map": "monotone",
+      "rate_branch": true,
+      "free_head": true
+    }
+  ],
+  "gates": {
+    "forecast_noninferiority_ratio": 1.02,
+    "irf_improvement_ratio": 0.98,
+    "minimum_dose_monotonicity_gain": 0.05,
+    "minimum_matched_events": 30,
+    "minimum_events_per_direction": 10,
+    "minimum_time_blocks": 10,
+    "minimum_direction_rate": 0.60,
+    "maximum_matching_smd": 0.20,
+    "maximum_pretrend_difference_c": 0.15,
+    "maximum_irf_wmae_c": 1.00,
+    "maximum_no_execution_effect_c": 0.10,
+    "minimum_executed_to_no_execution_ratio": 2.0,
+    "minimum_sp_events_per_group": 10
+  }
+}

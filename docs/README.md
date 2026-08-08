@@ -1,15 +1,19 @@
 # 文档地图
 
-文档按“活任务、Supervisor 判决、Phase 4 协议、历史证据”阅读。旧文档记录实验发生时的判断；若与根目录 `TODO.md`、`SUPERVISOR_REVIEW_2026-08-07.md` 或 `PROJECT_STATUS.md` 冲突，以新审查为准。
+文档按“Phase 3.5 活任务、项目状态、历史证据、暂停的 Phase 4 路线”阅读。旧文档记录实验发生时的判断；若与根目录 `TODO.md`、`PHASE3_5_EXPERIMENT_DESIGN.md` 或 `PROJECT_STATUS.md` 冲突，以新文档为准。
 
 ## 当前入口
 
 - [../TODO.md](../TODO.md)：项目唯一活任务队列与本地/Linux 状态机。
+- [PHASE3_5_EXPERIMENT_DESIGN.md](PHASE3_5_EXPERIMENT_DESIGN.md)：Phase 3 论文 E1–E5 核心验证、A1phys-V 与统计门禁。
+- [PHASE35_DESIGN.md](PHASE35_DESIGN.md)：exp_201 先导设计与当时推理；其 test-selected 结论已由正式 Phase 3.5 协议降级。
+- [plans/2026-08-08-phase3-5-a1phys-core-validation.md](plans/2026-08-08-phase3-5-a1phys-core-validation.md)：Phase 3.5 实施计划与测试清单。
+- [../experiments/phase3_5/README.md](../experiments/phase3_5/README.md)：Linux 唯一执行手册。
 - [SUPERVISOR_REVIEW_2026-08-07.md](SUPERVISOR_REVIEW_2026-08-07.md)：代码、结果、论文与方法论总审。
-- [PHASE4_EXPERIMENT_PLAN.md](PHASE4_EXPERIMENT_PLAN.md)：主汽温世界模型的 Gate、实验、统计与停止规则。
 - [PROJECT_STATUS.md](PROJECT_STATUS.md)：可信结论、候选模型、作废结论与下一判决点。
 - [CURRENT_TASKS.md](CURRENT_TASKS.md)：2026-08-07 早期任务设计；当前执行以根 TODO 为准。
 - [REMOTE_EXPERIMENT_PROTOCOL.md](REMOTE_EXPERIMENT_PROTOCOL.md)：本地研发与 Linux 正式实验的交接协议。
+- [PHASE4_EXPERIMENT_PLAN.md](PHASE4_EXPERIMENT_PLAN.md)：暂停的未来 Fan/三路线计划，不是当前执行协议。
 - [plans/2026-08-07-phase4-implementation.md](plans/2026-08-07-phase4-implementation.md)：Phase 4 测试驱动代码实施计划。
 - [plans/2026-08-07-project-reorganization-design.md](plans/2026-08-07-project-reorganization-design.md)：本次保守整理设计。
 

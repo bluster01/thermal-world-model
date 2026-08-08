@@ -1,6 +1,6 @@
 # 实验地图
 
-本目录保留按时间演化的研究脚本。为了保证历史结果可追溯，本轮不移动或重命名文件。
+本目录保留按时间演化的研究脚本。为了保证历史结果可追溯，不移动或重命名旧文件；当前唯一正式入口是 `phase3_5/`。
 
 ## `phase1_dynamics/`
 
@@ -30,7 +30,7 @@ MPC、PID、公平协议、鲁棒性和控制方法对照。
 
 SP 通道、监督模式、因果评测和当前灰箱候选。
 
-当前有效模块：
+历史模块（存在 test-selection、fallback 或旧 estimand，不再直接用于正式结论）：
 
 - `causal_eval.py`：动作构造、事件选择、DiD/CFE 指标。
 - `causal_arch.py`：A1/A3/B1、`g(x,0)=0`、A1phys 与 Koopman free-head。
@@ -40,6 +40,20 @@ SP 通道、监督模式、因果评测和当前灰箱候选。
 - `exp_109_p2_expand.py`：扩展事件集。
 - `exp_110_baselines.py`：完整基线汇总。
 - `exp_112_koopman_full.py`：Koopman free-head 三 seed 完整对照。
+- `exp_201_valve_action.py`：绝对/差分/固定等百分比阀位 pilot；方向信号有启发，但 test-selected，不是正式 Phase 3.5 入口。
+
+## `phase3_5/`
+
+Phase 3 论文核心验证的正式入口，覆盖 E1–E5：动作表征、阀门非线性、真实阀门事件响应、A1phys 反事实响应和 SP 未执行负对照。
+
+- `prepare_data.py`：从异步稀疏 CSV 构造 causal 10 s cache、staleness 与 SHA256 manifest。
+- `train.py`：单 run、validation-only checkpoint 训练。
+- `evaluate.py`：分离 validation/test 的预测、事件和负对照评估；test 写 access ledger。
+- `run_matrix.py`：42-run 开发矩阵 dry-run/执行及候选 seed 补跑。
+- `summarize.py`：A/B、seed 和 E1–E5 门禁汇总。
+- `README.md`：Linux 唯一执行手册。
+
+模型与评测代码位于 `src/phase35/`，版本化矩阵位于 `configs/phase3_5/experiment_matrix.json`，测试位于 `tests/phase35/`。
 
 ## 新实验规则
 
@@ -49,8 +63,8 @@ SP 通道、监督模式、因果评测和当前灰箱候选。
 4. 结果保存到独立目录，配置变化不得覆盖旧结果。
 5. checkpoint 用验证集选择，测试集不参与调参。
 6. 模型比较同时报告预测、干预、物理、泛化与计算指标。
-7. Fan 路线开始实现后，先增加新的独立阶段目录；模型定性后再决定是否迁入 `src/`。
+7. Phase 4/Fan 路线当前暂停，不得混入 Phase 3.5 配置或排行榜。
 8. 本地负责设计、实现、测试和 smoke；Linux 远端只执行已提交的固定版本，不直接热修。
 9. 远端回传结果必须包含 commit、命令、环境、seed、日志、退出状态和结果文件；审计完成前状态只能是 `results_returned`。
 
-当前优先级见 `docs/CURRENT_TASKS.md`。
+当前优先级见根目录 `TODO.md`；精确命令见 `phase3_5/README.md`。
