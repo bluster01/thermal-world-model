@@ -45,29 +45,50 @@ I_SP = NUMERIC_COLS.index('二级减温调节阀设定')    # for event selectio
 
 OUT_ROOT = 'results/exp_201_valve_action'
 
-# ─── Data: Δvalve or absolute valve as action ───
+# ─── Data: Δvalve / absolute valve / flow-proportional valve as action ───
 raw = data_all
 dvalve_col = np.diff(raw[:, I_V2], prepend=raw[0, I_V2])  # Δvalve
 dsp_col    = np.diff(raw[:, I_SP], prepend=raw[0, I_SP])    # ΔSP (events only)
 v_med_train = float(np.median(raw[:n_train, I_V2]))        # 训练集阀位中位数 (abs 模式参考点)
 absvalve_col = raw[:, I_V2] - v_med_train                  # 绝对阀位去中位数
-raw42 = np.concatenate([raw, dvalve_col[:, None], absvalve_col[:, None], dsp_col[:, None]], 1)
+# 等百分比流量特性先验 (用户: 阀门开度-流量非线性): F/Fmax = R^(V/100 - 1), R=50
+# u_flow ∈ [0, 1], 去训练集中位数保持 g(x,0)=0 语义 (典型开度→流量中位→干预 0)
+R_FLOW = 50.0
+v_pct = np.clip(raw[:, I_V2], 0.0, 100.0) / 100.0
+flow_col = (R_FLOW ** (v_pct - 1.0) - 1.0 / R_FLOW) / (1.0 - 1.0 / R_FLOW)  # [0,1]
+flow_med_train = float(np.median(flow_col[:n_train]))
+flow_col = flow_col - flow_med_train                                           # centered
+raw42 = np.concatenate([raw, dvalve_col[:, None], absvalve_col[:, None],
+                        flow_col[:, None], dsp_col[:, None]], 1)
 I_DVALVE = 40  # Δvalve column
 I_AVALVE = 41  # absolute valve (centered) column
-I_DSP    = 42  # ΔSP column (events only)
+I_FLOW   = 42  # equal-percentage flow (centered) column
+I_DSP    = 43  # ΔSP column (events only)
 
 train_raw = raw42[:n_train]
 test_raw  = raw42[n_val_end:]
 
 # ─── Action construction ───
+def valve_to_flow(v):
+    """等百分比流量变换: F/Fmax = R^(V/100-1), 归一化到 [0,1] 再去中位数。"""
+    v_pct = np.clip(np.asarray(v, dtype=np.float64), 0.0, 100.0) / 100.0
+    f = (R_FLOW ** (v_pct - 1.0) - 1.0 / R_FLOW) / (1.0 - 1.0 / R_FLOW)
+    return (f - flow_med_train).astype(np.float32)
+
+
 def build_valve_action(raw42, s, W_val, H_val, override=None, mode='delta'):
-    """Read Δvalve (delta) or centered absolute valve (abs) as action.
+    """Read Δvalve (delta), centered absolute valve (abs) or flow-proportional
+    valve (flow) as action.
     Delta mode: model's forward() cumsums internally → valve deviation trajectory.
-    Abs mode: integrate=False → u = a directly, absolute opening level retained."""
+    Abs/flow: integrate=False → u = a directly, absolute level retained."""
     if override is not None:
         a = np.asarray(override, dtype=np.float32)
         if a.ndim == 0: a = np.full(H_val, float(a), dtype=np.float32)
         return a
+    if mode == 'flow':
+        # 扰动在开度空间 → 变换到流量空间 (物理语义: 操作变量是开度)
+        v_win = raw42[s + W_val:s + W_val + H_val, I_V2]
+        return valve_to_flow(v_win)
     icol = I_DVALVE if mode == 'delta' else I_AVALVE
     return raw42[s + W_val:s + W_val + H_val, icol].astype(np.float32)
 
@@ -102,7 +123,8 @@ def eval_mae(model, H_val, n=200, seed=0, mode='delta'):
 def eval_jacobian(model, H_val, n=100, seed=42, delta=0.1, mode='delta'):
     """Finite-difference direction test. valve↑ → T↓ = correct physics
     delta mode: δ=0.1/step, cumsum → 6% cumulative valve deviation.
-    abs mode:   δ=5.0 whole-window valve +5% (opening level retained)."""
+    abs/flow:   δ=5.0 whole-window valve +5% (flow mode: perturb in OPENING
+    space V±δ, then transform to flow space)."""
     model.eval()
     rng = np.random.default_rng(seed)
     idxs = rng.integers(0, len(test_raw) - W - H_val, size=n)
@@ -110,9 +132,14 @@ def eval_jacobian(model, H_val, n=100, seed=42, delta=0.1, mode='delta'):
     for i in idxs:
         i_int = int(i)
         x = torch.from_numpy(test_raw[i_int:i_int + W, :N_FEAT]).float().unsqueeze(0).to(DEVICE)
-        a = build_valve_action(test_raw, i_int, W, H_val, mode=mode)
-        a_up = a.copy(); a_up += delta
-        a_dn = a.copy(); a_dn -= delta
+        if mode == 'flow':
+            v_win = raw[i_int:i_int + W + H_val, I_V2]
+            a_up = valve_to_flow(np.clip(v_win[W:], 0, 100) + delta)
+            a_dn = valve_to_flow(np.clip(v_win[W:], 0, 100) - delta)
+        else:
+            a = build_valve_action(test_raw, i_int, W, H_val, mode=mode)
+            a_up = a.copy(); a_up += delta
+            a_dn = a.copy(); a_dn -= delta
         mu_up, _ = model(x, torch.from_numpy(a_up).float().reshape(1, H_val, 1).to(DEVICE))
         mu_dn, _ = model(x, torch.from_numpy(a_dn).float().reshape(1, H_val, 1).to(DEVICE))
         diff = (mu_up - mu_dn).mean().item()
@@ -127,7 +154,8 @@ def build_model(variant, mode='delta'):
     if variant in ('A1phys_valve', 'A1phys_valve_noff', 'A1phys_null_valve'):
         # delta mode: K_init=0.01 (valve K ≈ 0.01× SP K, u ∈ ±4%)
         # abs mode:   K_init=0.002 (u ∈ ±30% centered, sig ≈ ±0.06 normalized)
-        k_init = 0.01 if mode == 'delta' else 0.002
+        # flow mode:  K_init=0.05 (u ∈ [-0.024, 0.98], sig ≈ ±0.05 normalized)
+        k_init = {'delta': 0.01, 'abs': 0.002, 'flow': 0.05}[mode]
         return CA.ResidualCausalWM(N_FEAT, TARGET_IDX, H,
                                    intervention='phys', cumsum_out=False,
                                    probabilistic=True, n_lag=2,
@@ -245,8 +273,9 @@ if __name__ == '__main__':
     ap.add_argument('--smoke', action='store_true')
     ap.add_argument('--all', action='store_true')
     ap.add_argument('--seeds', default='0')
-    ap.add_argument('--action-mode', default='delta', choices=['delta', 'abs'],
-                    help='delta: Δvalve + cumsum (v3 baseline); abs: absolute valve, no cumsum')
+    ap.add_argument('--action-mode', default='delta', choices=['delta', 'abs', 'flow'],
+                    help='delta: Δvalve + cumsum (v3 baseline); abs: absolute valve, '
+                         'no cumsum; flow: equal-percentage flow transform (R=50)')
     args = ap.parse_args()
 
     variants = [args.variant] if not args.all else ['A1phys_valve', 'A1phys_valve_noff', 'A1phys_null_valve']
