@@ -213,9 +213,10 @@ Phase 3.5 对 valve action 只需验证：
 > 1. 在 A 侧开发 pilot 中, action 表示从 Δvalve 换为等百分比流量 proxy (R=50, 未标定) 后,
 >    对齐评估下的模型扰动方向保持为负 (valve↑→T↓), 而 Δvalve 表示下方向不可学;
 >    该 pilot 用于生成假设, 不作为独立物理验证。
-> 2. SP 阶跃事件提供 observational gain reference (-90~-130 m°C/%@180s, 事件级中位数,
->    非工具变量估计; 事件混合动态工况, 严格稳态子集 n=1/79), 显示开发模型基线增益
->    低于该 reference 约 60 倍 (混杂收缩量级证据, 非因果识别)。
+> 2. SP 阶跃事件曾提供 observational gain reference (-90~-130 m°C/%@180s), 但 1s 数据
+>    first-stage 诊断 (2026-08-09) 证明该参考是选择性样本 (dv30·dsp<0 事后筛选;
+>    全样本 SP→阀位 R²<0.07, 41.6% 事件 30s 内阀位不动) —— 已弃用。SP 阶跃在伊敏
+>    数据上不是外生工具变量 (运行干预, 非准稳态试验)。
 > 3. 显式增益正则 (λ=0.15-0.2) 能把模型内部 180s 扰动 gain 从 ~-1.5 拉向 reference 量级
 >    (-50~-96 m°C/%), 方向保持为负 —— calibration target recovery, 不是独立 gain 验证。
 >    独立验证需在 B 侧/未来时间块以未参与训练的 reference 进行 (计划中)。
@@ -247,7 +248,7 @@ Phase 3.5 对 valve action 只需验证：
 | 项 | 状态 |
 |---|---|
 | P0-1 split offset bug (eval_jacobian/eval_gain_180 状态与action基线错位) | 🔧 修复中 (r2), 加 split-offset 单测, 重跑评估; 现有数值不作为对齐后的正式结果 |
-| P0-2 SP-IV 工具变量假设不闭合 | ✅ 表述降级为 observational gain reference; 事件需 S/D 稳态分层 + first-stage 诊断 (r3, 1s 数据) |
+| P0-2 SP-IV 工具变量假设不闭合 | ✅ **数据证实弱工具** (r3, 1s): 365事件中严格稳态S层n=1; SP→阀位first-stage R²<0.07, 41.6%事件30s内阀位不动; 原"SP-IV真值"(-90~-130 m°C/%)是 dv30·dsp<0 事后筛选的选择性样本 — 已弃用, 降级为"选择性观测参考", 不再作为校准目标依据 |
 | P0-3 校准与验证同目标 | ✅ 降级为 calibration target recovery; 独立验证计划: B 侧/未来块, reference 不参与训练 (r4) |
 | P1-1 时间单位错 (t+600=6000s) | ✅ v1 脚本结果弃用; v2 使用 r18/r60 并已注明步长 |
 | P1-2 best_gain 非 validation checkpoint | ✅ 承认; 正式口径改用 validation MAE 选点, gain 作门禁 (r4) |
