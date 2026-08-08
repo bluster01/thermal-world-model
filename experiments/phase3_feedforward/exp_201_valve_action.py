@@ -236,8 +236,8 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0, mod
 
     max_epochs = epochs if epochs else (20 if smoke else 150)
     patience = 5 if smoke else 20
-    best_mae = float('inf'); best_cfi = 0.0
-    best_mae_ep = 0; best_cfi_ep = 0
+    best_mae = float('inf'); best_cfi = 0.0; best_lg = float('inf')
+    best_mae_ep = 0; best_cfi_ep = 0; best_lg_ep = 0
     curve = []
 
     for ep in range(1, max_epochs + 1):
@@ -291,6 +291,9 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0, mod
             if cfi_fallback > best_cfi:
                 best_cfi = cfi_fallback; best_cfi_ep = ep
                 torch.save(model.state_dict(), os.path.join(outdir, 'best_cfi.pth'))
+            if loss_gain is not None and loss_gain.item() < best_lg:
+                best_lg = loss_gain.item(); best_lg_ep = ep
+                torch.save(model.state_dict(), os.path.join(outdir, 'best_gain.pth'))
 
             print(f'  ep{ep:3d} loss={loss.item():.4f} mae={mae:.4f} '
                   f'jac:neg={jac["neg"]:.1%} pos={jac["pos"]:.1%} z={jac["zero"]:.1%}')
@@ -299,7 +302,9 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0, mod
             print(f'  early stop at ep {ep}')
             break
 
-    model.load_state_dict(torch.load(os.path.join(outdir, 'best_cfi.pth')))
+    # final 评估: 优先 best_gain 检查点 (增益校准任务), 附 best_cfi 对照
+    ckpt = 'best_gain.pth' if os.path.exists(os.path.join(outdir, 'best_gain.pth')) else 'best_cfi.pth'
+    model.load_state_dict(torch.load(os.path.join(outdir, ckpt)))
     final_mae = eval_mae(model, H, n=200, seed=99, mode=mode)
     final_jac = eval_jacobian(model, H, n=100, seed=99,
                               delta=0.1 if mode == 'delta' else 5.0, mode=mode)
@@ -308,10 +313,11 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0, mod
 
     result = dict(variant=variant, seed=seed, H=H, mode=mode,
                   v_med_train=v_med_train, gain_target_180=GAIN_TARGET_180,
-                  best=dict(mae=best_mae, mae_ep=best_mae_ep, cfi=best_cfi, cfi_ep=best_cfi_ep),
+                  best=dict(mae=best_mae, mae_ep=best_mae_ep, cfi=best_cfi, cfi_ep=best_cfi_ep,
+                            lg=best_lg if best_lg < float('inf') else None, lg_ep=best_lg_ep),
                   final=dict(mae=final_mae, jac_neg=final_jac['neg'],
                              jac_pos=final_jac['pos'], jac_zero=final_jac['zero'],
-                             gain_180=final_gain),
+                             gain_180=final_gain, ckpt=ckpt),
                   curve=curve)
     with open(os.path.join(outdir, 'result.json'), 'w') as f:
         json.dump(result, f, indent=2, default=float)
