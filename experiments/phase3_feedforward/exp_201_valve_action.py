@@ -45,6 +45,9 @@ I_SP = NUMERIC_COLS.index('二级减温调节阀设定')    # for event selectio
 
 OUT_ROOT = 'results/exp_201_valve_action'
 
+# SP-IV 增益真值 (180s 口径, 中位数, 来自 exp_201_sp_iv2): -90~-130 m°C/%
+GAIN_TARGET_180 = -0.10   # °C/%(开度)
+
 # ─── Data: Δvalve / absolute valve / flow-proportional valve as action ───
 raw = data_all
 dvalve_col = np.diff(raw[:, I_V2], prepend=raw[0, I_V2])  # Δvalve
@@ -98,9 +101,11 @@ def make_batch(H_val, bs, rng, mode='delta'):
     X = np.stack([train_raw[i:i + W, :N_FEAT] for i in idxs])
     A = np.stack([build_valve_action(train_raw, int(i), W, H_val, mode=mode) for i in idxs])
     Y = np.stack([train_raw[i + W:i + W + H_val, TARGET_IDX] for i in idxs])
+    V = np.stack([raw[int(i):int(i) + W + H_val, I_V2] for i in idxs])  # 开度窗口 (增益校准用)
     return (torch.from_numpy(X).float().to(DEVICE),
             torch.from_numpy(A).float().unsqueeze(-1).to(DEVICE),
-            torch.from_numpy(Y).float().to(DEVICE))
+            torch.from_numpy(Y).float().to(DEVICE),
+            torch.from_numpy(V).float().to(DEVICE))
 
 
 @torch.no_grad()
@@ -149,6 +154,31 @@ def eval_jacobian(model, H_val, n=100, seed=42, delta=0.1, mode='delta'):
     return dict(neg=neg/n, pos=pos/n, zero=zero/n, n=n)
 
 
+@torch.no_grad()
+def eval_gain_180(model, n=100, seed=99, mode='delta'):
+    """模型 180s 扰动增益: 全时窗开度 ±5% → 第17步(180s)响应均值, m°C/%。"""
+    model.eval()
+    rng = np.random.default_rng(seed)
+    idxs = rng.integers(0, len(test_raw) - W - H, size=n)
+    diffs = []
+    for i in idxs:
+        i_int = int(i)
+        x = torch.from_numpy(test_raw[i_int:i_int + W, :N_FEAT]).float().unsqueeze(0).to(DEVICE)
+        if mode == 'flow':
+            v_win = raw[i_int:i_int + W + H, I_V2]
+            a_up = valve_to_flow(np.clip(v_win[W:], 0, 100) + 5.0)
+            a_dn = valve_to_flow(np.clip(v_win[W:], 0, 100) - 5.0)
+        else:
+            a = build_valve_action(test_raw, i_int, W, H, mode=mode)
+            a_up = a.copy(); a_up += (0.1 if mode == 'delta' else 5.0)
+            a_dn = a.copy(); a_dn -= (0.1 if mode == 'delta' else 5.0)
+        mu_up, _ = model(x, torch.from_numpy(a_up).float().reshape(1, H, 1).to(DEVICE))
+        mu_dn, _ = model(x, torch.from_numpy(a_dn).float().reshape(1, H, 1).to(DEVICE))
+        diffs.append((mu_up - mu_dn)[0, 17].item())
+    diffs = np.array(diffs)
+    return float(np.mean(diffs) / 10.0)   # °C/% (10% 总跨度)
+
+
 # ─── Model ───
 def build_model(variant, mode='delta'):
     if variant in ('A1phys_valve', 'A1phys_valve_noff', 'A1phys_null_valve'):
@@ -181,7 +211,8 @@ class SafeBetaNLL(torch.nn.Module):
         return nll.mean()
 
 
-def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0, mode='delta'):
+def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0, mode='delta',
+              lambda_gain=0.0):
     if smoke: epochs = 3
     torch.manual_seed(seed); np.random.seed(seed)
     rng = np.random.default_rng(seed)
@@ -189,6 +220,7 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0, mod
     suffix = f'_s{seed}'
     if freeze_free_epochs > 0: suffix += f'_ff{freeze_free_epochs}'
     if mode != 'delta': suffix += f'_{mode}'
+    if lambda_gain > 0: suffix += f'_lg{lambda_gain}'
     outdir = os.path.join(OUT_ROOT, f'{variant}{suffix}')
     os.makedirs(outdir, exist_ok=True)
 
@@ -215,9 +247,29 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0, mod
 
         model.train()
         opt.zero_grad()
-        X, A, Y = make_batch(H, 256, rng, mode=mode)
+        X, A, Y, V = make_batch(H, 256, rng, mode=mode)
         mu, lv = model(X, A)
         loss = criterion(mu, lv, Y)
+
+        # SP-IV 增益校准 (P3B 模式, 扰动口径): 模型 180s 扰动增益 → SP-IV 真值
+        # 真值: GAIN_TARGET_180 = -0.1°C/%(SP-IV 中位数 -90~-130 m°C/%@180s)
+        # 扰动 ±5% 开度 → 10% 跨度 → ideal = -1.0°C @180s (第 17 步)
+        # 梯度只经 mu_up-mu_dn 作用到干预分支 (f_free 与 action 无关)
+        if lambda_gain > 0 and mode == 'flow':
+            V_win = V[:, W:W + H]                                    # [B,H] 开度
+            A_up = torch.from_numpy(np.stack([valve_to_flow(np.clip(v, 0, 100) + 5.0)
+                                              for v in V_win.cpu().numpy()])).float().to(DEVICE)
+            A_dn = torch.from_numpy(np.stack([valve_to_flow(np.clip(v, 0, 100) - 5.0)
+                                              for v in V_win.cpu().numpy()])).float().to(DEVICE)
+            mu_up, _ = model(X, A_up.unsqueeze(-1))
+            mu_dn, _ = model(X, A_dn.unsqueeze(-1))
+            dT = (mu_up - mu_dn)[:, 17].mean()                       # 180s 点 batch 平均
+            ideal_g = GAIN_TARGET_180 * 10.0                         # -1.0°C
+            loss_gain = (dT - ideal_g).abs()
+            loss = loss + lambda_gain * loss_gain
+        else:
+            loss_gain = None
+
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 10.0)
         opt.step()
@@ -230,7 +282,8 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0, mod
             cfi_fallback = 0.5 * jac['neg'] + 0.5 * (1.0 if mae < 1.5 else 0.5)
 
             curve.append(dict(ep=ep, loss=loss.item(), mae=mae, cfi=cfi_fallback,
-                             jac_neg=jac['neg'], jac_pos=jac['pos'], jac_zero=jac['zero']))
+                             jac_neg=jac['neg'], jac_pos=jac['pos'], jac_zero=jac['zero'],
+                             loss_gain=None if loss_gain is None else loss_gain.item()))
 
             if mae < best_mae:
                 best_mae = mae; best_mae_ep = ep
@@ -250,18 +303,22 @@ def train_one(variant, seed, smoke=False, epochs=None, freeze_free_epochs=0, mod
     final_mae = eval_mae(model, H, n=200, seed=99, mode=mode)
     final_jac = eval_jacobian(model, H, n=100, seed=99,
                               delta=0.1 if mode == 'delta' else 5.0, mode=mode)
+    # 最终增益 (180s 扰动口径, m°C/%) — 与 SP-IV 真值对比
+    final_gain = eval_gain_180(model, n=100, seed=99, mode=mode)
 
     result = dict(variant=variant, seed=seed, H=H, mode=mode,
-                  v_med_train=v_med_train,
+                  v_med_train=v_med_train, gain_target_180=GAIN_TARGET_180,
                   best=dict(mae=best_mae, mae_ep=best_mae_ep, cfi=best_cfi, cfi_ep=best_cfi_ep),
                   final=dict(mae=final_mae, jac_neg=final_jac['neg'],
-                             jac_pos=final_jac['pos'], jac_zero=final_jac['zero']),
+                             jac_pos=final_jac['pos'], jac_zero=final_jac['zero'],
+                             gain_180=final_gain),
                   curve=curve)
     with open(os.path.join(outdir, 'result.json'), 'w') as f:
         json.dump(result, f, indent=2, default=float)
 
     print(f'  DONE: best_mae={best_mae:.4f} best_cfi={best_cfi:.4f} '
-          f'final_mae={final_mae:.4f} final_jac_neg={final_jac["neg"]:.1%}')
+          f'final_mae={final_mae:.4f} final_jac_neg={final_jac["neg"]:.1%} '
+          f'final_gain_180={final_gain*1000:.1f} m°C/%')
     return result
 
 
@@ -276,6 +333,8 @@ if __name__ == '__main__':
     ap.add_argument('--action-mode', default='delta', choices=['delta', 'abs', 'flow'],
                     help='delta: Δvalve + cumsum (v3 baseline); abs: absolute valve, '
                          'no cumsum; flow: equal-percentage flow transform (R=50)')
+    ap.add_argument('--lambda-gain', type=float, default=0.0,
+                    help='SP-IV gain calibration weight (flow mode, 180s perturbation)')
     args = ap.parse_args()
 
     variants = [args.variant] if not args.all else ['A1phys_valve', 'A1phys_valve_noff', 'A1phys_null_valve']
@@ -283,5 +342,6 @@ if __name__ == '__main__':
 
     for v in variants:
         for s in seeds:
-            print(f'\n{"="*60}\n{v} seed={s} mode={args.action_mode}\n{"="*60}')
-            train_one(v, s, smoke=args.smoke, freeze_free_epochs=args.ff, mode=args.action_mode)
+            print(f'\n{"="*60}\n{v} seed={s} mode={args.action_mode} λ_gain={args.lambda_gain}\n{"="*60}')
+            train_one(v, s, smoke=args.smoke, freeze_free_epochs=args.ff,
+                      mode=args.action_mode, lambda_gain=args.lambda_gain)

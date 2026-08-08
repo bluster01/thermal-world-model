@@ -1,0 +1,33 @@
+{
+  "variant": "A1phys_valve_noff",
+  "seed": 0,
+  "H": 60,
+  "mode": "flow",
+  "v_med_train": 20.261882781982422,
+  "gain_target_180": -0.1,
+  "best": {
+    "mae": 1.5284725427627563,
+    "mae_ep": 1,
+    "cfi": 0.25,
+    "cfi_ep": 1
+  },
+  "final": {
+    "mae": 1.443835735321045,
+    "jac_neg": 0.0,
+    "jac_pos": 1.0,
+    "jac_zero": 0.0,
+    "gain_180": 2.923583984375e-05
+  },
+  "curve": [
+    {
+      "ep": 1,
+      "loss": 2.264080047607422,
+      "mae": 1.5284725427627563,
+      "cfi": 0.25,
+      "jac_neg": 0.0,
+      "jac_pos": 1.0,
+      "jac_zero": 0.0,
+      "loss_gain": 1.0020411014556885
+    }
+  ]
+}
