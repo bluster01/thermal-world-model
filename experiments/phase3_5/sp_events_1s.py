@@ -57,12 +57,12 @@ def main():
         t0 = sp_ts[k + 1]           # 阶跃后第一个点
         # 阶跃后保持: 60s 内 SP 不再反向大动
         after = sp_ts[k + 1:]
-        hold = after <= t0 + SP_HOLD_S * 1e9
+        hold = after <= t0 + SP_HOLD_S * 1e6
         if hold.sum() < 2:
             continue
         if np.abs(sp_v[k + 1 + hold.sum() - 1] - sp_v[k + 1]) > 0.5 * SP_THR:
             continue   # 未保持, 跳过
-        if t0 - PRE_S * 1e9 < first_ns or t0 + POST_S * 1e9 > last_ns:
+        if t0 - PRE_S * 1e6 < first_ns or t0 + POST_S * 1e6 > last_ns:
             continue
         events.append((t0, sp_v[k], sp_v[k + 1]))
 
@@ -75,29 +75,36 @@ def main():
         pre = {}
         for c in COLS[1:]:
             ts, vs = upd[c]
-            lo = np.searchsorted(ts, t0 - PRE_S * 1e9, side='left')
-            hi = np.searchsorted(ts, t0 + POST_S * 1e9, side='right')
+            lo = np.searchsorted(ts, t0 - PRE_S * 1e6, side='left')
+            hi = np.searchsorted(ts, t0 + POST_S * 1e6, side='right')
             w_ts, w_v = ts[lo:hi], vs[lo:hi]
             # 前向填充到 1s 网格 (事件窗口内 ~1560 点, 可控)
             if len(w_ts) == 0:
                 pre[c] = None; continue
-            grid = np.arange((t0 - PRE_S * 1e9) // 1e9, (t0 + POST_S * 1e9) // 1e9 + 1) * 1e9
+            grid = np.arange((t0 - PRE_S * 1e6) // 1e6, (t0 + POST_S * 1e6) // 1e6 + 1) * 1e6
             pos = np.searchsorted(w_ts, grid, side='right') - 1
             filled = w_v[np.clip(pos, 0, len(w_v) - 1)]
             filled[pos < 0] = np.nan
             pre[c] = filled
         T = pre['末级过热器出口汽温']
-        if T is None or not np.isfinite(T[:PRE_S]).sum() >= 0.9 * PRE_S:
+        n_pre = int(PRE_S); n_post = int(POST_S)
+        if T is None or not np.isfinite(T[:n_pre]).sum() >= 0.9 * n_pre:
             continue
         n_pre = int(PRE_S); n_post = int(POST_S)
         load = pre['机组负荷']; pres = pre['主蒸汽压力']; valve = pre['二级减温调节门阀位']
+        if load is None or pres is None or valve is None:
+            continue   # 事件窗口内关键协变量无观测, 跳过
+        # 事件前紧邻窗口 (数组布局: [t0-960s .. t0+600s], n_pre=960 是 t0)
         feats.update({
-            'load_range_pre': float(np.nanmax(load[:n_pre]) - np.nanmin(load[:n_pre])),
-            'pres_range_pre': float(np.nanmax(pres[:n_pre]) - np.nanmin(pres[:n_pre])),
-            'temp_range_pre': float(np.nanmax(T[:n_pre]) - np.nanmin(T[:n_pre])),
-            'load_range_600': float(np.nanmax(load[:600]) - np.nanmin(load[:600])),
-            'pres_range_600': float(np.nanmax(pres[:600]) - np.nanmin(pres[:600])),
-            'temp_range_600': float(np.nanmax(T[:600]) - np.nanmin(T[:600])),
+            'load_range_60': float(np.nanmax(load[n_pre-60:n_pre]) - np.nanmin(load[n_pre-60:n_pre])),
+            'pres_range_60': float(np.nanmax(pres[n_pre-60:n_pre]) - np.nanmin(pres[n_pre-60:n_pre])),
+            'temp_range_60': float(np.nanmax(T[n_pre-60:n_pre]) - np.nanmin(T[n_pre-60:n_pre])),
+            'load_range_600': float(np.nanmax(load[n_pre-600:n_pre]) - np.nanmin(load[n_pre-600:n_pre])),
+            'pres_range_600': float(np.nanmax(pres[n_pre-600:n_pre]) - np.nanmin(pres[n_pre-600:n_pre])),
+            'temp_range_600': float(np.nanmax(T[n_pre-600:n_pre]) - np.nanmin(T[n_pre-600:n_pre])),
+            'load_range_960': float(np.nanmax(load[:n_pre]) - np.nanmin(load[:n_pre])),
+            'pres_range_960': float(np.nanmax(pres[:n_pre]) - np.nanmin(pres[:n_pre])),
+            'temp_range_960': float(np.nanmax(T[:n_pre]) - np.nanmin(T[:n_pre])),
             'dT_post_600': float(T[n_pre + 600] - T[n_pre - 1]) if np.isfinite(T[n_pre + 600]) else None,
             'valve_dv_30s': float(valve[n_pre + 3] - valve[n_pre - 1]) if np.isfinite(valve[n_pre + 3]) else None,
             'valve_dv_600s': float(valve[n_pre + 600] - valve[n_pre - 1]) if np.isfinite(valve[n_pre + 600]) else None,
@@ -105,10 +112,10 @@ def main():
         rows.append(feats)
 
     df = pd.DataFrame(rows)
-    n_s = int((df['load_range_600'] <= S_LOAD_RANGE) & (df['pres_range_600'] <= S_PRES_RANGE)
-              & (df['temp_range_600'] <= S_TEMP_RANGE)).sum()
-    n_s960 = int((df['load_range_pre'] <= S_LOAD_RANGE) & (df['pres_range_pre'] <= S_PRES_RANGE)
-                 & (df['temp_range_pre'] <= S_TEMP_RANGE)).sum()
+    n_s = int(((df['load_range_600'] <= S_LOAD_RANGE) & (df['pres_range_600'] <= S_PRES_RANGE)
+               & (df['temp_range_600'] <= S_TEMP_RANGE)).sum())
+    n_s960 = int(((df['load_range_960'] <= S_LOAD_RANGE) & (df['pres_range_960'] <= S_PRES_RANGE)
+                  & (df['temp_range_960'] <= S_TEMP_RANGE)).sum())
     print(f'events with full pre-window: {len(df)}')
     print(f'S-layer (600s): {n_s}   S-layer (960s): {n_s960}')
     if len(df):
