@@ -1,0 +1,90 @@
+{
+  "protocol_version": "phase3.5-v1",
+  "side": "A",
+  "step_seconds": 10,
+  "source": {
+    "path": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/merged_data/A侧主汽温全数据4.csv",
+    "size_bytes": 6578527779,
+    "mtime_ns": 1773627098000000000,
+    "sha256": "5618fd974a36d19427a2e918844a9844daffdcfc112598ab33b3ae1e1aa2b818",
+    "raw_rows": 70020906
+  },
+  "grid_start_ns": 1766478330000000000,
+  "grid_end_ns": 1773619190000000000,
+  "grid_rows": 714087,
+  "reconstruction": "causal_last_observation_carried_forward",
+  "quality": {
+    "机组负荷": {
+      "updates": 1701492,
+      "update_gap_median_s": 3.973800704,
+      "update_gap_p90_s": 5.204686336,
+      "grid_age_p90_s": 3.989548683166504
+    },
+    "主蒸汽压力": {
+      "updates": 2081894,
+      "update_gap_median_s": 3.357089792,
+      "update_gap_p90_s": 4.2181384192,
+      "grid_age_p90_s": 3.2835285663604736
+    },
+    "主给水流量": {
+      "updates": 2377826,
+      "update_gap_median_s": 3.012081152,
+      "update_gap_p90_s": 3.7335894015999997,
+      "grid_age_p90_s": 2.8879964351654053
+    },
+    "未校正总煤量": {
+      "updates": 2250941,
+      "update_gap_median_s": 3.1712463360000003,
+      "update_gap_p90_s": 3.9144545024000004,
+      "grid_age_p90_s": 3.0319786071777344
+    },
+    "主蒸汽流量": {
+      "updates": 2017971,
+      "update_gap_median_s": 3.467392256,
+      "update_gap_p90_s": 4.3396159744,
+      "grid_age_p90_s": 3.349858283996582
+    },
+    "二级减温器入口温度": {
+      "updates": 2148742,
+      "update_gap_median_s": 3.2220416,
+      "update_gap_p90_s": 4.263686144,
+      "grid_age_p90_s": 3.2727842330932617
+    },
+    "二级减温器出口温度": {
+      "updates": 1635031,
+      "update_gap_median_s": 3.953950592,
+      "update_gap_p90_s": 5.871496038400001,
+      "grid_age_p90_s": 4.52375602722168
+    },
+    "末级过热器出口汽温": {
+      "updates": 1446924,
+      "update_gap_median_s": 4.544720128,
+      "update_gap_p90_s": 7.0073283072,
+      "grid_age_p90_s": 5.352425575256348
+    },
+    "二级减温中间设定值": {
+      "updates": 2109130,
+      "update_gap_median_s": 3.365329408,
+      "update_gap_p90_s": 4.1541943808,
+      "grid_age_p90_s": 3.202131986618042
+    },
+    "二级减温喷水调节门指令": {
+      "updates": 1540866,
+      "update_gap_median_s": 3.8858176,
+      "update_gap_p90_s": 5.1029385216000005,
+      "grid_age_p90_s": 15.931465148925781
+    },
+    "二级减温调节阀设定": {
+      "updates": 122475,
+      "update_gap_median_s": 61.15372377600001,
+      "update_gap_p90_s": 62.4753039616,
+      "grid_age_p90_s": 56.037906646728516
+    },
+    "二级减温调节门阀位": {
+      "updates": 1980771,
+      "update_gap_median_s": 3.5510639360000003,
+      "update_gap_p90_s": 4.46247424,
+      "grid_age_p90_s": 3.403339147567749
+    }
+  }
+}
