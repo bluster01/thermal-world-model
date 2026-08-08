@@ -1,0 +1,142 @@
+{
+  "protocol_version": "phase3.5-v1",
+  "run_id": "B_absolute_nonlinear_s2",
+  "side": "B",
+  "seed": 2,
+  "config": {
+    "config_id": "absolute_nonlinear",
+    "action_mode": "absolute",
+    "opening_map": "monotone",
+    "rate_branch": false,
+    "free_head": true,
+    "window": 96,
+    "horizon": 60,
+    "d_model": 32,
+    "n_heads": 4,
+    "dropout": 0.1,
+    "loss": "huber",
+    "batch_size": 128,
+    "steps_per_epoch": 200,
+    "epochs": 50,
+    "patience": 10,
+    "min_delta": 0.0001,
+    "learning_rate": 0.001,
+    "weight_decay": 1e-05,
+    "freeze_free_epochs": 0,
+    "max_train_anchors": 0,
+    "max_eval_anchors": 4096,
+    "history_features": [
+      "机组负荷",
+      "主蒸汽压力",
+      "主给水流量",
+      "未校正总煤量",
+      "主蒸汽流量",
+      "二级减温器入口温度",
+      "二级减温器出口温度",
+      "末级过热器出口汽温",
+      "二级减温中间设定值",
+      "二级减温喷水调节门指令",
+      "二级减温调节阀设定",
+      "二级减温调节门阀位"
+    ]
+  },
+  "cache_metadata": {
+    "grid_end_ns": 1773619190000000000,
+    "grid_rows": 714087,
+    "grid_start_ns": 1766478330000000000,
+    "protocol_version": "phase3.5-v1",
+    "quality": {
+      "主给水流量": {
+        "grid_age_p90_s": 2.8879964351654053,
+        "update_gap_median_s": 3.012081152,
+        "update_gap_p90_s": 3.7335894015999997,
+        "updates": 2377826
+      },
+      "主蒸汽压力": {
+        "grid_age_p90_s": 3.2835285663604736,
+        "update_gap_median_s": 3.357089792,
+        "update_gap_p90_s": 4.2181384192,
+        "updates": 2081894
+      },
+      "主蒸汽流量": {
+        "grid_age_p90_s": 3.349858283996582,
+        "update_gap_median_s": 3.467392256,
+        "update_gap_p90_s": 4.3396159744,
+        "updates": 2017971
+      },
+      "二级减温中间设定值": {
+        "grid_age_p90_s": 3.291862726211548,
+        "update_gap_median_s": 3.420683648,
+        "update_gap_p90_s": 4.2307978751999995,
+        "updates": 2051201
+      },
+      "二级减温喷水调节门指令": {
+        "grid_age_p90_s": 4.659801483154297,
+        "update_gap_median_s": 3.918700032,
+        "update_gap_p90_s": 5.2348118528,
+        "updates": 1621065
+      },
+      "二级减温器入口温度": {
+        "grid_age_p90_s": 4.255951404571533,
+        "update_gap_median_s": 3.700571392,
+        "update_gap_p90_s": 5.68542592,
+        "updates": 1761742
+      },
+      "二级减温器出口温度": {
+        "grid_age_p90_s": 4.006730556488037,
+        "update_gap_median_s": 3.257531136,
+        "update_gap_p90_s": 5.33974144,
+        "updates": 1993628
+      },
+      "二级减温调节门阀位": {
+        "grid_age_p90_s": 3.355070114135742,
+        "update_gap_median_s": 3.47056256,
+        "update_gap_p90_s": 4.3734357504000005,
+        "updates": 2018476
+      },
+      "二级减温调节阀设定": {
+        "grid_age_p90_s": 56.014923095703125,
+        "update_gap_median_s": 61.220088576,
+        "update_gap_p90_s": 62.4874816,
+        "updates": 117760
+      },
+      "未校正总煤量": {
+        "grid_age_p90_s": 3.0319786071777344,
+        "update_gap_median_s": 3.1712463360000003,
+        "update_gap_p90_s": 3.9144545024000004,
+        "updates": 2250941
+      },
+      "末级过热器出口汽温": {
+        "grid_age_p90_s": 4.324974060058594,
+        "update_gap_median_s": 3.7732564479999997,
+        "update_gap_p90_s": 5.7970441728,
+        "updates": 1724145
+      },
+      "机组负荷": {
+        "grid_age_p90_s": 3.989548683166504,
+        "update_gap_median_s": 3.973800704,
+        "update_gap_p90_s": 5.204686336,
+        "updates": 1701492
+      }
+    },
+    "reconstruction": "causal_last_observation_carried_forward",
+    "side": "B",
+    "source": {
+      "mtime_ns": 1773628114000000000,
+      "path": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/merged_data/B侧主汽温全数据4.csv",
+      "raw_rows": 71204795,
+      "sha256": "bff8c7f11608edc5e2a59c292b7e5e49277d3cae9d087dd48bc2328cfed7c916",
+      "size_bytes": 6689028147
+    },
+    "step_seconds": 10
+  },
+  "git_sha": "61601c8cfe1c2ab0f85e5613f7eb60ae43d871d0",
+  "device": "cuda",
+  "torch_version": "2.11.0+cu130",
+  "train_anchor_count": 421937,
+  "validation_anchor_count": 4096,
+  "best_epoch": 19,
+  "elapsed_minutes": 1.4398628314336142,
+  "test_accessed": false,
+  "checkpoint_selector": "validation_integrated_mae"
+}
