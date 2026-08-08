@@ -10,6 +10,7 @@ import numpy as np
 from .data import Phase35Cache
 from .schema import (
     LOAD_COLUMN,
+    PRESSURE_COLUMN,
     Phase35ProtocolError,
     SP_COLUMN,
     TARGET_COLUMN,
@@ -20,6 +21,7 @@ from .schema import (
 
 MATCHING_COVARIATES = (
     "load",
+    "main_pressure",
     "main_temperature_error",
     "main_temperature_pretrend",
     "baseline_valve",
@@ -225,6 +227,7 @@ def quiet_control_candidates(
 
 def _pretreatment_covariates(cache: Phase35Cache, anchors: np.ndarray, pretrend_steps: int) -> np.ndarray:
     li = cache.index(LOAD_COLUMN)
+    pi = cache.index(PRESSURE_COLUMN)
     ti = cache.index(TARGET_COLUMN)
     si = cache.index(SP_COLUMN)
     vi = cache.index(VALVE_COLUMN)
@@ -233,13 +236,14 @@ def _pretreatment_covariates(cache: Phase35Cache, anchors: np.ndarray, pretrend_
     values = cache.values
     out = np.column_stack([
         values[anchors, li],
+        values[anchors, pi],
         values[anchors, ti] - values[anchors, si],
         values[anchors, ti] - values[prev, ti],
         values[anchors, vi],
         values[anchors, vi] - values[prev, vi],
         values[anchors, oi],
     ]).astype(np.float64)
-    required_at_anchor = (li, ti, si, vi, oi)
+    required_at_anchor = (li, pi, ti, si, vi, oi)
     invalid_anchor = (cache.ages_s[anchors][:, required_at_anchor] > 180.0).any(axis=1)
     invalid_prev = (cache.ages_s[prev][:, (ti, vi)] > 180.0).any(axis=1)
     out[invalid_anchor | invalid_prev] = np.nan
@@ -278,9 +282,15 @@ def matching_diagnostics(
     # The target pretrend is already one of the pre-treatment matching variables;
     # retain its raw Celsius difference so the gate is interpretable.
     pretrend_index = MATCHING_COVARIATES.index("main_temperature_pretrend")
+    # Control reuse: how many unique controls are used across all matched events.
+    all_anchors = [a for anchors in matched_anchors for a in anchors]
+    n_unique_controls = len(set(all_anchors))
+    n_uses = len(all_anchors)
     return {
         "status": "ok",
         "n_matched_events": int(len(event_cov)),
+        "n_unique_controls": int(n_unique_controls),
+        "control_reuse_ratio": float(n_uses / max(1, n_unique_controls)),
         "covariates": {
             name: {
                 "smd": float(smd[i]),
@@ -300,7 +310,13 @@ def match_quiet_controls(
     controls_per_event: int = 5,
     pretrend_seconds: int = 60,
     min_time_separation_seconds: int = 1800,
+    caliper_quantile: float = 0.5,
 ) -> dict[str, list[int]]:
+    """Match quiet controls with a caliper cap on scaled distance.
+
+    caliper_quantile: 事件-对照 scaled 距离的 cap, 取全部候选距离的
+    caliper_quantile 分位数; 超过 cap 的候选不匹配 → 该事件真正 unmatched。
+    """
     if not events:
         return {}
     if len(controls) < controls_per_event:
@@ -320,15 +336,24 @@ def match_quiet_controls(
     scale[scale < 1e-6] = 1.0
     Xc = (Xc - center) / scale
     Xe = (Xe - center) / scale
+
+    # 全部事件-对照距离池, 用于 caliper 分位数 (只统计 min_sep 允许的对)
+    all_allowed = np.abs(controls[None, :] - event_anchors[:, None]) >= min_sep
+    all_dist = np.where(all_allowed, np.sum((Xe[:, None, :] - Xc[None, :, :]) ** 2, axis=2), np.inf)
+    finite_dist = all_dist[np.isfinite(all_dist)]
+    if len(finite_dist) == 0:
+        return {}
+    caliper = float(np.quantile(finite_dist, caliper_quantile))
+
     matches: dict[str, list[int]] = {}
-    for event, x in zip(events, Xe):
+    for event, x, dist_row in zip(events, Xe, all_dist):
         if not np.isfinite(x).all():
             continue
-        allowed = np.abs(controls - event.anchor) >= min_sep
+        allowed = np.isfinite(dist_row) & (dist_row <= caliper)
         idx = np.flatnonzero(allowed)
         if len(idx) < controls_per_event:
-            continue
-        distance = np.sum((Xc[idx] - x) ** 2, axis=1)
+            continue  # caliper 内不足 → 真正 unmatched
+        distance = dist_row[idx]
         chosen_local = np.argpartition(distance, controls_per_event - 1)[:controls_per_event]
         chosen = idx[chosen_local[np.argsort(distance[chosen_local])]]
         matches[event.event_id] = [int(v) for v in controls[chosen]]

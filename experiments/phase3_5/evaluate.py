@@ -129,6 +129,9 @@ def main() -> None:
     parser.add_argument("--allow-test-access", action="store_true")
     parser.add_argument("--max-events", type=int, default=1000)
     parser.add_argument("--controls-per-event", type=int, default=5)
+    parser.add_argument("--caliper-quantile", type=float, default=0.5,
+                        help="scaled-distance cap for matching (quantile of all candidate distances); "
+                             "lower = stricter common support")
     parser.add_argument("--bootstrap", type=int, default=1000)
     parser.add_argument("--seed", type=int, default=20260808)
     args = parser.parse_args()
@@ -169,7 +172,10 @@ def main() -> None:
         chosen = np.sort(rng.choice(len(events), args.max_events, replace=False))
         events = [events[i] for i in chosen]
     controls = quiet_control_candidates(cache, args.split, model.config.window, model.config.horizon)
-    matches = match_quiet_controls(cache, events, controls, args.controls_per_event) if events else {}
+    matches = match_quiet_controls(
+        cache, events, controls, args.controls_per_event,
+        caliper_quantile=args.caliper_quantile,
+    ) if events else {}
     balance = matching_diagnostics(cache, events, matches)
     empirical_main, doses, ids = matched_empirical_irf(
         cache, events, matches, TARGET_COLUMN, model.config.horizon
