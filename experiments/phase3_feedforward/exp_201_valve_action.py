@@ -138,7 +138,9 @@ def eval_jacobian(model, H_val, n=100, seed=42, delta=0.1, mode='delta'):
         i_int = int(i)
         x = torch.from_numpy(test_raw[i_int:i_int + W, :N_FEAT]).float().unsqueeze(0).to(DEVICE)
         if mode == 'flow':
-            v_win = raw[i_int:i_int + W + H_val, I_V2]
+            # P0-1 fix: i_int 是 test split 相对索引, 阀位基线必须取同一 split 的全局行
+            g = n_val_end + i_int
+            v_win = raw[g:g + W + H_val, I_V2]
             a_up = valve_to_flow(np.clip(v_win[W:], 0, 100) + delta)
             a_dn = valve_to_flow(np.clip(v_win[W:], 0, 100) - delta)
         else:
@@ -165,7 +167,9 @@ def eval_gain_180(model, n=100, seed=99, mode='delta'):
         i_int = int(i)
         x = torch.from_numpy(test_raw[i_int:i_int + W, :N_FEAT]).float().unsqueeze(0).to(DEVICE)
         if mode == 'flow':
-            v_win = raw[i_int:i_int + W + H, I_V2]
+            # P0-1 fix: 同 eval_jacobian — split 相对索引必须加 n_val_end
+            g = n_val_end + i_int
+            v_win = raw[g:g + W + H, I_V2]
             a_up = valve_to_flow(np.clip(v_win[W:], 0, 100) + 5.0)
             a_dn = valve_to_flow(np.clip(v_win[W:], 0, 100) - 5.0)
         else:
