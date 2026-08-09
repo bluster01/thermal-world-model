@@ -174,6 +174,9 @@ access_ledger.json
 
 > 本节固化当前所有指标的定义、计算位置、当前数值与口径陷阱，避免跨会话引用混淆。
 > 数值来源：42-run validation 重跑（caliper=0.02）、SP 事件 1s 分析（train+val 重算）。
+> **2026-08-09 Supervisor 复核：本节数值保留作谱系，不再代表最终 gate。** canonical 状态为
+> E3 INCONCLUSIVE、E4 BLOCKED；B 侧“无阀位响应”只在 600 s 净变化成立，3–30 s 响应明显。
+> 以 `PHASE3_5_LINUX_RETURN_AUDIT_2026-08-09.md` 和 `summary_validation.*` 为准。
 
 ### 10.1 两个事件通道（先分清在说谁）
 
@@ -197,14 +200,14 @@ access_ledger.json
 | **G3 τ** | `model.py:188` `_first_order`，`alpha=1/tau` 每步更新 | 107–119 **步** = 1070–1190s | 响应时间常数 → 推上界，动力学被推到 600s 窗外 |
 | **exp_201 Jacobian 方向率** | 模型输出对阀位的导数方向（dT/dV<0） | 9/10 ckpt 100%，1 个 95% | 符号约束在 pilot 有无违反 → 无。**结构保证，非数据验证** |
 | **matched / balance** | caliper 匹配后事件数；SMD / reuse | A: 93 events, SMD 0.30, reuse 1.42 | 匹配协议合格性 |
-| **first-stage R²** | SP→阀位线性解释力 | <0.07 | SP 作为工具变量的相关性条件 → 不成立（SP-IV 已弃用） |
+| **first-stage R²** | SP→阀位线性解释力，必须注明 horizon | A: 3s=0.075/30s=0.153；B: 3s=0.264/30s=0.100 | horizon-dependent 且仍为闭环观测，不能据此建立 SP-IV |
 
 ### 10.3 当前证据状态（2026-08-09）
 
-- **数据真实值基础**：SP 干预通道方向率 73–83%（train+val 重算后成立，test 52 事件已排除）
+- **数据诊断基础**：SP 事件方向随 3–600 s horizon 明显变化；60sV/180sV 是结果后探索分层，不是独立真值或工具变量
 - **模型验证状态**：预测层不输 baseline（E1 正对照过）；干预分支参数塌缩（G3 FAIL）；模型方向 100% 是约束产物，未在观测上验证
-- **E3/E4/E5**：E3 FAIL（方向率 0.32/0.06 < 0.60）、E4 BLOCKED、E5 INCONCLUSIVE——协议合格后的可信 FAIL
-- **SP 事件模型对照（已做，2026-08-09）**：60sV train+val n=45 上模型方向率 82-89%（经验 73.3%），但效应幅度中位 0.05°C vs 经验 3.53°C（差 ~70 倍）→ 模型方向同向但剂量塌缩，**"方向正确"仅能保持为符号约束**，不能称"复现了物理响应"。详见 `docs/PHASE35_AUDIT_RESPONSE4_2026-08-09.md`
+- **E3/E4/E5**：E3 INCONCLUSIVE（A matched 93 全开阀；B 121 开/1 关；balance 未过）、E4 BLOCKED、E5 INCONCLUSIVE
+- **SP 事件模型对照（exploratory）**：A 60sV n=45 中 train=44/validation=1；模型幅度较观测小，但 mean/mean≈13.9×、median/median≈53.1×，不能混为“70× plant gain bias”
 
 ### 10.4 口径陷阱（已核实）
 

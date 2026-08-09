@@ -229,21 +229,27 @@ def evaluate_gates(aggregate: dict, matrix: dict) -> dict:
             balanced = max_smd <= thresholds["maximum_matching_smd"]
             pretrend_ok = abs(pretrend) <= thresholds["maximum_pretrend_difference_c"]
             response_nonzero = oriented_ci_high < 0.0
-            ok = (
-                enough and balanced and pretrend_ok and response_nonzero
-                and empirical_dir >= thresholds["minimum_direction_rate"]
-            )
-            side_gates["E3_empirical_response"] = _gate(
-                "PASS" if ok else "FAIL",
+            detail = (
                 f"events={n_events:.0f} (open={n_open:.0f}, close={n_close:.0f}); "
                 f"day blocks={n_blocks:.0f}; direction={empirical_dir:.3f}; "
                 f"oriented H60 CI upper={oriented_ci_high:.3f} C; "
-                f"max|SMD|={max_smd:.3f}; pretrend diff={pretrend:.3f} C",
+                f"max|SMD|={max_smd:.3f}; pretrend diff={pretrend:.3f} C"
             )
+            if not enough:
+                side_gates["E3_empirical_response"] = _gate("INCONCLUSIVE", detail + "; insufficient common support")
+            elif not balanced or not pretrend_ok:
+                side_gates["E3_empirical_response"] = _gate("INCONCLUSIVE", detail + "; matching gate not met")
+            else:
+                ok = response_nonzero and empirical_dir >= thresholds["minimum_direction_rate"]
+                side_gates["E3_empirical_response"] = _gate("PASS" if ok else "FAIL", detail)
 
         model_dir = _mean_direction(aggregate, side, "absolute_identity", "model_direction_rate")
         model_irf = _mean_irf(aggregate, side, "absolute_identity")
-        if model_dir is None or model_irf is None:
+        if side_gates["E3_empirical_response"]["status"] != "PASS":
+            side_gates["E4_model_response"] = _gate(
+                "BLOCKED", "E3 empirical reference did not pass; model-response comparison is not identifiable"
+            )
+        elif model_dir is None or model_irf is None:
             side_gates["E4_model_response"] = _gate("INCONCLUSIVE", "missing model response metrics")
         else:
             ok = model_dir >= thresholds["minimum_direction_rate"] and model_irf <= thresholds["maximum_irf_wmae_c"]
@@ -269,16 +275,13 @@ def evaluate_gates(aggregate: dict, matrix: dict) -> dict:
             side_gates["E5_sp_negative_control"] = _gate("INCONCLUSIVE", "missing executed/no-execution groups")
         else:
             ratio = executed / max(noexec, 1e-12)
+            ratio_text = "undefined (no-execution≈0)" if noexec <= 1e-6 else f"{ratio:.2f}"
             enough = min(n_noexec, n_executed) >= thresholds["minimum_sp_events_per_group"]
-            ok = (
-                enough
-                and noexec <= thresholds["maximum_no_execution_effect_c"]
-                and ratio >= thresholds["minimum_executed_to_no_execution_ratio"]
-            )
+            ok = noexec <= thresholds["maximum_no_execution_effect_c"] and ratio >= thresholds["minimum_executed_to_no_execution_ratio"]
             side_gates["E5_sp_negative_control"] = _gate(
-                "PASS" if ok else "FAIL",
+                "INCONCLUSIVE" if not enough else ("PASS" if ok else "FAIL"),
                 f"n(no-execution/executed)={n_noexec:.0f}/{n_executed:.0f}; "
-                f"no-execution={noexec:.4f} C; executed/no-execution={ratio:.2f}",
+                f"no-execution={noexec:.4f} C; executed/no-execution={ratio_text}",
             )
         out[side] = side_gates
     return out

@@ -278,6 +278,7 @@ def matching_diagnostics(
         return {"n_matched_events": int(len(event_cov)), "status": "insufficient_events"}
     pooled = np.sqrt((event_cov.var(axis=0, ddof=1) + control_cov.var(axis=0, ddof=1)) / 2.0)
     raw_difference = event_cov.mean(axis=0) - control_cov.mean(axis=0)
+    zero_variance_imbalance = (pooled <= 1e-8) & (np.abs(raw_difference) > 1e-8)
     smd = np.divide(raw_difference, pooled, out=np.zeros_like(raw_difference), where=pooled > 1e-8)
     # The target pretrend is already one of the pre-treatment matching variables;
     # retain its raw Celsius difference so the gate is interpretable.
@@ -286,19 +287,24 @@ def matching_diagnostics(
     all_anchors = [a for anchors in matched_anchors for a in anchors]
     n_unique_controls = len(set(all_anchors))
     n_uses = len(all_anchors)
+    status = "undefined_smd_zero_variance_imbalance" if zero_variance_imbalance.any() else "ok"
+    max_abs_smd = None if zero_variance_imbalance.any() else float(np.max(np.abs(smd)))
     return {
-        "status": "ok",
+        "status": status,
         "n_matched_events": int(len(event_cov)),
         "n_unique_controls": int(n_unique_controls),
         "control_reuse_ratio": float(n_uses / max(1, n_unique_controls)),
         "covariates": {
             name: {
-                "smd": float(smd[i]),
+                "smd": None if zero_variance_imbalance[i] else float(smd[i]),
                 "raw_mean_difference": float(raw_difference[i]),
             }
             for i, name in enumerate(MATCHING_COVARIATES)
         },
-        "max_abs_smd": float(np.max(np.abs(smd))),
+        "max_abs_smd": max_abs_smd,
+        "zero_variance_imbalanced_covariates": [
+            name for name, bad in zip(MATCHING_COVARIATES, zero_variance_imbalance) if bad
+        ],
         "main_temperature_pretrend_difference_c": float(raw_difference[pretrend_index]),
     }
 
@@ -319,6 +325,8 @@ def match_quiet_controls(
     """
     if not events:
         return {}
+    if not 0.0 < caliper_quantile <= 1.0:
+        raise Phase35ProtocolError("caliper_quantile must be in (0, 1]")
     if len(controls) < controls_per_event:
         raise Phase35ProtocolError("not enough quiet controls for requested matching ratio")
     step_s = int(cache.metadata.get("step_seconds", 10))

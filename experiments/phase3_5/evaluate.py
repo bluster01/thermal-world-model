@@ -4,8 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
-import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -33,8 +33,8 @@ from src.phase35.events import (
     quiet_control_candidates,
     events_to_jsonable,
 )
-from src.phase35.model import A1PhysValveWM, assert_constant_valve_identity
-from src.phase35.schema import ExperimentConfig, TARGET_COLUMN, TOUT2_COLUMN, VALVE_COLUMN
+from src.phase35.model import A1PhysValveWM
+from src.phase35.schema import ExperimentConfig, Phase35ProtocolError, TARGET_COLUMN, TOUT2_COLUMN, VALVE_COLUMN
 from src.phase35.training import _finite_json, _json_dump, evaluate_forecast, git_sha
 
 
@@ -46,6 +46,30 @@ def _load_model(checkpoint_path: Path, device: torch.device) -> tuple[A1PhysValv
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
     return model, checkpoint
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _validate_checkpoint_cache(checkpoint: dict, cache) -> None:
+    checkpoint_side = checkpoint.get("side")
+    cache_side = cache.metadata.get("side")
+    if checkpoint_side not in {"A", "B"} or cache_side not in {"A", "B"}:
+        raise Phase35ProtocolError(
+            f"checkpoint/cache side metadata is required; checkpoint={checkpoint_side!r}, cache={cache_side!r}"
+        )
+    if checkpoint_side != cache_side:
+        raise Phase35ProtocolError(
+            f"checkpoint side={checkpoint_side!r} does not match cache side={cache_side!r}"
+        )
+    missing = [name for name in checkpoint.get("feature_columns", ()) if name not in cache.columns]
+    if missing:
+        raise Phase35ProtocolError(f"cache is missing checkpoint feature columns: {missing}")
 
 
 @torch.no_grad()
@@ -129,9 +153,9 @@ def main() -> None:
     parser.add_argument("--allow-test-access", action="store_true")
     parser.add_argument("--max-events", type=int, default=1000)
     parser.add_argument("--controls-per-event", type=int, default=5)
-    parser.add_argument("--caliper-quantile", type=float, default=0.5,
+    parser.add_argument("--caliper-quantile", type=float, default=0.02,
                         help="scaled-distance cap for matching (quantile of all candidate distances); "
-                             "lower = stricter common support")
+                             "0.02 is the frozen exploratory value, not a confirmatory causal caliper")
     parser.add_argument("--bootstrap", type=int, default=1000)
     parser.add_argument("--seed", type=int, default=20260808)
     args = parser.parse_args()
@@ -159,6 +183,7 @@ def main() -> None:
     device = torch.device(args.device)
     cache = load_cache(args.cache)
     model, checkpoint = _load_model(checkpoint_path, device)
+    _validate_checkpoint_cache(checkpoint, cache)
     features = checkpoint["feature_columns"]
     anchors = valid_window_anchors(
         cache, args.split, features, TARGET_COLUMN, VALVE_COLUMN, model.config.window, model.config.horizon
@@ -167,6 +192,7 @@ def main() -> None:
     forecast = evaluate_forecast(model, cache, anchors, features, device)
 
     events = detect_valve_events(cache, args.split, model.config.window, model.config.horizon)
+    detected_raw = len(events)
     if args.max_events > 0 and len(events) > args.max_events:
         rng = np.random.default_rng(args.seed)
         chosen = np.sort(rng.choice(len(events), args.max_events, replace=False))
@@ -191,15 +217,19 @@ def main() -> None:
         main_metrics = _group_event_metrics(
             empirical_main, model_curves, doses, clusters, args.bootstrap, args.seed
         )
-        empirical_tout2, tout_doses, _ = matched_empirical_irf(
+        empirical_tout2, tout_doses, tout_ids = matched_empirical_irf(
             cache, events, matches, TOUT2_COLUMN, model.config.horizon
+        )
+        tout_clusters = np.asarray(
+            [cache.timestamps_ns[event_by_id[event_id].anchor] // day_ns for event_id in tout_ids],
+            dtype=np.int64,
         )
         tout_metrics = empirical_response_summary(
             empirical_tout2,
             tout_doses,
             bootstrap_replicates=args.bootstrap,
             seed=args.seed,
-            cluster_ids=clusters,
+            cluster_ids=tout_clusters,
         ) if len(tout_doses) >= 3 else {"status": "insufficient_events", "n_events": int(len(tout_doses))}
     else:
         main_metrics = {"status": "insufficient_events", "n_events": int(len(doses))}
@@ -207,15 +237,32 @@ def main() -> None:
 
     sp_events = detect_sp_execution_events(cache, args.split, model.config.window, model.config.horizon)
     negative_control = _sp_negative_control(model, cache, sp_events, features, device)
+    evaluation_provenance = {
+        "evaluation_git_sha": git_sha(ROOT),
+        "checkpoint_git_sha": checkpoint.get("git_sha", "unknown"),
+        "checkpoint_sha256": _sha256_file(checkpoint_path),
+        "checkpoint_side": checkpoint.get("side"),
+        "cache_side": cache.metadata.get("side"),
+        "cache_source_sha256": (cache.metadata.get("source") or {}).get("sha256"),
+        "split": args.split,
+        "max_events": args.max_events,
+        "controls_per_event": args.controls_per_event,
+        "caliper_quantile": args.caliper_quantile,
+        "bootstrap_replicates": args.bootstrap,
+        "evaluation_seed": args.seed,
+    }
     event_payload = {
         "protocol_version": "phase3.5-v1",
         "split": args.split,
+        "valve_events_detected_raw": detected_raw,
+        "valve_events_sampled": len(events),
         "valve_events_detected": len(events),
         "valve_events_matched": len(doses),
         "matching_balance": balance,
         "main_temperature": main_metrics,
         "second_stage_outlet_empirical": tout_metrics,
         "sp_negative_control": negative_control,
+        "evaluation_provenance": evaluation_provenance,
         "warnings": [
             "matched closed-loop event responses are observational, not randomized causal effects",
             "spray-flow measurements are not used as labels, doses, or selectors",
@@ -231,6 +278,7 @@ def main() -> None:
         "quiet_control_matches": matches,
         "sp_events": events_to_jsonable(sp_events),
         "cluster_unit": "UTC_calendar_day",
+        "evaluation_provenance": evaluation_provenance,
     })
     if args.split == "test":
         ledger = {

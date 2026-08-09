@@ -36,6 +36,7 @@ def main() -> None:
 
     matrix_path = Path(args.matrix)
     matrix = load_matrix(matrix_path)
+    evaluation = matrix.get("evaluation") or {}
     configs, sides, seeds = _csv_set(args.configs), _csv_set(args.sides), _csv_set(args.seeds, int)
     caches = {"A": args.cache_a, "B": args.cache_b}
     runs = [
@@ -45,6 +46,13 @@ def main() -> None:
     ]
     if args.execute and any(not caches[run.side] for run in runs):
         parser.error("--cache-a/--cache-b are required for every executed side")
+    if args.evaluate_validation:
+        required_evaluation = {
+            "max_events", "controls_per_event", "caliper_quantile", "bootstrap_replicates", "seed"
+        }
+        missing_evaluation = sorted(required_evaluation - set(evaluation))
+        if missing_evaluation:
+            parser.error(f"matrix evaluation block missing keys: {missing_evaluation}")
     print(f"[phase3.5] protocol={matrix['protocol_version']} runs={len(runs)} execute={args.execute}")
     for run in runs:
         cache = caches[run.side] or f"<CACHE_{run.side}>"
@@ -76,6 +84,11 @@ def main() -> None:
                 "--cache", cache,
                 "--split", "validation",
                 "--device", args.device,
+                "--max-events", str(evaluation["max_events"]),
+                "--controls-per-event", str(evaluation["controls_per_event"]),
+                "--caliper-quantile", str(evaluation["caliper_quantile"]),
+                "--bootstrap", str(evaluation["bootstrap_replicates"]),
+                "--seed", str(evaluation["seed"]),
             ]
             if args.execute and checkpoint.exists():
                 subprocess.run(eval_cmd, cwd=ROOT, check=True)

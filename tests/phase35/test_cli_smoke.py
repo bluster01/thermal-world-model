@@ -4,9 +4,11 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 
-from src.phase35.data import Phase35Cache, save_cache
-from src.phase35.schema import LOAD_COLUMN, REQUIRED_COLUMNS, SP_COLUMN, TARGET_COLUMN, VALVE_COLUMN
+from experiments.phase3_5.evaluate import _validate_checkpoint_cache
+from src.phase35.data import Phase35Cache, load_cache, save_cache
+from src.phase35.schema import LOAD_COLUMN, Phase35ProtocolError, REQUIRED_COLUMNS, SP_COLUMN, TARGET_COLUMN, VALVE_COLUMN
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -84,6 +86,8 @@ def test_train_and_validation_evaluate_cli_smoke(tmp_path):
         text=True,
     )
     run_dir = run_root / "A_absolute_identity_s0"
+    with pytest.raises(Phase35ProtocolError, match="does not match"):
+        _validate_checkpoint_cache({"side": "B", "feature_columns": []}, load_cache(cache_path))
     subprocess.run(
         [
             sys.executable,

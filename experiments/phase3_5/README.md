@@ -57,6 +57,10 @@ python experiments/phase3_5/summarize.py \
   --split validation --output-dir results/phase3_5
 ```
 
+`run_matrix.py` 会把矩阵中冻结的 evaluation 参数逐项传给 `evaluate.py`；当前
+`caliper_quantile=0.02` 是在首轮 validation 后冻结的探索性参数，不能包装成预注册的
+确认性因果门禁。评估产物必须保存 evaluator/checkpoint/cache SHA 和完整参数。
+
 训练期间唯一 checkpoint selector 是 validation integrated MAE。不得运行 `--split test`。每个 run 应至少包含：
 
 ```text
@@ -69,6 +73,15 @@ event_manifest_validation.json
 ```
 
 把整个 `results/phase3_5/`、控制台日志和环境信息原样回传，由本地检查事件数、独立日块数、`max|SMD|`、pretrend、IRF 和模型参数后再冻结候选。
+
+参数健康摘要使用显式 cache 路径运行；`free_only` 保留用于 42-run 闭合，但通过
+`physics_parameters_trained=false` 排除于 gain/τ 健康统计：
+
+```bash
+python experiments/phase3_5/param_summary.py \
+  --cache-a "$PH35_CACHE_A" --cache-b "$PH35_CACHE_B" \
+  --device cuda --output results/phase3_5/param_summary_validation.json
+```
 
 ## 4. 候选补足 5 seeds
 

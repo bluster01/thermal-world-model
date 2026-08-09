@@ -58,9 +58,18 @@ def irf_wmae(empirical: np.ndarray, model: np.ndarray) -> float:
 
 
 def _ranks(x: np.ndarray) -> np.ndarray:
+    """Return zero-based average ranks, including exact tie handling."""
+    x = np.asarray(x, dtype=np.float64)
     order = np.argsort(x, kind="mergesort")
+    sorted_x = x[order]
     ranks = np.empty(len(x), dtype=np.float64)
-    ranks[order] = np.arange(len(x), dtype=np.float64)
+    start = 0
+    while start < len(x):
+        stop = start + 1
+        while stop < len(x) and sorted_x[stop] == sorted_x[start]:
+            stop += 1
+        ranks[order[start:stop]] = 0.5 * (start + stop - 1)
+        start = stop
     return ranks
 
 

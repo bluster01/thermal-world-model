@@ -10,7 +10,14 @@ import numpy as np
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from experiments.phase3_5.sp_events_1s_v2 import split_of, SPLIT_FRAC
+from experiments.phase3_5.sp_events_1s_v2 import (
+    event_grid_ns,
+    filter_rows_by_split,
+    held_within,
+    respects_min_gap,
+    split_of,
+    validate_split_access,
+)
 
 
 def make_synthetic_event(t0_rel_s: float = 0.0, step_s: int = 1):
@@ -68,6 +75,46 @@ def test_split_of():
     assert split_of(gs, gs, ge, n) == 'train'
     assert split_of(ge, gs, ge, n) == 'test'
     print('test_split_of PASS: 60/20/20 边界正确')
+
+
+def test_split_filter_changes_both_count_and_serialized_events():
+    rows = [
+        {'split': 'train', 'event_id': 1},
+        {'split': 'validation', 'event_id': 2},
+        {'split': 'test', 'event_id': 3},
+    ]
+    assert filter_rows_by_split(rows, 'validation') == [{'split': 'validation', 'event_id': 2}]
+    assert len(filter_rows_by_split(rows, 'all')) == 3
+
+
+def test_test_or_all_split_requires_explicit_unlock():
+    for split in ('test', 'all'):
+        try:
+            validate_split_access(split, False)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f'{split} should require explicit test access')
+    validate_split_access('validation', False)
+    validate_split_access('test', True)
+
+
+def test_event_grid_preserves_fractional_event_timestamp_exactly():
+    t0_ns = 1_766_561_012_158_704_896
+    grid = event_grid_ns(t0_ns, 3, 2)
+    assert grid.dtype == np.int64
+    assert grid[3] == t0_ns
+    assert grid[2] == t0_ns - 1_000_000_000
+    assert grid[-1] == t0_ns + 2_000_000_000
+
+
+def test_hold_checks_whole_path_and_min_gap_is_inclusive():
+    assert held_within(np.array([568.0, 568.2, 567.8]), 568.0, 0.5)
+    assert not held_within(np.array([568.0, 569.0, 568.0]), 568.0, 0.5)
+    t0 = 1_700_000_000_000_000_000
+    assert respects_min_gap(t0, None, 600.0)
+    assert not respects_min_gap(t0, t0 - 599_000_000_000, 600.0)
+    assert respects_min_gap(t0, t0 - 600_000_000_000, 600.0)
 
 
 if __name__ == '__main__':

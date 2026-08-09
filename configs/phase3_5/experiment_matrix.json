@@ -71,6 +71,14 @@
       "free_head": true
     }
   ],
+  "evaluation": {
+    "status": "exploratory_posthoc_frozen",
+    "max_events": 1000,
+    "controls_per_event": 5,
+    "caliper_quantile": 0.02,
+    "bootstrap_replicates": 1000,
+    "seed": 20260808
+  },
   "gates": {
     "forecast_noninferiority_ratio": 1.02,
     "irf_improvement_ratio": 0.98,

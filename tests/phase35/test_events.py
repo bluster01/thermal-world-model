@@ -2,12 +2,14 @@ import numpy as np
 
 from src.phase35.data import Phase35Cache
 from src.phase35.events import (
+    ValveEvent,
     detect_sp_execution_events,
     detect_valve_events,
     match_quiet_controls,
     matching_diagnostics,
     quiet_control_candidates,
 )
+from src.phase35.schema import Phase35ProtocolError
 from src.phase35.schema import (
     LOAD_COLUMN,
     REQUIRED_COLUMNS,
@@ -80,3 +82,30 @@ def test_quiet_controls_and_matching_use_pretreatment_rows():
     assert all(abs(c - events[0].anchor) >= 6 for c in matches[events[0].event_id])
     diagnostics = matching_diagnostics(cache, events, matches)
     assert diagnostics["status"] == "insufficient_events"  # one event cannot establish balance
+
+
+def test_zero_variance_mean_imbalance_fails_closed():
+    cache = _cache()
+    event_anchors = [100, 120, 140]
+    control_anchors = [300, 320, 340]
+    li = cache.index(LOAD_COLUMN)
+    cache.values[event_anchors, li] = 500.0
+    cache.values[control_anchors, li] = 600.0
+    events = [
+        ValveEvent(f"event-{i}", anchor, anchor + 1, 2.0, "open", 20.0, "validation")
+        for i, anchor in enumerate(event_anchors)
+    ]
+    matches = {event.event_id: [control] for event, control in zip(events, control_anchors)}
+    diagnostics = matching_diagnostics(cache, events, matches, pretrend_seconds=10)
+    assert diagnostics["status"] == "undefined_smd_zero_variance_imbalance"
+    assert diagnostics["max_abs_smd"] is None
+    assert "load" in diagnostics["zero_variance_imbalanced_covariates"]
+    assert diagnostics["covariates"]["load"]["raw_mean_difference"] == -100.0
+
+
+def test_matching_rejects_invalid_caliper_quantile():
+    cache = _cache()
+    event = ValveEvent("event", 100, 101, 2.0, "open", 20.0, "validation")
+    controls = np.array([300, 320], dtype=np.int64)
+    with np.testing.assert_raises(Phase35ProtocolError):
+        match_quiet_controls(cache, [event], controls, controls_per_event=1, caliper_quantile=0.0)

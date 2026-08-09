@@ -2,6 +2,7 @@ import numpy as np
 
 from src.phase35.evaluation import (
     bootstrap_mean_curve,
+    dose_monotonicity,
     event_response_metrics,
     forecast_metrics,
     onset_lag_seconds,
@@ -36,3 +37,9 @@ def test_cluster_bootstrap_is_deterministic_and_counts_blocks():
     b = bootstrap_mean_curve(curves, n_boot=100, seed=7, cluster_ids=clusters)
     np.testing.assert_allclose(a["low"], b["low"])
     assert a["n_clusters"] == 2
+
+
+def test_dose_monotonicity_is_undefined_for_tied_constant_response():
+    dose = np.array([1.0, 2.0, 3.0, 4.0])
+    curves = np.zeros((4, 3))
+    assert np.isnan(dose_monotonicity(dose, curves))

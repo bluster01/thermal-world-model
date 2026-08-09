@@ -28,6 +28,7 @@ SP_THR = 1.0          # °C 阶跃阈值
 SP_HOLD_S = 60.0      # 阶跃后保持时长(检测用)
 PRE_S = 960.0         # 事件前稳定性窗口
 POST_S = 600.0        # 事件后响应窗口
+MIN_GAP_S = 600.0     # 相邻入选事件最小间隔，避免响应窗重叠
 
 # 稳态门槛 (S 层, 预注册): 事件前 PRE_S 内 range 限制
 S_LOAD_RANGE = 5.0    # MW
@@ -45,6 +46,17 @@ def git_sha() -> str:
             stderr=subprocess.DEVNULL, text=True).strip()
     except Exception:
         return 'unknown'
+
+
+def git_status_paths() -> list[str] | None:
+    try:
+        output = subprocess.check_output(
+            ['git', '-C', str(Path(__file__).resolve().parents[2]), 'status', '--porcelain'],
+            stderr=subprocess.DEVNULL, text=True,
+        )
+        return [line[3:].strip() for line in output.splitlines() if line.strip()]
+    except Exception:
+        return None
 
 
 def file_sha256(path: str) -> str:
@@ -67,11 +79,39 @@ def split_of(t_ns: int, grid_start_ns: int, grid_end_ns: int, n_rows: int) -> st
     return 'test'
 
 
+def filter_rows_by_split(rows: list[dict], split: str) -> list[dict]:
+    if split == 'all':
+        return list(rows)
+    return [row for row in rows if row['split'] == split]
+
+
+def validate_split_access(split: str, allow_test_access: bool) -> None:
+    if split in {'test', 'all'} and not allow_test_access:
+        raise ValueError("test outcomes are locked; pass --allow-test-access for split=test/all")
+
+
+def event_grid_ns(t0_ns: int, pre_s: int, post_s: int) -> np.ndarray:
+    """Build an exact event-aligned 1 s grid without float timestamp rounding."""
+    offsets = np.arange(-pre_s, post_s + 1, dtype=np.int64) * 1_000_000_000
+    return np.int64(t0_ns) + offsets
+
+
+def held_within(values: np.ndarray, reference: float, tolerance: float) -> bool:
+    values = np.asarray(values, dtype=np.float64)
+    return bool(len(values) and np.isfinite(values).all() and np.max(np.abs(values - reference)) <= tolerance)
+
+
+def respects_min_gap(t0_ns: int, previous_t0_ns: int | None, min_gap_s: float) -> bool:
+    return previous_t0_ns is None or t0_ns - previous_t0_ns >= min_gap_s * 1e9
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--side', choices=['A', 'B'], default='A')
-    ap.add_argument('--split', choices=['train', 'validation', 'test', 'all'], default='all',
-                    help='只保留指定 split 的事件; all = 全部(默认, 供 exploratory)')
+    ap.add_argument('--split', choices=['train', 'validation', 'test', 'all'], default='validation',
+                    help='只保留指定 split 的事件；test/all 需要显式解锁')
+    ap.add_argument('--allow-test-access', action='store_true')
+    ap.add_argument('--allow-dirty', action='store_true', help='仅调试；正式产物禁止从 dirty tree 生成')
     ap.add_argument('--input', default=DEFAULT_CSV)
     ap.add_argument('--output', default=DEFAULT_OUT)
     ap.add_argument('--grid-start-ns', type=int, required=True,
@@ -79,6 +119,16 @@ def main():
     ap.add_argument('--grid-end-ns', type=int, required=True)
     ap.add_argument('--grid-rows', type=int, required=True)
     args = ap.parse_args()
+    try:
+        validate_split_access(args.split, args.allow_test_access)
+    except ValueError as exc:
+        ap.error(str(exc))
+    dirty_paths_at_start = git_status_paths()
+    dirty_non_result_paths = [
+        path for path in (dirty_paths_at_start or []) if not path.replace('\\', '/').startswith('results/')
+    ]
+    if dirty_non_result_paths and not args.allow_dirty:
+        ap.error(f'working tree has uncommitted non-result files: {dirty_non_result_paths}')
 
     print('scanning sparse updates...', flush=True)
     upd = {c: ([], []) for c in COLS[1:]}
@@ -107,6 +157,7 @@ def main():
     candidates = 0
     rejected_hold = 0
     rejected_window = 0
+    rejected_min_gap = 0
     events = []
     for k in idx:
         candidates += 1
@@ -116,7 +167,8 @@ def main():
         if hold.sum() < 2:
             rejected_hold += 1
             continue
-        if np.abs(sp_v[k + 1 + hold.sum() - 1] - sp_v[k + 1]) > 0.5 * SP_THR:
+        held_values = sp_v[k + 1:k + 1 + hold.sum()]
+        if not held_within(held_values, sp_v[k + 1], 0.5 * SP_THR):
             rejected_hold += 1
             continue
         if t0 - PRE_S * 1e9 < first_ns or t0 + POST_S * 1e9 > last_ns:
@@ -124,9 +176,15 @@ def main():
             continue
         events.append((t0, sp_v[k], sp_v[k + 1]))
 
-    print(f'candidate SP steps: {candidates} (rejected hold={rejected_hold}, window={rejected_window}, kept={len(events)})', flush=True)
+    print(
+        f'candidate SP steps: {candidates} (rejected hold={rejected_hold}, '
+        f'window={rejected_window}, held-window candidates={len(events)})',
+        flush=True,
+    )
 
     rows = []
+    rejected_covariate_window = 0
+    last_output_t0 = None
     for t0, sp_before, sp_after in events:
         feats = {'t0_ns': int(t0), 'split': split_of(t0, args.grid_start_ns, args.grid_end_ns, args.grid_rows),
                  'dsp': float(sp_after - sp_before)}
@@ -138,7 +196,7 @@ def main():
             w_ts, w_v = ts[lo:hi], vs[lo:hi]
             if len(w_ts) == 0:
                 pre[c] = None; continue
-            grid = np.arange((t0 - PRE_S * 1e9) // 1e9, (t0 + POST_S * 1e9) // 1e9 + 1) * 1e9
+            grid = event_grid_ns(int(t0), int(PRE_S), int(POST_S))
             pos = np.searchsorted(w_ts, grid, side='right') - 1
             filled = w_v[np.clip(pos, 0, len(w_v) - 1)]
             filled[pos < 0] = np.nan
@@ -146,10 +204,14 @@ def main():
         T = pre['末级过热器出口汽温']
         n_pre = int(PRE_S); n_post = int(POST_S)
         if T is None or not np.isfinite(T[:n_pre]).sum() >= 0.9 * n_pre:
+            rejected_covariate_window += 1
             continue
         load = pre['机组负荷']; pres = pre['主蒸汽压力']; valve = pre['二级减温调节门阀位']
         if load is None or pres is None or valve is None:
+            rejected_covariate_window += 1
             continue
+        sp_path = pre['二级减温调节阀设定']
+        sp_max_dev_600 = float(np.nanmax(np.abs(sp_path[n_pre:n_pre + n_post + 1] - sp_after)))
         feats.update({
             'load_range_60': float(np.nanmax(load[n_pre-60:n_pre]) - np.nanmin(load[n_pre-60:n_pre])),
             'pres_range_60': float(np.nanmax(pres[n_pre-60:n_pre]) - np.nanmin(pres[n_pre-60:n_pre])),
@@ -161,6 +223,8 @@ def main():
             'pres_range_960': float(np.nanmax(pres[:n_pre]) - np.nanmin(pres[:n_pre])),
             'temp_range_960': float(np.nanmax(T[:n_pre]) - np.nanmin(T[:n_pre])),
             'dT_post_600': float(T[n_pre + 600] - T[n_pre - 1]) if np.isfinite(T[n_pre + 600]) else None,
+            'sp_max_dev_600': sp_max_dev_600,
+            'sp_held_600': bool(sp_max_dev_600 <= 0.5 * SP_THR),
             'dv_3s': float(valve[n_pre + 3] - valve[n_pre - 1]) if np.isfinite(valve[n_pre + 3]) else None,
             'dv_10s': float(valve[n_pre + 10] - valve[n_pre - 1]) if np.isfinite(valve[n_pre + 10]) else None,
             'dv_30s': float(valve[n_pre + 30] - valve[n_pre - 1]) if np.isfinite(valve[n_pre + 30]) else None,
@@ -168,17 +232,28 @@ def main():
             'dv_180s': float(valve[n_pre + 180] - valve[n_pre - 1]) if np.isfinite(valve[n_pre + 180]) else None,
             'dv_600s': float(valve[n_pre + 600] - valve[n_pre - 1]) if np.isfinite(valve[n_pre + 600]) else None,
         })
+        if not respects_min_gap(int(t0), None if last_output_t0 is None else int(last_output_t0), MIN_GAP_S):
+            rejected_min_gap += 1
+            continue
         rows.append(feats)
+        last_output_t0 = t0
 
-    df = pd.DataFrame(rows)
-    n_s = int(((df['load_range_600'] <= S_LOAD_RANGE) & (df['pres_range_600'] <= S_PRES_RANGE)
-               & (df['temp_range_600'] <= S_TEMP_RANGE)).sum())
-    n_s960 = int(((df['load_range_960'] <= S_LOAD_RANGE) & (df['pres_range_960'] <= S_PRES_RANGE)
-                  & (df['temp_range_960'] <= S_TEMP_RANGE)).sum())
+    print(
+        f'event funnel after covariates/gap: covariate={rejected_covariate_window}, '
+        f'min_gap={rejected_min_gap}, kept={len(rows)}',
+        flush=True,
+    )
 
-    # split 过滤
-    if args.split != 'all':
-        df = df[df['split'] == args.split]
+    all_df = pd.DataFrame(rows)
+    filtered_rows = filter_rows_by_split(rows, args.split)
+    df = pd.DataFrame(filtered_rows)
+    if df.empty:
+        n_s = n_s960 = 0
+    else:
+        n_s = int(((df['load_range_600'] <= S_LOAD_RANGE) & (df['pres_range_600'] <= S_PRES_RANGE)
+                   & (df['temp_range_600'] <= S_TEMP_RANGE)).sum())
+        n_s960 = int(((df['load_range_960'] <= S_LOAD_RANGE) & (df['pres_range_960'] <= S_PRES_RANGE)
+                      & (df['temp_range_960'] <= S_TEMP_RANGE)).sum())
 
     payload = {
         'n': len(df),
@@ -189,19 +264,23 @@ def main():
         'thresholds': {'sp': SP_THR, 's_load': S_LOAD_RANGE, 's_pres': S_PRES_RANGE,
                        's_temp': S_TEMP_RANGE},
         'funnel': {'candidates': candidates, 'rejected_hold': rejected_hold,
-                   'rejected_window': rejected_window, 'kept_full_window': len(rows)},
+                   'rejected_window': rejected_window, 'rejected_min_gap': rejected_min_gap,
+                   'rejected_covariate_window': rejected_covariate_window,
+                   'kept_full_window_all_splits': len(all_df), 'kept_after_split': len(df)},
         'provenance': {
             'source': args.input,
             'source_sha256': file_sha256(args.input),
             'generated_at_utc': datetime.now(timezone.utc).isoformat(),
             'git_sha': git_sha(),
+            'git_dirty_at_start': bool(dirty_paths_at_start),
+            'dirty_non_result_paths_at_start': dirty_non_result_paths,
             'script': str(Path(__file__).resolve()),
             'grid_start_ns': args.grid_start_ns,
             'grid_end_ns': args.grid_end_ns,
             'grid_rows': args.grid_rows,
             'split_frac': list(SPLIT_FRAC),
         },
-        'events': rows,
+        'events': filtered_rows,
     }
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
