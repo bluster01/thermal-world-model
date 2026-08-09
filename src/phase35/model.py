@@ -267,6 +267,7 @@ class A1PhysValveWM(nn.Module):
             "dose": dose,
             "gain": params.gain,
             "tau": params.tau,
+            "rate_gain": params.rate_gain,
         }
 
     def intervention_effect(self, history: torch.Tensor, future_valve: torch.Tensor, baseline_valve: torch.Tensor) -> torch.Tensor:
