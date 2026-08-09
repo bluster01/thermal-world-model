@@ -8,6 +8,8 @@
 
 当前状态：**42/42 development runs 已完成且模型 checkpoint test 尚未评估；validation 审计判定 E3 不可识别、E4 被阻断、E5 样本不足、G3 参数塌缩，当前没有候选。A/B 两侧 1 s SP JSON 均已写入 test 事件及 `dT_post_600`，因此两侧 event test 都不再是盲 lockbox；未来正式事件证据必须使用新时间块。**详见 [Linux 增量整体审计](docs/PHASE3_5_LINUX_RETURN_AUDIT_2026-08-09.md)。
 
+最新补充：分段辨识 pilot 的数字已在本地精确复现，但旧脚本丢失阀门阶跃符号、未实施负荷/压力/主汽温稳态门禁，且所谓脉冲响应只是未预白化滞后相关。因此 85%/74% 和 0 s 峰值不得升级为物理确认；修正门禁见 [分段辨识审计与验证协议](docs/PHASE35_SEGMENTED_IDENTIFICATION_REVIEW_2026-08-09.md)。
+
 收口决定：当前数据和配置不再补 seed、不打开模型 test，也不继续扩大 A1phys 矩阵。Phase 3.5 可以形成方法学/阴性结果文章，但不能形成“完全物理响应”或“反事实世界模型已成立”的文章。最终目标的缺口与后续 W0–W6 门禁见 [主汽温世界模型证据阶梯](docs/WORLD_MODEL_EVIDENCE_LADDER.md)。
 
 ## 五组核心实验
@@ -43,6 +45,7 @@ E1–E5 全部属于 Phase 3.5 主文证据，不是 Phase 4，也不是附录�
 | 5A | 修 1 s 事件 horizon/split/provenance，A/B 只跑 validation | 本地写代码；Linux 执行 | 显式多 horizon；split 真过滤；test 默认锁定；600 s gap/hold 可审计 | ◼ 代码完成；当前批不重跑，旧 JSON 仅作探索材料 |
 | 5B | 修参数健康摘要 | 本地写代码；Linux 执行 | τ 两 stage/真实秒、rate gain、完整 checkpoint/cache/anchor hash、free-only 显式排除 | ◼ 代码完成；当前塌缩结论足以阻断，不为“补好看数字”重跑 |
 | 5C | 冻结未来正式 E3 双 estimand | 本地设计 | 稳态 held-step 主分析；动态 trajectory 次分析；开/关均满足 common support | → 仅在取得未来新时间块前完成；未完成前不得恢复 E3/E4 强结论 |
+| 5D | 修正分段辨识并执行 V0–V4 | 本地冻结协议/审计；Linux 改实现并回传 | 保留有符号剂量；完整稳态/hold 门禁；blocked 验证；2×2 与 placebo；不得使用伪脉冲响应 | ▶ Linux 修改中；旧 JSON 仅作可复现 pilot |
 | 6 | 每侧冻结最多 2 个候选，补 seed 3/4 | Linux | 候选选择和 seed 清单写入版本化 manifest | ⛔ 当前批取消；无候选 |
 | 7 | 一次批量打开 test，评估冻结候选 | Linux | 每 run 生成 `access_ledger.json`，不得按 test 回调模型 | ⛔ 当前批取消；模型 test 保持未访问 |
 | 8 | 制作 validation 表图、更新 claim ledger 和论文 | 本地 / Codex | 同时报预测、经验响应、模型响应、CI 和失败边界 | ▶ 当前唯一文章任务；结果保持阴性/不确定 |
