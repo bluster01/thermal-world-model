@@ -44,7 +44,7 @@ E1–E5 全部属于 Phase 3.5 主文证据，不是 Phase 4，也不是附录�
 | 5 | 汇总 validation，审计事件数、日块数、balance/pretrend 与参数塌缩 | 本地 / Codex | E1–E5 均可判 PASS/FAIL/INCONCLUSIVE；缺证据不强判 | ✓ 已判；无候选 |
 | 5A | 修 1 s 事件 horizon/split/provenance，A/B 只跑 validation | 本地写代码；Linux 执行 | 显式多 horizon；split 真过滤；test 默认锁定；600 s gap/hold 可审计 | ◼ 代码完成；当前批不重跑，旧 JSON 仅作探索材料 |
 | 5B | 修参数健康摘要 | 本地写代码；Linux 执行 | τ 两 stage/真实秒、rate gain、完整 checkpoint/cache/anchor hash、free-only 显式排除 | ◼ 代码完成；当前塌缩结论足以阻断，不为“补好看数字”重跑 |
-| 5C | 冻结未来正式 E3 双 estimand | 本地设计 | 稳态 held-step 主分析；动态 trajectory 次分析；开/关均满足 common support | → 仅在取得未来新时间块前完成；未完成前不得恢复 E3/E4 强结论 |
+| 5C | 冻结未来正式 E3 双 estimand | 本地设计 | 稳态 held-step 主分析；动态 trajectory 次分析；开/关均满足 common support | ✅ 已冻结 (2026-08-09)：双 estimand 设计、配对/门禁/判定/样本量/placebo 全预注册，见 [E3 estimand 冻结设计](docs/PHASE35_E3_ESTIMAND_FROZEN_2026-08-09.md)；现有数据不达门槛，未来新时间块或现场试验按此执行；未通过前不得恢复 E3/E4 强结论 |
 | 5D | 修正分段辨识并执行 V0–V4 | 本地冻结协议/审计；Linux 改实现并回传 | 保留有符号剂量；完整稳态/hold 门禁；blocked 验证；2×2 与 placebo；不得使用伪脉冲响应 | ▶ Linux 执行完毕回传 (2026-08-09)：V0–V4 全 INCONCLUSIVE/NOT PASSED（A=7/B=6 事件不足、12 open/1 close 无双向 support、held-step=2）；85%/74% 降级为 exploratory pilot；脚本已代码化，未来新时间块可原样重跑 |
 | 6 | 每侧冻结最多 2 个候选，补 seed 3/4 | Linux | 候选选择和 seed 清单写入版本化 manifest | ⛔ 当前批取消；无候选 |
 | 7 | 一次批量打开 test，评估冻结候选 | Linux | 每 run 生成 `access_ledger.json`，不得按 test 回调模型 | ⛔ 当前批取消；模型 test 保持未访问 |
