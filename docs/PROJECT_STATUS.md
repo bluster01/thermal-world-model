@@ -4,7 +4,7 @@
 
 ## 一句话状态
 
-项目已完成预测基线、MPC 方法探索和第一轮观测事件评测，但**尚未完成模型定性，也没有独立 lockbox 结论**。Phase 4 已暂停，当前唯一活动阶段是 Phase 3.5：以实际绝对阀位为代理动作，重新验证 A1phys 的预测能力、真实阀门响应、模型响应和 SP 未执行负对照。框架已通过本地测试，尚无正式训练结果。
+项目已完成预测基线、MPC 方法探索和 Phase 3.5 的 42/42 development runs，但**尚未完成模型定性，也没有独立 lockbox 结论**。Phase 3.5 审计后 E3 不可识别、E4 被阻断、E5 样本不足且物理参数塌缩，当前没有可进入 test 的候选。Phase 4 继续暂停；当前文章应以预测与物理响应可识别性的边界、结构约束和 fail-closed 审计收口。
 
 ## Phase 3.5 当前状态
 
@@ -15,12 +15,25 @@
 | 数据框架 | 已实现 | causal LOCF 10 s grid、staleness、SHA256、60/20/20 split 内窗口 |
 | A1phys-V | 已实现 | 历史阀位可作处理前状态；未来阀位只进入受约束干预分支 |
 | exp_201 pilot | 已回传并审计降级 | A 侧固定 `R=50`：ff10 三 seed 为 100%×3，no-freeze 三 seed 均值约 98.3%；原始绝对阀位多为 60–75%。均为 test-selected，且手工先验未标定，不能作正式证据 |
-| 核心实验 | 已实现，未运行 | E1–E5 全部属于论文主文核心验证 |
+| 核心实验 | 42/42 development runs 已完成并审计 | E1 PASS；E2/E3/E5 INCONCLUSIVE；E4 BLOCKED；没有 test 候选 |
 | 训练选择 | 已修正 | validation-only canonical checkpoint；test 显式解锁并写 ledger |
-| 统计 | 已实现，待事件审计 | A/B 分报；UTC 日块 bootstrap；seed 仅表示优化波动 |
-| 正式结果 | 尚无 | 当前不能声称“完全物理响应”或 Phase 3.5 模型胜出 |
+| 统计 | 已运行并 fail-closed 审计 | A/B 分报；UTC 日块 bootstrap；seed 仅表示优化波动；matching balance/common support 未过 |
+| 正式结果 | 仅 development validation | 模型 test 尚未打开；A/B 旧 event test 标签已暴露，未来事件证据需新时间块 |
 
 Phase 3.5 的目标不是证明质量/能量守恒，而是建立分层物理一致性：阀门动作可辨认、经验温度响应可复核、模型反事实响应能复现该曲线、SP 未执行时模型不制造阀门效应。完整协议见 [`PHASE3_5_EXPERIMENT_DESIGN.md`](PHASE3_5_EXPERIMENT_DESIGN.md)。
+
+## 最终世界模型距离
+
+最终系统需分别通过状态/动作语义、独立预测、状态闭合仿真、可识别反事实和分级闭环五项合同。当前只达到 `C0 PARTIAL + C1 DEVELOPMENT ONLY`：
+
+| 最终能力 | 当前证据 | 判决 |
+|---|---|---|
+| 未见时间预测 | 历史预测基线与 Phase 3.5 development validation | 尚缺新时间块独立 test、校准与工况分层 |
+| 递推仿真 | 当前主要输出固定 horizon 温度与低阶动作响应 | 未建立完整下一状态、自由 rollout 稳定性或守恒闭合 |
+| 反事实推演 | 有代码方向/零动作约束；E3 reference 未通过 | BLOCKED；action sensitivity 不能写成 `do(action)` |
+| 闭环嵌入 | 旧 MPC 探索存在同构 plant 与协议缺陷 | 未建立独立 plant/HIL、策略支持、实时性和安全证据 |
+
+权威缺口矩阵和 W0–W6 放行路径见 [`WORLD_MODEL_EVIDENCE_LADDER.md`](WORLD_MODEL_EVIDENCE_LADDER.md)。
 
 ## 证据分级
 
@@ -121,7 +134,7 @@ exp_025 使用实际绝对阀位，exp_106/旧 A1phys 使用 `二级减温调节
 - 当前正式逻辑位于 `src/phase35/` 与 `experiments/phase3_5/`；`phase3_feedforward/` 只作历史追溯。
 - 仓库没有锁定依赖或可复现环境文件。
 - `data/伊敏6号机` 是 Linux 符号链接，Windows 检出不可直接使用。
-- Phase 3.5 已新增数据、模型、事件、训练、统计、汇总和 CLI smoke 专项测试；当前 25 项通过。全仓历史测试仍有 `TimeXerWM` 测试桩收集错误，不能由专项测试代替或隐去。
+- Phase 3.5 已新增数据、模型、事件、训练、统计、汇总和 CLI smoke 专项测试；当前 36 项通过。全仓历史测试仍有 `TimeXerWM` 测试桩及硬编码 CSV 导入收集错误，不能由专项测试代替或隐去。
 - `eval_protocol.py` 的 PID 物理方向、零误差工作点和导数项实现存在 P0 缺陷；旧控制结果不得恢复证据等级。
 - `exp_106/112` 在 test 上逐 epoch 评估并选 checkpoint；`exp_109/110` 又合并 val+test 构造/筛选事件。
 - 148 个 Python 文件中有 88 个没有 `if __name__ == '__main__'` guard；多个实验依赖导入副作用、全局变量与 `sys.path/sys.argv` 修改。
@@ -130,12 +143,6 @@ exp_025 使用实际绝对阀位，exp_106/旧 A1phys 使用 `二级减温调节
 
 ## 下一判决点
 
-当前只推进 Phase 3.5：
+当前批次的 42-run 训练和本地审计已经结束，不补 seed、不打开模型 test。下一科学判决点只有一个：在未来新时间块之前冻结 E3 的双 estimand——稳态 held-step 主分析与动态 trajectory 次分析——并解决开/关阀 common support、balance、pre-trend 和 placebo。若该 reference 仍不可识别，Phase 3.5 以方法学和阴性结果收口，不以预测 MAE 替代。
 
-1. Linux 生成 A/B cache 与 source SHA256/staleness manifest；
-2. 运行 42 个 development runs，只打开 validation；
-3. 本地审计 E1–E5、匹配 balance/pretrend、独立日块数和参数塌缩；
-4. 每侧最多冻结两个候选并补到 5 seeds；
-5. 一次批量 test，随后本地复算和论文收口。
-
-若事件/日块不足，物理响应结论标记 `INCONCLUSIVE`，不以预测 MAE 替代。活队列见根目录 [`TODO.md`](../TODO.md)。Phase 4 Gate 计划保留但暂停。
+文章完成后，若继续最终世界模型，先进入 W3 状态闭合 simulator 设计，而不是恢复旧 MPC 或扩大当前 A1phys 超参矩阵。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 Gate 计划保留但暂停。

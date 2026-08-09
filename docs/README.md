@@ -11,6 +11,7 @@
 - [../experiments/phase3_5/README.md](../experiments/phase3_5/README.md)：Linux 唯一执行手册。
 - [SUPERVISOR_REVIEW_2026-08-07.md](SUPERVISOR_REVIEW_2026-08-07.md)：代码、结果、论文与方法论总审。
 - [PROJECT_STATUS.md](PROJECT_STATUS.md)：可信结论、候选模型、作废结论与下一判决点。
+- [WORLD_MODEL_EVIDENCE_LADDER.md](WORLD_MODEL_EVIDENCE_LADDER.md)：从预测器到仿真、反事实与闭环的五级能力合同、证据缺口和 W0–W6 门禁。
 - [CURRENT_TASKS.md](CURRENT_TASKS.md)：2026-08-07 早期任务设计；当前执行以根 TODO 为准。
 - [REMOTE_EXPERIMENT_PROTOCOL.md](REMOTE_EXPERIMENT_PROTOCOL.md)：本地研发与 Linux 正式实验的交接协议。
 - [PHASE4_EXPERIMENT_PLAN.md](PHASE4_EXPERIMENT_PLAN.md)：暂停的未来 Fan/三路线计划，不是当前执行协议。

@@ -2,7 +2,7 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-09）**：Phase 4 暂停，项目回到 Phase 3 文章收口。Phase 3.5 是当前唯一活动阶段，集中完成 A1phys 的论文核心验证：用实际绝对阀位作为 plant-level 代理动作，验证现场温度响应、阀门非线性、模型干预响应和“SP 变化但阀门未执行”的负对照。框架已实现并通过本地测试，但尚无 Phase 3.5 正式训练结果，因此不能声称模型已获得“完全物理响应”。
+> **当前判断（2026-08-09）**：Phase 4 暂停，项目回到 Phase 3 文章收口。Phase 3.5 的 42/42 development runs 已完成，但审计后 E3 不可识别、E4 被阻断、E5 样本不足且物理支路参数塌缩，当前没有可进入 test 的候选。因此不能声称模型已获得“完全物理响应”。项目的最终目标仍是可预测、可递推仿真、可作反事实推演并能分级嵌入闭环的主汽温世界模型；这些能力必须分别取证。
 
 ## 当前入口
 
@@ -10,6 +10,7 @@
 - [Phase 3.5 实验设计](docs/PHASE3_5_EXPERIMENT_DESIGN.md)
 - [Linux 执行手册](experiments/phase3_5/README.md)
 - [项目状态与证据边界](docs/PROJECT_STATUS.md)
+- [最终世界模型证据阶梯](docs/WORLD_MODEL_EVIDENCE_LADDER.md)
 - [文档地图](docs/README.md)
 - [实验地图](experiments/README.md)
 - [历史结果索引](results/README.md)
@@ -41,6 +42,19 @@ SP → 控制器/执行机构 → 阀门指令 → 实际阀位
 | E5 | SP 改变但阀位未执行应如何解释？ | 600 s no-execution / fast executed / ambiguous | 模型阀门效应、真实温度变化与层级证据 |
 
 E1–E5 全部属于主文核心验证。任何一项证据不足都保留 `INCONCLUSIVE`，不靠单一 CFI 合成分数强行选冠军。
+
+本轮判决为：E1 的正对照通过；E2、E3、E5 为 `INCONCLUSIVE`；E4 为 `BLOCKED`。这可以支持一篇关于预测与响应可识别性边界、结构约束和 fail-closed 审计的文章，但不能把当前模型升级为已验证的 simulator 或 counterfactual model。
+
+## 最终目标与当前距离
+
+世界模型不是一个更准的温度预测器。项目将最终能力拆成五个合同：状态/动作语义、独立预测、状态闭合仿真、可识别反事实和分级闭环。当前大致处于 `C0 PARTIAL + C1 DEVELOPMENT ONLY`：
+
+- 当前模型不生成完整下一状态，也没有 30–60 min 自由递推稳定性证据，因此尚不是可验证的仿真器；
+- E3 未建立可信的实际阀门响应 reference，因此改变模型动作得到的曲线只能称 action sensitivity，不能称已识别反事实；
+- 旧 MPC 使用同构 plant 且协议存在缺陷，没有独立闭环效用证据；
+- A1phys 是二阶惯性灰箱先验，没有质量/能量守恒、执行器标定和完整热状态闭合。
+
+逐级缺口、实验门禁与停止规则见 [主汽温世界模型证据阶梯](docs/WORLD_MODEL_EVIDENCE_LADDER.md)。
 
 ## A1phys-V 架构
 
@@ -125,7 +139,7 @@ python -m compileall -q src/phase35 experiments/phase3_5
 python experiments/phase3_5/run_matrix.py
 ```
 
-当前 Phase 3.5 专项测试为 25 项并已通过，其中包含 synthetic train→validation→locked-test CLI smoke。正式新协议 GPU 训练和真实数据 E1–E5 尚未执行。
+当前 Phase 3.5 专项测试为 36 项并已通过，其中包含 synthetic train→validation→locked-test CLI smoke、事件 fail-closed、零方差匹配和 split/test-lock 回归测试。42 个真实数据 development runs 已完成；独立模型 test 尚未执行，A/B 旧事件 test 标签则已在探索脚本中暴露，未来正式事件证据必须使用新时间块。
 
 ## 历史证据限制
 

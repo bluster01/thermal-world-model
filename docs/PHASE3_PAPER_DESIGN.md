@@ -1,5 +1,7 @@
 # Phase 3 收口论文设计稿
 
+> **历史设计 / 已由 2026-08-09 Phase 3.5 审计取代。** 本文关于“唯一物理正确响应”“n_lag=2 已由 DiD 辨识”“因果保真度 Pareto 最优”等表述没有通过当前 E3 common-support、balance、独立 test 与参数健康门禁，不得直接用于论文。当前可守叙事见 [`PHASE3_5_LINUX_RETURN_AUDIT_2026-08-09.md`](PHASE3_5_LINUX_RETURN_AUDIT_2026-08-09.md)；从预测器到最终世界模型的证据缺口见 [`WORLD_MODEL_EVIDENCE_LADDER.md`](WORLD_MODEL_EVIDENCE_LADDER.md)。
+
 > 版本：2026-08-08
 > 定位：Phase 3 (因果架构评估) 的收口论文，作为 Phase 4 (Fan20 物理建模) 的前置交付物
 > 状态：设计稿，待 cwoc 确认后进入实验补全和写作

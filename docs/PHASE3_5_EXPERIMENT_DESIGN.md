@@ -1,6 +1,6 @@
 # Phase 3.5：A1phys 阀门级核心验证
 
-> 状态：实验、代码框架和开发矩阵已实现；本地专项测试通过，等待 Linux 数据审计与训练结果。
+> 状态：42/42 development runs 与 Linux 返回审计已完成；E3 INCONCLUSIVE、E4 BLOCKED、E5 INCONCLUSIVE，当前批次无 test 候选并按阴性/不确定结果收口。最终世界模型的后续证据门见 [`WORLD_MODEL_EVIDENCE_LADDER.md`](WORLD_MODEL_EVIDENCE_LADDER.md)。
 > 范围：承接 Phase 3 论文核心验证，不启动 Phase 4，不比较 Fan 路线。
 > 数据：A/B 两侧原始异步历史数据；喷水流量仅作诊断，不作监督真值。
 

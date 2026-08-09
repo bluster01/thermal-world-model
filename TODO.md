@@ -1,12 +1,14 @@
 # TODO — Phase 3.5 论文核心验证
 
-> 更新：2026-08-09。本文是项目唯一活任务队列。Phase 4 已暂停；Fan2017/2020/2021 与三条可微路线不进入当前训练计划。
+> 更新：2026-08-09。本文是项目唯一活任务队列。Phase 3.5 当前 42-run 批次已收口；Phase 4 仍暂停，Fan2017/2020/2021 与三条可微路线不进入当前训练计划。
 
 ## 当前目标
 
-完成 Phase 3 文章所需的核心证据链：先证明现场阀门确有可辨认的温度响应，再检验 A1phys 是否能复现该响应，同时不牺牲预测精度。喷水流量传感器不准，因此它只作诊断；主动作是实际二级减温阀绝对开度，模型学习 A/B 侧独立的单调非线性有效开度。
+以当前审计边界完成 Phase 3 文章：报告现场闭环预测与动作响应可识别性的差异、A1phys 结构约束、E3 无 common support 导致 E4 阻断，以及 fail-closed 实验框架。喷水流量传感器不准，因此它只作诊断；主动作是实际二级减温阀绝对开度代理，不把阀位伪装成质量流量。
 
 当前状态：**42/42 development runs 已完成且模型 checkpoint test 尚未评估；validation 审计判定 E3 不可识别、E4 被阻断、E5 样本不足、G3 参数塌缩，当前没有候选。A/B 两侧 1 s SP JSON 均已写入 test 事件及 `dT_post_600`，因此两侧 event test 都不再是盲 lockbox；未来正式事件证据必须使用新时间块。**详见 [Linux 增量整体审计](docs/PHASE3_5_LINUX_RETURN_AUDIT_2026-08-09.md)。
+
+收口决定：当前数据和配置不再补 seed、不打开模型 test，也不继续扩大 A1phys 矩阵。Phase 3.5 可以形成方法学/阴性结果文章，但不能形成“完全物理响应”或“反事实世界模型已成立”的文章。最终目标的缺口与后续 W0–W6 门禁见 [主汽温世界模型证据阶梯](docs/WORLD_MODEL_EVIDENCE_LADDER.md)。
 
 ## 五组核心实验
 
@@ -29,7 +31,7 @@ E1–E5 全部属于 Phase 3.5 主文证据，不是 Phase 4，也不是附录�
 | C. 评测与统计 | C0 预测指标 → C1 E3/E4 IRF → C2 E5 负对照 → C3 日级 block bootstrap → C4 test 一次访问 | C0 完成；C1–C3 维持 INCONCLUSIVE/BLOCKED；C4 HOLD | `summary_validation.*`、冻结候选表 |
 | D. 论文与审计 | D0 claim ledger → D1 validation 表图 → D2 单次 test → D3 复算/反例 → D4 主文 | 已形成负面辨识审计；主结果仍 HOLD | Phase 3.5 主文核心表图与可守结论 |
 
-## 现在的执行清单
+## 收口后的执行清单
 
 | 顺序 | 任务 | 谁执行 | 完成标准 | 状态 |
 |---:|---|---|---|---|
@@ -38,12 +40,12 @@ E1–E5 全部属于 Phase 3.5 主文证据，不是 Phase 4，也不是附录�
 | 3 | dry-run 42 个开发命令并保存环境/git SHA | Linux | 命令数、config、side、seed 与矩阵一致 | ✓ |
 | 4 | 运行 42 个开发训练并仅评估 validation | Linux | 7 configs × 2 sides × 3 seeds；模型评估未访问 test | ✓ |
 | 5 | 汇总 validation，审计事件数、日块数、balance/pretrend 与参数塌缩 | 本地 / Codex | E1–E5 均可判 PASS/FAIL/INCONCLUSIVE；缺证据不强判 | ✓ 已判；无候选 |
-| 5A | 修 1 s 事件 horizon/split/provenance，A/B 只跑 validation | 本地写代码；Linux 执行 | 显式多 horizon；split 真过滤；test 默认锁定；600 s gap/hold 可审计 | △ 本地代码已修；旧 A/B JSON 来自 dirty tree 且含 test，等 Linux 在本 commit 重跑 validation |
-| 5B | 修参数健康摘要 | 本地写代码；Linux 执行 | τ 两 stage/真实秒、rate gain、完整 checkpoint/cache/anchor hash、free-only 显式排除 | △ 塌缩诊断可保留；本地 provenance 代码已补，等 Linux 重跑 JSON |
-| 5C | 重构正式 E3 事件 estimand | 本地设计与写代码 | 阀位 60 s 成形后到 600 s 保持；负荷/压力稳定；开/关均满足 common support | ▶ 当前唯一方法学执行项；未完成前不得再报 E3 FAIL |
-| 6 | 每侧冻结最多 2 个候选，补 seed 3/4 | Linux | 候选选择和 seed 清单写入版本化 manifest | × 等 5 |
-| 7 | 一次批量打开 test，评估冻结的 5-seed 候选和 `free_only` | Linux | 每 run 生成 `access_ledger.json`，不得按 test 回调模型 | × 等 6 |
-| 8 | 本地复算 test、制作表图、更新 claim ledger 和论文 | 本地 / Codex | 同时报预测、经验响应、模型响应、CI 和失败边界 | × 等 7 |
+| 5A | 修 1 s 事件 horizon/split/provenance，A/B 只跑 validation | 本地写代码；Linux 执行 | 显式多 horizon；split 真过滤；test 默认锁定；600 s gap/hold 可审计 | ◼ 代码完成；当前批不重跑，旧 JSON 仅作探索材料 |
+| 5B | 修参数健康摘要 | 本地写代码；Linux 执行 | τ 两 stage/真实秒、rate gain、完整 checkpoint/cache/anchor hash、free-only 显式排除 | ◼ 代码完成；当前塌缩结论足以阻断，不为“补好看数字”重跑 |
+| 5C | 冻结未来正式 E3 双 estimand | 本地设计 | 稳态 held-step 主分析；动态 trajectory 次分析；开/关均满足 common support | → 仅在取得未来新时间块前完成；未完成前不得恢复 E3/E4 强结论 |
+| 6 | 每侧冻结最多 2 个候选，补 seed 3/4 | Linux | 候选选择和 seed 清单写入版本化 manifest | ⛔ 当前批取消；无候选 |
+| 7 | 一次批量打开 test，评估冻结候选 | Linux | 每 run 生成 `access_ledger.json`，不得按 test 回调模型 | ⛔ 当前批取消；模型 test 保持未访问 |
+| 8 | 制作 validation 表图、更新 claim ledger 和论文 | 本地 / Codex | 同时报预测、经验响应、模型响应、CI 和失败边界 | ▶ 当前唯一文章任务；结果保持阴性/不确定 |
 
 ## 放行门禁
 
@@ -78,7 +80,7 @@ Linux 的唯一运行说明见 [experiments/phase3_5/README.md](experiments/phas
 - [x] Supervisor 已判 E3 INCONCLUSIVE、E4 BLOCKED、E5 INCONCLUSIVE，当前无 test 候选。
 - [x] 原 SP-IV/gain truth 已撤回；现有 SP 事件只作动态闭环不可辨识诊断。
 - [x] 修复新增 1 s 脚本的 3s/30s 索引、时间单位和 A/B 参数化。
-- [ ] 在本地修复后的 split/test-lock/min-gap/provenance 代码上，仅重跑 A/B validation；旧 v2 JSON 不作正式证据。
+- [x] 本地修复 split/test-lock/min-gap/provenance；决定当前批不为补结果重跑，旧 v2 JSON 只作探索证据，未来新时间块使用修复版协议。
 - [x] 明确 τ 是 step 并换算 seconds，补 rate gain；G3 维持 FAIL（参数塌缩）。
 - [x] 登记 A/B 两侧 event test 均已被 exploratory 访问；模型 test 尚未访问，未来正式事件证据改用新时间块。
 
