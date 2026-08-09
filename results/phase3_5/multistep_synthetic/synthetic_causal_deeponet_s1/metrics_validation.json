@@ -1,0 +1,43 @@
+{
+  "effect_mae": 0.01605810597538948,
+  "effect_rmse": 0.020126357674598694,
+  "integrated_absolute_error": 0.9634863138198853,
+  "direction_accuracy_nonzero": 0.6957858204841614,
+  "horizon_mae": {
+    "H1": 0.016259947791695595,
+    "H6": 0.016137665137648582,
+    "H18": 0.015275295823812485,
+    "H60": 0.01601916365325451
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.19209074974060059,
+    "positive_step_terminal_effect_max_c": -0.1762082576751709,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": false,
+      "fixed_horizon": true,
+      "direction_constrained": false,
+      "continuous_time": false
+    },
+    "operator": {
+      "spectral_radius": null,
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_two_pole_v1",
+    "gain_c_per_pct": -0.04,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "dt_seconds": 10.0,
+    "seed": 21360815,
+    "split": "validation"
+  }
+}
