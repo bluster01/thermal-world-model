@@ -104,7 +104,7 @@ def main():
 
         # 固定扰动 IRF: baseline_valve + FIXED_PERTURB_PCT 开度 (真实阀位单位, 跨 map 可比)
         with torch.no_grad():
-            fv_perturb = (bv + FIXED_PERTURB_PCT)[:, None].expand(bv.shape[0], run.config.horizon).to(DEVICE)
+            fv_perturb = (bv + FIXED_PERTURB_PCT)[:, None].expand(bv.shape[0], run.config.horizon).to(device)
             eff = model.intervention_effect(hist, fv_perturb, bv)
         irf_h60 = eff[:, -1].cpu().numpy().mean()  # °C @600s
 
