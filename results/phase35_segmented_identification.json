@@ -1,0 +1,88 @@
+{
+ "data": {
+  "rows": 1192329,
+  "csv": "all_merged_10s.csv"
+ },
+ "source": "experiments/phase3_5/segmented_identification.py",
+ "cross_config": "A_valve->right_2nd_out (cross), B_valve->left_2nd_out (cross)",
+ "leading_zone": {
+  "A_valve": {
+   "n_events": 20,
+   "cross": {
+    "K_neg_rate_pct": 85.0,
+    "n_fit": 20,
+    "K_med": -2.09,
+    "T_med_s": 16.0,
+    "tau_med_s": 40.0,
+    "R2_med": 0.19
+   },
+   "direct": {
+    "K_neg_rate_pct": 45.0,
+    "n_fit": 20,
+    "K_med": -2.786,
+    "T_med_s": 145.0,
+    "tau_med_s": 14.0,
+    "R2_med": 0.32
+   }
+  },
+  "B_valve": {
+   "n_events": 172,
+   "cross": {
+    "K_neg_rate_pct": 73.8,
+    "n_fit": 172,
+    "K_med": -1.674,
+    "T_med_s": 9.0,
+    "tau_med_s": 20.0,
+    "R2_med": 0.19
+   },
+   "direct": {
+    "K_neg_rate_pct": 63.4,
+    "n_fit": 172,
+    "K_med": -2.428,
+    "T_med_s": 10.0,
+    "tau_med_s": 30.0,
+    "R2_med": 0.23
+   }
+  }
+ },
+ "inertia_zone": {
+  "A_events": {
+   "n_events": 20,
+   "right2nd_to_right_ms [direct]": {
+    "peak_t_s": 0,
+    "peak_h": 0.1847,
+    "energy_60s_pct": 53.0,
+    "h0": 0.1847,
+    "h60s": 0.0841,
+    "h300s": 0.0575
+   },
+   "right2nd_to_left_ms [negative]": {
+    "peak_t_s": 350,
+    "peak_h": 0.0604,
+    "energy_60s_pct": 0.0,
+    "h0": 0.0056,
+    "h60s": 0.0057,
+    "h300s": 0.0384
+   }
+  },
+  "B_events": {
+   "n_events": 172,
+   "left2nd_to_left_ms [direct]": {
+    "peak_t_s": 0,
+    "peak_h": 0.1403,
+    "energy_60s_pct": 41.0,
+    "h0": 0.1403,
+    "h60s": 0.0558,
+    "h300s": 0.0481
+   },
+   "left2nd_to_right_ms [negative]": {
+    "peak_t_s": 280,
+    "peak_h": 0.0607,
+    "energy_60s_pct": 10.0,
+    "h0": -0.028,
+    "h60s": -0.0295,
+    "h300s": 0.053
+   }
+  }
+ }
+}
