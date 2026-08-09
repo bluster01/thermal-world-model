@@ -39,7 +39,7 @@ class _ValveResponseOperator(ActionResponseOperator):
 
 
 class StableGrayboxOperator(_ValveResponseOperator):
-    """One- or two-pole stable valve-to-temperature incremental model."""
+    """Stable cascaded valve-to-temperature model with optional context scheduling."""
 
     capabilities = OperatorCapabilities(True, False, True, True)
 
@@ -55,18 +55,35 @@ class StableGrayboxOperator(_ValveResponseOperator):
             config.tau_max_seconds - config.tau_min_seconds
         )
         self.raw_tau = nn.Parameter(torch.tensor([_logit(float(x)) for x in fractions]))
+        if config.context_scheduled:
+            self.gain_schedule = nn.Linear(config.context_dim, 1, bias=False)
+            self.tau_schedule = nn.Linear(config.context_dim, config.poles, bias=False)
+            nn.init.zeros_(self.gain_schedule.weight)
+            nn.init.zeros_(self.tau_schedule.weight)
+        else:
+            self.gain_schedule = None
+            self.tau_schedule = None
 
-    def physical_parameters(self) -> tuple[torch.Tensor, torch.Tensor]:
-        gain = -F.softplus(self.raw_gain)
-        tau = self.config.tau_min_seconds + (
+    def physical_parameters(self, context: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+        base_gain = -F.softplus(self.raw_gain)
+        base_tau = self.config.tau_min_seconds + (
             self.config.tau_max_seconds - self.config.tau_min_seconds
         ) * torch.sigmoid(self.raw_tau)
+        if self.gain_schedule is None:
+            return base_gain, base_tau
+        if context is None:
+            raise Phase35MultiStepError("context is required for scheduled graybox parameters")
+        gain_shift = self.config.schedule_log_scale * torch.tanh(self.gain_schedule(context)).squeeze(1)
+        tau_shift = self.config.schedule_log_scale * torch.tanh(self.tau_schedule(context))
+        gain = base_gain * torch.exp(gain_shift)
+        tau = base_tau[None, :] * torch.exp(tau_shift)
+        tau = tau.clamp(self.config.tau_min_seconds, self.config.tau_max_seconds)
         return gain, tau
 
     def forward(self, context, action, reference, initial_state=None) -> ResponseOutput:
         self._validate_inputs(context, action, reference)
         dose = self.effective_dose(action, reference)
-        gain, tau = self.physical_parameters()
+        gain, tau = self.physical_parameters(context)
         decay = torch.exp(-self.config.dt_seconds / tau)
         batch = context.shape[0]
         if initial_state is None:
@@ -81,17 +98,23 @@ class StableGrayboxOperator(_ValveResponseOperator):
             stage_input = dose[:, step]
             updated = []
             for pole in range(self.config.poles):
-                stage = decay[pole] * state[:, pole] + (1.0 - decay[pole]) * stage_input
+                pole_decay = decay[pole] if decay.ndim == 1 else decay[:, pole]
+                stage = pole_decay * state[:, pole] + (1.0 - pole_decay) * stage_input
                 updated.append(stage)
                 stage_input = stage
             state = torch.stack(updated, dim=1)
             trajectory.append(state)
         states = torch.stack(trajectory, dim=1)
-        effect = gain * states[..., -1]
+        effect = gain * states[..., -1] if gain.ndim == 0 else gain[:, None] * states[..., -1]
         diagnostics = {
-            "gain_c_per_effective_pct": gain,
-            "tau_seconds": tau,
+            "gain_c_per_effective_pct": gain.mean(),
+            "gain_range_c_per_effective_pct": torch.stack((gain.min(), gain.max())),
+            "tau_seconds": tau.mean(dim=0) if tau.ndim == 2 else tau,
+            "tau_range_seconds": torch.stack(
+                (tau.amin(dim=0), tau.amax(dim=0)), dim=1
+            ) if tau.ndim == 2 else torch.stack((tau, tau), dim=1),
             "spectral_radius": decay.max(),
+            "context_scheduled": self.config.context_scheduled,
             "reference_identity_max_error": self._identity_error(effect, action, reference),
         }
         return ResponseOutput(effect, states, diagnostics)

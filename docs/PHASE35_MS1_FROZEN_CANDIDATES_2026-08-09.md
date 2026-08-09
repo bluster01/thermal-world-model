@@ -4,6 +4,9 @@
 > 单个 checkpoint 一次性打开 synthetic test。证据范围: synthetic known-truth,
 > 不扩展到 A/B 真实数据 test。
 
+> 本文保留冻结与授权时点；test 后的正式复核见
+> [`PHASE35_MS1_REVIEW_2026-08-10.md`](PHASE35_MS1_REVIEW_2026-08-10.md)。
+
 ## 1. 结构门禁审计 (18/18 PASS)
 
 | 门禁 | 判据 | 结果 |
@@ -29,9 +32,14 @@
 
 ## 3. synthetic test 访问记录
 
-| run | test MAE | 访问时间 | ledger |
-|---|---|---|---|
-| (执行后填写) | | | synthetic_test_access_ledger.json |
+| route | 3-seed test MAE mean±std | ledger |
+|---|---:|---|
+| graybox_1p | 0.018926±0.000161 | 3/3 completed |
+| graybox_2p | 0.015983±0.000096 | 3/3 completed |
+| koopman_k2 | 0.016644±0.000055 | 3/3 completed |
+| koopman_k4 | 0.016585±0.000055 | 3/3 completed |
+| pi_ode | 0.015989±0.000094 | 3/3 completed |
+| causal_deeponet | 0.016021±0.000101 | 3/3 completed |
 
 ## 4. 边界声明
 

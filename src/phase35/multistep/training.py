@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import math
 import os
@@ -92,7 +93,11 @@ def _json_dump(path: Path, value: Any) -> None:
     os.replace(temporary, path)
 
 
-def response_metrics(target: torch.Tensor, prediction: torch.Tensor) -> dict[str, Any]:
+def response_metrics(
+    target: torch.Tensor,
+    prediction: torch.Tensor,
+    clean_target: torch.Tensor | None = None,
+) -> dict[str, Any]:
     target = target.detach().cpu()
     prediction = prediction.detach().cpu()
     error = prediction - target
@@ -103,7 +108,7 @@ def response_metrics(target: torch.Tensor, prediction: torch.Tensor) -> dict[str
         direction_accuracy = float((torch.sign(target[active]) == torch.sign(prediction[active])).float().mean())
     else:
         direction_accuracy = None
-    return {
+    metrics = {
         "effect_mae": float(error.abs().mean()),
         "effect_rmse": float(error.square().mean().sqrt()),
         "integrated_absolute_error": float(error.abs().sum(dim=1).mean()),
@@ -114,6 +119,30 @@ def response_metrics(target: torch.Tensor, prediction: torch.Tensor) -> dict[str
         "sample_count": int(target.shape[0]),
         "horizon": int(horizon),
     }
+    if clean_target is not None:
+        clean_target = clean_target.detach().cpu()
+        clean_error = prediction - clean_target
+        clean_active = clean_target.abs() > 0.01
+        clean_scale = clean_target.abs().mean()
+        metrics.update({
+            "clean_effect_mae": float(clean_error.abs().mean()),
+            "clean_effect_rmse": float(clean_error.square().mean().sqrt()),
+            "clean_effect_scale": float(clean_scale),
+            "clean_effect_nmae": float(clean_error.abs().mean() / clean_scale.clamp_min(1e-8)),
+            "clean_effect_mae_active": float(clean_error[clean_active].abs().mean())
+            if clean_active.any() else None,
+            "noise_mae": float((target - clean_target).abs().mean()),
+            "direction_accuracy_clean_nonzero": float(
+                (torch.sign(clean_target[clean_active]) == torch.sign(prediction[clean_active]))
+                .float()
+                .mean()
+            ) if clean_active.any() else None,
+            "clean_horizon_mae": {
+                f"H{point}": float(clean_error[:, point - 1].abs().mean())
+                for point in horizon_points
+            },
+        })
+    return metrics
 
 
 @torch.no_grad()
@@ -134,7 +163,15 @@ def evaluate_operator(
         )
         predictions.append(output.effect.cpu())
     prediction = torch.cat(predictions, dim=0)
-    return response_metrics(batch.target_effect, prediction), prediction
+    return response_metrics(batch.target_effect, prediction, batch.clean_effect), prediction
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 @torch.no_grad()
@@ -185,6 +222,7 @@ def train_synthetic_run(
     device: str | torch.device = "cpu",
     repo_root: str | Path | None = None,
     overwrite: bool = False,
+    protocol_version: str = "phase3.5-ms-v1",
 ) -> MultiStepTrainResult:
     operator_config.validate()
     training_config.validate()
@@ -252,7 +290,7 @@ def train_synthetic_run(
             best_state = copy.deepcopy(operator.state_dict())
             torch.save(
                 {
-                    "protocol_version": "phase3.5-ms-v1",
+                    "protocol_version": protocol_version,
                     "route_id": route_id,
                     "seed": seed,
                     "epoch": epoch,
@@ -278,7 +316,7 @@ def train_synthetic_run(
     validation_metrics["truth"] = validation_batch.truth
     _json_dump(out / "metrics_validation.json", validation_metrics)
     manifest = {
-        "protocol_version": "phase3.5-ms-v1",
+        "protocol_version": protocol_version,
         "evidence_scope": "synthetic_method_feasibility_not_field_causality",
         "run_id": f"synthetic_{route_id}_s{seed}",
         "route_id": route_id,
@@ -294,6 +332,7 @@ def train_synthetic_run(
         "device": str(dev),
         "torch_version": torch.__version__,
         "elapsed_seconds": time.time() - started,
+        "checkpoint_sha256": _sha256(checkpoint_path),
         "test_accessed": False,
     }
     _json_dump(out / "manifest.json", manifest)
@@ -328,6 +367,9 @@ def evaluate_synthetic_test_checkpoint(
         )
     dev = torch.device(device)
     checkpoint = torch.load(checkpoint_path, map_location=dev, weights_only=False)
+    expected_checkpoint_sha = manifest.get("checkpoint_sha256")
+    if expected_checkpoint_sha is not None and _sha256(checkpoint_path) != expected_checkpoint_sha:
+        raise RuntimeError(f"checkpoint sha256 mismatch for {out}")
     for key in ("protocol_version", "route_id", "seed", "git_sha"):
         if checkpoint.get(key) != manifest.get(key):
             raise RuntimeError(f"checkpoint/manifest mismatch for {key}")
@@ -338,7 +380,7 @@ def evaluate_synthetic_test_checkpoint(
     if test_samples < 1:
         raise ValueError("test_samples must be positive")
     ledger = {
-        "protocol_version": "phase3.5-ms-v1",
+        "protocol_version": manifest["protocol_version"],
         "status": "started",
         "evidence_scope": "synthetic_method_feasibility_not_field_causality",
         "route_id": manifest["route_id"],

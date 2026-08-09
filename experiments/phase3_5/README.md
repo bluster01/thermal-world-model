@@ -192,3 +192,44 @@ python experiments/phase3_5/multistep_sysid.py \
 ```
 
 该显式开关只授权 synthetic known-truth test，不授权任何真实数据 test 访问。
+
+## 8. Phase 3.5-MS2 结构失配 validation 批次
+
+MS1 已完成；结论和限制见 [`docs/PHASE35_MS1_REVIEW_2026-08-10.md`](../../docs/PHASE35_MS1_REVIEW_2026-08-10.md)。MS2 只运行两个独立 regime：阀门单调非线性 `MS2-V` 与工况调度 `MS2-C`。冻结设计见 [`docs/plans/2026-08-10-phase35-ms2-mismatch-design.md`](../../docs/plans/2026-08-10-phase35-ms2-mismatch-design.md)。
+
+Linux 必须在目标 commit 的干净工作树执行：
+
+```bash
+python -m pytest tests/phase35/multistep -q
+python -m compileall -q src/phase35/multistep \
+  experiments/phase3_5/multistep_mismatch.py \
+  experiments/phase3_5/summarize_multistep_mismatch.py
+python experiments/phase3_5/multistep_mismatch.py --dry-run
+```
+
+dry-run 必须严格得到 `2 regimes / 11 candidates / 33 runs`。本地/远端 smoke 只验证链路，不进入结果目录：
+
+```bash
+python experiments/phase3_5/multistep_mismatch.py \
+  --candidate-id c_g2_scheduled --seed 0 --device cpu \
+  --output-root results/phase3_5/multistep_mismatch_smoke \
+  --smoke --execute
+```
+
+正式 validation 运行：
+
+```bash
+python experiments/phase3_5/multistep_mismatch.py \
+  --device cuda \
+  --output-root results/phase3_5/multistep_mismatch \
+  --execute-matrix --skip-existing
+
+python experiments/phase3_5/summarize_multistep_mismatch.py \
+  --output-root results/phase3_5/multistep_mismatch
+```
+
+MS2 runner **没有 synthetic test 开关**。不得调用 MS1 的 test evaluator 读取 MS2 test，也不得依据 validation 临时新增 candidate、seed 或修改 300-epoch cap。33 个 run 均须原样回传 manifest、history、validation metrics 和 checkpoint。
+
+`checkpoint_best_val.pt` 受 `.gitignore` 排除，因此在 push JSON 之前必须另外归档全部 checkpoint，并记录归档 SHA-256。每个 manifest 自带单文件 `checkpoint_sha256`；归档回传后本地逐项校验。若只有 JSON、没有可校验 checkpoint，状态只能记 `results_analyzed`，不能记 `reproducibility_passed`。
+
+汇总器要求 33 个 checkpoint 与 hash 全部存在，检查未授权 test 产物、manifest/history 一致性和结构门禁，并生成 `summary_validation.json`；任一失败会以非零退出。Linux 只汇报运行状态和该原始聚合，不作路线冠军判定。MS2-V 与 MS2-C 分榜；`clean_effect_nmae` 为主要已知真值诊断，带噪 `effect_mae` 仍是唯一 checkpoint selector。synthetic test 必须等待本地结构审计和单独授权。

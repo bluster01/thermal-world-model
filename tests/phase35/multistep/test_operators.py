@@ -54,7 +54,7 @@ def test_future_action_cannot_change_earlier_response(route):
     assert torch.any(torch.abs(first[:, 8:] - second[:, 8:]) > 1e-7)
 
 
-@pytest.mark.parametrize("poles", [1, 2])
+@pytest.mark.parametrize("poles", [1, 2, 3])
 def test_graybox_has_physical_direction_and_positive_time_constants(poles):
     operator = build_response_operator(_config("graybox", poles=poles)).eval()
     context, _, reference = _paths()
@@ -63,6 +63,24 @@ def test_graybox_has_physical_direction_and_positive_time_constants(poles):
     assert torch.all(output.effect <= 1e-8)
     assert torch.all(output.effect[:, -1] < 0)
     assert torch.all(output.diagnostics["tau_seconds"] > 0)
+    assert output.diagnostics["spectral_radius"].item() < 1.0
+
+
+def test_context_scheduled_graybox_varies_parameters_without_losing_direction_or_stability():
+    operator = build_response_operator(
+        _config("graybox", poles=2, context_scheduled=True, schedule_log_scale=0.5)
+    ).eval()
+    with torch.no_grad():
+        operator.gain_schedule.weight[0, 0] = 1.0
+        operator.tau_schedule.weight[0, 1] = 1.0
+    context, _, reference = _paths()
+    output = operator(context, reference + 5.0, reference)
+    gain, tau = operator.physical_parameters(context)
+    assert gain.shape == (3,)
+    assert tau.shape == (3, 2)
+    assert torch.unique(gain).numel() > 1
+    assert torch.unique(tau[:, 0]).numel() > 1
+    assert torch.all(output.effect <= 1e-8)
     assert output.diagnostics["spectral_radius"].item() < 1.0
 
 
@@ -109,3 +127,5 @@ def test_invalid_physical_config_fails_closed():
         _config("graybox", dt_seconds=0).validate()
     with pytest.raises(Phase35MultiStepError):
         _config("unknown").validate()
+    with pytest.raises(Phase35MultiStepError, match="only by graybox"):
+        _config("koopman", context_scheduled=True).validate()

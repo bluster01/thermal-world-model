@@ -64,7 +64,7 @@ g_R(c,a,a^{\mathrm{ref}})_{1:k}
 
 式（4）和（5）是架构恒等式/信息流性质，不是从数据学习得到的经验结论。它们可排除一类伪反事实，但不能解决隐藏混杂。
 
-## 4. Stable Graybox-1P/2P
+## 4. Stable Graybox-1P/2P/3P
 
 ### 4.1 离散动力学
 
@@ -103,9 +103,22 @@ K=-\operatorname{softplus}(\kappa),qquad
 
 从参数化上保证 \(K<0\) 和 \(\tau_i\in(\tau_{\min},\tau_{\max})\)。
 
+MS2-C 的 context-scheduled A1phys-MS 在该全局参数上增加有界对数尺度调度：
+
+\[
+K(c)=K_0\exp\{s\tanh(w_K^\top c)\},\qquad
+\tau_i(c)=\operatorname{clip}\!\left[
+\tau_{i,0}\exp\{s\tanh(w_{\tau_i}^\top c)\},
+\tau_{\min},\tau_{\max}
+\right],
+\tag{9a}
+\]
+
+其中 \(s=0.5\)，调度权重零初始化。该形式在全部 context 下保持 \(K(c)<0\)、\(\tau_i(c)>0\)，但单个 \(K/\tau\) 与阀门映射仍可能存在等价补偿，必须结合已知真值参数和响应误差审计。
+
 ### 4.2 稳定性与方向
 
-由 \(\tau_i>0\) 和 \(\Delta t>0\) 可得 \(0<\alpha_i<1\)，每个一阶环节都是 BIBO 稳定。对常值剂量 \(u_k=u^*\)，稳态满足 \(z_{1,\infty}=z_{2,\infty}=u^*\)，故
+由 \(\tau_i>0\) 和 \(\Delta t>0\) 可得 \(0<\alpha_i<1\)，每个一阶环节都是 BIBO 稳定。MS2-C 进一步由有限 \(\tau_{\max}\) 给出统一的 \(\alpha_i(c)<1\) 上界。对固定 context 和常值剂量 \(u_k=u^*\)，稳态满足 \(z_{1,\infty}=z_{2,\infty}=u^*\)，故
 
 \[
 \widehat{\Delta T}_{\infty}=Ku^*.
@@ -247,7 +260,9 @@ MS1 真值动力学也不依赖随机 context \(c\)，所以 \(c\) 在这一阶�
 
 ### 8.2 冻结矩阵
 
-正式 validation 矩阵为 6 routes × 3 seeds：Graybox-1P/2P、Koopman-K2/K4、PI-ODE、Causal-DeepONet。每个 run 使用 train/validation/test = 1024/256/256 条 synthetic trajectory；训练最多 100 epochs。所有路线共享 batch、优化器、data pass 数和 validation selector，wall-clock 单独报告，不用于模型优劣判定。
+MS1 正式 validation 矩阵为 6 routes × 3 seeds：Graybox-1P/2P、Koopman-K2/K4、PI-ODE、Causal-DeepONet。每个 run 使用 train/validation/test = 1024/256/256 条 synthetic trajectory；训练最多 100 epochs。
+
+MS2 只冻结两个独立失配轴：`valve_nonlinear_r50` 的 6 candidates 与 `context_scheduled_2p` 的 5 candidates，共 11 candidates × 3 seeds = 33 validation runs；最大 300 epochs、patience 30。两轴不混榜，纯迟延与未建模扰动继续 HOLD。完整主对比与门禁见 [`plans/2026-08-10-phase35-ms2-mismatch-design.md`](plans/2026-08-10-phase35-ms2-mismatch-design.md)。所有路线共享 batch、优化器和 validation selector，wall-clock 单独报告。
 
 ## 9. 训练目标、选模与评测
 
@@ -282,7 +297,7 @@ MS1 真值动力学也不依赖随机 context \(c\)，所以 \(c\) 在这一阶�
 \tag{24}
 \]
 
-H1/H6/H18/H60 MAE、每条轨迹 integrated absolute error 和非零响应方向率。当前 integrated absolute error 是离散绝对误差和 \(\sum_k|e_k|\)，没有乘采样间隔；方向率只在真值效应 \(|\Delta T|>0.01\ ^\circ\mathrm C\) 的点上计算。结构诊断独立报告：
+H1/H6/H18/H60 MAE、每条轨迹 integrated absolute error 和非零响应方向率。当前 integrated absolute error 是离散绝对误差和 \(\sum_k|e_k|\)，没有乘采样间隔。MS1 的旧方向率使用带噪 target，已在结果审计中降为不可区分诊断；MS2 同时保存无噪声 `clean_effect`，主要报告 clean MAE/NMAE，并只在 \(|\Delta T_{clean}|>0.01\ ^\circ\mathrm C\) 处计算 clean-direction。结构诊断独立报告：
 
 - `reference_identity_max_error`；
 - `future_action_leakage_max_error`；
@@ -300,7 +315,7 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 |---|---|---|
 | 代码恒等式 | 零参考响应、prefix causality、递推状态续传 | 现场因果识别 |
 | MS1 synthetic | 同型二阶系统上的参数/响应可恢复性 | 路线普遍优越性、真实阀门增益 |
-| MS2 mismatch（未实现） | 对阶次/非线性/变参数/扰动的鲁棒性 | 现场 `do(valve)` |
+| MS2 mismatch（V/C 已实现，待 Linux） | 对阀门非线性与 context 变参数的模块可解性 | 纯迟延/扰动鲁棒性、现场 `do(valve)` |
 | MS3 real validation（未实现） | A/B 观测预测与模型敏感性 | 未控制混杂下的反事实效应 |
 | MS4 new-time E3/E4 | 若门禁通过，可比较经验响应与模型响应 | 超出数据支持域的闭环安全性 |
 
@@ -328,13 +343,14 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 | 内容 | 代码 | 主要测试 |
 |---|---|---|
 | 合同与式（4）—（5） | `multistep/contracts.py` | `test_all_routes_obey_shape_and_exact_reference_identity`、`test_future_action_cannot_change_earlier_response` |
-| 式（6）—（10） | `multistep/operators.py::StableGrayboxOperator` | `test_graybox_has_physical_direction_and_positive_time_constants` |
+| 式（6）—（10）与（9a） | `multistep/operators.py::StableGrayboxOperator` | Graybox 方向/时间常数测试、`test_context_scheduled_graybox_varies_parameters_without_losing_direction_or_stability` |
 | 式（11）—（13） | `multistep/operators.py::ControlledKoopmanOperator` | `test_controlled_koopman_is_stable_and_not_the_legacy_free_head` |
 | 式（14）—（17） | `multistep/operators.py::PhysicsInformedODEOperator` | `test_pi_ode_reports_finite_neural_closure_penalty` |
 | 式（18）—（20） | `multistep/operators.py::CausalDeepONetOperator` | fixed-horizon、future-action causality 测试 |
 | 式（21） | `multistep/synthetic.py` | deterministic split、split non-reuse 测试 |
 | 式（22）—（24）与 test ledger | `multistep/training.py` | CLI smoke、artifact、repeat-test refusal 测试 |
 | 递推组合律 | 三条 stateful operator | `test_recursive_routes_preserve_state_across_rollout_chunks` |
+| MS2-V/C 真值与 clean metrics | `multistep/synthetic.py`、`multistep/training.py` | nonlinear/context truth、MS2 CLI 与 checkpoint hash 测试 |
 
 ## 13. Reference ledger
 

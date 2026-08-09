@@ -42,6 +42,8 @@ class OperatorConfig:
     tau_max_seconds: float = 900.0
     ode_substeps: int = 2
     closure_scale: float = 0.02
+    context_scheduled: bool = False
+    schedule_log_scale: float = 0.5
 
     def validate(self) -> None:
         if self.route not in ROUTES:
@@ -52,8 +54,8 @@ class OperatorConfig:
             raise Phase35MultiStepError("dt_seconds must be positive")
         if self.opening_map not in OPENING_MAPS:
             raise Phase35MultiStepError(f"unknown opening_map={self.opening_map!r}")
-        if self.poles not in {1, 2}:
-            raise Phase35MultiStepError("graybox poles must be 1 or 2")
+        if self.poles not in {1, 2, 3}:
+            raise Phase35MultiStepError("graybox poles must be 1, 2, or 3")
         if self.latent_dim < 1 or self.hidden_dim < 2:
             raise Phase35MultiStepError("latent_dim and hidden_dim are outside supported ranges")
         if not 0 < self.tau_min_seconds < self.tau_max_seconds:
@@ -62,6 +64,10 @@ class OperatorConfig:
             raise Phase35MultiStepError("tau_min_seconds must be at least one sampling interval")
         if self.ode_substeps < 1 or self.closure_scale < 0:
             raise Phase35MultiStepError("ODE substeps must be positive and closure_scale non-negative")
+        if self.schedule_log_scale <= 0:
+            raise Phase35MultiStepError("schedule_log_scale must be positive")
+        if self.context_scheduled and self.route != "graybox":
+            raise Phase35MultiStepError("context_scheduled is currently supported only by graybox")
 
     @classmethod
     def from_mapping(cls, raw: Mapping[str, object]) -> "OperatorConfig":

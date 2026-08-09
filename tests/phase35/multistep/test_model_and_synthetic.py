@@ -39,6 +39,7 @@ def test_synthetic_split_is_deterministic_and_contains_known_truth():
     second = generate_synthetic_split(spec, "train")
     torch.testing.assert_close(first.context, second.context)
     torch.testing.assert_close(first.action, second.action)
+    torch.testing.assert_close(first.clean_effect, second.clean_effect)
     torch.testing.assert_close(first.target_effect, second.target_effect)
     assert first.context.shape == (48, 3)
     assert first.action.shape == first.reference.shape == first.target_effect.shape == (48, 20)
@@ -55,3 +56,43 @@ def test_synthetic_splits_do_not_reuse_action_paths():
     assert not torch.equal(train.action, validation.action)
     assert not torch.equal(validation.action, test.action)
     assert torch.count_nonzero(train.target_effect[train.profile_ids == 0]).item() == 0
+
+
+def test_nonlinear_valve_truth_depends_on_absolute_opening_not_only_delta():
+    base = SyntheticSpec(
+        samples=50,
+        horizon=20,
+        context_dim=3,
+        seed=21,
+        noise_std=0.0,
+        truth_regime="nonlinear_valve",
+        truth_opening_map="equal_percentage_r50",
+    )
+    nonlinear = generate_synthetic_split(base, "train")
+    linear = generate_synthetic_split(
+        SyntheticSpec(**{
+            **base.__dict__,
+            "truth_regime": "two_pole_linear",
+            "truth_opening_map": "identity",
+        }),
+        "train",
+    )
+    torch.testing.assert_close(nonlinear.action, linear.action)
+    assert not torch.allclose(nonlinear.clean_effect, linear.clean_effect)
+
+
+def test_context_scheduled_truth_changes_gain_and_time_constants_but_stays_stable():
+    spec = SyntheticSpec(
+        samples=48,
+        horizon=20,
+        context_dim=4,
+        seed=31,
+        noise_std=0.0,
+        truth_regime="context_scheduled",
+        context_gain_log_scale=0.35,
+        context_tau_log_scale=0.30,
+    )
+    batch = generate_synthetic_split(spec, "validation")
+    assert batch.truth["realized_gain_range"][0] < batch.truth["realized_gain_range"][1] < 0
+    assert all(low > 0 and high > low for low, high in batch.truth["realized_tau_range"])
+    assert torch.isfinite(batch.clean_effect).all()

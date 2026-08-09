@@ -108,13 +108,15 @@ exp_025 使用实际绝对阀位，exp_106/旧 A1phys 使用 `二级减温调节
 
 | 路线 | 仓库已有工作 | 尚缺什么 |
 |---|---|---|
-| PI-ODE | exp_020 使用纯神经动力学与固定 Euler 小步；Phase 3.5-MS 已实现二阶名义 ODE+动作门控小闭合 | 先完成已知真值多 seed；Fan 方程、部分可观测状态与真实响应评测仍未进入 |
-| Controlled Koopman | exp_020 的潜在受控 decoder；exp_112 的 Koopman free-head；Phase 3.5-MS 已实现稳定对角受控响应算子 | 先与同 estimand 路线做 synthetic 可解性比较；Fan 状态、非平稳工况和独立干预评测仍缺 |
-| 灰箱 / DeepONet 算子 | A1phys 有低阶惯性；Phase 3.5-MS 已实现 1P/2P 灰箱和 prefix-causal DeepONet | 待 Linux 18-run validation；真实数据迁移、失配压力测试与 Fan 物理闭合仍缺 |
+| PI-ODE | exp_020 使用纯神经动力学与固定 Euler 小步；MS1 在同型二阶 synthetic truth 达噪声下限 | MS2 检验非线性阀门/工况调度失配；Fan 方程、部分可观测状态与真实响应仍未进入 |
+| Controlled Koopman | exp_020 的潜在受控 decoder；exp_112 的 Koopman free-head；MS1 稳定受控模态算子通过结构门禁 | MS1 多数 run 碰到 epoch cap；MS2 只作同 estimand 次要对照，不赋予真实 Koopman 谱解释 |
+| 灰箱 / DeepONet 算子 | MS1 证明 2P 灰箱同型可解，DeepONet 达噪声下限；MS2 新增 context-scheduled A1phys-MS | 待 Linux 33-run validation；真实数据迁移与 Fan 物理闭合仍缺 |
 
 因此，exp_020 和 exp_112 都不能回答“Fan 物理微分模型是否优于当前模型”。Phase 3.5-MS 新框架也只回答低维动作响应的表示/优化可行性，不等同于 Fan 模型比较或现场因果验证。
 
 Phase 3.5-MS 的统一 estimand、四类路线公式、损失/指标定义、可辨识性边界和来源核验见 [`PHASE35_MS_METHODS_AND_REFERENCES.md`](PHASE35_MS_METHODS_AND_REFERENCES.md)。
+
+MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军；数值与限制见 [`PHASE35_MS1_REVIEW_2026-08-10.md`](PHASE35_MS1_REVIEW_2026-08-10.md)。当前下一 Gate 为 MS2-V/C validation，设计见 [`plans/2026-08-10-phase35-ms2-mismatch-design.md`](plans/2026-08-10-phase35-ms2-mismatch-design.md)。
 
 ## 已降级或作废的结论
 

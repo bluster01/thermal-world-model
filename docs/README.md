@@ -10,6 +10,8 @@
 - [plans/2026-08-08-phase3-5-a1phys-core-validation.md](plans/2026-08-08-phase3-5-a1phys-core-validation.md)：Phase 3.5 实施计划与测试清单。
 - [PHASE35_MS_METHODS_AND_REFERENCES.md](PHASE35_MS_METHODS_AND_REFERENCES.md)：Phase 3.5-MS 的统一 estimand、四路线公式与证明、可辨识性边界、代码追溯及核验参考文献。
 - [plans/2026-08-09-phase35-multistep-action-response-design.md](plans/2026-08-09-phase35-multistep-action-response-design.md)：Phase 3.5-MS 多步动作响应架构设计。
+- [PHASE35_MS1_REVIEW_2026-08-10.md](PHASE35_MS1_REVIEW_2026-08-10.md)：MS1 18-run/test 数值复算、结构门禁、训练预算与可复现性审计。
+- [plans/2026-08-10-phase35-ms2-mismatch-design.md](plans/2026-08-10-phase35-ms2-mismatch-design.md)：MS2-V 阀门非线性与 MS2-C 工况调度的冻结设计。
 - [../experiments/phase3_5/README.md](../experiments/phase3_5/README.md)：Linux 唯一执行手册。
 - [SUPERVISOR_REVIEW_2026-08-07.md](SUPERVISOR_REVIEW_2026-08-07.md)：代码、结果、论文与方法论总审。
 - [PROJECT_STATUS.md](PROJECT_STATUS.md)：可信结论、候选模型、作废结论与下一判决点。
