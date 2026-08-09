@@ -1,0 +1,49 @@
+{
+  "effect_mae": 0.01590653322637081,
+  "effect_rmse": 0.019957441836595535,
+  "integrated_absolute_error": 0.9543920159339905,
+  "direction_accuracy_nonzero": 0.6966255307197571,
+  "horizon_mae": {
+    "H1": 0.014604747295379639,
+    "H6": 0.01624428667128086,
+    "H18": 0.015304036438465118,
+    "H60": 0.015599891543388367
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.18383993208408356,
+    "positive_step_terminal_effect_max_c": -0.18397539854049683,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": true,
+      "fixed_horizon": false,
+      "direction_constrained": false,
+      "continuous_time": true
+    },
+    "operator": {
+      "gain_c_per_effective_pct": -0.04037410393357277,
+      "tau_seconds": [
+        59.4427490234375,
+        237.55484008789062
+      ],
+      "spectral_radius": 0.9587782025337219,
+      "physics_residual_mse": 1.6544660752515483e-07,
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_two_pole_v1",
+    "gain_c_per_pct": -0.04,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "dt_seconds": 10.0,
+    "seed": 20460812,
+    "split": "test"
+  }
+}

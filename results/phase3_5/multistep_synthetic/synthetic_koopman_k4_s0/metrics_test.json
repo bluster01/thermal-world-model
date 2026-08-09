@@ -1,0 +1,61 @@
+{
+  "effect_mae": 0.016564691439270973,
+  "effect_rmse": 0.02083381824195385,
+  "integrated_absolute_error": 0.9938815832138062,
+  "direction_accuracy_nonzero": 0.6966255307197571,
+  "horizon_mae": {
+    "H1": 0.014604747295379639,
+    "H6": 0.0166882686316967,
+    "H18": 0.01545760314911604,
+    "H60": 0.01692388765513897
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.1765621304512024,
+    "positive_step_terminal_effect_max_c": -0.20176026225090027,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": true,
+      "fixed_horizon": false,
+      "direction_constrained": true,
+      "continuous_time": false
+    },
+    "operator": {
+      "koopman_decay": [
+        0.945267379283905,
+        0.978314995765686,
+        0.986122727394104,
+        0.987643837928772
+      ],
+      "control_weight": [
+        0.008221675641834736,
+        0.005178679712116718,
+        0.004801254253834486,
+        0.004702749662101269
+      ],
+      "decoder_weight": [
+        -0.020243508741259575,
+        -0.03728778287768364,
+        -0.07052541524171829,
+        -0.08520771563053131
+      ],
+      "spectral_radius": 0.987643837928772,
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_two_pole_v1",
+    "gain_c_per_pct": -0.04,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "dt_seconds": 10.0,
+    "seed": 20460812,
+    "split": "test"
+  }
+}
