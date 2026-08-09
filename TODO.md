@@ -1,6 +1,6 @@
 # TODO — Phase 3.5 论文核心验证
 
-> 更新：2026-08-09。本文是项目唯一活任务队列。Phase 3.5 当前 42-run 批次已收口；Phase 4 仍暂停，Fan2017/2020/2021 与三条可微路线不进入当前训练计划。
+> 更新：2026-08-09。本文是项目唯一活任务队列。Phase 3.5 原 42-run 批次已收口；现新增 Phase 3.5-MS 多步动作响应可解性工作线。Phase 4 仍暂停，Fan2017/2020/2021 不进入当前训练计划；本轮只比较低维 Graybox、Controlled Koopman、PI-ODE 与 Causal DeepONet 响应表示。
 
 ## 当前目标
 
@@ -10,7 +10,22 @@
 
 最新补充：分段辨识 pilot 的数字已在本地精确复现，但旧脚本丢失阀门阶跃符号、未实施负荷/压力/主汽温稳态门禁，且所谓脉冲响应只是未预白化滞后相关。因此 85%/74% 和 0 s 峰值不得升级为物理确认；修正门禁见 [分段辨识审计与验证协议](docs/PHASE35_SEGMENTED_IDENTIFICATION_REVIEW_2026-08-09.md)。
 
-收口决定：当前数据和配置不再补 seed、不打开模型 test，也不继续扩大 A1phys 矩阵。Phase 3.5 可以形成方法学/阴性结果文章，但不能形成“完全物理响应”或“反事实世界模型已成立”的文章。最终目标的缺口与后续 W0–W6 门禁见 [主汽温世界模型证据阶梯](docs/WORLD_MODEL_EVIDENCE_LADDER.md)。
+收口决定：原 42-run 数据和配置不再补 seed、不打开模型 test，也不在旧协议内扩大 A1phys 矩阵。新增 Phase 3.5-MS 先用已知真值合成系统回答“多步响应架构是否可辨识且稳定”，其阳性结果也不能替代现场 E3，不能写成“完全物理响应”或“反事实世界模型已成立”。最终目标的缺口与后续 W0–W6 门禁见 [主汽温世界模型证据阶梯](docs/WORLD_MODEL_EVIDENCE_LADDER.md)。
+
+## Phase 3.5-MS — 多步动作响应可解性
+
+统一模型为 `T_hat = f_free(context) + g_response(context, action_path, reference_path)`。未来动作不得进入 `f_free`；所有 `g_response` 在结构上满足参考路径零响应和时间因果性。第一批只跑 synthetic known-truth，不读取 A/B 模型 test，也不恢复旧 E4。
+
+| ID | 任务 | 论文问题 | 产物/门禁 | 状态 |
+|---|---|---|---|---|
+| MS0 合同 | 冻结统一输入、参考干预、状态与诊断接口 | 四种方法是否在比较同一 estimand？ | exact identity；future action leakage=0 | ✓ 代码与测试完成 |
+| MS1 已知真值 | 二阶惯性下的 hold/step/pulse/ramp/multi-step | 架构是否至少能恢复一个可解的多步系统？ | 3 seeds；validation MAE；参数恢复；结构门禁 | ▶ 框架完成，待 Linux 跑 18 runs |
+| MS2 失配压力 | 一阶/二阶、工况变参数、非线性有效开度、未建模扰动 | 路线优势是否只来自 inverse crime？ | 分 regime 报告，不混单榜 | ◻ MS1 通过后实现 |
+| MS3 真实数据适配 | 复用 A/B causal cache，交叉阀位已按现场映射 | 合成可解性能否迁移到观测预测？ | validation-only；A/B 分榜；不称因果 | ◻ HOLD |
+| MS4 经验响应校准 | 仅在未来新时间块 E3 通过后连接真实 IRF | 模型响应是否复现可识别物理响应？ | common support、稳态/动态双 estimand | ⛔ 等待新数据证据 |
+| MS5 分段训练 | free 预训练 → 短冻结 response → 小学习率联合 | 多模块耦合能否稳定且不被 free head 吸收？ | stage checkpoints、梯度/参数健康、joint 非退化 | ◻ MS3 前实现 |
+
+当前 frozen synthetic matrix：Graybox-1P/2P、Koopman-K2/K4、PI-ODE、Causal-DeepONet，共 `6 routes × 3 seeds = 18 runs`。Methods 公式、证明、claim 边界和 reference ledger 见 [Phase 3.5-MS 方法文档](docs/PHASE35_MS_METHODS_AND_REFERENCES.md)；设计与实现计划见 [多步动作响应算子设计](docs/plans/2026-08-09-phase35-multistep-action-response-design.md) 和 [实施计划](docs/plans/2026-08-09-phase35-multistep-action-response.md)。
 
 ## 五组核心实验
 
@@ -89,4 +104,4 @@ Linux 的唯一运行说明见 [experiments/phase3_5/README.md](experiments/phas
 
 ## 暂停项
 
-Phase 4 的 Fan20 守恒骨架、Fan17 金属蓄热、Fan21 宽负荷 mismatch，以及 Neural ODE / Controlled Koopman / 时变灰箱三路线全部冻结为未来路线图。它们不影响 Phase 3.5 的代码、预算、候选选择或论文当前结论。
+Phase 4 的 Fan20 守恒骨架、Fan17 金属蓄热、Fan21 宽负荷 mismatch，以及与 Fan 状态耦合的 Neural ODE / Controlled Koopman / 时变灰箱路线继续冻结。Phase 3.5-MS 只实现低维动作增量响应表示，用于方法可解性和后续 A1phys-MS 消融；它不启用 Fan 路线，也不改变原 42-run 的候选选择或论文当前现场结论。

@@ -8,6 +8,8 @@
 - [PHASE3_5_EXPERIMENT_DESIGN.md](PHASE3_5_EXPERIMENT_DESIGN.md)：Phase 3 论文 E1–E5 核心验证、A1phys-V 与统计门禁。
 - [PHASE35_DESIGN.md](PHASE35_DESIGN.md)：exp_201 先导设计与当时推理；其 test-selected 结论已由正式 Phase 3.5 协议降级。
 - [plans/2026-08-08-phase3-5-a1phys-core-validation.md](plans/2026-08-08-phase3-5-a1phys-core-validation.md)：Phase 3.5 实施计划与测试清单。
+- [PHASE35_MS_METHODS_AND_REFERENCES.md](PHASE35_MS_METHODS_AND_REFERENCES.md)：Phase 3.5-MS 的统一 estimand、四路线公式与证明、可辨识性边界、代码追溯及核验参考文献。
+- [plans/2026-08-09-phase35-multistep-action-response-design.md](plans/2026-08-09-phase35-multistep-action-response-design.md)：Phase 3.5-MS 多步动作响应架构设计。
 - [../experiments/phase3_5/README.md](../experiments/phase3_5/README.md)：Linux 唯一执行手册。
 - [SUPERVISOR_REVIEW_2026-08-07.md](SUPERVISOR_REVIEW_2026-08-07.md)：代码、结果、论文与方法论总审。
 - [PROJECT_STATUS.md](PROJECT_STATUS.md)：可信结论、候选模型、作废结论与下一判决点。
@@ -33,6 +35,8 @@
 - [paper_Fan2021_宽负荷非线性模型.md](paper_Fan2021_宽负荷非线性模型.md)：能量不匹配、节流损失和时变参数。
 - [伊敏40列_vs_Fan模型变量对照.md](伊敏40列_vs_Fan模型变量对照.md)：可观测变量与缺口。
 - [Neural_ODE_Koopman_三篇关键论文.md](Neural_ODE_Koopman_三篇关键论文.md)：Neural ODE、Deep Koopman、Koopa 调研。
+
+其中旧三篇调研只作概念背景；Phase 3.5-MS 的具体方法命名和引用以 `PHASE35_MS_METHODS_AND_REFERENCES.md` 为准。
 
 原文 PDF 和全文转写保存在同目录，仅用于研究核对，不作为项目状态入口。
 

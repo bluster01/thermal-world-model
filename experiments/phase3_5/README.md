@@ -132,3 +132,63 @@ python experiments/phase3_5/summarize.py \
 - 失败 run 也原样回传，不在远端修复。
 
 Linux 输出只是 `results_returned`。只有本地复算事件、统计量、反例和门禁后，才能写入论文结论。
+
+## 7. Phase 3.5-MS 多步响应可解性批次
+
+该批次与前述 42-run 分开：它不读取 A/B 真实数据，不恢复被阻断的 E3/E4，而是在已知二阶惯性真值下验证 Graybox、Controlled Koopman、PI-ODE 和 Causal DeepONet 能否辨识多步动作响应。阳性结果只记作 `synthetic_method_feasibility`。
+
+执行前必须阅读 [`docs/PHASE35_MS_METHODS_AND_REFERENCES.md`](../../docs/PHASE35_MS_METHODS_AND_REFERENCES.md)；该文档冻结了公式、方法命名、可辨识性和引用边界。Linux 不根据文献或临时结果修改模型。
+
+先在目标 commit 上执行专项验证并展开矩阵：
+
+```bash
+python -m pytest tests/phase35/multistep -q
+python -m compileall -q src/phase35/multistep experiments/phase3_5/multistep_sysid.py
+python experiments/phase3_5/multistep_sysid.py --dry-run
+```
+
+dry-run 必须得到 `6 routes × 3 seeds = 18 runs`。本地 CPU 冒烟只验证程序链，不产生论文结果：
+
+```bash
+python experiments/phase3_5/multistep_sysid.py \
+  --route-id graybox_2p --seed 0 --device cpu \
+  --output-root results/phase3_5/multistep_smoke --smoke --execute
+```
+
+Linux 正式批次用一个命令顺序执行冻结的 18 runs；`--skip-existing` 只会跳过 manifest、history、checkpoint、validation metrics 齐全，且 Git SHA/config/seed 全部与当前矩阵一致的 run。残缺或混版本目录会直接报错：
+
+```bash
+python experiments/phase3_5/multistep_sysid.py \
+  --device cuda --output-root results/phase3_5/multistep_synthetic \
+  --execute-matrix --skip-existing
+```
+
+调试单条 run 时使用下面模板；调试产物不得并入正式目录：
+
+```bash
+python experiments/phase3_5/multistep_sysid.py \
+  --route-id graybox_2p --seed 0 --device cuda \
+  --output-root results/phase3_5/multistep_synthetic --execute
+```
+
+训练命令不提供 test 访问。每个 run 回传：
+
+```text
+manifest.json
+history.json
+checkpoint_best_val.pt
+metrics_validation.json
+```
+
+`metrics_validation.json` 同时记录 H1/H6/H18/H60 响应误差和结构诊断。路线进入 synthetic test 前必须由本地确认：`reference_identity_max_error=0`、`future_action_leakage_max_error=0`、状态/输出有限、稳定路线谱半径小于 1，并冻结候选与 checkpoint 清单。
+
+签字后的单个冻结 checkpoint 使用独立命令一次性打开 synthetic test；命令会原样加载 validation checkpoint，写入 `metrics_test.json` 和 `synthetic_test_access_ledger.json`，重复访问会被拒绝：
+
+```bash
+python experiments/phase3_5/multistep_sysid.py \
+  --route-id graybox_2p --seed 0 --device cuda \
+  --output-root results/phase3_5/multistep_synthetic \
+  --evaluate-synthetic-test --allow-synthetic-test
+```
+
+该显式开关只授权 synthetic known-truth test，不授权任何真实数据 test 访问。

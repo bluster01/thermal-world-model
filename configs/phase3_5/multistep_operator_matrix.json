@@ -1,0 +1,72 @@
+{
+  "protocol_version": "phase3.5-ms-v1",
+  "evidence_scope": "synthetic_method_feasibility_not_field_causality",
+  "seeds": [0, 1, 2],
+  "operator_defaults": {
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "opening_map": "identity",
+    "poles": 2,
+    "latent_dim": 4,
+    "hidden_dim": 32,
+    "tau_min_seconds": 20.0,
+    "tau_max_seconds": 900.0,
+    "ode_substeps": 2,
+    "closure_scale": 0.02
+  },
+  "synthetic": {
+    "train_samples": 1024,
+    "validation_samples": 256,
+    "test_samples": 256,
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "seed": 20260809,
+    "noise_std": 0.02,
+    "gain_c_per_pct": -0.04,
+    "tau_seconds": [70.0, 210.0]
+  },
+  "training": {
+    "batch_size": 64,
+    "epochs": 100,
+    "patience": 15,
+    "learning_rate": 0.002,
+    "weight_decay": 0.000001,
+    "physics_weight": 0.01,
+    "gradient_clip": 1.0
+  },
+  "routes": [
+    {
+      "route_id": "graybox_1p",
+      "route": "graybox",
+      "poles": 1
+    },
+    {
+      "route_id": "graybox_2p",
+      "route": "graybox",
+      "poles": 2
+    },
+    {
+      "route_id": "koopman_k2",
+      "route": "koopman",
+      "latent_dim": 2
+    },
+    {
+      "route_id": "koopman_k4",
+      "route": "koopman",
+      "latent_dim": 4
+    },
+    {
+      "route_id": "pi_ode",
+      "route": "pi_ode",
+      "poles": 2
+    },
+    {
+      "route_id": "causal_deeponet",
+      "route": "deeponet",
+      "latent_dim": 8,
+      "hidden_dim": 32
+    }
+  ]
+}

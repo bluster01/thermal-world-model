@@ -108,11 +108,13 @@ exp_025 使用实际绝对阀位，exp_106/旧 A1phys 使用 `二级减温调节
 
 | 路线 | 仓库已有工作 | 尚缺什么 |
 |---|---|---|
-| Neural ODE | exp_020 使用纯神经动力学与固定 Euler 小步 | Fan 方程、守恒结构、部分可观测状态、严谨 ODE solver、公平多 seed |
-| Controlled Koopman | exp_020 的潜在受控 decoder；exp_112 的 Koopman free-head | 在 Fan 状态和控制输入上建模、非平稳工况、物理输出约束、独立干预评测 |
-| 时变灰箱混合 | A1phys 有低阶惯性；文档调研了 Koopa/时变参数 | Fan 2020/2021 骨架、负荷调度、能量不匹配、低维残差与参数漂移验证 |
+| PI-ODE | exp_020 使用纯神经动力学与固定 Euler 小步；Phase 3.5-MS 已实现二阶名义 ODE+动作门控小闭合 | 先完成已知真值多 seed；Fan 方程、部分可观测状态与真实响应评测仍未进入 |
+| Controlled Koopman | exp_020 的潜在受控 decoder；exp_112 的 Koopman free-head；Phase 3.5-MS 已实现稳定对角受控响应算子 | 先与同 estimand 路线做 synthetic 可解性比较；Fan 状态、非平稳工况和独立干预评测仍缺 |
+| 灰箱 / DeepONet 算子 | A1phys 有低阶惯性；Phase 3.5-MS 已实现 1P/2P 灰箱和 prefix-causal DeepONet | 待 Linux 18-run validation；真实数据迁移、失配压力测试与 Fan 物理闭合仍缺 |
 
-因此，exp_020 和 exp_112 都不能回答“Fan 物理微分模型是否优于当前模型”。
+因此，exp_020 和 exp_112 都不能回答“Fan 物理微分模型是否优于当前模型”。Phase 3.5-MS 新框架也只回答低维动作响应的表示/优化可行性，不等同于 Fan 模型比较或现场因果验证。
+
+Phase 3.5-MS 的统一 estimand、四类路线公式、损失/指标定义、可辨识性边界和来源核验见 [`PHASE35_MS_METHODS_AND_REFERENCES.md`](PHASE35_MS_METHODS_AND_REFERENCES.md)。
 
 ## 已降级或作废的结论
 
