@@ -167,3 +167,60 @@ access_ledger.json
 ## 9. 论文主张边界
 
 若 E1–E5 全部通过，可称“absolute-valve-conditioned, physics-guided gray-box world model with layered observational response validation”。不能称 A1phys 为守恒方程物理模型，也不能将 matched closed-loop IRF 写成随机干预因果真值。
+
+---
+
+## 10. 指标地图与口径速查（2026-08-09 版）
+
+> 本节固化当前所有指标的定义、计算位置、当前数值与口径陷阱，避免跨会话引用混淆。
+> 数值来源：42-run validation 重跑（caliper=0.02）、SP 事件 1s 分析（train+val 重算）。
+
+### 10.1 两个事件通道（先分清在说谁）
+
+| | SP 事件通道 | 阀位事件通道 |
+|---|---|---|
+| 事件定义 | \|ΔSP\|≥1.0°C + 60s 保持 | \|ΔV\|≥0.8% 阶跃 + 剂量≥1.0% |
+| 性质 | 相对外生（运行人员干预） | **内生**（PID 闭环输出，温度偏了才动阀） |
+| 方向率 | **73–83%** ✅ | A=0.323 / B=0.057 ❌ |
+| 提取位置 | `experiments/phase3_5/sp_events_1s.py`（1s 网格） | `src/phase35/events.py::detect_valve_events`（10s cache） |
+| 当前用途 | 观测响应诊断 / 未来真实值基础 | E3/E4 正式门禁事件 |
+
+物理核心：SP 是"因"（人发的指令），阀位是"果"（PID 对温度偏差的响应）。SP 方向干净；阀位动作时温度本来就在漂，观测方向被内生性污染。
+
+### 10.2 指标家族（每个指标回答不同问题）
+
+| 指标 | 定义/计算位置 | 当前数值 | 回答的问题 |
+|---|---|---|---|
+| **经验方向率** empirical_direction_rate | `response_direction_rate(dose, curves)`：sign(dose)·curve<0 的比例；`src/phase35/evaluation.py:27` | SP 通道 73–83%；阀位通道 A=0.323 / B=0.057 | 数据里有无可辨认的物理响应 → SP 有，阀位没有 |
+| **模型方向率** model_direction_rate | 同一批事件上模型预测曲线的方向率 | A=1.000 / B=0.992 | 模型预测方向 → **架构约束产物，不是学习证据**（A1Phys 硬保证开阀→降温符号） |
+| **G3 gain** | `param_summary.py`；干预分支学出的阀位→温度增益 | near-zero 比例 50–80% | 干预分支学出东西没有 → 塌缩 |
+| **G3 τ** | `model.py:188` `_first_order`，`alpha=1/tau` 每步更新 | 107–119 **步** = 1070–1190s | 响应时间常数 → 推上界，动力学被推到 600s 窗外 |
+| **exp_201 Jacobian 方向率** | 模型输出对阀位的导数方向（dT/dV<0） | 9/10 ckpt 100%，1 个 95% | 符号约束在 pilot 有无违反 → 无。**结构保证，非数据验证** |
+| **matched / balance** | caliper 匹配后事件数；SMD / reuse | A: 93 events, SMD 0.30, reuse 1.42 | 匹配协议合格性 |
+| **first-stage R²** | SP→阀位线性解释力 | <0.07 | SP 作为工具变量的相关性条件 → 不成立（SP-IV 已弃用） |
+
+### 10.3 当前证据状态（2026-08-09）
+
+- **数据真实值基础**：SP 干预通道方向率 73–83%（train+val 重算后成立，test 52 事件已排除）
+- **模型验证状态**：预测层不输 baseline（E1 正对照过）；干预分支参数塌缩（G3 FAIL）；模型方向 100% 是约束产物，未在观测上验证
+- **E3/E4/E5**：E3 FAIL（方向率 0.32/0.06 < 0.60）、E4 BLOCKED、E5 INCONCLUSIVE——协议合格后的可信 FAIL
+- **待做对照**：在 SP 事件上算模型响应方向（logged valve 输入），若 ~75–80% 才能说"模型复现了 SP 干预响应"
+
+### 10.4 口径陷阱（已核实）
+
+| 陷阱 | 真相 | 核实依据 |
+|---|---|---|
+| `valve_dv_30s` 字段名 | 实际是 **3s**：`valve[n_pre+3]`（1s 网格） | `sp_events_1s.py:109`，2026-08-09 复核 |
+| `dT_post_600` / `valve_dv_600s` | 真 600s（`n_pre+600`）✅ | `sp_events_1s.py:108,110` |
+| τ=107–119 打印为秒 | 实际是 **10s 采样步数** = 1070–1190s；`param_summary.py:87` 单位标签错误 | `model.py:189` `alpha=1/tau` 每步更新，无 dt 因子；2026-08-09 复核 |
+| A 侧 365 事件 | **含 test 54 个**（lockbox 已开）；正式分析须在 train+val 重算 | split 60/20/20 时间边界，2026-08-09 复核（279/32/54） |
+| SP-IV "真值" | 已弃用：弱工具（R²<0.07）+ 选择性样本（Berkson/collider） | 审计 P0-2，commit 5b5212a |
+| compliance 82 事件 80.5% | 3s action-selected subset，不能外推全样本 | 审计 P0-1 |
+| SP 事件 t0_ns 单位 | 实际是 epoch **微秒**（`astype(int64)//1000` 后再 /1e6 用），字段名误导 | `sp_events_1s.py:34` |
+
+### 10.5 引用规范
+
+- 说"模型方向正确"必须限定为"符号约束保持"，不得写作"模型复现了观测物理响应"
+- 说"SP 方向率"必须注明层定义（60sV/180sV/交集）与 split（train+val / 全时段）
+- 说"τ"必须带单位：`τ_steps` 或 `τ_seconds`（= steps × 10）
+- 说"30s 阀位响应"前先确认字段实际索引（3s 陷阱）
