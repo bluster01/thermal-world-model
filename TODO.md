@@ -38,8 +38,8 @@ E1–E5 全部属于 Phase 3.5 主文证据，不是 Phase 4，也不是附录�
 | 3 | dry-run 42 个开发命令并保存环境/git SHA | Linux | 命令数、config、side、seed 与矩阵一致 | ✓ |
 | 4 | 运行 42 个开发训练并仅评估 validation | Linux | 7 configs × 2 sides × 3 seeds；模型评估未访问 test | ✓ |
 | 5 | 汇总 validation，审计事件数、日块数、balance/pretrend 与参数塌缩 | 本地 / Codex | E1–E5 均可判 PASS/FAIL/INCONCLUSIVE；缺证据不强判 | ✓ 已判；无候选 |
-| 5A | 修 1 s 事件 horizon/split/provenance，A train/val 与 B validation 重跑 | 本地写代码；Linux 执行 | 显式 3/30/600 s；S/D、first-stage、event funnel 可复算 | ▶ 当前唯一执行项 |
-| 5B | 修参数健康摘要 | 本地写代码；Linux 执行 | τ 两 stage/真实秒、rate gain、checkpoint/anchor hash、排除 free-only | 等 5A 同批回传 |
+| 5A | 修 1 s 事件 horizon/split/provenance，A train/val 与 B validation 重跑 | 本地写代码；Linux 执行 | 显式 3/30/600 s；S/D、first-stage、event funnel 可复算 | ✓ v2 脚本+单测 3/3；A 365(279/32/54) B 360(274/33/53)；B 方向率 ~50% |
+| 5B | 修参数健康摘要 | 本地写代码；Linux 执行 | τ 两 stage/真实秒、rate gain、checkpoint/anchor hash、排除 free-only | ✓ τ真实秒1139s全贴上界；rate全塌缩；IRF+5%固定扰动跨map可比；SHA溯源 |
 | 6 | 每侧冻结最多 2 个候选，补 seed 3/4 | Linux | 候选选择和 seed 清单写入版本化 manifest | × 等 5 |
 | 7 | 一次批量打开 test，评估冻结的 5-seed 候选和 `free_only` | Linux | 每 run 生成 `access_ledger.json`，不得按 test 回调模型 | × 等 6 |
 | 8 | 本地复算 test、制作表图、更新 claim ledger 和论文 | 本地 / Codex | 同时报预测、经验响应、模型响应、CI 和失败边界 | × 等 7 |
