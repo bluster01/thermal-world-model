@@ -1,0 +1,125 @@
+{
+ "v2": {
+  "n_held": 2,
+  "A": {
+   "n_events": 7,
+   "cross": {
+    "best_na": 2,
+    "best_nb": 2,
+    "best_d_steps": 0,
+    "fit_r2": 0.995,
+    "n_fit_pts": 845,
+    "b_coef": -0.075558,
+    "a1_coef": 1.1506
+   },
+   "same": {
+    "best_na": 2,
+    "best_nb": 2,
+    "best_d_steps": 0,
+    "fit_r2": 0.995,
+    "n_fit_pts": 845,
+    "b_coef": -0.113089,
+    "a1_coef": 1.203
+   }
+  },
+  "B": {
+   "n_events": 6,
+   "cross": {
+    "best_na": 2,
+    "best_nb": 2,
+    "best_d_steps": 0,
+    "fit_r2": 0.83,
+    "n_fit_pts": 724,
+    "b_coef": 0.124709,
+    "a1_coef": 0.5572
+   },
+   "same": {
+    "best_na": 2,
+    "best_nb": 2,
+    "best_d_steps": 0,
+    "fit_r2": 0.982,
+    "n_fit_pts": 724,
+    "b_coef": -0.178241,
+    "a1_coef": 1.3397
+   }
+  }
+ },
+ "v3": {
+  "right_dev": {
+   "block": "dev",
+   "d_same_steps": 3,
+   "fit_r2": 0.9989,
+   "b_same": 0.00095,
+   "b_oth": 0.0014,
+   "b_load": 0.00056,
+   "same_gt_other": false,
+   "n_pts": 845782
+  },
+  "right_val": {
+   "block": "val",
+   "d_same_steps": 6,
+   "fit_r2": 1.0,
+   "b_same": -0.00022,
+   "b_oth": 0.00024,
+   "b_load": 0.00014,
+   "same_gt_other": false,
+   "n_pts": 251527
+  },
+  "right_rob": {
+   "block": "rob",
+   "d_same_steps": 3,
+   "fit_r2": 0.9992,
+   "b_same": 0.00075,
+   "b_oth": 0.00176,
+   "b_load": 0.00048,
+   "same_gt_other": false,
+   "n_pts": 95005
+  },
+  "left_dev": {
+   "block": "dev",
+   "d_same_steps": 3,
+   "fit_r2": 0.9995,
+   "b_same": 0.00026,
+   "b_oth": 0.00105,
+   "b_load": 0.00032,
+   "same_gt_other": false,
+   "n_pts": 845782
+  },
+  "left_val": {
+   "block": "val",
+   "d_same_steps": 3,
+   "fit_r2": 1.0,
+   "b_same": -0.00057,
+   "b_oth": 0.00068,
+   "b_load": 4e-05,
+   "same_gt_other": false,
+   "n_pts": 251530
+  },
+  "left_rob": {
+   "block": "rob",
+   "d_same_steps": 3,
+   "fit_r2": 0.9995,
+   "b_same": 0.00045,
+   "b_oth": 0.00117,
+   "b_load": 0.0003,
+   "same_gt_other": false,
+   "n_pts": 95005
+  },
+  "right_devmodel_on_val": {
+   "nrmse": 0.0075,
+   "n_pts": 251530
+  },
+  "right_devmodel_on_rob": {
+   "nrmse": 0.3089,
+   "n_pts": 95005
+  },
+  "left_devmodel_on_val": {
+   "nrmse": 0.0047,
+   "n_pts": 251530
+  },
+  "left_devmodel_on_rob": {
+   "nrmse": 0.2078,
+   "n_pts": 95005
+  }
+ }
+}

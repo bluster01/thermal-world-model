@@ -1,0 +1,27 @@
+{
+ "method": "day-clustered bootstrap, n_boot=2000, alpha=0.05, seed=42",
+ "note": "V0 INCONCLUSIVE \u2192 \u4ee5\u4e0b\u4ec5 exploratory, \u4e0d\u6784\u6210\u786e\u8ba4\u8bc1\u636e",
+ "by_side": {
+  "A": {
+   "n_events": 7,
+   "days": 5,
+   "paired_area_mean": 0.0803,
+   "paired_area_ci95": [
+    -0.2725,
+    0.3489
+   ],
+   "ci_crosses_zero": true
+  },
+  "B": {
+   "n_events": 6,
+   "days": 5,
+   "paired_area_mean": -3.9891,
+   "paired_area_ci95": [
+    -8.3528,
+    0.7382
+   ],
+   "ci_crosses_zero": true
+  }
+ },
+ "verdict": "INCONCLUSIVE: \u53cc\u4fa7 CI \u5747\u542b 0, \u4e8b\u4ef6\u4e0d\u8db3(<30/\u56de\u8def) \u65e0\u7edf\u8ba1\u529f\u6548"
+}

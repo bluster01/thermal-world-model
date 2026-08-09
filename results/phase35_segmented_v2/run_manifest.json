@@ -1,0 +1,49 @@
+{
+ "generated_at": "2026-08-09 19:33:43 +0800",
+ "git_sha": "625b4f7ff6b3dbbb7278a0b025c8faaab40855a0",
+ "git_dirty": "?? experiments/phase3_5/segmented_v2/\n?? results/phase35_segmented_v2/",
+ "csv_path": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/all_merged_10s.csv",
+ "csv_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+ "python": "3.11.15",
+ "platform": "Linux-6.11.0-1016-nvidia-aarch64-with-glibc2.39",
+ "numpy": "2.3.5",
+ "pandas": "3.0.2",
+ "thresholds": {
+  "sampling": "10s continuous grid, gaps excluded",
+  "load_min_mw": 250,
+  "pre_window_s": 600,
+  "load_range_mw": 15,
+  "pressure_range_mpa": 0.4,
+  "temp_range_c": 3.0,
+  "valve_range_pct": 0.3,
+  "dose_def": "median(post 30-60s) - median(pre 60s)",
+  "main_threshold_pct": 3.0,
+  "sensitivity_pct": [
+   2.0,
+   5.0
+  ],
+  "other_valve_limit": "max(1%, 0.5*|dose|)",
+  "min_event_gap_s": 600,
+  "held_step": "post-dose 300s valve range <= max(0.5%, 0.2*|dose|)"
+ },
+ "splits": {
+  "development": "2025-12-24 ~ 2026-03-31",
+  "internal_validation": "2026-04-01 ~ 2026-04-30",
+  "robustness": "2026-05-01 ~ 2026-05-11",
+  "note": "2026-05 previously viewed, robustness only; confirmatory needs new block"
+ },
+ "commands": [
+  "python experiments/phase3_5/segmented_v2/v0_events.py --csv <csv> --out-dir results/phase35_segmented_v2",
+  "python experiments/phase3_5/segmented_v2/v1_leading.py --csv <csv> --events results/phase35_segmented_v2/event_manifest.jsonl --out-dir results/phase35_segmented_v2",
+  "python experiments/phase3_5/segmented_v2/v23_models.py --csv <csv> --events results/phase35_segmented_v2/event_manifest.jsonl --out-dir results/phase35_segmented_v2",
+  "python experiments/phase3_5/segmented_v2/v4_placebo.py --csv <csv> --events results/phase35_segmented_v2/event_manifest.jsonl --out-dir results/phase35_segmented_v2"
+ ],
+ "verdict": {
+  "v0": "INCONCLUSIVE (A=7 events/5 days, B=6 events/5 days; <30 events/8 days; 12 open / 1 close → no bidirectional common support; held-step=2)",
+  "v1": "INCONCLUSIVE (paired area CI includes 0: A=[-0.27,+0.35], B=[-8.35,+0.74])",
+  "v2": "INCONCLUSIVE (n too small; A b_coef noisy, B cross direction consistent but n=6)",
+  "v3": "NOT PASSED (same-side coefficient not dominant: b_oth > b_same in all blocks; collinear dual-side inputs; R2=1.0 autocorrelation-dominated)",
+  "v4": "NOT PASSED (B wrong-side > true; strata close-cells empty)",
+  "conclusion": "85%/74% 与 0s 峰值仅 exploratory pilot; 交叉拓扑物理结论 NOT VERIFIED; E3 保持 INCONCLUSIVE; E4 保持 BLOCKED"
+ }
+}
