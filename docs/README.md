@@ -8,7 +8,10 @@
 - [PHASE35_CONTEXT_SNAPSHOT.md](PHASE35_CONTEXT_SNAPSHOT.md)：上下文丢失后的第一恢复入口、完整 MS 顺序和当前 Gate。
 - [../configs/phase3_5/experiment_registry.json](../configs/phase3_5/experiment_registry.json)：机器可校验的 Gate、Linux 授权、关键脚本和产物状态。
 - [PHASE35_MAINLINE_CONTEXT.md](PHASE35_MAINLINE_CONTEXT.md)：完整 MS 主命题、known-truth/现场两条证据臂与停止规则。
-- [plans/2026-08-10-phase35-ms2d2-order-design.md](plans/2026-08-10-phase35-ms2d2-order-design.md)：当前 MS2-D2 无迟延三阶惯性压力设计、主门禁与诊断边界。
+- [PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md](PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md)：D2 validation 的 checkpoint/episode 独立复算、screening 判决与 test 授权。
+- [plans/2026-08-10-phase35-ms2d2-test-design.md](plans/2026-08-10-phase35-ms2d2-test-design.md)：当前 D2 one-shot test 的内容寻址、配对统计和停止规则。
+- [plans/2026-08-10-phase35-ms2d2-test-implementation.md](plans/2026-08-10-phase35-ms2d2-test-implementation.md)：D2 test runner、汇总器、状态和 Linux 交付清单。
+- [plans/2026-08-10-phase35-ms2d2-order-design.md](plans/2026-08-10-phase35-ms2d2-order-design.md)：MS2-D2 无迟延三阶惯性 validation 的冻结设计与诊断边界。
 - [plans/2026-08-10-phase35-ms2d2-order-implementation.md](plans/2026-08-10-phase35-ms2d2-order-implementation.md)：D2 代码、测试、状态与 Linux 交付实施清单。
 - [plans/2026-08-10-phase35-ms2d-pressure-design.md](plans/2026-08-10-phase35-ms2d-pressure-design.md)：已完成 MS2-D1 纯迟延压力设计。
 - [PHASE35_MS2D1_SUPERVISOR_AUDIT_2026-08-10.md](PHASE35_MS2D1_SUPERVISOR_AUDIT_2026-08-10.md)：D1 validation 的 checkpoint/history/archive 独立复核、统计谬误扫描与一次性 test 判决。

@@ -79,6 +79,6 @@
 
 当前 Phase 3.5-MS 已有正式 synthetic known-truth 结果，但其证据范围不包含现场因果：MS1、MS2-V/C/J 已关闭；`results/phase3_5/ms2d_delay/` 保存 D1 validation 与 one-shot test。D1 的 oracle test 为 0.0206–0.0223；learned-delay 点改善 20.4–22.5%，但预注册 bootstrap CI 下界 17.2–18.8% 未达 20%，因此是确认门禁 FAIL，不得只引用点估计。权威审计见 [`PHASE35_MS2D1_TEST_SUPERVISOR_AUDIT_2026-08-10.md`](../docs/PHASE35_MS2D1_TEST_SUPERVISOR_AUDIT_2026-08-10.md)。
 
-当前 MS2-D2 只处于 `ready_for_linux`，尚无正式结果；其产物将写入 `results/phase3_5/ms2d_order/`。框架完成或本地 smoke 通过不能提前建立科学结果条目。
+MS2-D2 validation 已回传并由本地审计为 `AUDITED_SCREENING_PASS / TEST_AUTHORIZED`。21/21 artifacts 与结构门通过；oracle clean NMAE 为 0.0214–0.0226，三阶主模型为 0.0403–0.0520；相对二阶的 validation 点改善为 18.56%–28.10%，独立 episode bootstrap 95% CI 下界为 15.08%–22.28%。这些数字仍来自参与 checkpoint 选择的 validation；当前仅授权原 21 checkpoints 的一次性 synthetic test。权威审计见 [`PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md`](../docs/PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md)。无 pure-delay truth 下 learned-delay 诊断失败，说明机制补偿/不可辨识，不是现场迟延证据。
 
 Phase 4 已暂停。Fan20-SST 守恒骨架、Fan17/21 嵌套组件、Fan-state controlled Koopman 和时变灰箱路线目前没有正式结果，也不进入 Phase 3.5 结果目录。

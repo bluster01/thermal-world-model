@@ -390,7 +390,7 @@ runner 会在首次 test 访问前校验 authorization、matrix、validation sum
 
 汇总器因科学门禁失败返回 code 2 时，仍须原样提交全部新增 JSON、更新后的 manifest、stdout/stderr 和环境信息；不得删除 started/partial ledger、重复访问 test、重训、改门槛或启动 D2。test 结果只证明或否证该 known-truth pure-delay 设计，不支持现场 20 s 迟延、开环阀门因果或完整世界模型结论。
 
-## 13. 当前授权：MS2-D2 三阶惯性 validation
+## 13. 已完成归档：MS2-D2 三阶惯性 validation
 
 MS2-D2 是独立的阶次压力诊断，不继承 D1 的 learned-delay 阳性表述。synthetic truth 固定为 R50 非线性、context scheduling、三个惯性极点 `[40,70,210] s`，且 `input_delay_steps=0`。主对比只回答三极点是否优于同预算二极点；二极点+learned-delay 只检查遗漏阶次是否被误读成延迟。
 
@@ -407,7 +407,7 @@ python -m compileall -q src/phase35/multistep \
 python experiments/phase3_5/ms2d_order.py --dry-run
 ```
 
-状态必须是 `active_gate=ms2d_d2`、`status=ready_for_linux`、`linux_authorized_gate=ms2d_d2`；工作树必须为空；dry-run 必须严格得到 `1 regime / 7 candidates / 21 validation runs` 且 `test_authorized=false`。任一条件不符即停止，不自行修改配置或状态。
+本节命令只用于复现已完成批次，不再授权重复执行。原运行时状态为 `ready_for_linux`，dry-run 为 `1 regime / 7 candidates / 21 validation runs` 且 `test_authorized=false`。
 
 正式运行与汇总：
 
@@ -439,4 +439,53 @@ echo $? > results/phase3_5/ms2d_order/remote_execution/summary_exit_code.txt
 3. `d2_g3_three_pole` clean NMAE `<0.10`；
 4. 三极点相对二极点 clean NMAE 改善 `≥10%`。
 
-tau 集合的 permutation-invariant log-MAE，以及无迟延 truth 下 learned-delay 的期望步数/零步质量，只是诊断，不改变主门禁。汇总器因科学门禁失败返回 code 2 时仍须原样回传；训练命令非零则停止并回传日志。Linux 只提交 `results/phase3_5/ms2d_order/**`，不得修改注册表、TODO、README、源代码、测试或 Supervisor 文档，不得访问 synthetic test，也不得启动 D3。
+tau 集合的 permutation-invariant log-MAE，以及无迟延 truth 下 learned-delay 的期望步数/零步质量，只是诊断，不改变主门禁。该 validation 已由本地审计为 screening PASS；不要重复训练，也不要用 validation 排名升级 secondary 路线。
+
+## 14. 当前唯一授权：MS2-D2 one-shot synthetic test
+
+本批只对已归档的 7 candidates × 3 seeds 共 21 个 validation-selected checkpoints 做一次独立 test 推理，不训练、不调参、不补 seed。先在授权 commit 的干净工作树运行无访问预检：
+
+```bash
+python experiments/phase3_5/experiment_status.py --check --json
+git status --short
+git rev-parse HEAD
+python -m pytest tests/phase35/multistep/test_ms2d_order_test.py \
+  tests/phase35/test_experiment_status.py -q
+python -m compileall -q src/phase35/multistep \
+  experiments/phase3_5/ms2d_order_test.py \
+  experiments/phase3_5/summarize_ms2d_order_test.py
+python experiments/phase3_5/ms2d_order_test.py --dry-run
+```
+
+状态必须严格为 `active_gate=ms2d_d2`、`active_status=test_authorized`、`linux_authorized_gate=ms2d_d2`；工作树必须为空。dry-run 必须显示 `run_count=21`、`archive_member_count=21`、`validation_screening_pass=true`、`test_accessed=false`；tau 诊断为 true、no-true-delay 诊断为 false 是预期状态，不是 test 失败。任一 content pin、manifest、checkpoint、冻结代码或既有 test artifact 检查失败即停止，不删除产物规避重复访问锁。
+
+一次性执行与汇总：
+
+```bash
+mkdir -p results/phase3_5/ms2d_order/remote_test
+git rev-parse HEAD > results/phase3_5/ms2d_order/remote_test/git_commit.txt
+python --version > results/phase3_5/ms2d_order/remote_test/environment.txt 2>&1
+nvidia-smi >> results/phase3_5/ms2d_order/remote_test/environment.txt 2>&1
+printf '%s\n' \
+  'python experiments/phase3_5/ms2d_order_test.py --device cuda --evaluate-test-matrix --allow-synthetic-test' \
+  > results/phase3_5/ms2d_order/remote_test/command.txt
+
+python experiments/phase3_5/ms2d_order_test.py \
+  --device cuda --evaluate-test-matrix --allow-synthetic-test \
+  > results/phase3_5/ms2d_order/remote_test/test_stdout.log \
+  2> results/phase3_5/ms2d_order/remote_test/test_stderr.log
+echo $? > results/phase3_5/ms2d_order/remote_test/test_exit_code.txt
+```
+
+只有 `test_exit_code.txt` 为 0 才继续汇总：
+
+```bash
+python experiments/phase3_5/summarize_ms2d_order_test.py \
+  > results/phase3_5/ms2d_order/remote_test/summary_stdout.log \
+  2> results/phase3_5/ms2d_order/remote_test/summary_stderr.log
+echo $? > results/phase3_5/ms2d_order/remote_test/summary_exit_code.txt
+```
+
+确认主门逐 seed为：oracle clean NMAE `<0.05`；三极点 clean NMAE `<0.10`；三极点相对二极点的配对 episode、profile 分层 10,000 次 bootstrap 95% CI 下界 `>=0.10`。tau 恢复和伪迟延仍是非阻断诊断；即使后者失败，不能据此把主门改成 FAIL。汇总器因科学门失败返回 code 2 时，仍须原样提交所有 JSON、ledger、更新后的 manifest 和日志。
+
+Linux 只提交 `results/phase3_5/ms2d_order/**`。不得修改 `configs/`、`src/`、`experiments/`、`tests/`、TODO、README、注册表、PROJECT_STATUS、上下文快照或任何 Supervisor 文档；不得新增自审 review，不得删除 partial ledger、重复 test、重训或启动 D3。远端只报告执行与原始门禁，本地 Supervisor 负责独立复算和状态迁移。

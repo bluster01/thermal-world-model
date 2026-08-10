@@ -239,17 +239,27 @@
     },
     "ms2d_d2": {
       "title": "三阶惯性结构压力",
-      "status": "ready_for_linux",
+      "status": "test_authorized",
       "owner": "linux_run_local_audit",
       "evidence_scope": "synthetic_order_pressure_validation_not_field_causality",
       "scripts": {
         "runner": {
           "path": "experiments/phase3_5/ms2d_order.py",
-          "status": "active",
+          "status": "closed",
           "required": true
         },
         "summary": {
           "path": "experiments/phase3_5/summarize_ms2d_order.py",
+          "status": "closed",
+          "required": true
+        },
+        "test_runner": {
+          "path": "experiments/phase3_5/ms2d_order_test.py",
+          "status": "active",
+          "required": true
+        },
+        "test_summary": {
+          "path": "experiments/phase3_5/summarize_ms2d_order_test.py",
           "status": "active",
           "required": true
         }
@@ -269,14 +279,42 @@
         },
         "validation_summary": {
           "path": "results/phase3_5/ms2d_order/summary_validation.json",
-          "required": false
+          "required": true
+        },
+        "checkpoint_archive": {
+          "path": "results/phase3_5/archive/ms2d_d2_checkpoints_validation.tar",
+          "required": true
         },
         "supervisor_audit": {
           "path": "docs/PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md",
+          "required": true
+        },
+        "test_design": {
+          "path": "docs/plans/2026-08-10-phase35-ms2d2-test-design.md",
+          "required": true
+        },
+        "test_implementation_plan": {
+          "path": "docs/plans/2026-08-10-phase35-ms2d2-test-implementation.md",
+          "required": true
+        },
+        "test_authorization": {
+          "path": "configs/phase3_5/ms2d_order_test_authorization.json",
+          "required": true
+        },
+        "test_summary": {
+          "path": "results/phase3_5/ms2d_order/summary_test.json",
+          "required": false
+        },
+        "test_root_ledger": {
+          "path": "results/phase3_5/ms2d_order/synthetic_test_matrix_access_ledger.json",
           "required": false
         }
       },
-      "decision": "D1 已按冻结 margin 阴性关闭；D2 作为独立阶次压力诊断放行。真值无 pure delay、含第三惯性极点；learned-delay 仅作遗漏阶次误读诊断"
+      "decision": "AUDITED_SCREENING_PASS / TEST_AUTHORIZED：21-run validation 主门与独立 episode bootstrap 通过；只授权原 checkpoint 一次性 synthetic test，不重训；tau/伪迟延保持非阻断诊断",
+      "advisories": [
+        "Linux validation 新增的 review 越过远端职责边界，已降级为 UNVERIFIED_REMOTE_REPORT；权威判决仅见 Supervisor audit",
+        "validation 的三阶惯性与 learned-delay 在 600 s 支持域内可互相逼近，test 不能建立现场唯一阶次或迟延机制"
+      ]
     },
     "ms2d_d3": {
       "title": "未建模扰动压力",

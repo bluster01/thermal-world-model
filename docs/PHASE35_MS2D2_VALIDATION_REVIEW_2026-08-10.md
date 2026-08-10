@@ -1,11 +1,13 @@
 # Phase 3.5-MS2-D2 Third-Order Pressure Validation Review（2026-08-10）
 
+> **文档角色：Linux 远端执行报告（非独立审计）。** 本文件超出了当批允许的 `results/phase3_5/ms2d_order/**` 写入范围，现保留作 provenance 记录；权威判决见 [`PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md`](PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md)。
+
 ## Material Passport
 
 - Origin Skill: academic-research-suite / experiment-agent
 - Origin Mode: validate（sequential pressure Gate D2）
 - Origin Date: 2026-08-10
-- Verification Status: ANALYZED（checkpoint 归档见 §6）
+- Verification Status: UNVERIFIED_REMOTE_REPORT（后续已由本地 Supervisor 独立审计）
 - Version Label: phase35_ms2d2_validation_review_v1
 - Execution Commit: `fa6933c`（manifest git_sha，21/21 一致）
 - Evidence Scope: `synthetic_order_pressure_validation_not_field_causality`；不读取 A/B 现场 test；不恢复已废弃 E1–E5
@@ -68,7 +70,7 @@
 
 **确认设计 §1 的核心假设**：真值没有纯迟延，但 `d2_g2_delay_compensation`（二阶+learned-delay）仍分配 E[d]≈2.2 steps 的伪迟延（w0 仅 ~27%），且其 clean NMAE（0.0456）**接近** three_pole（0.0444，差距仅 2.7%）。按冻结停止规则 §7：**记录为机制不可辨识证据**，不事后把 delay 路线升级为胜出。
 
-## 5. 结论与边界（论文表述）
+## 5. 远端结果摘要与边界（提交 Supervisor 审计）
 
 1. **正结论（仅限合成真值）**：在 R50 + context 调度 + 三阶惯性 [40,70,210]s 的 known-truth 下，显式三阶结构相对同预算二阶结构改善 18.6%–28.1%（3 seeds），且绝对误差 <0.10 —— 阶次结构失配被正确回应，MS2-D 系列在"更强的结构失配"轴上通过。
 2. **机制边界**：learned-delay 会吸收漏掉惯性（伪迟延 E[d]≈2.2 steps）且误差与真三阶几乎持平 → **阶次与迟延在有限 horizon 内部分可互换**，单凭响应误差不能区分机制；这限制了对现场"输运迟延 vs 高阶惯性"的解释权。
@@ -76,8 +78,8 @@
 4. deeponet 数值最低仍按预注册为 secondary reference，不升级冠军。
 5. 全部仅属 synthetic known-truth；不授权现场 E3/E4、真实阀门曲线或现场因果主张。
 
-## 6. 待办
+## 6. 回传状态
 
 1. **checkpoint 归档**：21 × `checkpoint_best_val.pt` 打包 tar + SHA（`e8d6d806...`），21/21 manifest 匹配 ✅ 已完成。
-2. commit + push（含 remote_execution 完整日志——响应 D1 审计 provenance advisory）。
-3. D2 审计后由 Codex 决定：是否授权一次性 test（paired bootstrap CI 下界 ≥10%）、D3 或 MS5。
+2. 已提交并回传完整 `remote_execution` 日志。
+3. Gate 状态、test 授权和后续路线只由本地 Supervisor 更新；本报告不承担状态迁移。

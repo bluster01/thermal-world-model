@@ -6,7 +6,7 @@
 - Scope: Phase 3.5-MS0–MS5、真实数据适配与闭环响应验证
 - Verification Status: ANALYZED；MS2-D1 test 已独立审计
 - Deprecated Track: 原 E1–E5，仅作历史失败证据
-- Active Decision: 完成完整 MS 系列；当前 Gate 为 MS2-D2
+- Active Decision: 完成完整 MS 系列；MS2-D2 validation 已审计，当前仅授权 one-shot test
 
 ## 1. 一句话主线
 
@@ -46,6 +46,8 @@ MS0 → MS1 → MS2-V/C/J → MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选
 - MS2-V：learned monotone 相对 identity 的 validation/test 改善稳定超过门槛；没有单独恢复真实 `phi`。
 - MS2-C：scheduled K/τ 相对 global 双层通过。
 - MS2-J：joint 相对两个单模块双层通过；response-internal staged 在 1.10 非劣界双层失败，但相对 Stage A 有效。因此当前 response 主训练采用 joint，不能据此决定完整 MS5 staging。
+- MS2-D1：learned-delay 的改善方向跨 split 稳定，但 test CI 下界未达到冻结的 20%，按阴性结果关闭；不传播 delay 结构。
+- MS2-D2 validation：三阶相对二阶的配对 episode bootstrap CI 下界逐 seed为 15.08%–22.28%，高于 10%；只建立 screening 证据，等待一次性 test。
 
 Koopman、PI-ODE 与 DeepONet 继续作为表示路线参与压力和真实适配验证；MS2-J 的 secondary 数值不构成最终路线冠军。
 
@@ -65,7 +67,7 @@ MS2-D 采用顺序压力测试，不一次铺开大矩阵：
 
 D1 已关闭：learned causal delay 的改善方向跨 validation/test 稳定，但 test bootstrap CI 下界 17.2–18.8% 未达到预注册 20%，且 delay kernel 未唯一恢复。该结果不能把 learned-delay 传播为主架构的已证实部件。
 
-D2 因而采用正交的阶次压力设计：真值取消 pure delay，只加入第三个惯性极点 `[40,70,210] s`。主对比为 context-scheduled 三极点 graybox 与同预算二极点消融；oracle 验证生成—优化链。二极点+learned-delay 只诊断“遗漏阶次是否被误读成延迟”，Koopman、PI-ODE、DeepONet继续作 secondary references。当前只授权 validation，D2 审计前不读取 synthetic test、不启动 D3。
+D2 因而采用正交的阶次压力设计：真值取消 pure delay，只加入第三个惯性极点 `[40,70,210] s`。21-run validation 已独立审计为 screening PASS：oracle 与三阶绝对 NMAE 逐 seed 过门，三阶相对二阶的 validation bootstrap CI 下界亦逐 seed高于 10%。但 validation 参与 checkpoint 选择，因此当前只授权原 21 checkpoints 的一次性 synthetic test。确认门为 oracle `<0.05`、三阶 `<0.10`、配对/profile 分层 bootstrap CI 下界逐 seed `>=10%`；tau 和伪迟延只作诊断。Koopman、PI-ODE、DeepONet继续作 secondary references，不能按 test 排名事后升级。D2 test 审计前不启动 D3。
 
 ## 6. 当前不能声称
 

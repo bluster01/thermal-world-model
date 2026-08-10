@@ -31,13 +31,17 @@ python experiments/phase3_5/experiment_status.py --check --json
 | MS2-C | CLOSED | scheduled K/τ 相对 global 双层 PASS |
 | MS2-J | CLOSED | joint 相对两个单模块双层 PASS；staged 10% 非劣双层 FAIL；采用 joint |
 | MS2-D1 | CLOSED | test 改善方向稳定，但逐 seed CI 下界 17.2–18.8% 未达预注册 20%；参数诊断继续负，不重试 |
-| MS2-D2 | READY_FOR_LINUX | 无 pure delay 的三阶惯性 truth；只授权 21-run validation，test 未授权 |
+| MS2-D2 | TEST_AUTHORIZED | validation 已审计 screening PASS；只授权原 21 checkpoints 一次性 synthetic test，不重训 |
 | MS2-D3 | PLANNED | 未建模扰动；等待 D2 validation 审计 |
 | MS5 | PLANNED | 完整 `free+response` 耦合，不被 MS2-J 替代 |
 | MS3 | PLANNED | A/B validation-only 真实数据适配，不称因果 |
 | MS4 | PLANNED | 用 SP held-step 验证串级闭环响应，不恢复旧 E 匹配 |
 
 ## 4. Linux 最新同步与本地审计
+
+Linux 在 `aedf1be` 回传 MS2-D2 validation，实际训练 commit 为 `fa6933c`。21/21 artifacts、manifest、history、checkpoint archive 与结构门禁已由本地逐项复核：oracle clean NMAE 0.0214–0.0226；三极点主模型 0.0403–0.0520；相对二极点点改善 18.56%–28.10%。独立重建 validation episodes 后，配对/profile 分层 10,000 次 bootstrap 的 95% CI 下界为 15.08%–22.28%，逐 seed 高于预注册 10%。因此只判 `AUDITED_SCREENING_PASS / TEST_AUTHORIZED`；validation 参与 checkpoint 选择，不能代替独立 test。权威判决见 [`PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md`](PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md)。
+
+无 pure-delay truth 下，二极点+learned-delay 仍产生 2.16–2.40 steps 的期望迟延且零步质量仅 0.241–0.297。这说明遗漏阶次可被迟延容量补偿，不是现场迟延阳性。Linux 另写入了一个 validation review，违反远端只写结果/可选 `UNVERIFIED_REMOTE_REPORT` 的边界；该文件已降级，不能覆盖 Supervisor audit。
 
 Linux 在 `dc2939c` 回传 MS2-D1 one-shot test。远端报告的数字经本地重新聚合、独立 50,000 次 NumPy bootstrap、manifest/episode/ledger/hash 审计后成立：oracle 为 0.0206–0.0223；learned-delay 点改善 20.4–22.5%，但冻结 95% CI 下界为 17.2–18.8%，未达 20%。因此 D1 以 `TEST_NOT_CONFIRMED_AT_20PCT_MARGIN` 关闭；不重试、不调阈值，也不把 learned-delay 当现场已证实结构。权威判决见 [`PHASE35_MS2D1_TEST_SUPERVISOR_AUDIT_2026-08-10.md`](PHASE35_MS2D1_TEST_SUPERVISOR_AUDIT_2026-08-10.md)。
 
@@ -62,7 +66,7 @@ Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。�
 
 ## 5. 当前下一步
 
-MS2-D2 只运行 known-truth validation：真值为 R50 + context scheduling + 三个惯性极点 `[40,70,210] s`，纯迟延固定为 0。主门禁要求 oracle 每 seed clean NMAE `<0.05`，三极点主模型每 seed `<0.10`，且相对同预算二极点每 seed 改善 `≥10%`。三极点 tau 集合恢复和二极点 learned-delay 是否虚构迟延只作诊断。Linux 只能执行 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 第 13 节；不得改权威文档、访问 test 或启动 D3。设计见 [`plans/2026-08-10-phase35-ms2d2-order-design.md`](plans/2026-08-10-phase35-ms2d2-order-design.md)。
+MS2-D2 当前只执行一次 known-truth synthetic test：读取内容寻址归档中的 7 candidates × 3 seeds，不重训。主门禁要求 oracle 每 seed clean NMAE `<0.05`、三极点主模型每 seed `<0.10`，且三极点相对二极点的配对/profile 分层 bootstrap 95% CI 下界每 seed `>=0.10`。tau 集合恢复和无迟延 truth 下的 learned-delay 继续只作非阻断诊断。Linux 只能执行 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 第 14 节，只提交 `results/phase3_5/ms2d_order/**`；不得重训、重复访问、修改权威文档或启动 D3。测试设计见 [`plans/2026-08-10-phase35-ms2d2-test-design.md`](plans/2026-08-10-phase35-ms2d2-test-design.md)。
 
 ## 6. 上下文读取优先级
 
