@@ -4,13 +4,17 @@
 
 ## 当前目标
 
-以当前审计边界完成 Phase 3 文章：报告现场闭环预测与动作响应可识别性的差异、A1phys 结构约束、E3 无 common support 导致 E4 阻断，以及 fail-closed 实验框架。喷水流量传感器不准，因此它只作诊断；主动作是实际二级减温阀绝对开度代理，不把阀位伪装成质量流量。
+以当前审计边界完成 Phase 3 文章：用现场 E1–E5 说明闭环预测与真实动作响应识别的差异，用 synthetic MS0–MS2-J 证明结构化多步响应架构在 known-truth 下可解，再用 fail-closed 门禁阻止两条证据臂互相替代。喷水流量传感器不准，因此它只作诊断；主动作是实际二级减温阀绝对开度代理，不把阀位伪装成质量流量。完整主线见 [Phase 3.5 主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)。
 
-当前状态：**42/42 development runs 已完成且模型 checkpoint test 尚未评估；validation 审计判定 E3 不可识别、E4 被阻断、E5 样本不足、G3 参数塌缩，当前没有候选。A/B 两侧 1 s SP JSON 均已写入 test 事件及 `dT_post_600`，因此两侧 event test 都不再是盲 lockbox；未来正式事件证据必须使用新时间块。**详见 [Linux 增量整体审计](docs/PHASE3_5_LINUX_RETURN_AUDIT_2026-08-09.md)。
+当前状态：**42/42 development runs 已完成且现场模型 checkpoint test 尚未评估；validation 审计判定 E3 不可识别、E4 被阻断、E5 样本不足、G3 参数塌缩，当前没有现场候选。A/B 两侧 1 s SP JSON 均已写入 test 事件及 `dT_post_600`，因此两侧 event test 都不再是盲 lockbox；未来正式事件证据必须使用新时间块。**详见 [Linux 增量整体审计](docs/PHASE3_5_LINUX_RETURN_AUDIT_2026-08-09.md)。
 
 最新补充：分段辨识 pilot 的数字已在本地精确复现，但旧脚本丢失阀门阶跃符号、未实施负荷/压力/主汽温稳态门禁，且所谓脉冲响应只是未预白化滞后相关。因此 85%/74% 和 0 s 峰值不得升级为物理确认；修正门禁见 [分段辨识审计与验证协议](docs/PHASE35_SEGMENTED_IDENTIFICATION_REVIEW_2026-08-09.md)。
 
 收口决定：原 42-run 数据和配置不再补 seed、不打开模型 test，也不在旧协议内扩大 A1phys 矩阵。新增 Phase 3.5-MS 先用已知真值合成系统回答“多步响应架构是否可辨识且稳定”，其阳性结果也不能替代现场 E3，不能写成“完全物理响应”或“反事实世界模型已成立”。最终目标的缺口与后续 W0–W6 门禁见 [主汽温世界模型证据阶梯](docs/WORLD_MODEL_EVIDENCE_LADDER.md)。
+
+### 当前唯一判决点
+
+只执行并审计一次 MS2-J synthetic test。若联合模块复现，停止扩大 synthetic 矩阵并进入论文表图/claim ledger；若不复现，原样报告 validation/test 不一致。staged 无论结果如何都不能事后改写成路线冠军。MS2-D、MS3、MS4、MS5 与 Phase 4 均保持 HOLD，除非论文收口后重新授权。
 
 ## Phase 3.5-MS — 多步动作响应可解性
 
@@ -28,7 +32,7 @@
 | MS4 经验响应校准 | 仅在未来新时间块 E3 通过后连接真实 IRF | 模型响应是否复现可识别物理响应？ | common support、稳态/动态双 estimand | ⛔ 等待新数据证据 |
 | MS5 分段训练 | free 预训练 → 短冻结 response → 小学习率联合 | 完整世界模型中 response 是否会被 free head 吸收？ | stage checkpoints、梯度/参数健康、joint 非退化 | ◻ 完整 free+response 耦合仍 HOLD；MS2-J 只先验证 response 内部 staging |
 
-MS1 的客观复核见 [MS1 Supervisor Review](docs/PHASE35_MS1_REVIEW_2026-08-10.md)，MS2 validation/test 见 [MS2 Validation Review](docs/PHASE35_MS2_VALIDATION_REVIEW_2026-08-10.md) 与 [MS2 Test Review](docs/PHASE35_MS2_TEST_REVIEW_2026-08-10.md)。MS2-J 只做联合模块和训练稳定性，不把 synthetic PASS 升级成现场物理辨识。
+MS1 的客观复核见 [MS1 Supervisor Review](docs/PHASE35_MS1_REVIEW_2026-08-10.md)，MS2 validation/test 见 [MS2 Validation Review](docs/PHASE35_MS2_VALIDATION_REVIEW_2026-08-10.md) 与 [MS2 Test Review](docs/PHASE35_MS2_TEST_REVIEW_2026-08-10.md)。MS2-J 只做联合模块和 response 内部训练策略，不把 synthetic PASS 升级成现场物理辨识，也不外推完整 `free+response` 的 MS5 staging。
 
 ## 五组核心实验
 

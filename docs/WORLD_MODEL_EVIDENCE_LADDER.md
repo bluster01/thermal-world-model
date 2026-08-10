@@ -1,20 +1,20 @@
 # 主汽温世界模型证据阶梯与缺口
 
-> 更新：2026-08-09
+> 更新：2026-08-10
 > 状态：Phase 3.5 当前批次收口后的 Supervisor 判决
 > 目标：明确“预测、仿真、反事实、闭环”分别需要什么证据，防止用一种能力替代另一种能力。
 
 ## Material Passport
 
 - Material Type: project evidence-gap and experiment-gate specification
-- Scope: repository code, Phase 1–3.5 results, Linux return artifacts and audit documents available at commit `548035a`
-- Verification Status: ANALYZED；Phase 3.5 专项测试可复现，真实训练 checkpoint 未在本地复跑
+- Scope: repository code, Phase 1–3.5 field results，以及截至 MS2-J test 授权提交 `5fa9769` 的 synthetic evidence artifacts
+- Verification Status: ANALYZED；Phase 3.5-MS checkpoint/metrics 已本地复核，真实 42-run 模型 test 未访问
 - Data Boundary: A/B 现场 historian；喷水流量不作真值；实际阀位仅是 plant action 的代理
 - Claim Boundary: 本文定义后续证据要求，不把观测闭环关联升级为随机干预因果效应
 
 ## 1. 总判决
 
-项目目前证明的是：在历史闭环数据的 development validation 上，可以训练主汽温多步预测器，并能在架构中加入零动作、方向、惯性和单调开度等约束。
+项目目前证明的是：在历史闭环数据的 development validation 上，可以训练主汽温多步预测器并加入动作结构约束；在 synthetic known-truth 上，递推响应支路能够处理二阶惯性、非线性有效开度和工况调度。
 
 项目目前尚未证明的是：模型能够作为状态闭合的仿真器稳定递推；改变动作输入得到的是可识别的反事实；模型在由控制器生成的新动作分布下仍可信；模型嵌入闭环后能安全改善控制性能。
 
@@ -37,7 +37,7 @@
 |---|---|---|---|---|
 | C0 状态与动作语义 | 模型中的状态、动作和扰动是否对应真实控制链？ | tag、单位、测点层级、时间对齐、staleness、split 与 provenance 可审计 | **PARTIAL** | 阀位→喷水有效作用未标定；喷水流量不可作真值；隐藏热状态与外生扰动不完整 |
 | C1 预测 | 在未参与开发的未来时段，能否预测真实温度？ | 独立时间块、多时域误差、校准区间、强基线、A/B 分侧与工况分层 | **DEVELOPMENT ONLY** | 42 runs 只有 validation；没有新的独立 test；尚无稳定胜出配置 |
-| C2 仿真 | 给定初态、动作轨迹和扰动，模型能否递推生成物理一致的未来状态？ | recursive rollout、状态闭合、误差增长、稳定性、守恒残差、自由运行与 teacher-forcing 分离 | **NOT ESTABLISHED** | 当前主要是定长温度预测和响应支路，不生成完整下一状态；没有长时自由滚动或独立 plant 对照 |
+| C2 仿真 | 给定初态、动作轨迹和扰动，模型能否递推生成物理一致的未来状态？ | recursive rollout、状态闭合、误差增长、稳定性、守恒残差、自由运行与 teacher-forcing 分离 | **SYNTHETIC RESPONSE SUBMODEL ONLY** | MS1/MS2 只证明低维响应支路可递推；不生成完整下一状态，没有长时自由滚动或独立 plant 对照 |
 | C3 反事实 | 若动作轨迹换成未发生的轨迹，预测差异是否可解释为动作效应？ | action consistency、common support、无混杂设计或安全激励、经验响应 reference、placebo/negative control、CI | **BLOCKED** | E3 无双向 common support、balance 未过；E4 被阻断；架构符号约束不等于因果识别 |
 | C4 闭环 | 由策略产生的新动作进入模型和现场后，性能与安全是否仍成立？ | 独立 plant/HIL、策略分布覆盖、闭环稳定性、约束违例、延迟预算、shadow→advisory→受限试验 | **NOT ESTABLISHED** | 旧 MPC 为同构 plant 且协议不公平；无可信 OPE、HIL、shadow 或现场受限闭环证据 |
 
@@ -53,9 +53,10 @@
 | E3 matching | 暴露了 close-event support 和 matching balance 的不足 | “阀门没有物理响应”或“A1phys 物理响应失败” |
 | SP 多时域探索 | A/B 阀位都存在明显早期响应，600 s 净效应会衰减/反转 | SP 是 plant action；600 s 单点代表完整执行链；B 侧阀门不响应 |
 | G3 参数诊断 | 当前物理支路参数有塌缩，必须阻断强主张 | 两级惯性或所有 physics-guided 路线都不可行 |
+| Phase 3.5-MS1/MS2 | known-truth 下多步递推、单调开度与工况调度可以恢复响应；联合模块 validation 有明确增量 | 现场参数、真实阀门曲线、完整状态闭合、现场因果反事实 |
 | 旧 MPC 结果 | 可以作为协议失败和 objective mismatch 的方法学案例 | 世界模型控制优于 PID，或已经通过闭环验证 |
 
-Phase 3.5 论文当前最稳的贡献不是“已经得到完整物理响应”，而是：建立动作层级、结构约束、观测事件门禁和 fail-closed 审计，并展示预测精度不能替代物理响应可识别性。
+Phase 3.5 论文当前最稳的贡献不是“已经得到完整物理响应”，而是：把 known-truth 架构可解性与现场响应可识别性拆开验证；建立动作层级、结构约束、观测事件门禁和 fail-closed 审计，并展示预测精度或 synthetic PASS 都不能替代现场物理响应 reference。
 
 ## 4. 还缺的关键证据
 
@@ -136,15 +137,16 @@ A1phys 当前是低阶响应先验，不是守恒模型。若最终目标包含�
 | W5 策略离线验证 | 验证 policy-generated action 分布 | support-aware OPE、独立 plant、鲁棒性和故障注入 | 性能非劣且约束/安全门通过 | 不进 shadow |
 | W6 闭环分级 | 证明可嵌入且安全 | replay→HIL→shadow→advisory→受限闭环 | 每级预注册验收并有回退 | 停留在上一等级 |
 
-W2 是当前最近的科学门；W3 是从“预测器”成为“仿真器”的结构门；W4 是“反事实”的识别门；W5–W6 才是闭环门。四者不能合并成一个 MAE 或 CFI 分数。
+对最终真实世界模型，W2 仍是最近的现场科学门；对当前 Phase 3 论文，最近且唯一的实验判决是 MS2-J 一次性 synthetic test。W3 是从“预测器”成为“仿真器”的结构门；W4 是“反事实”的识别门；W5–W6 才是闭环门。它们不能合并成一个 MAE 或 CFI 分数。
 
 ## 6. 论文与工程的两条叙事
 
 ### Phase 3/3.5 论文可以收口的叙事
 
 - 现场闭环预测准确性与动作响应可识别性是两个不同目标；
-- 绝对阀位及其工作点值得显式建模，但当前没有证据证明复杂非线性映射优于 identity；
+- 绝对阀位及其工作点值得显式建模；synthetic 证明复杂非线性真值下 learned monotone 优于 identity，但当前现场数据没有对应优越性证据；
 - 结构物理约束可以保证代码不变量，却不能替代经验响应 reference；
+- known-truth 试验可以验证结构化响应模型的可解性，却不能替代现场 E3；
 - fail-closed 门禁能够阻止 prediction-only 模型被错误升级为 counterfactual model。
 
 ### 最终世界模型未来必须回答的叙事
@@ -176,8 +178,8 @@ W2 是当前最近的科学门；W3 是从“预测器”成为“仿真器”�
 
 ## 8. 当前优先级
 
-1. 不再扩大 A1phys 训练矩阵；先冻结 W2 的稳态 held-step / 动态 trajectory 双 estimand。
-2. 为未来新时间块保留真正盲的事件与模型 lockbox。
-3. W2 仍不可识别时，Phase 3.5 以方法学和阴性结果收口，不用预测 MAE 补位。
+1. 完成并审计一次 MS2-J synthetic test；无论成败都不重试、不扩 MS2-D，随后进入论文表图与 claim ledger。
+2. 不再扩大真实 A1phys 训练矩阵；为未来 W2 保留稳态 held-step / 动态 trajectory 双 estimand和真正盲的新时间块。
+3. W2 仍不可识别时，Phase 3.5 以“known-truth 可解性 + 现场识别边界 + fail-closed 方法”收口，不用预测 MAE 或 synthetic PASS 补位。
 4. 文章完成后再设计 W3 的状态闭合 simulator；这不是现有预测头的小改版。
 5. 只有 W3、W4 通过后，才恢复任何 MPC/闭环路线。

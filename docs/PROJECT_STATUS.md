@@ -1,10 +1,10 @@
 # 项目状态
 
-> 更新：2026-08-09。本文是项目现状的权威入口；历史文档保留当时结论，不自动代表当前判断。
+> 更新：2026-08-10。本文是项目现状的权威入口；历史文档保留当时结论，不自动代表当前判断。
 
 ## 一句话状态
 
-项目已完成预测基线、MPC 方法探索和 Phase 3.5 的 42/42 development runs，但**尚未完成模型定性，也没有独立 lockbox 结论**。Phase 3.5 审计后 E3 不可识别、E4 被阻断、E5 样本不足且物理参数塌缩，当前没有可进入 test 的候选。Phase 4 继续暂停；当前文章应以预测与物理响应可识别性的边界、结构约束和 fail-closed 审计收口。
+项目已完成预测基线、MPC 方法探索、Phase 3.5 的 42/42 现场 development runs，以及 Phase 3.5-MS1/MS2 和 MS2-J validation 的 synthetic known-truth 验证，但**尚未完成真实模型定性，也没有现场独立 lockbox 结论**。现场 E3 不可识别、E4 被阻断，不能打开旧 42-run 模型 test；synthetic 只证明结构化多步响应支路在已知真值下可解。当前唯一实验判决是 MS2-J 一次性 synthetic test；Phase 4 继续暂停。论文主线见 [`PHASE35_MAINLINE_CONTEXT.md`](PHASE35_MAINLINE_CONTEXT.md)。
 
 ## Phase 3.5 当前状态
 
@@ -108,15 +108,15 @@ exp_025 使用实际绝对阀位，exp_106/旧 A1phys 使用 `二级减温调节
 
 | 路线 | 仓库已有工作 | 尚缺什么 |
 |---|---|---|
-| PI-ODE | exp_020 使用纯神经动力学与固定 Euler 小步；MS1 在同型二阶 synthetic truth 达噪声下限；MS2-V/C validation/test 误差较低 | MS2 未把 PI-ODE 预注册为主要对照或冠军；联合耦合、Fan 方程、部分可观测状态与真实响应仍未验证 |
+| PI-ODE | exp_020 使用纯神经动力学与固定 Euler 小步；MS1 在同型二阶 synthetic truth 达噪声下限；MS2-V/C validation/test 误差较低 | MS2 未把 PI-ODE 预注册为主要对照或冠军；PI-ODE 自身的联合非线性/显式调度、Fan 方程、部分可观测状态与真实响应仍未验证 |
 | Controlled Koopman | exp_020 的潜在受控 decoder；exp_112 的 Koopman free-head；MS1 稳定受控模态算子通过结构门禁 | MS2 的 global-context 与四模态阀门版本只作次要对照，不能据此赋予真实 Koopman 谱解释 |
-| 灰箱 / DeepONet 算子 | MS1 证明 2P 灰箱同型可解；MS2-V/C validation+test 的两个预注册响应对比均通过 | 单调响应模块存在 `K/phi/动力学` 补偿，尚未辨识出真实阀门曲线；双模块共同收敛、真实数据迁移与 Fan 物理闭合仍缺 |
+| 灰箱 / DeepONet 算子 | MS1 证明 2P 灰箱同型可解；MS2-V/C validation+test 的两个预注册响应对比均通过；MS2-J validation 的联合模块门禁通过 | 单调响应模块存在 `K/phi/动力学` 补偿，尚未辨识出真实阀门曲线；MS2-J test、真实数据迁移与 Fan 物理闭合仍缺 |
 
 因此，exp_020 和 exp_112 都不能回答“Fan 物理微分模型是否优于当前模型”。Phase 3.5-MS 新框架也只回答低维动作响应的表示/优化可行性，不等同于 Fan 模型比较或现场因果验证。
 
 Phase 3.5-MS 的统一 estimand、四类路线公式、损失/指标定义、可辨识性边界和来源核验见 [`PHASE35_MS_METHODS_AND_REFERENCES.md`](PHASE35_MS_METHODS_AND_REFERENCES.md)。
 
-MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军。MS2-V/C validation+test 已独立复核：两个主对比的逐 seed paired-episode CI 下界均远高于 20%，但 MS2-V 的 learned `phi` 没有恢复真值曲线，DeepONet 也可隐式表达非线性；论文不能写成“阀门映射必要且已辨识”。当前下一 Gate 是 MS2-J：在同一已知真值中联合 R50 非线性和 context 调度，比较 joint-from-scratch、三阶段训练与单模块消融；只开放 validation。见 [`PHASE35_MS2_TEST_REVIEW_2026-08-10.md`](PHASE35_MS2_TEST_REVIEW_2026-08-10.md) 与 [`plans/2026-08-10-phase35-ms2j-coupling-design.md`](plans/2026-08-10-phase35-ms2j-coupling-design.md)。
+MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军。MS2-V/C validation+test 已独立复核：两个主对比的逐 seed paired-episode CI 下界均远高于 20%，但 MS2-V 的 learned `phi` 没有恢复真值曲线，DeepONet 也可隐式表达非线性；论文不能写成“阀门映射必要且已辨识”。MS2-J validation 已得到混合结果：联合模块相对两个单模块消融通过，当前 staged 协议未达到 joint 的 1.10 非劣界；下一步只做一次性 synthetic test，不重训、不扩矩阵。见 [`PHASE35_MS2J_VALIDATION_REVIEW_2026-08-10.md`](PHASE35_MS2J_VALIDATION_REVIEW_2026-08-10.md) 与 [`plans/2026-08-10-phase35-ms2j-test-design.md`](plans/2026-08-10-phase35-ms2j-test-design.md)。
 
 ## 已降级或作废的结论
 
@@ -147,6 +147,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-当前批次的 42-run 训练和本地审计已经结束，不补 seed、不打开模型 test。下一科学判决点只有一个：在未来新时间块之前冻结 E3 的双 estimand——稳态 held-step 主分析与动态 trajectory 次分析——并解决开/关阀 common support、balance、pre-trend 和 placebo。若该 reference 仍不可识别，Phase 3.5 以方法学和阴性结果收口，不以预测 MAE 替代。
+当前批次的 42-run 训练和本地审计已经结束，不补 seed、不打开模型 test。眼前唯一实验判决点是 MS2-J 一次性 synthetic test：确认联合模块是否跨 split 复现，并如实记录 staged 非劣结果；之后停止扩展 synthetic 矩阵，进入论文表图与 claim ledger。未来若继续现场证据，仍必须使用新时间块执行已冻结的 E3 双 estimand，并解决开/关阀 common support、balance、pre-trend 和 placebo。
 
 文章完成后，若继续最终世界模型，先进入 W3 状态闭合 simulator 设计，而不是恢复旧 MPC 或扩大当前 A1phys 超参矩阵。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 Gate 计划保留但暂停。

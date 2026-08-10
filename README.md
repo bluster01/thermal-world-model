@@ -2,11 +2,12 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-09）**：Phase 4 暂停，项目回到 Phase 3 文章收口。Phase 3.5 的 42/42 development runs 已完成，但审计后 E3 不可识别、E4 被阻断、E5 样本不足且物理支路参数塌缩，当前没有可进入 test 的候选。因此不能声称模型已获得“完全物理响应”。项目的最终目标仍是可预测、可递推仿真、可作反事实推演并能分级嵌入闭环的主汽温世界模型；这些能力必须分别取证。
+> **当前判断（2026-08-10）**：Phase 4 暂停，项目回到 Phase 3 文章收口。现场 42-run development 审计后 E3 不可识别、E4 被阻断，不能声称已获得“完全物理响应”。Phase 3.5-MS 已在 known-truth 中建立多步响应架构的可解性证据；当前只等待 MS2-J 一次性 synthetic test，确认联合非线性/工况调度与 staged-vs-joint 的混合结论。synthetic PASS 不能替代现场因果 reference。
 
 ## 当前入口
 
 - [唯一活任务队列](TODO.md)
+- [Phase 3.5 主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)
 - [Phase 3.5 实验设计](docs/PHASE3_5_EXPERIMENT_DESIGN.md)
 - [Linux 执行手册](experiments/phase3_5/README.md)
 - [项目状态与证据边界](docs/PROJECT_STATUS.md)
@@ -16,6 +17,12 @@
 - [历史结果索引](results/README.md)
 
 Phase 4 的 [实验计划](docs/PHASE4_EXPERIMENT_PLAN.md) 和 Fan2017/2020/2021 路线保留为暂停的未来工作，不进入当前预算或论文判决。
+
+## 当前主要实验目的
+
+论文采用两条互不替代的证据臂：现场 E1–E5 判断 historian 是否足以确认真实动作响应；synthetic MS0–MS2-J 判断结构化模型在真值已知时是否具备多步响应能力。前者当前主要得到 `INCONCLUSIVE/BLOCKED`，后者已证明基本递推、单调开度和工况调度可解。
+
+眼前唯一实验是 MS2-J 独立 test：确认非线性开度与 context 调度联合后仍优于任一单模块，并复核当前 staged 训练未达到 joint 的 1.10 非劣界。它不是新一轮架构赛马，也不验证现场物理因果、完整仿真器或闭环控制。完整问题—证据—停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)。
 
 ## Phase 3.5 研究命题
 
@@ -41,7 +48,7 @@ SP → 控制器/执行机构 → 阀门指令 → 实际阀位
 | E4 | A1phys 是否复现 E3？ | logged valve / constant-valve counterfactual | direction、lag、IRF-WMAE、dose monotonicity |
 | E5 | SP 改变但阀位未执行应如何解释？ | 600 s no-execution / fast executed / ambiguous | 模型阀门效应、真实温度变化与层级证据 |
 
-E1–E5 全部属于主文核心验证。任何一项证据不足都保留 `INCONCLUSIVE`，不靠单一 CFI 合成分数强行选冠军。
+E1–E5 构成主文的现场证据臂；MS0–MS2-J 构成架构 known-truth 证据臂。任何一项证据不足都保留 `INCONCLUSIVE/BLOCKED`，不靠单一 CFI 或 synthetic 结果强行补位。
 
 本轮判决为：E1 的正对照通过；E2、E3、E5 为 `INCONCLUSIVE`；E4 为 `BLOCKED`。这可以支持一篇关于预测与响应可识别性边界、结构约束和 fail-closed 审计的文章，但不能把当前模型升级为已验证的 simulator 或 counterfactual model。
 
@@ -154,8 +161,8 @@ python experiments/phase3_5/run_matrix.py
 
 ## 论文可守表述
 
-若 E1–E5 均通过，可写：
+基于当前两条证据臂，可写：
 
-> an absolute-valve-conditioned, physics-guided gray-box world model with layered observational response validation
+> a physics-guided multistep action-response framework with synthetic known-truth validation and fail-closed identifiability auditing on industrial closed-loop data
 
-仍不能写“完全物理模型”“真实喷水流量已恢复”或“随机干预因果效应已证明”。论文图表默认英文，研究与工程记录可使用中文。
+这不是“已验证 world model”的同义改写。仍不能写“完全物理模型”“真实喷水流量已恢复”“随机干预因果效应已证明”“状态闭合 simulator 已成立”或“可直接进入闭环”。论文图表默认英文，研究与工程记录可使用中文。
