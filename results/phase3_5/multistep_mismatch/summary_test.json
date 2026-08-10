@@ -1,0 +1,258 @@
+{
+  "protocol_version": "phase3.5-ms2-v1",
+  "evidence_scope": "synthetic_mismatch_test_not_field_causality",
+  "split": "test",
+  "run_count": 33,
+  "test_accessed": true,
+  "all_artifact_and_structural_gates_pass": true,
+  "gate_failures": [],
+  "primary_contrasts_pass": true,
+  "candidates": {
+    "c_deeponet": {
+      "regime_id": "context_scheduled_2p",
+      "route": "deeponet",
+      "clean_effect_nmae_mean": 0.021065631260474522,
+      "clean_effect_nmae_std": 0.0019886662062456716,
+      "clean_effect_mae_mean": 0.0010801991059755285,
+      "effect_mae_mean": 0.016072241589426994,
+      "direction_accuracy_clean_nonzero_mean": 1.0,
+      "all_structural_gates_pass": true
+    },
+    "c_g2_global": {
+      "regime_id": "context_scheduled_2p",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.20997482538223267,
+      "clean_effect_nmae_std": 0.001351813786329469,
+      "clean_effect_mae_mean": 0.010793540937205156,
+      "effect_mae_mean": 0.02133954254289468,
+      "direction_accuracy_clean_nonzero_mean": 1.0,
+      "all_structural_gates_pass": true
+    },
+    "c_g2_scheduled": {
+      "regime_id": "context_scheduled_2p",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.02091802718738715,
+      "clean_effect_nmae_std": 0.0007297652556275013,
+      "clean_effect_mae_mean": 0.0010746002662926912,
+      "effect_mae_mean": 0.01608017273247242,
+      "direction_accuracy_clean_nonzero_mean": 1.0,
+      "all_structural_gates_pass": true
+    },
+    "c_k4_global": {
+      "regime_id": "context_scheduled_2p",
+      "route": "koopman",
+      "clean_effect_nmae_mean": 0.22781995932261148,
+      "clean_effect_nmae_std": 0.003015022953050799,
+      "clean_effect_mae_mean": 0.01170886680483818,
+      "effect_mae_mean": 0.021738360946377117,
+      "direction_accuracy_clean_nonzero_mean": 1.0,
+      "all_structural_gates_pass": true
+    },
+    "c_pi_ode": {
+      "regime_id": "context_scheduled_2p",
+      "route": "pi_ode",
+      "clean_effect_nmae_mean": 0.02483486197888851,
+      "clean_effect_nmae_std": 0.0010748713613483794,
+      "clean_effect_mae_mean": 0.001275133341550827,
+      "effect_mae_mean": 0.016108296811580658,
+      "direction_accuracy_clean_nonzero_mean": 1.0,
+      "all_structural_gates_pass": true
+    },
+    "v_deeponet": {
+      "regime_id": "valve_nonlinear_r50",
+      "route": "deeponet",
+      "clean_effect_nmae_mean": 0.020316965878009796,
+      "clean_effect_nmae_std": 0.0037658396839353554,
+      "clean_effect_mae_mean": 0.0007154867441082994,
+      "effect_mae_mean": 0.01602487328151862,
+      "direction_accuracy_clean_nonzero_mean": 1.0,
+      "all_structural_gates_pass": true
+    },
+    "v_g2_identity": {
+      "regime_id": "valve_nonlinear_r50",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.3354141314824422,
+      "clean_effect_nmae_std": 0.009925964691816485,
+      "clean_effect_mae_mean": 0.01181610735754172,
+      "effect_mae_mean": 0.02222558856010437,
+      "direction_accuracy_clean_nonzero_mean": 1.0,
+      "all_structural_gates_pass": true
+    },
+    "v_g2_monotone": {
+      "regime_id": "valve_nonlinear_r50",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.036790081610282264,
+      "clean_effect_nmae_std": 0.0029056177592844392,
+      "clean_effect_mae_mean": 0.001295852513673405,
+      "effect_mae_mean": 0.0161271287749211,
+      "direction_accuracy_clean_nonzero_mean": 1.0,
+      "all_structural_gates_pass": true
+    },
+    "v_g2_r50_oracle": {
+      "regime_id": "valve_nonlinear_r50",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.004276475558678309,
+      "clean_effect_nmae_std": 0.001145101378982429,
+      "clean_effect_mae_mean": 0.00015062192445232844,
+      "effect_mae_mean": 0.015983788296580315,
+      "direction_accuracy_clean_nonzero_mean": 1.0,
+      "all_structural_gates_pass": true
+    },
+    "v_k4_monotone": {
+      "regime_id": "valve_nonlinear_r50",
+      "route": "koopman",
+      "clean_effect_nmae_mean": 0.08165473987658818,
+      "clean_effect_nmae_std": 0.003965248898835542,
+      "clean_effect_mae_mean": 0.002876389461259047,
+      "effect_mae_mean": 0.0164744450400273,
+      "direction_accuracy_clean_nonzero_mean": 1.0,
+      "all_structural_gates_pass": true
+    },
+    "v_pi_monotone": {
+      "regime_id": "valve_nonlinear_r50",
+      "route": "pi_ode",
+      "clean_effect_nmae_mean": 0.042405616492033005,
+      "clean_effect_nmae_std": 0.0029248335781724218,
+      "clean_effect_mae_mean": 0.0014936023702224095,
+      "effect_mae_mean": 0.016158131882548332,
+      "direction_accuracy_clean_nonzero_mean": 1.0,
+      "all_structural_gates_pass": true
+    }
+  },
+  "primary_contrasts": {
+    "valve_nonlinear_r50": {
+      "candidate_id": "v_g2_monotone",
+      "baseline_id": "v_g2_identity",
+      "seed_results": [
+        {
+          "observed_relative_improvement": 0.8803652907700261,
+          "ci95": [
+            0.8593908356694556,
+            0.8990614964361194
+          ],
+          "bootstrap_replicates": 10000,
+          "bootstrap_seed": 20260810,
+          "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+          "episode_count": 256,
+          "profile_counts": {
+            "0": 52,
+            "1": 51,
+            "2": 51,
+            "3": 51,
+            "4": 51
+          },
+          "seed": 0,
+          "ci_lower_exceeds_20pct": true
+        },
+        {
+          "observed_relative_improvement": 0.9028609167685043,
+          "ci95": [
+            0.8841983629768755,
+            0.9191351158818154
+          ],
+          "bootstrap_replicates": 10000,
+          "bootstrap_seed": 20260811,
+          "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+          "episode_count": 256,
+          "profile_counts": {
+            "0": 52,
+            "1": 51,
+            "2": 51,
+            "3": 51,
+            "4": 51
+          },
+          "seed": 1,
+          "ci_lower_exceeds_20pct": true
+        },
+        {
+          "observed_relative_improvement": 0.8870759918356576,
+          "ci95": [
+            0.866871250180189,
+            0.9045035647131179
+          ],
+          "bootstrap_replicates": 10000,
+          "bootstrap_seed": 20260812,
+          "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+          "episode_count": 256,
+          "profile_counts": {
+            "0": 52,
+            "1": 51,
+            "2": 51,
+            "3": 51,
+            "4": 51
+          },
+          "seed": 2,
+          "ci_lower_exceeds_20pct": true
+        }
+      ],
+      "all_seed_ci_lower_exceeds_20pct": true
+    },
+    "context_scheduled_2p": {
+      "candidate_id": "c_g2_scheduled",
+      "baseline_id": "c_g2_global",
+      "seed_results": [
+        {
+          "observed_relative_improvement": 0.8966487016619188,
+          "ci95": [
+            0.8839804053302476,
+            0.9084384666042326
+          ],
+          "bootstrap_replicates": 10000,
+          "bootstrap_seed": 20261810,
+          "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+          "episode_count": 256,
+          "profile_counts": {
+            "0": 52,
+            "1": 51,
+            "2": 51,
+            "3": 51,
+            "4": 51
+          },
+          "seed": 0,
+          "ci_lower_exceeds_20pct": true
+        },
+        {
+          "observed_relative_improvement": 0.9004042842708867,
+          "ci95": [
+            0.8905780908842355,
+            0.9092043608031015
+          ],
+          "bootstrap_replicates": 10000,
+          "bootstrap_seed": 20261811,
+          "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+          "episode_count": 256,
+          "profile_counts": {
+            "0": 52,
+            "1": 51,
+            "2": 51,
+            "3": 51,
+            "4": 51
+          },
+          "seed": 1,
+          "ci_lower_exceeds_20pct": true
+        },
+        {
+          "observed_relative_improvement": 0.9040607127722609,
+          "ci95": [
+            0.8907127100609313,
+            0.9150050949186508
+          ],
+          "bootstrap_replicates": 10000,
+          "bootstrap_seed": 20261812,
+          "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+          "episode_count": 256,
+          "profile_counts": {
+            "0": 52,
+            "1": 51,
+            "2": 51,
+            "3": 51,
+            "4": 51
+          },
+          "seed": 2,
+          "ci_lower_exceeds_20pct": true
+        }
+      ],
+      "all_seed_ci_lower_exceeds_20pct": true
+    }
+  }
+}

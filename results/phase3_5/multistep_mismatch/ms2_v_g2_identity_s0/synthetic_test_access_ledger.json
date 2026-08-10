@@ -1,0 +1,23 @@
+{
+  "protocol_version": "phase3.5-ms2-v1",
+  "status": "completed",
+  "evidence_scope": "synthetic_mismatch_test_not_field_causality",
+  "candidate_id": "v_g2_identity",
+  "regime_id": "valve_nonlinear_r50",
+  "seed": 0,
+  "training_git_sha": "f3401631edae60b42f8832024de7098305e4d0d7",
+  "evaluation_git_sha": "f4e0612001cc4fb357526363cf6292f662532858",
+  "frozen_code_equivalence_paths": [
+    "configs/phase3_5/multistep_mismatch_matrix.json",
+    "experiments/phase3_5/multistep_mismatch.py",
+    "src/phase35/multistep/contracts.py",
+    "src/phase35/multistep/operators.py",
+    "src/phase35/multistep/synthetic.py",
+    "src/phase35/multistep/training.py"
+  ],
+  "checkpoint": "checkpoint_best_val.pt",
+  "checkpoint_sha256": "d018bdf5539537c06fa8e13e02c3dc1e0487420d319bdbd4649ff183c0bf3e2d",
+  "checkpoint_selector": "validation_effect_mae",
+  "test_samples": 256,
+  "trajectory_design_sha256": "65d2700875909943a625179503411ad844fa70632c84ad19bb73b9d764d7659a"
+}

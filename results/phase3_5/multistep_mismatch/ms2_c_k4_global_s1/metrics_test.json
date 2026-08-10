@@ -1,0 +1,92 @@
+{
+  "effect_mae": 0.021958855912089348,
+  "effect_rmse": 0.028826765716075897,
+  "integrated_absolute_error": 1.3175315856933594,
+  "direction_accuracy_nonzero": 0.7034493684768677,
+  "horizon_mae": {
+    "H1": 0.016239237040281296,
+    "H6": 0.016022324562072754,
+    "H18": 0.019214561209082603,
+    "H60": 0.028496991842985153
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "clean_effect_mae": 0.012022370472550392,
+  "clean_effect_rmse": 0.020730815827846527,
+  "clean_effect_scale": 0.05356645584106445,
+  "clean_effect_nmae": 0.22443841397762299,
+  "clean_effect_mae_active": 0.020381130278110504,
+  "noise_mae": 0.016057893633842468,
+  "direction_accuracy_clean_nonzero": 1.0,
+  "clean_horizon_mae": {
+    "H1": 0.0,
+    "H6": 0.0012366865994408727,
+    "H18": 0.00737591041252017,
+    "H60": 0.02050117775797844
+  },
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.17866180837154388,
+    "positive_step_terminal_effect_max_c": -0.2009308636188507,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": true,
+      "fixed_horizon": false,
+      "direction_constrained": true,
+      "continuous_time": false
+    },
+    "operator": {
+      "koopman_decay": [
+        0.9673120975494385,
+        0.9807120561599731,
+        0.9829829931259155,
+        0.983954906463623
+      ],
+      "control_weight": [
+        0.005317456088960171,
+        0.005396961700171232,
+        0.005522932857275009,
+        0.005558955483138561
+      ],
+      "decoder_weight": [
+        -0.022055331617593765,
+        -0.04788607731461525,
+        -0.06177165359258652,
+        -0.06953341513872147
+      ],
+      "spectral_radius": 0.983954906463623,
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_cascade_v2",
+    "truth_regime": "context_scheduled",
+    "truth_opening_map": "identity",
+    "gain_c_per_pct": -0.04,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3,
+    "realized_gain_range": [
+      -0.056644506752491,
+      -0.028270602226257324
+    ],
+    "realized_tau_range": [
+      [
+        51.926509857177734,
+        94.31584167480469
+      ],
+      [
+        156.06809997558594,
+        283.2048034667969
+      ]
+    ],
+    "dt_seconds": 10.0,
+    "seed": 21460816,
+    "split": "test"
+  }
+}

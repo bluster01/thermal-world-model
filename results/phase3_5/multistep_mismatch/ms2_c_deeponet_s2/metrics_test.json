@@ -1,0 +1,74 @@
+{
+  "effect_mae": 0.016020391136407852,
+  "effect_rmse": 0.020069822669029236,
+  "integrated_absolute_error": 0.9612234830856323,
+  "direction_accuracy_nonzero": 0.703554093837738,
+  "horizon_mae": {
+    "H1": 0.016361508518457413,
+    "H6": 0.016639307141304016,
+    "H18": 0.017133424058556557,
+    "H60": 0.015675533562898636
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "clean_effect_mae": 0.0011255776043981314,
+  "clean_effect_rmse": 0.002565806731581688,
+  "clean_effect_scale": 0.05160478502511978,
+  "clean_effect_nmae": 0.02181149646639824,
+  "clean_effect_mae_active": 0.0019056519959121943,
+  "noise_mae": 0.01589866913855076,
+  "direction_accuracy_clean_nonzero": 1.0,
+  "clean_horizon_mae": {
+    "H1": 0.0,
+    "H6": 0.00015154430002439767,
+    "H18": 0.0007805060595273972,
+    "H60": 0.00192490522749722
+  },
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.24729502201080322,
+    "positive_step_terminal_effect_max_c": -0.13727092742919922,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": false,
+      "fixed_horizon": true,
+      "direction_constrained": false,
+      "continuous_time": false
+    },
+    "operator": {
+      "spectral_radius": null,
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_cascade_v2",
+    "truth_regime": "context_scheduled",
+    "truth_opening_map": "identity",
+    "gain_c_per_pct": -0.04,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3,
+    "realized_gain_range": [
+      -0.056723497807979584,
+      -0.028241092339158058
+    ],
+    "realized_tau_range": [
+      [
+        52.138511657714844,
+        94.26025390625
+      ],
+      [
+        156.29290771484375,
+        282.74920654296875
+      ]
+    ],
+    "dt_seconds": 10.0,
+    "seed": 22460819,
+    "split": "test"
+  }
+}
