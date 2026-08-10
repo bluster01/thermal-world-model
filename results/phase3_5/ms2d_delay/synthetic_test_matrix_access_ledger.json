@@ -1,0 +1,95 @@
+{
+  "protocol_version": "phase3.5-ms2d-d1-test-v1",
+  "status": "completed",
+  "evidence_scope": "synthetic_delay_pressure_test_not_field_causality",
+  "authorization": "configs/phase3_5/ms2d_delay_test_authorization.json",
+  "authorization_sha256": "d1e04ce03ffeb2b0ab204f9c4131b352c8c58a10d049161d9e1be49755427ffe",
+  "matrix_sha256": "f5164bfb5f0e3e2d7d2dd0dfbb83934d8a573fb8a5ee874e4a71d9d11392f933",
+  "validation_summary_sha256": "be29f9a3a9f4993c31cd8ebf8076f4f4b926c46e4d7ddf9eb321fd273faa6197",
+  "checkpoint_archive_sha256": "7ee6393993d209cee255e8d7f09b7d376a135b63fc70572b0c6993d44e1a05f4",
+  "evaluation_git_sha": "61edbc77f0fa8e598445f650144456f2b5626efc",
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.11.0+cu130",
+    "cuda_runtime": "13.0",
+    "cuda_available": true,
+    "device": "cuda",
+    "platform": "Linux-6.11.0-1016-nvidia-aarch64-with-glibc2.39"
+  },
+  "run_count": 18,
+  "test_samples": 256,
+  "completed_runs": [
+    {
+      "candidate_id": "d1_g2_no_delay",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d1_g2_no_delay",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d1_g2_no_delay",
+      "seed": 2
+    },
+    {
+      "candidate_id": "d1_g2_learned_delay",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d1_g2_learned_delay",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d1_g2_learned_delay",
+      "seed": 2
+    },
+    {
+      "candidate_id": "d1_g2_oracle_delay",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d1_g2_oracle_delay",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d1_g2_oracle_delay",
+      "seed": 2
+    },
+    {
+      "candidate_id": "d1_k4_monotone",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d1_k4_monotone",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d1_k4_monotone",
+      "seed": 2
+    },
+    {
+      "candidate_id": "d1_pi_monotone",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d1_pi_monotone",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d1_pi_monotone",
+      "seed": 2
+    },
+    {
+      "candidate_id": "d1_deeponet",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d1_deeponet",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d1_deeponet",
+      "seed": 2
+    }
+  ]
+}

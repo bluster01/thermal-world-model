@@ -1,0 +1,17 @@
+{
+  "protocol_version": "phase3.5-ms2d-d1-test-v1",
+  "status": "completed",
+  "evidence_scope": "synthetic_delay_pressure_test_not_field_causality",
+  "candidate_id": "d1_g2_no_delay",
+  "regime_id": "pure_delay_r50_context_scheduled",
+  "seed": 2,
+  "training_git_sha": "95d1dbeebe23068e2a018edb44e6255a75faf6dd",
+  "evaluation_git_sha": "61edbc77f0fa8e598445f650144456f2b5626efc",
+  "checkpoint_archive": "results/phase3_5/archive/ms2d_d1_checkpoints_validation.tar",
+  "checkpoint_archive_sha256": "7ee6393993d209cee255e8d7f09b7d376a135b63fc70572b0c6993d44e1a05f4",
+  "checkpoint_member": "ms2d_d1_g2_no_delay_s2/checkpoint_best_val.pt",
+  "checkpoint_sha256": "52ef7c3bfc9af8d515cbcbd9a92ea2325bd39691925670355d41687954d4ed26",
+  "checkpoint_selector": "validation_effect_mae",
+  "test_samples": 256,
+  "trajectory_design_sha256": "a690b1db6a11b3f2626b7347b9d81d2c48657bd106d2a9d895c2820a7075ca29"
+}

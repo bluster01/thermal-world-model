@@ -1,0 +1,229 @@
+{
+  "protocol_version": "phase3.5-ms2d-d1-test-v1",
+  "evidence_scope": "synthetic_delay_pressure_test_not_field_causality",
+  "split": "test",
+  "run_count": 18,
+  "test_accessed": true,
+  "frozen_validation_status": {
+    "all_artifact_and_structural_gates_pass": true,
+    "oracle_gate_pass": true,
+    "delay_response_gate_pass": true,
+    "delay_identification_diagnostic_pass": false,
+    "all_primary_gates_pass": true
+  },
+  "all_artifact_and_structural_gates_pass": true,
+  "gate_failures": [],
+  "candidates": {
+    "d1_deeponet": {
+      "role": "secondary_representation",
+      "route": "deeponet",
+      "clean_effect_nmae_mean": 0.03462934618194898,
+      "clean_effect_nmae_std": 0.002425272076107207,
+      "clean_effect_mae_mean": 0.0011244516354054213,
+      "effect_mae_mean": 0.016085997844735783,
+      "all_structural_gates_pass": true
+    },
+    "d1_g2_learned_delay": {
+      "role": "primary_model",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.04251777504881223,
+      "clean_effect_nmae_std": 0.0014036508477130911,
+      "clean_effect_mae_mean": 0.0013820225140079856,
+      "effect_mae_mean": 0.01610962177316348,
+      "all_structural_gates_pass": true
+    },
+    "d1_g2_no_delay": {
+      "role": "primary_ablation",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.0541913074751695,
+      "clean_effect_nmae_std": 0.001994736268004257,
+      "clean_effect_mae_mean": 0.0017612607528765996,
+      "effect_mae_mean": 0.01616149644056956,
+      "all_structural_gates_pass": true
+    },
+    "d1_g2_oracle_delay": {
+      "role": "positive_control",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.021367521956562996,
+      "clean_effect_nmae_std": 0.0008928723461446727,
+      "clean_effect_mae_mean": 0.0006940047993945578,
+      "effect_mae_mean": 0.016024171685179073,
+      "all_structural_gates_pass": true
+    },
+    "d1_k4_monotone": {
+      "role": "secondary_representation",
+      "route": "koopman",
+      "clean_effect_nmae_mean": 0.25708311796188354,
+      "clean_effect_nmae_std": 0.016134520825902925,
+      "clean_effect_mae_mean": 0.008358393795788288,
+      "effect_mae_mean": 0.019515734165906906,
+      "all_structural_gates_pass": true
+    },
+    "d1_pi_monotone": {
+      "role": "secondary_representation",
+      "route": "pi_ode",
+      "clean_effect_nmae_mean": 0.05885657792290052,
+      "clean_effect_nmae_std": 0.0032222830317636332,
+      "clean_effect_mae_mean": 0.0019126843738680084,
+      "effect_mae_mean": 0.016243987406293552,
+      "all_structural_gates_pass": true
+    }
+  },
+  "delay_identification_diagnostic": {
+    "candidate_id": "d1_g2_learned_delay",
+    "error_steps_max": 1.0,
+    "truth_plus_minus_one_step_mass_min": 0.8,
+    "seed_results": [
+      {
+        "expected_delay_seconds": 21.954395294189453,
+        "expected_delay_steps": 2.1954395294189455,
+        "truth_delay_steps": 2,
+        "absolute_error_steps": 0.1954395294189455,
+        "truth_plus_minus_one_step_mass": 0.579492200165987,
+        "neighborhood_mass_min": 0.8,
+        "delay_weights": [
+          0.21496792137622833,
+          0.04764332249760628,
+          0.2699097990989685,
+          0.26193907856941223,
+          0.20553983747959137
+        ],
+        "seed": 0,
+        "within_one_step": true,
+        "concentrated_near_truth": false
+      },
+      {
+        "expected_delay_seconds": 20.30367088317871,
+        "expected_delay_steps": 2.0303670883178713,
+        "truth_delay_steps": 2,
+        "absolute_error_steps": 0.03036708831787127,
+        "truth_plus_minus_one_step_mass": 0.5377283021807671,
+        "neighborhood_mass_min": 0.8,
+        "delay_weights": [
+          0.2669498920440674,
+          0.0570668950676918,
+          0.24997127056121826,
+          0.230690136551857,
+          0.19532181322574615
+        ],
+        "seed": 1,
+        "within_one_step": true,
+        "concentrated_near_truth": false
+      },
+      {
+        "expected_delay_seconds": 20.34367561340332,
+        "expected_delay_steps": 2.034367561340332,
+        "truth_delay_steps": 2,
+        "absolute_error_steps": 0.03436756134033203,
+        "truth_plus_minus_one_step_mass": 0.5612848773598671,
+        "neighborhood_mass_min": 0.8,
+        "delay_weights": [
+          0.2526530921459198,
+          0.05950171500444412,
+          0.27473175525665283,
+          0.22705140709877014,
+          0.1860620081424713
+        ],
+        "seed": 2,
+        "within_one_step": true,
+        "concentrated_near_truth": false
+      }
+    ],
+    "all_seeds_pass": false,
+    "interpretation": "Parameter recovery is diagnostic only and is not part of the response confirmation gate."
+  },
+  "oracle_test": {
+    "candidate_id": "d1_g2_oracle_delay",
+    "clean_effect_nmae_max": 0.05,
+    "seed_results": [
+      {
+        "seed": 0,
+        "clean_effect_nmae": 0.020600900811929456,
+        "passes": true
+      },
+      {
+        "seed": 1,
+        "clean_effect_nmae": 0.021153806790670335,
+        "passes": true
+      },
+      {
+        "seed": 2,
+        "clean_effect_nmae": 0.02234785594977539,
+        "passes": true
+      }
+    ],
+    "all_seeds_pass": true
+  },
+  "delay_response_test": {
+    "candidate_id": "d1_g2_learned_delay",
+    "baseline_id": "d1_g2_no_delay",
+    "ci_lower_relative_improvement_min": 0.2,
+    "seed_results": [
+      {
+        "observed": 0.20386847151292598,
+        "ci95": [
+          0.1720465630142785,
+          0.2396507777127358
+        ],
+        "bootstrap_replicates": 10000,
+        "bootstrap_seed": 20260810,
+        "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+        "episode_count": 256,
+        "profile_counts": {
+          "0": 52,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "seed": 0,
+        "ci_lower_meets_threshold": false
+      },
+      {
+        "observed": 0.2169786564842728,
+        "ci95": [
+          0.184484400014115,
+          0.2501637994000539
+        ],
+        "bootstrap_replicates": 10000,
+        "bootstrap_seed": 20260811,
+        "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+        "episode_count": 256,
+        "profile_counts": {
+          "0": 52,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "seed": 1,
+        "ci_lower_meets_threshold": false
+      },
+      {
+        "observed": 0.22503695242637917,
+        "ci95": [
+          0.18781431965640663,
+          0.2655800671530487
+        ],
+        "bootstrap_replicates": 10000,
+        "bootstrap_seed": 20260812,
+        "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+        "episode_count": 256,
+        "profile_counts": {
+          "0": 52,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "seed": 2,
+        "ci_lower_meets_threshold": false
+      }
+    ],
+    "all_seeds_pass": false
+  },
+  "delay_parameter_diagnostic_pass": false,
+  "all_confirmatory_gates_pass": false,
+  "all_gates_pass": false,
+  "interpretation_rule": "This one-shot known-truth synthetic test confirms or challenges the frozen D1 response result; it neither authorizes retraining nor supports field-causal or unique-delay-identification claims."
+}

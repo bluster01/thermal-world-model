@@ -12,7 +12,7 @@
 
 ### 当前判决点
 
-MS2-D1 pure-delay validation 已完成并由本地逐 checkpoint 重放审计：oracle 0.021<0.05、learned vs no-delay 点改善 20.3–23.1%；延迟期望 2.03–2.20 steps（真值 2）但权重分布弥散（±1 step 质量 0.54–0.58<0.80）。探索性的 validation episode bootstrap 95% CI 下界约为 17.3%–19.6%，未达到 20%，所以该结果只算 screening PASS。当前授权同一 18 个 validation-selected checkpoint 的一次性 synthetic test；不重训、不改阈值、不增 seed。D1 test 审计前不启动 D2。
+MS2-D1 pure-delay validation+test 均已完成（18/18 runs）：validation 点估计改善 20.3–23.1% screening PASS；test paired-episode bootstrap CI 下界 17.2–18.8% 未达 20% → **validation screening 阳性、independent test 未确认**。oracle 双层复现 0.021<0.05；延迟参数诊断双层负（E[d] 精确但分布弥散）。按冻结解释不重试不调阈值；D2 是否运行由 Codex 以压力诊断重新设计，不传播 D1 阳性。
 
 ## Phase 3.5-MS — 多步动作响应可解性
 
@@ -25,7 +25,7 @@ MS2-D1 pure-delay validation 已完成并由本地逐 checkpoint 重放审计：
 | MS2-V 阀门非线性 | R50 真值下 identity/oracle/learned monotone 与灵活算子 | 单调模块能否恢复支持域内增量响应？ | 6 candidates×3 seeds；clean NMAE；独立榜 | ✅ validation+test 双层 PASS（test: monotone vs identity CI下界 0.859–0.884 >> 20%，3seed×256ep×10k bootstrap；oracle 0.0043 复现；`K/phi` 补偿使真实曲线不可单独辨识） |
 | MS2-C 工况调度 | 增益/时间常数随 context 变化 | 多步 A1phys 参数调度能否辨识？ | 5 candidates×3 seeds；clean NMAE；独立榜 | ✅ validation+test 双层 PASS（test: scheduled vs global CI下界 0.884–0.891 >> 20%，3seed×256ep×10k bootstrap；K/τ 调度相关性高） |
 | MS2-J 联合耦合 | 同一真值同时含 R50 非线性与 context 调度 | 双模块能否共同收敛？staged 是否比 joint 更稳定？ | 9 candidates×3 seeds；双模块 joint/staged、单模块消融、灵活路线；一次性 test | ✅ validation+test 双层：联合模块 PASS（test CI下界 0.73–0.89 >> 20%）；staged FAIL 复现（test ratio 1.14–1.20，CI上界 1.09–1.32 > 1.10）；oracle 0.0225 复现 |
-| MS2-D1 纯迟延 | R50+调度 truth 加 20 s delay | delay module 是否必要？响应和参数能否分别恢复？ | 6 candidates×3 seeds；oracle；learned vs no-delay；参数诊断分列 | ▶ validation screening PASS / test 已授权：点改善 20.3–23.1%，但 validation bootstrap CI 下界未达 20%；参数核不唯一；等待一次性 test |
+| MS2-D1 纯迟延 | R50+调度 truth 加 20 s delay | delay module 是否必要？响应和参数能否分别恢复？ | 6 candidates×3 seeds；oracle；learned vs no-delay；参数诊断分列 | ⚠️ validation PASS / **test 未确认**：oracle 0.021<0.05 双层复现；test CI 下界 17.2–18.8% < 20%（点估计 20.4–22.5% 方向一致）；E[d] 精确但分布弥散 → capacity 有效、真实迟延未唯一恢复；按冻结解释不重试不调阈值 |
 | MS2-D2/D3 | 三阶惯性、未建模扰动 | 结论是否跨更强失配成立？ | 顺序 Gate，不混大矩阵 | ◻ 等待 D1 test 审计 |
 | MS5 完整耦合 | free 预训练/冻结/联合与 joint 对照 | response 是否被 free head 吸收？ | stage checkpoint、梯度、参数漂移、动作敏感性 | ◻ MS2-D 后、MS3 前 |
 | MS3 真实数据适配 | 复用 A/B causal cache，交叉链按现场冻结 | 合成可解性能否迁移到观测预测？ | validation-only；A/B 分榜；不称因果 | ◻ 等待 MS5 |

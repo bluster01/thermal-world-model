@@ -59,7 +59,7 @@
   "torch_version": "2.11.0+cu130",
   "elapsed_seconds": 1044.7760300636292,
   "checkpoint_sha256": "41fe1290f658a797bd5b5b78524d4447ef1692c30614bdcf9e597b0146cce983",
-  "test_accessed": false,
+  "test_accessed": true,
   "regime_id": "pure_delay_r50_context_scheduled",
   "candidate_role": "secondary_representation",
   "matrix_sha256": "f5164bfb5f0e3e2d7d2dd0dfbb83934d8a573fb8a5ee874e4a71d9d11392f933",
@@ -71,5 +71,8 @@
     "src/phase35/multistep/synthetic.py",
     "src/phase35/multistep/training.py"
   ],
-  "test_authorized": false
+  "test_authorized": true,
+  "test_access_note": "synthetic_delay_known_truth_only",
+  "test_access_ledger": "synthetic_test_access_ledger.json",
+  "test_episode_metrics": "episode_metrics_test.json"
 }

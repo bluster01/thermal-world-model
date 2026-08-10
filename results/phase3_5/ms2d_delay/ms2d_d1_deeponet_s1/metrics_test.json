@@ -1,0 +1,76 @@
+{
+  "effect_mae": 0.016157936304807663,
+  "effect_rmse": 0.020208202302455902,
+  "integrated_absolute_error": 0.9694761037826538,
+  "direction_accuracy_nonzero": 0.6646450757980347,
+  "horizon_mae": {
+    "H1": 0.01744425669312477,
+    "H6": 0.016581764444708824,
+    "H18": 0.015940316021442413,
+    "H60": 0.016540756449103355
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "clean_effect_mae": 0.001135388039983809,
+  "clean_effect_rmse": 0.0024772712495177984,
+  "clean_effect_scale": 0.032974179834127426,
+  "clean_effect_nmae": 0.03443263843655586,
+  "clean_effect_mae_active": 0.002067269990220666,
+  "noise_mae": 0.01604672148823738,
+  "direction_accuracy_clean_nonzero": 1.0,
+  "clean_horizon_mae": {
+    "H1": 0.0,
+    "H6": 0.0001653418003115803,
+    "H18": 0.0007734508253633976,
+    "H60": 0.0015587401576340199
+  },
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.22911697626113892,
+    "positive_step_terminal_effect_max_c": -0.053472280502319336,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": false,
+      "fixed_horizon": true,
+      "direction_constrained": false,
+      "continuous_time": false
+    },
+    "operator": {
+      "spectral_radius": null,
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_cascade_v2",
+    "truth_regime": "delayed_context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "gain_c_per_pct": -0.1,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3,
+    "input_delay_steps": 2,
+    "input_delay_seconds": 20.0,
+    "realized_gain_range": [
+      -0.14174816012382507,
+      -0.0706506222486496
+    ],
+    "realized_tau_range": [
+      [
+        52.106590270996094,
+        94.14695739746094
+      ],
+      [
+        156.71653747558594,
+        282.94940185546875
+      ]
+    ],
+    "dt_seconds": 10.0,
+    "seed": 21460818,
+    "split": "test"
+  }
+}
