@@ -22,7 +22,7 @@
 | MS1 已知真值 | 二阶惯性下的 hold/step/pulse/ramp/multi-step | 架构是否至少能恢复一个可解的多步系统？ | 18/18；参数恢复；结构门禁；单次 synthetic test | ✓ PASS：只支持同型可解性，不设路线冠军 |
 | MS2-V 阀门非线性 | R50 真值下 identity/oracle/learned monotone 与灵活算子 | 单调模块能否恢复支持域内增量响应？ | 6 candidates×3 seeds；clean NMAE；独立榜 | ✅ validation+test 双层 PASS（test: monotone vs identity CI下界 0.859–0.884 >> 20%，3seed×256ep×10k bootstrap；oracle 0.0043 复现；`K/phi` 补偿使真实曲线不可单独辨识） |
 | MS2-C 工况调度 | 增益/时间常数随 context 变化 | 多步 A1phys 参数调度能否辨识？ | 5 candidates×3 seeds；clean NMAE；独立榜 | ✅ validation+test 双层 PASS（test: scheduled vs global CI下界 0.884–0.891 >> 20%，3seed×256ep×10k bootstrap；K/τ 调度相关性高） |
-| MS2-J 联合耦合 | 同一真值同时含 R50 非线性与 context 调度 | 双模块能否共同收敛？staged 是否比 joint 更稳定？ | 9 candidates×3 seeds；双模块 joint/staged、单模块消融、灵活路线；validation-only | ▶ 代码/测试已冻结，待 Linux 27-run validation；不加入 delay/扰动 |
+| MS2-J 联合耦合 | 同一真值同时含 R50 非线性与 context 调度 | 双模块能否共同收敛？staged 是否比 joint 更稳定？ | 9 candidates×3 seeds；双模块 joint/staged、单模块消融、灵活路线；validation-only | ✅ validation 完成：联合模块门禁 PASS（vs 单模块消融 79-91%，3seed 一致）；staged 门禁 FAIL（ratio 1.15-1.23 > 1.10，staged 不优于 joint）；test 未授权 |
 | MS2-D 后续压力 | 纯迟延、阶次扩展、未建模扰动 | 结论是否跨更强失配成立？ | MS2-V/C 收口后再决定 | ◻ HOLD，当前不铺开 |
 | MS3 真实数据适配 | 复用 A/B causal cache，交叉阀位已按现场映射 | 合成可解性能否迁移到观测预测？ | validation-only；A/B 分榜；不称因果 | ◻ HOLD |
 | MS4 经验响应校准 | 仅在未来新时间块 E3 通过后连接真实 IRF | 模型响应是否复现可识别物理响应？ | common support、稳态/动态双 estimand | ⛔ 等待新数据证据 |

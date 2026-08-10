@@ -1,0 +1,80 @@
+{
+  "effect_mae": 0.016362037509679794,
+  "effect_rmse": 0.020523181185126305,
+  "integrated_absolute_error": 0.9817221760749817,
+  "direction_accuracy_nonzero": 0.6757596135139465,
+  "horizon_mae": {
+    "H1": 0.016499483957886696,
+    "H6": 0.01603691279888153,
+    "H18": 0.017342744395136833,
+    "H60": 0.015518495813012123
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "clean_effect_mae": 0.002068490255624056,
+  "clean_effect_rmse": 0.00415386026725173,
+  "clean_effect_scale": 0.037795308977365494,
+  "clean_effect_nmae": 0.054728757590055466,
+  "clean_effect_mae_active": 0.0036707348190248013,
+  "noise_mae": 0.01606426201760769,
+  "direction_accuracy_clean_nonzero": 1.0,
+  "clean_horizon_mae": {
+    "H1": 0.0,
+    "H6": 7.808313966961578e-05,
+    "H18": 0.0010920154163613915,
+    "H60": 0.0036833970807492733
+  },
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.2253897786140442,
+    "positive_step_terminal_effect_max_c": -0.08601924777030945,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": true,
+      "fixed_horizon": false,
+      "direction_constrained": false,
+      "continuous_time": true
+    },
+    "operator": {
+      "gain_c_per_effective_pct": -0.04711459204554558,
+      "tau_seconds": [
+        65.03731536865234,
+        249.7958526611328
+      ],
+      "spectral_radius": 0.9607580304145813,
+      "physics_residual_mse": 2.3292191144719254e-06,
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_cascade_v2",
+    "truth_regime": "context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "gain_c_per_pct": -0.1,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3,
+    "realized_gain_range": [
+      -0.1417984515428543,
+      -0.07095446437597275
+    ],
+    "realized_tau_range": [
+      [
+        51.95259094238281,
+        94.26506042480469
+      ],
+      [
+        155.88299560546875,
+        283.0052185058594
+      ]
+    ],
+    "dt_seconds": 10.0,
+    "seed": 20360814,
+    "split": "validation"
+  }
+}

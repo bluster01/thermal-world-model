@@ -1,0 +1,69 @@
+{
+  "protocol_version": "phase3.5-ms2j-v1",
+  "evidence_scope": "synthetic_joint_coupling_validation_not_field_causality",
+  "run_id": "synthetic_j_g2_r50_scheduled_s1",
+  "route_id": "j_g2_r50_scheduled",
+  "seed": 1,
+  "operator_config": {
+    "route": "graybox",
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "opening_map": "equal_percentage_r50",
+    "poles": 2,
+    "latent_dim": 4,
+    "hidden_dim": 32,
+    "tau_min_seconds": 20.0,
+    "tau_max_seconds": 900.0,
+    "ode_substeps": 2,
+    "closure_scale": 0.02,
+    "context_scheduled": true,
+    "schedule_log_scale": 0.5
+  },
+  "training_config": {
+    "batch_size": 64,
+    "epochs": 300,
+    "patience": 30,
+    "learning_rate": 0.002,
+    "weight_decay": 1e-06,
+    "physics_weight": 0.01,
+    "gradient_clip": 1.0
+  },
+  "synthetic_spec": {
+    "samples": 1024,
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "seed": 21260814,
+    "noise_std": 0.02,
+    "gain_c_per_pct": -0.1,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "truth_regime": "context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3
+  },
+  "train_samples": 1024,
+  "validation_samples": 256,
+  "checkpoint_selector": "validation_effect_mae",
+  "best_epoch": 187,
+  "git_sha": "e3c61447a43da2879e75eb63606f1928eb3495c5",
+  "device": "cuda",
+  "torch_version": "2.11.0+cu130",
+  "elapsed_seconds": 54.472230195999146,
+  "checkpoint_sha256": "150bcc66a6fe4fce3427320d277f2fe1c223fa76179e4a033868e99551d69cfa",
+  "test_accessed": false,
+  "training_mode": "joint",
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.11.0+cu130",
+    "cuda_runtime": "13.0",
+    "cuda_available": true,
+    "device": "cuda",
+    "platform": "Linux-6.11.0-1016-nvidia-aarch64-with-glibc2.39"
+  },
+  "validation_trajectory_design_sha256": "3037468ad6ffce5e59ce38ef875bf75e047a5f5e8c4cbb8551ae43f5bfd61e89"
+}
