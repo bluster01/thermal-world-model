@@ -66,5 +66,6 @@ Phase 3 论文核心验证的正式入口，覆盖 E1–E5：动作表征、阀�
 7. Phase 4/Fan 路线当前暂停，不得混入 Phase 3.5 配置或排行榜。
 8. 本地负责设计、实现、测试和 smoke；Linux 远端只执行已提交的固定版本，不直接热修。
 9. 远端回传结果必须包含 commit、命令、环境、seed、日志、退出状态和结果文件；审计完成前状态只能是 `results_returned`。
+10. Linux 只能写当前 Gate 的结果目录和标记为 `UNVERIFIED_REMOTE_REPORT` 的回传记录；注册表、TODO、上下文快照和 Supervisor 文档只由本地更新。
 
 当前优先级见根目录 `TODO.md`；精确命令见 `phase3_5/README.md`。

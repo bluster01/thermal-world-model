@@ -99,6 +99,26 @@ def test_context_scheduled_truth_changes_gain_and_time_constants_but_stays_stabl
     assert torch.isfinite(batch.clean_effect).all()
 
 
+def test_context_scheduled_truth_supports_three_resolvable_cascaded_poles():
+    spec = SyntheticSpec(
+        samples=48,
+        horizon=20,
+        context_dim=4,
+        seed=35,
+        noise_std=0.0,
+        tau_seconds=(40.0, 70.0, 210.0),
+        truth_regime="context_scheduled",
+        truth_opening_map="equal_percentage_r50",
+        context_gain_log_scale=0.35,
+        context_tau_log_scale=0.30,
+    )
+    batch = generate_synthetic_split(spec, "validation")
+    assert batch.truth["tau_seconds"] == [40.0, 70.0, 210.0]
+    assert len(batch.truth["realized_tau_range"]) == 3
+    assert batch.truth["input_delay_steps"] == 0
+    assert torch.isfinite(batch.clean_effect).all()
+
+
 def test_delayed_context_truth_is_zero_padded_and_exactly_shifts_the_same_response():
     common = dict(
         samples=48,

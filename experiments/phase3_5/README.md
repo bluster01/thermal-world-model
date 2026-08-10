@@ -358,9 +358,9 @@ python experiments/phase3_5/summarize_ms2d_delay.py \
 
 汇总器可能因科学门禁失败以 code 2 退出；仍须原样回传 18 个完整运行目录、`summary_validation.json`、命令输出、环境和 Git SHA。不得改阈值、补 seed、删除失败运行、访问 test，或继续 D2。D1 只有经本地复算后才从 `results_returned` 进入 `audited`。
 
-## 12. 当前授权：MS2-D1 一次性 synthetic test
+## 12. 已完成：MS2-D1 一次性 synthetic test
 
-MS2-D1 validation 已由本地逐 checkpoint 审计为 **screening PASS**，但 validation episode bootstrap 的 95% CI 下界没有达到 20%，不能直接关闭 D1。当前唯一授权是原 18 个 validation-selected checkpoint 的一次性 synthetic test；不重新训练，不改变模型、阈值、seed、split 或 checkpoint。
+本节保留已完成 test 的可复现命令，不再授权重复运行。MS2-D1 最终判决为 `TEST_NOT_CONFIRMED_AT_20PCT_MARGIN`：oracle 通过，改善方向稳定，但逐 seed CI 下界 17.2–18.8% 未达 20%；不重试、不调阈值。
 
 先在干净工作树运行无 test 访问的预检：
 
@@ -389,3 +389,54 @@ python experiments/phase3_5/summarize_ms2d_delay_test.py
 runner 会在首次 test 访问前校验 authorization、matrix、validation summary 和 checkpoint tar 的 SHA256，核对 18 个 manifest/checkpoint 与冻结训练代码等价性，并先写 root access ledger。汇总器要求同 seed 的全部候选共享完全相同的 test trajectory hash；主对比以 256 个配对 episode 为单位、按 action profile 分层做 10,000 次 bootstrap。oracle 每 seed clean NMAE 必须 `<0.05`；learned-delay 相对 no-delay 的改善 95% CI 下界每 seed必须 `≥0.20`。迟延权重集中度继续只作参数诊断。
 
 汇总器因科学门禁失败返回 code 2 时，仍须原样提交全部新增 JSON、更新后的 manifest、stdout/stderr 和环境信息；不得删除 started/partial ledger、重复访问 test、重训、改门槛或启动 D2。test 结果只证明或否证该 known-truth pure-delay 设计，不支持现场 20 s 迟延、开环阀门因果或完整世界模型结论。
+
+## 13. 当前授权：MS2-D2 三阶惯性 validation
+
+MS2-D2 是独立的阶次压力诊断，不继承 D1 的 learned-delay 阳性表述。synthetic truth 固定为 R50 非线性、context scheduling、三个惯性极点 `[40,70,210] s`，且 `input_delay_steps=0`。主对比只回答三极点是否优于同预算二极点；二极点+learned-delay 只检查遗漏阶次是否被误读成延迟。
+
+先核对状态、工作树、冻结矩阵和本地测试：
+
+```bash
+python experiments/phase3_5/experiment_status.py --check --json
+git status --short
+git rev-parse HEAD
+python -m pytest tests/phase35/multistep tests/phase35/test_experiment_status.py -q
+python -m compileall -q src/phase35/multistep \
+  experiments/phase3_5/ms2d_order.py \
+  experiments/phase3_5/summarize_ms2d_order.py
+python experiments/phase3_5/ms2d_order.py --dry-run
+```
+
+状态必须是 `active_gate=ms2d_d2`、`status=ready_for_linux`、`linux_authorized_gate=ms2d_d2`；工作树必须为空；dry-run 必须严格得到 `1 regime / 7 candidates / 21 validation runs` 且 `test_authorized=false`。任一条件不符即停止，不自行修改配置或状态。
+
+正式运行与汇总：
+
+```bash
+mkdir -p results/phase3_5/ms2d_order/remote_execution
+git rev-parse HEAD > results/phase3_5/ms2d_order/remote_execution/git_commit.txt
+python --version > results/phase3_5/ms2d_order/remote_execution/environment.txt 2>&1
+nvidia-smi >> results/phase3_5/ms2d_order/remote_execution/environment.txt 2>&1
+
+python experiments/phase3_5/ms2d_order.py \
+  --device cuda \
+  --output-root results/phase3_5/ms2d_order \
+  --execute-matrix --skip-existing \
+  > results/phase3_5/ms2d_order/remote_execution/train_stdout.log \
+  2> results/phase3_5/ms2d_order/remote_execution/train_stderr.log
+echo $? > results/phase3_5/ms2d_order/remote_execution/train_exit_code.txt
+
+python experiments/phase3_5/summarize_ms2d_order.py \
+  --output-root results/phase3_5/ms2d_order \
+  > results/phase3_5/ms2d_order/remote_execution/summary_stdout.log \
+  2> results/phase3_5/ms2d_order/remote_execution/summary_stderr.log
+echo $? > results/phase3_5/ms2d_order/remote_execution/summary_exit_code.txt
+```
+
+冻结矩阵为 7 candidates × 3 seeds：二极点消融、三极点主模型、三极点+R50 oracle、二极点+learned-delay 诊断，以及 Koopman、PI-ODE、DeepONet secondary references。主门禁逐 seed 要求：
+
+1. 21/21 artifact 与结构门禁通过；
+2. `d2_g3_oracle_structure` clean NMAE `<0.05`；
+3. `d2_g3_three_pole` clean NMAE `<0.10`；
+4. 三极点相对二极点 clean NMAE 改善 `≥10%`。
+
+tau 集合的 permutation-invariant log-MAE，以及无迟延 truth 下 learned-delay 的期望步数/零步质量，只是诊断，不改变主门禁。汇总器因科学门禁失败返回 code 2 时仍须原样回传；训练命令非零则停止并回传日志。Linux 只提交 `results/phase3_5/ms2d_order/**`，不得修改注册表、TODO、README、源代码、测试或 Supervisor 文档，不得访问 synthetic test，也不得启动 D3。

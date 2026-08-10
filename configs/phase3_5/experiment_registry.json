@@ -1,8 +1,8 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
   "updated_at": "2026-08-10",
-  "active_gate": "ms2d_d1",
-  "linux_authorized_gate": "ms2d_d1",
+  "active_gate": "ms2d_d2",
+  "linux_authorized_gate": "ms2d_d2",
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -156,7 +156,7 @@
     },
     "ms2d_d1": {
       "title": "纯迟延结构压力",
-      "status": "test_authorized",
+      "status": "closed",
       "owner": "linux_run_local_audit",
       "evidence_scope": "synthetic_delay_pressure_test_not_field_causality",
       "scripts": {
@@ -172,12 +172,12 @@
         },
         "test_runner": {
           "path": "experiments/phase3_5/ms2d_delay_test.py",
-          "status": "active",
+          "status": "closed",
           "required": true
         },
         "test_summary": {
           "path": "experiments/phase3_5/summarize_ms2d_delay_test.py",
-          "status": "active",
+          "status": "closed",
           "required": true
         }
       },
@@ -220,23 +220,63 @@
         },
         "test_summary": {
           "path": "results/phase3_5/ms2d_delay/summary_test.json",
-          "required": false
+          "required": true
         },
         "test_root_ledger": {
           "path": "results/phase3_5/ms2d_delay/synthetic_test_matrix_access_ledger.json",
-          "required": false
+          "required": true
+        },
+        "test_supervisor_audit": {
+          "path": "docs/PHASE35_MS2D1_TEST_SUPERVISOR_AUDIT_2026-08-10.md",
+          "required": true
         }
       },
-      "decision": "validation 独立审计为 screening PASS、参数辨识诊断 FAIL；授权原 18 checkpoints 一次性 synthetic test，D2 继续冻结"
+      "decision": "CLOSED / TEST_NOT_CONFIRMED_AT_20PCT_MARGIN：test 点改善方向稳定但逐 seed CI 下界 17.2–18.8% 未达预注册 20%；参数辨识诊断继续 FAIL；不重试、不传播 learned-delay 为已证实结构",
+      "advisories": [
+        "Linux test evaluation SHA 61edbc7 与授权 commit 6665405 的冻结执行代码等价，仅多一个随后撤回的远端自审文档",
+        "远端未单独提交 stdout/stderr；环境已写入 root ledger，后续 Gate 按强化协议回传完整日志"
+      ]
     },
     "ms2d_d2": {
       "title": "三阶惯性结构压力",
-      "status": "planned",
-      "owner": "local_design",
-      "evidence_scope": "synthetic_order_pressure_validation",
-      "scripts": {},
-      "artifacts": {},
-      "decision": "等待 D1 一次性 test 审计"
+      "status": "ready_for_linux",
+      "owner": "linux_run_local_audit",
+      "evidence_scope": "synthetic_order_pressure_validation_not_field_causality",
+      "scripts": {
+        "runner": {
+          "path": "experiments/phase3_5/ms2d_order.py",
+          "status": "active",
+          "required": true
+        },
+        "summary": {
+          "path": "experiments/phase3_5/summarize_ms2d_order.py",
+          "status": "active",
+          "required": true
+        }
+      },
+      "artifacts": {
+        "matrix": {
+          "path": "configs/phase3_5/ms2d_order_matrix.json",
+          "required": true
+        },
+        "design": {
+          "path": "docs/plans/2026-08-10-phase35-ms2d2-order-design.md",
+          "required": true
+        },
+        "implementation_plan": {
+          "path": "docs/plans/2026-08-10-phase35-ms2d2-order-implementation.md",
+          "required": true
+        },
+        "validation_summary": {
+          "path": "results/phase3_5/ms2d_order/summary_validation.json",
+          "required": false
+        },
+        "supervisor_audit": {
+          "path": "docs/PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md",
+          "required": false
+        }
+      },
+      "decision": "D1 已按冻结 margin 阴性关闭；D2 作为独立阶次压力诊断放行。真值无 pure delay、含第三惯性极点；learned-delay 仅作遗漏阶次误读诊断"
     },
     "ms2d_d3": {
       "title": "未建模扰动压力",

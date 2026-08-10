@@ -1,0 +1,121 @@
+{
+  "protocol_version": "phase3.5-ms2d-d2-v1",
+  "evidence_scope": "synthetic_order_pressure_validation_not_field_causality",
+  "seeds": [0, 1, 2],
+  "operator_defaults": {
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "opening_map": "identity",
+    "poles": 2,
+    "latent_dim": 4,
+    "hidden_dim": 32,
+    "tau_min_seconds": 20.0,
+    "tau_max_seconds": 900.0,
+    "ode_substeps": 2,
+    "closure_scale": 0.02,
+    "context_scheduled": false,
+    "schedule_log_scale": 0.5,
+    "delay_mode": "none",
+    "fixed_delay_steps": 0,
+    "max_delay_steps": 0
+  },
+  "synthetic_defaults": {
+    "train_samples": 1024,
+    "validation_samples": 256,
+    "test_samples": 256,
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "seed": 20260813,
+    "noise_std": 0.02,
+    "gain_c_per_pct": -0.10,
+    "tau_seconds": [40.0, 70.0, 210.0],
+    "truth_regime": "context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.30,
+    "input_delay_steps": 0
+  },
+  "training": {
+    "batch_size": 64,
+    "epochs": 300,
+    "patience": 30,
+    "learning_rate": 0.002,
+    "weight_decay": 0.000001,
+    "physics_weight": 0.01,
+    "gradient_clip": 1.0
+  },
+  "gates": {
+    "oracle_clean_nmae_max": 0.05,
+    "order_aware_clean_nmae_max": 0.10,
+    "order_aware_relative_improvement_min": 0.10,
+    "tau_set_log_mae_max": 0.35,
+    "no_true_delay_expected_steps_max": 0.50,
+    "no_true_delay_zero_step_mass_min": 0.80
+  },
+  "regimes": [
+    {
+      "regime_id": "third_order_r50_context_scheduled",
+      "question": "Does an explicit third inertial pole outperform the same two-pole graybox when the known truth has three poles and no pure delay?",
+      "synthetic": {},
+      "candidates": [
+        {
+          "candidate_id": "d2_g2_two_pole",
+          "role": "primary_ablation",
+          "route": "graybox",
+          "opening_map": "monotone",
+          "context_scheduled": true,
+          "poles": 2
+        },
+        {
+          "candidate_id": "d2_g3_three_pole",
+          "role": "primary_model",
+          "route": "graybox",
+          "opening_map": "monotone",
+          "context_scheduled": true,
+          "poles": 3
+        },
+        {
+          "candidate_id": "d2_g3_oracle_structure",
+          "role": "positive_control",
+          "route": "graybox",
+          "opening_map": "equal_percentage_r50",
+          "context_scheduled": true,
+          "poles": 3
+        },
+        {
+          "candidate_id": "d2_g2_delay_compensation",
+          "role": "alternative_mechanism_diagnostic",
+          "route": "graybox",
+          "opening_map": "monotone",
+          "context_scheduled": true,
+          "poles": 2,
+          "delay_mode": "learned",
+          "max_delay_steps": 4
+        },
+        {
+          "candidate_id": "d2_k4_monotone",
+          "role": "secondary_representation",
+          "route": "koopman",
+          "opening_map": "monotone",
+          "latent_dim": 4
+        },
+        {
+          "candidate_id": "d2_pi_monotone",
+          "role": "secondary_representation",
+          "route": "pi_ode",
+          "opening_map": "monotone"
+        },
+        {
+          "candidate_id": "d2_deeponet",
+          "role": "secondary_representation",
+          "route": "deeponet",
+          "opening_map": "identity",
+          "latent_dim": 8,
+          "hidden_dim": 32
+        }
+      ]
+    }
+  ]
+}

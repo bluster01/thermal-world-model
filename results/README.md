@@ -77,6 +77,8 @@
 
 `results/exp_201_valve_action/` 是 Phase 3.5 A 侧 pilot：固定等百分比 `R=50` 的 ff10 三 seed 最终 test-Jacobian 负方向为 100%×3，no-freeze 三 seed 为 95%/100%/100%，而绝对阀位变体多为 60–75%。但 exp_201 逐轮访问 test，并以同一 test MAE/Jacobian 组成的 fallback CFI 保存 `best_cfi`；固定曲线也未经流量标定。因此这些数字只生成 E2 假设，不作论文核心结果。
 
-当前没有新协议正式结果。未来结果固定写入 `results/phase3_5/runs/<side>_<config>_s<seed>/`，开发汇总写入 `summary_validation.*`，单次 test 汇总写入 `summary_test.*`。框架完成或本地 smoke 通过都不能提前建立结果条目。
+当前 Phase 3.5-MS 已有正式 synthetic known-truth 结果，但其证据范围不包含现场因果：MS1、MS2-V/C/J 已关闭；`results/phase3_5/ms2d_delay/` 保存 D1 validation 与 one-shot test。D1 的 oracle test 为 0.0206–0.0223；learned-delay 点改善 20.4–22.5%，但预注册 bootstrap CI 下界 17.2–18.8% 未达 20%，因此是确认门禁 FAIL，不得只引用点估计。权威审计见 [`PHASE35_MS2D1_TEST_SUPERVISOR_AUDIT_2026-08-10.md`](../docs/PHASE35_MS2D1_TEST_SUPERVISOR_AUDIT_2026-08-10.md)。
+
+当前 MS2-D2 只处于 `ready_for_linux`，尚无正式结果；其产物将写入 `results/phase3_5/ms2d_order/`。框架完成或本地 smoke 通过不能提前建立科学结果条目。
 
 Phase 4 已暂停。Fan20-SST 守恒骨架、Fan17/21 嵌套组件、Fan-state controlled Koopman 和时变灰箱路线目前没有正式结果，也不进入 Phase 3.5 结果目录。

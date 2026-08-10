@@ -84,6 +84,23 @@ def test_context_scheduled_graybox_varies_parameters_without_losing_direction_or
     assert output.diagnostics["spectral_radius"].item() < 1.0
 
 
+def test_three_pole_scheduled_graybox_preserves_state_across_rollout_chunks():
+    operator = build_response_operator(
+        _config("graybox", poles=3, context_scheduled=True)
+    ).eval()
+    context, action, reference = _paths()
+    full = operator(context, action, reference)
+    first = operator(context, action[:, :5], reference[:, :5])
+    second = operator(context, action[:, 5:], reference[:, 5:], first.final_state)
+    assert first.final_state.shape == (3, 3)
+    torch.testing.assert_close(
+        torch.cat((first.effect, second.effect), dim=1),
+        full.effect,
+        atol=1e-6,
+        rtol=1e-6,
+    )
+
+
 def test_fixed_delay_graybox_is_zero_until_the_frozen_delay_and_then_responds():
     operator = build_response_operator(
         _config(

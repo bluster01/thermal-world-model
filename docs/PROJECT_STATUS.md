@@ -4,7 +4,7 @@
 
 ## 一句话状态
 
-项目已完成 MS0、MS1、MS2-V/C/J；MS2-J test 的 episode bootstrap 已本地精确复算：联合模块双层 PASS、response-internal staged 非劣双层 FAIL。项目**尚未完成真实模型定性，也未进入论文收口**。MS2-D1 validation 已独立审计为 screening PASS，当前 active Gate 只授权一次性 synthetic test，D2 尚未放行；后续仍需 D2/D3、MS5 完整耦合、MS3 真实适配和 MS4 闭环响应。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
+项目已完成 MS0、MS1、MS2-V/C/J 和 MS2-D1；MS2-J 联合模块双层 PASS、response-internal staged 非劣双层 FAIL。D1 test 的点改善方向稳定，但确认性 CI 下界 17.2–18.8% 未达预注册 20%，故以 `TEST_NOT_CONFIRMED_AT_20PCT_MARGIN` 关闭，且 delay 参数仍不可唯一辨识。项目**尚未完成真实模型定性，也未进入论文收口**。当前 active Gate 只授权 MS2-D2 的 21-run synthetic validation；后续仍需 D3、MS5 完整耦合、MS3 真实适配和 MS4 闭环响应。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
 
 ## Phase 3.5 当前状态
 
@@ -147,6 +147,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-下一判决点是 MS2-D1 一次性 synthetic test：原 18 个 validation-selected checkpoints 不重训，在独立 test episodes 上要求 oracle 每 seed clean NMAE `<0.05`，且 learned-delay 相对 no-delay 的配对、profile 分层 bootstrap 95% CI 下界每 seed `≥0.20`。validation 点改善虽为 20.3%–23.1%，其探索性 bootstrap CI 下界仅约 17.3%–19.6%，所以只能作为 screening。注册表现为 `test_authorized`；D2 不自动启动。
+下一判决点是 MS2-D2 三阶惯性 validation：在无 pure delay、R50+context scheduling、truth tau `[40,70,210] s` 下，要求三极点 oracle 每 seed clean NMAE `<0.05`，三极点主模型每 seed `<0.10`，且相对同预算二极点每 seed改善 `≥10%`。tau 集合恢复和二极点+learned-delay 的虚假迟延只作诊断，不并入主门禁。注册表现为 `ready_for_linux`；test 与 D3 均未授权。
 
 完整顺序为 MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 保持暂停。

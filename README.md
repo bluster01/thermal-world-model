@@ -2,7 +2,7 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-10）**：Phase 4 暂停，先完成 Phase 3.5-MS 全系列，尚未进入论文收口。MS2-J test 已完成：联合模块双层 PASS，response-internal staged 非劣双层 FAIL，当前 response 训练采用 joint。MS2-D1 validation 已审计为 screening PASS，现只授权原 checkpoint 的一次性 synthetic test；D2 仍冻结。之后仍有 D2/D3、完整 `free+response` 的 MS5、真实 A/B 的 MS3 和闭环物理响应 MS4。旧 E1–E5 已废弃，只保留为历史失败证据。
+> **当前判断（2026-08-10）**：Phase 4 暂停，先完成 Phase 3.5-MS 全系列，尚未进入论文收口。MS2-J 联合模块双层 PASS、response-internal staged 非劣双层 FAIL。MS2-D1 的改善方向跨 validation/test 稳定，但确认性 CI 下界 17.2–18.8% 未达预注册 20%，已阴性关闭且不传播 learned-delay 结构。当前唯一授权是 MS2-D2 的无迟延三阶惯性 21-run validation；之后仍有 D3、完整 `free+response` 的 MS5、真实 A/B 的 MS3 和闭环物理响应 MS4。旧 E1–E5 已废弃，只保留为历史失败证据。
 
 ## 当前入口
 
@@ -22,7 +22,7 @@ Phase 4 的 [实验计划](docs/PHASE4_EXPERIMENT_PLAN.md) 和 Fan2017/2020/2021
 
 ## 当前主要实验目的
 
-完整目标是验证结构化多步响应从“已知真值可解”到“结构失配稳健”、再到“完整 `free+response` 不吸收动作”、真实数据适配和现场闭环响应的一条连续证据链。当前完成至 MS2-J；MS2-D1 的 18-run validation 已完成并独立复核，当前状态为 `test_authorized`，不是 D1 已关闭。完整顺序和停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)，机器状态可运行 `python experiments/phase3_5/experiment_status.py --check --json` 查询。
+完整目标是验证结构化多步响应从“已知真值可解”到“结构失配稳健”、再到“完整 `free+response` 不吸收动作”、真实数据适配和现场闭环响应的一条连续证据链。当前完成至 MS2-D1；D2 以第三惯性极点而非 pure delay 作为独立结构压力，状态为 `ready_for_linux`。完整顺序和停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)，机器状态可运行 `python experiments/phase3_5/experiment_status.py --check --json` 查询。
 
 ## Phase 3.5 研究命题
 
@@ -142,10 +142,10 @@ $env:MKL_NUM_THREADS='1'
 python -m pytest tests/phase35 -q
 python -m compileall -q src/phase35 experiments/phase3_5
 python experiments/phase3_5/experiment_status.py --check --json
-python experiments/phase3_5/ms2d_delay.py --dry-run
+python experiments/phase3_5/ms2d_order.py --dry-run
 ```
 
-当前 Phase 3.5 专项测试覆盖 synthetic train→validation→locked-test CLI smoke、MS2-J/MS2-D1 已完成 ledger 的重复访问拒绝、MS2-D1 causal delay timing/simplex/state continuation/content pin/paired bootstrap、实验状态唯一授权、事件 fail-closed、零方差匹配和 split/test-lock 回归测试。最新通过数以仓库测试命令输出为准。旧 42 个真实数据 development runs 已完成但路线废弃；独立真实数据模型 test 未执行，A/B 旧事件 test 标签已在探索脚本中暴露，未来 MS4 正式事件证据必须使用新时间块。
+当前 Phase 3.5 专项测试覆盖 synthetic train→validation→locked-test CLI smoke、MS2-J/MS2-D1 已完成 ledger 的重复访问拒绝、D1 delay timing/simplex/content pin/paired bootstrap、D2 三阶真值/冻结矩阵/fail-closed 聚合、实验状态唯一授权、事件 fail-closed、零方差匹配和 split/test-lock 回归测试。最新通过数以仓库测试命令输出为准。旧 42 个真实数据 development runs 已完成但路线废弃；独立真实数据模型 test 未执行，A/B 旧事件 test 标签已在探索脚本中暴露，未来 MS4 正式事件证据必须使用新时间块。
 
 ## 历史证据限制
 

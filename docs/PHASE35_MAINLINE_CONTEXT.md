@@ -4,9 +4,9 @@
 
 - Material Type: active experiment-purpose specification
 - Scope: Phase 3.5-MS0–MS5、真实数据适配与闭环响应验证
-- Verification Status: ANALYZED；MS2-J test 已本地复算
+- Verification Status: ANALYZED；MS2-D1 test 已独立审计
 - Deprecated Track: 原 E1–E5，仅作历史失败证据
-- Active Decision: 完成完整 MS 系列；当前 Gate 为 MS2-D1
+- Active Decision: 完成完整 MS 系列；当前 Gate 为 MS2-D2
 
 ## 1. 一句话主线
 
@@ -55,7 +55,7 @@ Koopman、PI-ODE 与 DeepONet 继续作为表示路线参与压力和真实适�
 
 现场物理验证改由 MS4 承担。当前最强外部锚点是 SP held-step 的闭环响应：A/B 两侧具有双向事件和 110+ 日块，`SP↑→T2↑→Tm↑` 方向率约 70–86%。它验证的是包含串级 PID 的闭环系统，不是开环 `do(valve)`；双侧 SP 联动仍限制单侧归因。
 
-## 5. 当前 Gate：MS2-D1
+## 5. 当前 Gate：MS2-D2
 
 MS2-D 采用顺序压力测试，不一次铺开大矩阵：
 
@@ -63,7 +63,9 @@ MS2-D 采用顺序压力测试，不一次铺开大矩阵：
 2. D2：加入第三个惯性环节；
 3. D3：加入 action-independent colored disturbance。
 
-D1 主判决只比较 learned causal delay graybox 与 no-delay 消融。fixed-delay oracle 用于确认生成—优化链，Koopman、PI-ODE、DeepONet只作 secondary references。D1 完成前不进入 D2，也不读取 synthetic test。
+D1 已关闭：learned causal delay 的改善方向跨 validation/test 稳定，但 test bootstrap CI 下界 17.2–18.8% 未达到预注册 20%，且 delay kernel 未唯一恢复。该结果不能把 learned-delay 传播为主架构的已证实部件。
+
+D2 因而采用正交的阶次压力设计：真值取消 pure delay，只加入第三个惯性极点 `[40,70,210] s`。主对比为 context-scheduled 三极点 graybox 与同预算二极点消融；oracle 验证生成—优化链。二极点+learned-delay 只诊断“遗漏阶次是否被误读成延迟”，Koopman、PI-ODE、DeepONet继续作 secondary references。当前只授权 validation，D2 审计前不读取 synthetic test、不启动 D3。
 
 ## 6. 当前不能声称
 

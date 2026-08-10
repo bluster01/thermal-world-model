@@ -25,18 +25,29 @@
 3. 保存完整日志、结构化结果和运行元数据。
 4. 原样回传失败信息，不在远端临时修改模型或评测口径。
 
+Linux 的版本化写入范围严格限定为：
+
+- 当前授权 Gate 的 `results/<active_gate>/**` 或运行手册明确给出的等价结果目录；
+- runner 按协议生成/更新的 manifest、metrics、ledger、checkpoint hash；
+- 若运行手册明确要求，可新增一个 `docs/REMOTE_RETURN_<gate>_<date>.md`，且顶部必须标记 `UNVERIFIED_REMOTE_REPORT`。
+
+Linux **不得**修改 `configs/`、`src/`、`experiments/`、`tests/`、根 `TODO.md`、根 `README.md`、`docs/PROJECT_STATUS.md`、`docs/PHASE35_CONTEXT_SNAPSHOT.md`、机器注册表，或任何 `SUPERVISOR_AUDIT/REVIEW` 文档；不得自行把状态改为 `audited`、`closed` 或放行下一 Gate。只有本地 Supervisor 在复算后更新权威状态、结论和下一批授权。
+
 ## 实验状态
 
 | 状态 | 含义 | 可否写入结论 |
 |---|---|---|
-| `designed` | 假设、对照和判据已写清 | 否 |
-| `implemented` | 代码完成，尚未通过 smoke | 否 |
-| `smoke_passed` | 小规模前向、训练和保存链路通过 | 否 |
-| `ready_for_remote` | 已提交且远端清单完整 | 否 |
-| `remote_running` | Linux 正式实验执行中 | 否 |
+| `planned` / `implementation` | 设计或代码尚未完成 | 否 |
+| `local_verified` | 本地测试、smoke、dry-run 已通过，尚未放行 | 否 |
+| `ready_for_linux` | 已提交、运行清单完整且是唯一 Linux 授权 Gate | 否 |
+| `linux_running` | Linux 按冻结版本执行中 | 否 |
 | `results_returned` | 结果已回传，尚未审计 | 否 |
-| `audited` | 指标、日志、协议和异常已复核 | 可写带范围的结果 |
-| `concluded` | 多 seed 与关键消融支持判决 | 可更新项目结论 |
+| `audited` | 指标、日志、协议和异常已由本地复核 | 可写带范围的结果 |
+| `test_authorized` / `test_completed` | 仅对明确 Gate 开放一次 test / 已执行待审计 | 未审计前否 |
+| `closed` | Gate 已按预注册规则完成最终判决 | 可更新带范围的项目结论 |
+| `paused` / `deprecated` | 暂停或废弃路线 | 否 |
+
+机器状态词以 `configs/phase3_5/experiment_registry.json` 的 `status_vocabulary` 为准；Linux 不得依据旧文档中的近义状态自行迁移。
 
 ## 本地交付给 Linux 的运行包
 
@@ -84,6 +95,8 @@ results/...             # JSON/CSV/NPZ 等结构化结果
 
 checkpoint 体积过大时可不提交 Git，但应保留文件名、大小、SHA256 和保存位置。正式结果 JSON 必须入库或提供可追溯归档。
 
+远端报告中的数值摘要默认状态是 `UNVERIFIED_REMOTE_REPORT`。它可以说明命令是否完成、产物位置和原始门禁输出，但不能写“独立审计通过”“论文结论成立”或自行部署下一 Gate。
+
 ## 本地审计清单
 
 结果返回后依次检查：
@@ -96,7 +109,7 @@ checkpoint 体积过大时可不提交 Git，但应保留文件名、大小、SH
 6. 负面结果是否可能来自数值积分、单位、动作编码或结果覆盖错误。
 7. 结论范围是否严格小于等于实验覆盖范围。
 
-审计完成后更新根 `TODO.md`、`docs/PROJECT_STATUS.md` 和 `results/README.md`。`docs/CURRENT_TASKS.md` 是历史任务说明，不再维护。只有改变项目主判断时才更新根 README。
+审计完成后由本地 Supervisor 更新机器注册表、根 `TODO.md`、`docs/PHASE35_CONTEXT_SNAPSHOT.md`、`docs/PROJECT_STATUS.md` 和 `results/README.md`。`docs/CURRENT_TASKS.md` 是历史任务说明，不再维护。只有改变项目主判断时才更新根 README。
 
 ## 失败处理
 
