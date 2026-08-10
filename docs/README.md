@@ -9,6 +9,9 @@
 - [../configs/phase3_5/experiment_registry.json](../configs/phase3_5/experiment_registry.json)：机器可校验的 Gate、Linux 授权、关键脚本和产物状态。
 - [PHASE35_MAINLINE_CONTEXT.md](PHASE35_MAINLINE_CONTEXT.md)：完整 MS 主命题、known-truth/现场两条证据臂与停止规则。
 - [plans/2026-08-10-phase35-ms2d-pressure-design.md](plans/2026-08-10-phase35-ms2d-pressure-design.md)：当前 MS2-D1 纯迟延压力设计。
+- [PHASE35_MS2D1_SUPERVISOR_AUDIT_2026-08-10.md](PHASE35_MS2D1_SUPERVISOR_AUDIT_2026-08-10.md)：D1 validation 的 checkpoint/history/archive 独立复核、统计谬误扫描与一次性 test 判决。
+- [plans/2026-08-10-phase35-ms2d1-test-design.md](plans/2026-08-10-phase35-ms2d1-test-design.md)：D1 content-addressed 一次性 synthetic test 设计与确认门禁。
+- [plans/2026-08-10-phase35-ms2d1-test-implementation.md](plans/2026-08-10-phase35-ms2d1-test-implementation.md)：D1 test runner、汇总器、状态机与 Linux 交付实施清单。
 - [PHASE3_5_EXPERIMENT_DESIGN.md](PHASE3_5_EXPERIMENT_DESIGN.md)：已废弃 E1–E5 路线的历史设计与失败门禁，不是当前执行协议。
 - [PHASE35_DESIGN.md](PHASE35_DESIGN.md)：exp_201 先导设计与当时推理；其 test-selected 结论已由正式 Phase 3.5 协议降级。
 - [plans/2026-08-08-phase3-5-a1phys-core-validation.md](plans/2026-08-08-phase3-5-a1phys-core-validation.md)：Phase 3.5 实施计划与测试清单。

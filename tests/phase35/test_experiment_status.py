@@ -70,6 +70,19 @@ def test_status_cli_emits_machine_readable_summary():
     assert payload["deprecated_tracks"] == ["legacy_e"]
 
 
+def test_registry_accepts_test_authorized_active_gate():
+    module = _module()
+    registry = module.load_registry(
+        ROOT / "configs/phase3_5/experiment_registry.json"
+    )
+    registry["active_gate"] = "ms2d_d1"
+    registry["linux_authorized_gate"] = "ms2d_d1"
+    registry["experiments"]["ms2d_d1"]["status"] = "test_authorized"
+    report = module.validate_registry(registry, ROOT)
+    assert report["valid"] is True
+    assert report["active_status"] == "test_authorized"
+
+
 def test_registry_rejects_two_linux_authorized_gates():
     module = _module()
     registry = module.load_registry(

@@ -156,17 +156,27 @@
     },
     "ms2d_d1": {
       "title": "纯迟延结构压力",
-      "status": "ready_for_linux",
+      "status": "test_authorized",
       "owner": "linux_run_local_audit",
-      "evidence_scope": "synthetic_delay_pressure_validation",
+      "evidence_scope": "synthetic_delay_pressure_test_not_field_causality",
       "scripts": {
         "runner": {
           "path": "experiments/phase3_5/ms2d_delay.py",
-          "status": "active",
+          "status": "closed",
           "required": true
         },
         "summary": {
           "path": "experiments/phase3_5/summarize_ms2d_delay.py",
+          "status": "closed",
+          "required": true
+        },
+        "test_runner": {
+          "path": "experiments/phase3_5/ms2d_delay_test.py",
+          "status": "active",
+          "required": true
+        },
+        "test_summary": {
+          "path": "experiments/phase3_5/summarize_ms2d_delay_test.py",
           "status": "active",
           "required": true
         }
@@ -186,10 +196,38 @@
         },
         "validation_summary": {
           "path": "results/phase3_5/ms2d_delay/summary_validation.json",
+          "required": true
+        },
+        "checkpoint_archive": {
+          "path": "results/phase3_5/archive/ms2d_d1_checkpoints_validation.tar",
+          "required": true
+        },
+        "supervisor_audit": {
+          "path": "docs/PHASE35_MS2D1_SUPERVISOR_AUDIT_2026-08-10.md",
+          "required": true
+        },
+        "test_design": {
+          "path": "docs/plans/2026-08-10-phase35-ms2d1-test-design.md",
+          "required": true
+        },
+        "test_implementation_plan": {
+          "path": "docs/plans/2026-08-10-phase35-ms2d1-test-implementation.md",
+          "required": true
+        },
+        "test_authorization": {
+          "path": "configs/phase3_5/ms2d_delay_test_authorization.json",
+          "required": true
+        },
+        "test_summary": {
+          "path": "results/phase3_5/ms2d_delay/summary_test.json",
+          "required": false
+        },
+        "test_root_ledger": {
+          "path": "results/phase3_5/ms2d_delay/synthetic_test_matrix_access_ledger.json",
           "required": false
         }
       },
-      "decision": "本地 88 项 Phase3.5 测试、compile、CPU smoke 与 18-run dry-run 通过；仅授权 Linux validation，不授权 test"
+      "decision": "validation 独立审计为 screening PASS、参数辨识诊断 FAIL；授权原 18 checkpoints 一次性 synthetic test，D2 继续冻结"
     },
     "ms2d_d2": {
       "title": "三阶惯性结构压力",
@@ -198,7 +236,7 @@
       "evidence_scope": "synthetic_order_pressure_validation",
       "scripts": {},
       "artifacts": {},
-      "decision": "等待 D1 validation 审计"
+      "decision": "等待 D1 一次性 test 审计"
     },
     "ms2d_d3": {
       "title": "未建模扰动压力",

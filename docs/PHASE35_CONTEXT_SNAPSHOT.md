@@ -30,13 +30,19 @@ python experiments/phase3_5/experiment_status.py --check --json
 | MS2-V | CLOSED | learned monotone 在 R50 truth 下相对 identity 双层 PASS；`K/phi` 不可拆分 |
 | MS2-C | CLOSED | scheduled K/τ 相对 global 双层 PASS |
 | MS2-J | CLOSED | joint 相对两个单模块双层 PASS；staged 10% 非劣双层 FAIL；采用 joint |
-| MS2-D1 | READY_FOR_LINUX | 当前 active/authorized Gate：20 s pure-delay validation；不授权 test |
-| MS2-D2/D3 | PLANNED | 三阶惯性、未建模扰动，按序进入 |
+| MS2-D1 | TEST_AUTHORIZED | validation 已审计为 screening PASS；当前只授权冻结 checkpoint 的一次性 synthetic test |
+| MS2-D2/D3 | PLANNED | 三阶惯性、未建模扰动；等待 D1 test 审计 |
 | MS5 | PLANNED | 完整 `free+response` 耦合，不被 MS2-J 替代 |
 | MS3 | PLANNED | A/B validation-only 真实数据适配，不称因果 |
 | MS4 | PLANNED | 用 SP held-step 验证串级闭环响应，不恢复旧 E 匹配 |
 
 ## 4. Linux 最新同步与本地审计
+
+Linux 在 `7cf2b14` 回传 MS2-D1 validation：18/18 artifacts/结构门禁通过；oracle clean NMAE 0.0201–0.0211；learned-delay 相对 no-delay 的逐 seed 点改善 20.25%–23.11%；learned delay 期望为 2.03–2.20 steps，但真值 ±1 step 质量仅 0.538–0.579。
+
+本地重新汇总全部 JSON、解包并加载 18 个 checkpoint、重放 best-epoch 选择和配置/hash 校验，结果一致。独立的 validation episode bootstrap 诊断显示 95% CI 下界约 17.3%–19.6%，所以判为 `AUDITED_SCREENING_PASS`，不是确认性关闭。当前 content-addressed authorization 只允许原 18 checkpoints 的一次性 synthetic test；D2 继续冻结。完整判决见 [`PHASE35_MS2D1_SUPERVISOR_AUDIT_2026-08-10.md`](PHASE35_MS2D1_SUPERVISOR_AUDIT_2026-08-10.md)。
+
+此前 MS2-J 状态保持不变：
 
 Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。基于每 seed 256 episode、按 action profile 分层、10,000 次 bootstrap：
 
@@ -53,7 +59,7 @@ Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。�
 
 ## 5. 当前下一步
 
-MS2-D1 只加入固定 20 s pure delay。主对比是同一 scheduled monotone graybox 的 learned-delay vs no-delay；fixed-delay oracle 是正对照，Koopman/PI-ODE/DeepONet 是 secondary representation references。正式 validation 为 18 runs；本地 88 项 Phase3.5 测试、compile、CPU smoke、dry-run 与 fail-closed 汇总测试已通过，现仅授权 Linux validation，不授权 test。Linux 只能执行 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 第 11 节。设计见 [`plans/2026-08-10-phase35-ms2d-pressure-design.md`](plans/2026-08-10-phase35-ms2d-pressure-design.md)。
+MS2-D1 的一次性 test 不训练，只从已 pin 的 tar 读取 18 个 validation-selected checkpoints，在每 seed 256 个独立 test episodes 上评估。确认门禁是 oracle 每 seed clean NMAE `<0.05`，以及 learned-delay 相对 no-delay 的配对、action-profile 分层 10,000 次 bootstrap 95% CI 下界每 seed `≥0.20`。迟延参数核恢复继续单列诊断，不阻塞响应门。Linux 只能执行 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 第 12 节；不得重训、改阈值、增 seed 或启动 D2。设计见 [`plans/2026-08-10-phase35-ms2d1-test-design.md`](plans/2026-08-10-phase35-ms2d1-test-design.md)。
 
 ## 6. 上下文读取优先级
 

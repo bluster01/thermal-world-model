@@ -1,0 +1,44 @@
+{
+  "protocol_version": "phase3.5-ms2d-d1-test-v1",
+  "training_protocol_version": "phase3.5-ms2d-d1-v1",
+  "evidence_scope": "synthetic_delay_pressure_test_not_field_causality",
+  "matrix": {
+    "path": "configs/phase3_5/ms2d_delay_matrix.json",
+    "sha256": "f5164bfb5f0e3e2d7d2dd0dfbb83934d8a573fb8a5ee874e4a71d9d11392f933"
+  },
+  "validation_summary": {
+    "path": "results/phase3_5/ms2d_delay/summary_validation.json",
+    "sha256": "be29f9a3a9f4993c31cd8ebf8076f4f4b926c46e4d7ddf9eb321fd273faa6197"
+  },
+  "checkpoint_archive": {
+    "path": "results/phase3_5/archive/ms2d_d1_checkpoints_validation.tar",
+    "sha256": "7ee6393993d209cee255e8d7f09b7d376a135b63fc70572b0c6993d44e1a05f4",
+    "member_count": 18
+  },
+  "expected_run_count": 18,
+  "test_samples": 256,
+  "bootstrap": {
+    "replicates": 10000,
+    "seed": 20260810
+  },
+  "gates": {
+    "oracle_clean_nmae_max": 0.05,
+    "delay_response_ci_lower_min": 0.20,
+    "delay_identification_error_steps_max": 1.0,
+    "delay_truth_neighborhood_mass_min": 0.80
+  },
+  "frozen_validation_status": {
+    "all_artifact_and_structural_gates_pass": true,
+    "oracle_gate_pass": true,
+    "delay_response_gate_pass": true,
+    "delay_identification_diagnostic_pass": false,
+    "all_primary_gates_pass": true
+  },
+  "authorized_scope": {
+    "synthetic_test_once": true,
+    "retraining": false,
+    "hyperparameter_changes": false,
+    "additional_seeds": false,
+    "real_data_test": false
+  }
+}

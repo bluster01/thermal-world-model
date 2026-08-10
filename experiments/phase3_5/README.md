@@ -323,9 +323,9 @@ python experiments/phase3_5/summarize_joint_coupling_test.py
 
 runner 在首次生成 test 前核对 authorization、训练矩阵、validation summary、checkpoint tar 的 SHA256，以及 27 个 manifest、30 个实际读取权重（27 canonical + 3 Stage-A）和冻结训练代码等价性。test 以完整 episode 为统计单位，按 action profile 分层做 10,000 次 paired bootstrap：joint 对两个单模块的改善 CI 下界均须 ≥20%；staged/joint 误差比 CI 上界须 ≤1.10；staged 对 Stage-A 改善 CI 下界须 ≥20%。由于 validation 的 staged 门禁已失败，test 汇总器再次以 code 2 退出是预期科学结果；不得删除 started/partial ledger 后重跑。回传全部新增 JSON、更新后的 manifest、stdout/stderr 和环境信息，不重新训练、不改 checkpoint、不访问 A/B 真实数据 test。
 
-## 11. 当前授权：MS2-D1 纯迟延 validation
+## 11. 已完成：MS2-D1 纯迟延 validation
 
-本节是当前唯一可执行的新批次。MS2-D1 在 MS2-J 的 R50 非线性、context 调度和二阶惯性真值上只增加 20 s 纯迟延，回答显式因果迟延模块是否改善多步响应。它不访问 synthetic test 或 A/B 数据，不启动 D2/D3/MS5。
+本节保留已完成 validation 的可复现命令，不再授权重复运行。MS2-D1 在 MS2-J 的 R50 非线性、context 调度和二阶惯性真值上只增加 20 s 纯迟延，回答显式因果迟延模块是否改善多步响应。它不访问 synthetic test 或 A/B 数据，不启动 D2/D3/MS5。
 
 先核对机器状态、工作树和冻结矩阵：
 
@@ -357,3 +357,35 @@ python experiments/phase3_5/summarize_ms2d_delay.py \
 六个候选为同结构 no-delay 消融、learned-delay 主模型、fixed-delay+R50 oracle 正控，以及 Koopman、PI-ODE、DeepONet 三个次要表示参考。主要判决只包含：18/18 artifact/结构门通过；oracle 每 seed clean NMAE `<0.05`；learned-delay 相对 no-delay 每 seed 改善 `≥20%`。期望迟延误差 `≤1 step` 与真值 ±1 step 邻域质量 `≥0.80` 单列为参数诊断，不与响应恢复混成同一个结论。
 
 汇总器可能因科学门禁失败以 code 2 退出；仍须原样回传 18 个完整运行目录、`summary_validation.json`、命令输出、环境和 Git SHA。不得改阈值、补 seed、删除失败运行、访问 test，或继续 D2。D1 只有经本地复算后才从 `results_returned` 进入 `audited`。
+
+## 12. 当前授权：MS2-D1 一次性 synthetic test
+
+MS2-D1 validation 已由本地逐 checkpoint 审计为 **screening PASS**，但 validation episode bootstrap 的 95% CI 下界没有达到 20%，不能直接关闭 D1。当前唯一授权是原 18 个 validation-selected checkpoint 的一次性 synthetic test；不重新训练，不改变模型、阈值、seed、split 或 checkpoint。
+
+先在干净工作树运行无 test 访问的预检：
+
+```bash
+python experiments/phase3_5/experiment_status.py --check --json
+git status --short
+git rev-parse HEAD
+python -m pytest tests/phase35/multistep tests/phase35/test_experiment_status.py -q
+python -m compileall -q src/phase35/multistep \
+  experiments/phase3_5/ms2d_delay_test.py \
+  experiments/phase3_5/summarize_ms2d_delay_test.py
+python experiments/phase3_5/ms2d_delay_test.py --dry-run
+```
+
+状态必须是 `active_gate=ms2d_d1`、`status=test_authorized`、`linux_authorized_gate=ms2d_d1`；dry-run 必须返回 18 runs、18 archive members、`validation_screening_pass=true`、`delay_parameter_diagnostic_pass=false`、`test_accessed=false`。任一项不符立即停止。
+
+确认无误后只执行一次完整矩阵：
+
+```bash
+python experiments/phase3_5/ms2d_delay_test.py \
+  --device cuda --evaluate-test-matrix --allow-synthetic-test
+
+python experiments/phase3_5/summarize_ms2d_delay_test.py
+```
+
+runner 会在首次 test 访问前校验 authorization、matrix、validation summary 和 checkpoint tar 的 SHA256，核对 18 个 manifest/checkpoint 与冻结训练代码等价性，并先写 root access ledger。汇总器要求同 seed 的全部候选共享完全相同的 test trajectory hash；主对比以 256 个配对 episode 为单位、按 action profile 分层做 10,000 次 bootstrap。oracle 每 seed clean NMAE 必须 `<0.05`；learned-delay 相对 no-delay 的改善 95% CI 下界每 seed必须 `≥0.20`。迟延权重集中度继续只作参数诊断。
+
+汇总器因科学门禁失败返回 code 2 时，仍须原样提交全部新增 JSON、更新后的 manifest、stdout/stderr 和环境信息；不得删除 started/partial ledger、重复访问 test、重训、改门槛或启动 D2。test 结果只证明或否证该 known-truth pure-delay 设计，不支持现场 20 s 迟延、开环阀门因果或完整世界模型结论。

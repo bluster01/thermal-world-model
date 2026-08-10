@@ -12,7 +12,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REGISTRY = ROOT / "configs/phase3_5/experiment_registry.json"
-LINUX_STATES = {"ready_for_linux", "linux_running"}
+LINUX_STATES = {"ready_for_linux", "linux_running", "test_authorized"}
 SCRIPT_STATES = {"active", "closed", "planned", "deprecated"}
 
 

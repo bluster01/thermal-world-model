@@ -4,7 +4,7 @@
 
 ## 一句话状态
 
-项目已完成 MS0、MS1、MS2-V/C/J；MS2-J test 的 episode bootstrap 已本地精确复算：联合模块双层 PASS、response-internal staged 非劣双层 FAIL。项目**尚未完成真实模型定性，也未进入论文收口**。当前 active Gate 是 MS2-D1 pure-delay 压力，后续仍需 D2/D3、MS5 完整耦合、MS3 真实适配和 MS4 闭环响应。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
+项目已完成 MS0、MS1、MS2-V/C/J；MS2-J test 的 episode bootstrap 已本地精确复算：联合模块双层 PASS、response-internal staged 非劣双层 FAIL。项目**尚未完成真实模型定性，也未进入论文收口**。MS2-D1 validation 已独立审计为 screening PASS，当前 active Gate 只授权一次性 synthetic test，D2 尚未放行；后续仍需 D2/D3、MS5 完整耦合、MS3 真实适配和 MS4 闭环响应。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
 
 ## Phase 3.5 当前状态
 
@@ -138,7 +138,7 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 - 当前正式逻辑位于 `src/phase35/` 与 `experiments/phase3_5/`；`phase3_feedforward/` 只作历史追溯。
 - 仓库没有锁定依赖或可复现环境文件。
 - `data/伊敏6号机` 是 Linux 符号链接，Windows 检出不可直接使用。
-- Phase 3.5 已新增数据、模型、事件、训练、统计、汇总和 CLI smoke 专项测试；当前 88 项通过。全仓历史测试仍有 `TimeXerWM` 测试桩及硬编码 CSV 导入收集错误，不能由专项测试代替或隐去。
+- Phase 3.5 已新增数据、模型、事件、训练、统计、汇总和 CLI smoke 专项测试；最新通过数以仓库测试命令输出为准。全仓历史测试仍有 `TimeXerWM` 测试桩及硬编码 CSV 导入收集错误，不能由专项测试代替或隐去。
 - `eval_protocol.py` 的 PID 物理方向、零误差工作点和导数项实现存在 P0 缺陷；旧控制结果不得恢复证据等级。
 - `exp_106/112` 在 test 上逐 epoch 评估并选 checkpoint；`exp_109/110` 又合并 val+test 构造/筛选事件。
 - 148 个 Python 文件中有 88 个没有 `if __name__ == '__main__'` guard；多个实验依赖导入副作用、全局变量与 `sys.path/sys.argv` 修改。
@@ -147,6 +147,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-下一判决点是 MS2-D1 validation：20 s pure-delay truth 下，learned-delay graybox 是否相对同结构 no-delay 消融跨 seed 改善，并且 oracle 能关闭生成—优化链。代码、矩阵、汇总器、88 项专项测试、compile、CPU smoke 和 18-run dry-run 已通过，注册表现为 `ready_for_linux`；只授权 validation，不授权 test。
+下一判决点是 MS2-D1 一次性 synthetic test：原 18 个 validation-selected checkpoints 不重训，在独立 test episodes 上要求 oracle 每 seed clean NMAE `<0.05`，且 learned-delay 相对 no-delay 的配对、profile 分层 bootstrap 95% CI 下界每 seed `≥0.20`。validation 点改善虽为 20.3%–23.1%，其探索性 bootstrap CI 下界仅约 17.3%–19.6%，所以只能作为 screening。注册表现为 `test_authorized`；D2 不自动启动。
 
 完整顺序为 MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 保持暂停。

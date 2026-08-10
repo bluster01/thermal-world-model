@@ -1,5 +1,7 @@
 # Phase 3.5-MS2-D1 Pure-Delay Pressure Validation Review（2026-08-10）
 
+> Supervisor 复核已完成；本文件的环境字段与归档待办有事实性过时。最终审计与一次性 test 判决以 [MS2-D1 Supervisor Audit](PHASE35_MS2D1_SUPERVISOR_AUDIT_2026-08-10.md) 为准。
+
 ## Material Passport
 
 - Origin Skill: academic-research-suite / experiment-agent
@@ -62,7 +64,7 @@
 | 项目 | 结果 |
 |---|---|
 | 18/18 结构门禁 | reference identity / future-action leakage / post-change sensitivity / 有限性 / 长期方向 / 谱半径 全过（failures 列表为空） |
-| 环境字段 | 18/18 manifest 含 python/torch/cuda/device/platform |
+| 环境字段 | 18/18 manifest 只有 `device`/`torch_version`；缺少 python/cuda runtime/platform，见 Supervisor Audit |
 | 单 execution SHA | 18/18 = `95d1dbe` |
 | test 访问 | 18/18 test_accessed=false；`test_authorized=false`（dry-run 与 manifest 双确认） |
 | 训练预算 | 300 epochs 上限，无 test 泄漏路径 |
@@ -76,6 +78,6 @@
 
 ## 6. 待办
 
-1. **checkpoint 归档**：18 × `checkpoint_best_val.pt` 打包 tar + SHA（P1-3 同协议），36/36 匹配校验（含 manifest hash 比对）。
-2. 归档后 commit + push。
-3. D1 审计决定是否授权一次性 test 及 D2（三阶串联惯性）；D2/D3 不自动启动。
+1. **checkpoint 归档已完成**：18 × `checkpoint_best_val.pt`，SHA256 为 `7ee6393993d209cee255e8d7f09b7d376a135b63fc70572b0c6993d44e1a05f4`。
+2. Supervisor 已完成独立复算并授权冻结的一次性 synthetic test。
+3. D2/D3 不自动启动；等待 D1 test 审计。
