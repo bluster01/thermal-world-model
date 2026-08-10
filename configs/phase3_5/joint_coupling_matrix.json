@@ -1,0 +1,125 @@
+{
+  "protocol_version": "phase3.5-ms2j-v1",
+  "evidence_scope": "synthetic_joint_coupling_validation_not_field_causality",
+  "seeds": [0, 1, 2],
+  "operator_defaults": {
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "opening_map": "identity",
+    "poles": 2,
+    "latent_dim": 4,
+    "hidden_dim": 32,
+    "tau_min_seconds": 20.0,
+    "tau_max_seconds": 900.0,
+    "ode_substeps": 2,
+    "closure_scale": 0.02,
+    "context_scheduled": false,
+    "schedule_log_scale": 0.5
+  },
+  "synthetic_defaults": {
+    "train_samples": 1024,
+    "validation_samples": 256,
+    "test_samples": 256,
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "seed": 20260811,
+    "noise_std": 0.02,
+    "gain_c_per_pct": -0.10,
+    "tau_seconds": [70.0, 210.0],
+    "truth_regime": "context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.30
+  },
+  "training": {
+    "batch_size": 64,
+    "epochs": 300,
+    "patience": 30,
+    "learning_rate": 0.002,
+    "weight_decay": 0.000001,
+    "physics_weight": 0.01,
+    "gradient_clip": 1.0
+  },
+  "staged_training": {
+    "stage_a_epochs": 120,
+    "stage_b_epochs": 90,
+    "stage_c_epochs": 90,
+    "stage_patience": 20,
+    "joint_learning_rate_scale": 0.2
+  },
+  "regimes": [
+    {
+      "regime_id": "joint_r50_context_scheduled",
+      "question": "Can nonlinear opening and context scheduling converge jointly, and is staged training stable?",
+      "synthetic": {},
+      "candidates": [
+        {
+          "candidate_id": "j_g2_identity_global",
+          "route": "graybox",
+          "opening_map": "identity",
+          "context_scheduled": false,
+          "training_mode": "joint"
+        },
+        {
+          "candidate_id": "j_g2_monotone_global",
+          "route": "graybox",
+          "opening_map": "monotone",
+          "context_scheduled": false,
+          "training_mode": "joint"
+        },
+        {
+          "candidate_id": "j_g2_identity_scheduled",
+          "route": "graybox",
+          "opening_map": "identity",
+          "context_scheduled": true,
+          "training_mode": "joint"
+        },
+        {
+          "candidate_id": "j_g2_monotone_scheduled_joint",
+          "route": "graybox",
+          "opening_map": "monotone",
+          "context_scheduled": true,
+          "training_mode": "joint"
+        },
+        {
+          "candidate_id": "j_g2_monotone_scheduled_staged",
+          "route": "graybox",
+          "opening_map": "monotone",
+          "context_scheduled": true,
+          "training_mode": "staged"
+        },
+        {
+          "candidate_id": "j_g2_r50_scheduled",
+          "route": "graybox",
+          "opening_map": "equal_percentage_r50",
+          "context_scheduled": true,
+          "training_mode": "joint"
+        },
+        {
+          "candidate_id": "j_k4_monotone",
+          "route": "koopman",
+          "latent_dim": 4,
+          "opening_map": "monotone",
+          "training_mode": "joint"
+        },
+        {
+          "candidate_id": "j_pi_monotone",
+          "route": "pi_ode",
+          "poles": 2,
+          "opening_map": "monotone",
+          "training_mode": "joint"
+        },
+        {
+          "candidate_id": "j_deeponet",
+          "route": "deeponet",
+          "latent_dim": 8,
+          "hidden_dim": 32,
+          "opening_map": "identity",
+          "training_mode": "joint"
+        }
+      ]
+    }
+  ]
+}

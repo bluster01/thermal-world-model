@@ -1,6 +1,6 @@
 # TODO — Phase 3.5 论文核心验证
 
-> 更新：2026-08-10。本文是项目唯一活任务队列。Phase 3.5 原 42-run 批次已收口；Phase 3.5-MS2 validation 已完成权重级复算，当前只部署冻结 33 checkpoints 的一次性 synthetic test。Phase 4 仍暂停，Fan2017/2020/2021 不进入当前训练计划。
+> 更新：2026-08-10。本文是项目唯一活任务队列。Phase 3.5 原 42-run 批次已收口；Phase 3.5-MS2-V/C validation+test 已独立复核并收口。当前只启动联合非线性+工况调度与 staged-vs-joint 的 synthetic coupling Gate；Phase 4 仍暂停，Fan2017/2020/2021 不进入当前训练计划。
 
 ## 当前目标
 
@@ -22,12 +22,13 @@
 | MS1 已知真值 | 二阶惯性下的 hold/step/pulse/ramp/multi-step | 架构是否至少能恢复一个可解的多步系统？ | 18/18；参数恢复；结构门禁；单次 synthetic test | ✓ PASS：只支持同型可解性，不设路线冠军 |
 | MS2-V 阀门非线性 | R50 真值下 identity/oracle/learned monotone 与灵活算子 | 单调模块能否恢复支持域内增量响应？ | 6 candidates×3 seeds；clean NMAE；独立榜 | ✅ validation+test 双层 PASS（test: monotone vs identity CI下界 0.859–0.884 >> 20%，3seed×256ep×10k bootstrap；oracle 0.0043 复现；`K/phi` 补偿使真实曲线不可单独辨识） |
 | MS2-C 工况调度 | 增益/时间常数随 context 变化 | 多步 A1phys 参数调度能否辨识？ | 5 candidates×3 seeds；clean NMAE；独立榜 | ✅ validation+test 双层 PASS（test: scheduled vs global CI下界 0.884–0.891 >> 20%，3seed×256ep×10k bootstrap；K/τ 调度相关性高） |
+| MS2-J 联合耦合 | 同一真值同时含 R50 非线性与 context 调度 | 双模块能否共同收敛？staged 是否比 joint 更稳定？ | 9 candidates×3 seeds；双模块 joint/staged、单模块消融、灵活路线；validation-only | ▶ 代码/测试已冻结，待 Linux 27-run validation；不加入 delay/扰动 |
 | MS2-D 后续压力 | 纯迟延、阶次扩展、未建模扰动 | 结论是否跨更强失配成立？ | MS2-V/C 收口后再决定 | ◻ HOLD，当前不铺开 |
 | MS3 真实数据适配 | 复用 A/B causal cache，交叉阀位已按现场映射 | 合成可解性能否迁移到观测预测？ | validation-only；A/B 分榜；不称因果 | ◻ HOLD |
 | MS4 经验响应校准 | 仅在未来新时间块 E3 通过后连接真实 IRF | 模型响应是否复现可识别物理响应？ | common support、稳态/动态双 estimand | ⛔ 等待新数据证据 |
-| MS5 分段训练 | free 预训练 → 短冻结 response → 小学习率联合 | 多模块耦合能否稳定且不被 free head 吸收？ | stage checkpoints、梯度/参数健康、joint 非退化 | ◻ MS3 前实现 |
+| MS5 分段训练 | free 预训练 → 短冻结 response → 小学习率联合 | 完整世界模型中 response 是否会被 free head 吸收？ | stage checkpoints、梯度/参数健康、joint 非退化 | ◻ 完整 free+response 耦合仍 HOLD；MS2-J 只先验证 response 内部 staging |
 
-MS1 的客观复核见 [MS1 Supervisor Review](docs/PHASE35_MS1_REVIEW_2026-08-10.md)，MS2 validation 的权重/参数/分层复核见 [MS2 Validation Review](docs/PHASE35_MS2_VALIDATION_REVIEW_2026-08-10.md)。当前唯一活跃执行是 33 个冻结 checkpoint 的一次性 synthetic test；设计与门禁见 [MS2 结构失配实验设计](docs/plans/2026-08-10-phase35-ms2-mismatch-design.md)。
+MS1 的客观复核见 [MS1 Supervisor Review](docs/PHASE35_MS1_REVIEW_2026-08-10.md)，MS2 validation/test 见 [MS2 Validation Review](docs/PHASE35_MS2_VALIDATION_REVIEW_2026-08-10.md) 与 [MS2 Test Review](docs/PHASE35_MS2_TEST_REVIEW_2026-08-10.md)。MS2-J 只做联合模块和训练稳定性，不把 synthetic PASS 升级成现场物理辨识。
 
 ## 五组核心实验
 

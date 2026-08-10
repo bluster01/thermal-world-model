@@ -262,7 +262,7 @@ MS1 真值动力学也不依赖随机 context \(c\)，所以 \(c\) 在这一阶�
 
 MS1 正式 validation 矩阵为 6 routes × 3 seeds：Graybox-1P/2P、Koopman-K2/K4、PI-ODE、Causal-DeepONet。每个 run 使用 train/validation/test = 1024/256/256 条 synthetic trajectory；训练最多 100 epochs。
 
-MS2 只冻结两个独立失配轴：`valve_nonlinear_r50` 的 6 candidates 与 `context_scheduled_2p` 的 5 candidates，共 11 candidates × 3 seeds = 33 validation runs；最大 300 epochs、patience 30。两轴不混榜，纯迟延与未建模扰动继续 HOLD。完整主对比与门禁见 [`plans/2026-08-10-phase35-ms2-mismatch-design.md`](plans/2026-08-10-phase35-ms2-mismatch-design.md)。所有路线共享 batch、优化器和 validation selector，wall-clock 单独报告。
+MS2-V/C 冻结两个独立失配轴：`valve_nonlinear_r50` 的 6 candidates 与 `context_scheduled_2p` 的 5 candidates，共 11 candidates × 3 seeds = 33 runs；validation+一次性 synthetic test 已完成。两轴的主响应对比均通过，但 learned `phi` 不可单独辨识。下一批 MS2-J 使用同一真值同时启用 R50 非线性和 context 调度，以 9 candidates × 3 seeds 比较双模块 joint/staged、单模块消融及灵活路线；完整门禁见 [`plans/2026-08-10-phase35-ms2j-coupling-design.md`](plans/2026-08-10-phase35-ms2j-coupling-design.md)。纯迟延与未建模扰动继续 HOLD。
 
 ## 9. 训练目标、选模与评测
 
@@ -315,7 +315,8 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 |---|---|---|
 | 代码恒等式 | 零参考响应、prefix causality、递推状态续传 | 现场因果识别 |
 | MS1 synthetic | 同型二阶系统上的参数/响应可恢复性 | 路线普遍优越性、真实阀门增益 |
-| MS2 mismatch（V/C 已实现，待 Linux） | 对阀门非线性与 context 变参数的模块可解性 | 纯迟延/扰动鲁棒性、现场 `do(valve)` |
+| MS2-V/C mismatch（validation+test 已完成） | 合成真值内非线性响应容量与 context 通道的模块价值 | learned 阀门曲线、联合收敛、纯迟延/扰动、现场 `do(valve)` |
+| MS2-J coupling（待 Linux validation） | 双模块共同收敛与 staged 非劣稳定性 | 真实数据迁移、现场物理参数与因果响应 |
 | MS3 real validation（未实现） | A/B 观测预测与模型敏感性 | 未控制混杂下的反事实效应 |
 | MS4 new-time E3/E4 | 若门禁通过，可比较经验响应与模型响应 | 超出数据支持域的闭环安全性 |
 

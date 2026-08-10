@@ -263,3 +263,43 @@ python experiments/phase3_5/summarize_multistep_mismatch_test.py \
 每 run 必须新增 `metrics_test.json`、`episode_metrics_test.json`、`synthetic_test_access_ledger.json`，并只把 manifest 的 `test_accessed` 从 false 改为 true。汇总器默认执行按动作类型分层的 10,000 次 paired-episode bootstrap；两个主对比的三个 seed 均须满足 95% CI 下界不低于 20%。
 
 回传所有 test JSON、更新后的 manifest、`summary_test.json`、完整 stdout/stderr 和环境信息。checkpoint 权重不变，不需要重新训练或重新打包；任一 started/partial ledger 必须原样回传，不得删除后重试。该授权仅覆盖 synthetic MS2 test，不授权 A/B 真实数据 test。
+
+## 9. Phase 3.5-MS2-J 联合耦合 validation
+
+MS2-V/C 已收口。MS2-J 只检验同一 synthetic truth 中 R50 非线性与 context 调度能否共同收敛，以及三阶段训练相对 joint-from-scratch 是否稳定。冻结设计见 [`docs/plans/2026-08-10-phase35-ms2j-coupling-design.md`](../../docs/plans/2026-08-10-phase35-ms2j-coupling-design.md)。本批不加入 delay、三阶或扰动，不读取任何 synthetic/真实 test。
+
+Linux 在授权 commit 的干净工作树先执行：
+
+```bash
+python -m pytest tests/phase35/multistep -q
+python -m compileall -q \
+  src/phase35/multistep/staging.py \
+  experiments/phase3_5/joint_coupling.py \
+  experiments/phase3_5/summarize_joint_coupling.py
+python experiments/phase3_5/joint_coupling.py --dry-run
+```
+
+dry-run 必须严格得到 `1 regime / 9 candidates / 27 validation runs`。先在正式结果目录外做 staged smoke：
+
+```bash
+python experiments/phase3_5/joint_coupling.py \
+  --candidate-id j_g2_monotone_scheduled_staged --seed 0 --device cpu \
+  --output-root results/phase3_5/joint_coupling_smoke \
+  --smoke --execute
+```
+
+正式 validation：
+
+```bash
+python experiments/phase3_5/joint_coupling.py \
+  --device cuda \
+  --output-root results/phase3_5/joint_coupling \
+  --execute-matrix --skip-existing
+
+python experiments/phase3_5/summarize_joint_coupling.py \
+  --output-root results/phase3_5/joint_coupling
+```
+
+汇总器检查 27 个 checkpoint/manifest/history/validation metrics、同 seed trajectory hash、环境 provenance 和全部结构门禁。staged 的每个 seed 还必须回传 `checkpoint_stage_a/b/c.pt`、`metrics_stage_a/b/c_validation.json` 和阶段摘要。全部 `.pt` 需归档并记录 SHA：27 个 canonical checkpoint 加 staged 三 seed 的 9 个阶段 checkpoint，共 36 个文件。
+
+若预注册的 20% 联合模块 Gate 或 10% staged 非劣 Gate 失败，汇总器会以 code 2 退出；这属于科学结果，不是运行错误，仍须原样回传全部 artifacts。Linux 不改阈值、不补 seed、不自行重训，也不写路线冠军结论。MS2-J test 尚未授权，runner 没有 test 开关。
