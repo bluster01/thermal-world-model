@@ -1,0 +1,17 @@
+{
+  "protocol_version": "phase3.5-ms2j-test-v1",
+  "status": "completed",
+  "evidence_scope": "synthetic_joint_coupling_test_not_field_causality",
+  "candidate_id": "j_deeponet",
+  "regime_id": "joint_r50_context_scheduled",
+  "seed": 1,
+  "training_git_sha": "e3c61447a43da2879e75eb63606f1928eb3495c5",
+  "evaluation_git_sha": "78904ba36446fa8d8aa3f0307b67b605e3ed362b",
+  "checkpoint_archive": "results/phase3_5/archive/ms2j_checkpoints_validation.tar",
+  "checkpoint_archive_sha256": "3005fd4b2c3b96bedaf53e273ad39f440670fec5b23eb60e7d64e540d3e06f52",
+  "checkpoint_member": "ms2j_j_deeponet_s1/checkpoint_best_val.pt",
+  "checkpoint_sha256": "9ca2edf372b279f6c56e3f6ef895fb250c11b15a487902025f4589dba5450af3",
+  "checkpoint_selector": "validation_effect_mae",
+  "test_samples": 256,
+  "trajectory_design_sha256": "ecc444127920b95481f85ec9a37e2ce490e0dbe334c227ae0988429af7358ea6"
+}

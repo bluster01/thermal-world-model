@@ -55,7 +55,7 @@
   "torch_version": "2.11.0+cu130",
   "elapsed_seconds": 54.97139120101929,
   "checkpoint_sha256": "d756a4b09bbf506c9733535f4465d666b6d3470e74d7da9de826966e3885399f",
-  "test_accessed": false,
+  "test_accessed": true,
   "training_mode": "joint",
   "environment": {
     "python": "3.11.15",
@@ -65,5 +65,8 @@
     "device": "cuda",
     "platform": "Linux-6.11.0-1016-nvidia-aarch64-with-glibc2.39"
   },
-  "validation_trajectory_design_sha256": "3d82b6393e62db67142012c601d3627bc97388e36da327e6ed3ce6f2d29a0496"
+  "validation_trajectory_design_sha256": "3d82b6393e62db67142012c601d3627bc97388e36da327e6ed3ce6f2d29a0496",
+  "test_access_note": "synthetic_joint_coupling_known_truth_only",
+  "test_access_ledger": "synthetic_test_access_ledger.json",
+  "test_episode_metrics": "episode_metrics_test.json"
 }

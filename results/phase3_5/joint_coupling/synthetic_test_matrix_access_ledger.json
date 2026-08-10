@@ -1,0 +1,131 @@
+{
+  "protocol_version": "phase3.5-ms2j-test-v1",
+  "status": "completed",
+  "evidence_scope": "synthetic_joint_coupling_test_not_field_causality",
+  "authorization": "configs/phase3_5/joint_coupling_test_authorization.json",
+  "authorization_sha256": "0962289864d09c1c8e0c8cea5bde6fd0b9f3ee67f1ae1455e69f09c8500c7bd1",
+  "matrix_sha256": "22d78c52a6c082d23071dc44c97375b97bf37a2556b12e7a8d14d55c427e11f4",
+  "validation_summary_sha256": "212e53ccf8774fa7df9e7026ba3ba64dfbead173ec7ad7d69c0e8428103b10c0",
+  "checkpoint_archive_sha256": "3005fd4b2c3b96bedaf53e273ad39f440670fec5b23eb60e7d64e540d3e06f52",
+  "evaluation_git_sha": "78904ba36446fa8d8aa3f0307b67b605e3ed362b",
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.11.0+cu130",
+    "cuda_runtime": "13.0",
+    "cuda_available": true,
+    "device": "cuda",
+    "platform": "Linux-6.11.0-1016-nvidia-aarch64-with-glibc2.39"
+  },
+  "run_count": 27,
+  "test_samples": 256,
+  "completed_runs": [
+    {
+      "candidate_id": "j_g2_identity_global",
+      "seed": 0
+    },
+    {
+      "candidate_id": "j_g2_identity_global",
+      "seed": 1
+    },
+    {
+      "candidate_id": "j_g2_identity_global",
+      "seed": 2
+    },
+    {
+      "candidate_id": "j_g2_monotone_global",
+      "seed": 0
+    },
+    {
+      "candidate_id": "j_g2_monotone_global",
+      "seed": 1
+    },
+    {
+      "candidate_id": "j_g2_monotone_global",
+      "seed": 2
+    },
+    {
+      "candidate_id": "j_g2_identity_scheduled",
+      "seed": 0
+    },
+    {
+      "candidate_id": "j_g2_identity_scheduled",
+      "seed": 1
+    },
+    {
+      "candidate_id": "j_g2_identity_scheduled",
+      "seed": 2
+    },
+    {
+      "candidate_id": "j_g2_monotone_scheduled_joint",
+      "seed": 0
+    },
+    {
+      "candidate_id": "j_g2_monotone_scheduled_joint",
+      "seed": 1
+    },
+    {
+      "candidate_id": "j_g2_monotone_scheduled_joint",
+      "seed": 2
+    },
+    {
+      "candidate_id": "j_g2_monotone_scheduled_staged",
+      "seed": 0
+    },
+    {
+      "candidate_id": "j_g2_monotone_scheduled_staged",
+      "seed": 1
+    },
+    {
+      "candidate_id": "j_g2_monotone_scheduled_staged",
+      "seed": 2
+    },
+    {
+      "candidate_id": "j_g2_r50_scheduled",
+      "seed": 0
+    },
+    {
+      "candidate_id": "j_g2_r50_scheduled",
+      "seed": 1
+    },
+    {
+      "candidate_id": "j_g2_r50_scheduled",
+      "seed": 2
+    },
+    {
+      "candidate_id": "j_k4_monotone",
+      "seed": 0
+    },
+    {
+      "candidate_id": "j_k4_monotone",
+      "seed": 1
+    },
+    {
+      "candidate_id": "j_k4_monotone",
+      "seed": 2
+    },
+    {
+      "candidate_id": "j_pi_monotone",
+      "seed": 0
+    },
+    {
+      "candidate_id": "j_pi_monotone",
+      "seed": 1
+    },
+    {
+      "candidate_id": "j_pi_monotone",
+      "seed": 2
+    },
+    {
+      "candidate_id": "j_deeponet",
+      "seed": 0
+    },
+    {
+      "candidate_id": "j_deeponet",
+      "seed": 1
+    },
+    {
+      "candidate_id": "j_deeponet",
+      "seed": 2
+    }
+  ]
+}

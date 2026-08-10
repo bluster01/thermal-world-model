@@ -1,0 +1,19 @@
+{
+  "protocol_version": "phase3.5-ms2j-test-v1",
+  "status": "completed",
+  "evidence_scope": "synthetic_joint_coupling_test_not_field_causality",
+  "candidate_id": "j_g2_monotone_scheduled_staged",
+  "regime_id": "joint_r50_context_scheduled",
+  "seed": 0,
+  "training_git_sha": "e3c61447a43da2879e75eb63606f1928eb3495c5",
+  "evaluation_git_sha": "78904ba36446fa8d8aa3f0307b67b605e3ed362b",
+  "checkpoint_archive": "results/phase3_5/archive/ms2j_checkpoints_validation.tar",
+  "checkpoint_archive_sha256": "3005fd4b2c3b96bedaf53e273ad39f440670fec5b23eb60e7d64e540d3e06f52",
+  "checkpoint_member": "ms2j_j_g2_monotone_scheduled_staged_s0/checkpoint_best_val.pt",
+  "checkpoint_sha256": "ce4cfc32886eb636e3465eaf788067e4c93f94a6fe8c5ab53658b7641b4005bd",
+  "checkpoint_selector": "stage_c_validation_effect_mae_with_boundary_epoch0",
+  "test_samples": 256,
+  "stage_a_checkpoint_member": "ms2j_j_g2_monotone_scheduled_staged_s0/checkpoint_stage_a.pt",
+  "stage_a_checkpoint_sha256": "a2f05e419c9f1b9e9d997d914c8631893297c04c6c6cc035de541b6975524cc7",
+  "trajectory_design_sha256": "739bde3eb796b01566685e6265d448a2adc8876e3a84b502d062899751657eab"
+}
