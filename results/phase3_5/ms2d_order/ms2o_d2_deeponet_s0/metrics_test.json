@@ -1,0 +1,81 @@
+{
+  "effect_mae": 0.016185682266950607,
+  "effect_rmse": 0.020176038146018982,
+  "integrated_absolute_error": 0.9711410403251648,
+  "direction_accuracy_nonzero": 0.6589986681938171,
+  "horizon_mae": {
+    "H1": 0.01694011129438877,
+    "H6": 0.01713070273399353,
+    "H18": 0.017316758632659912,
+    "H60": 0.016087044030427933
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "clean_effect_mae": 0.0015626495005562901,
+  "clean_effect_rmse": 0.003437876235693693,
+  "clean_effect_scale": 0.034063465893268585,
+  "clean_effect_nmae": 0.04587464779615402,
+  "clean_effect_mae_active": 0.0028923095669597387,
+  "noise_mae": 0.015986789017915726,
+  "direction_accuracy_clean_nonzero": 1.0,
+  "clean_horizon_mae": {
+    "H1": 0.0,
+    "H6": 0.00016807248175609857,
+    "H18": 0.0011542573338374496,
+    "H60": 0.0023003965616226196
+  },
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.3308372497558594,
+    "positive_step_terminal_effect_max_c": -0.06051015853881836,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": false,
+      "fixed_horizon": true,
+      "direction_constrained": false,
+      "continuous_time": false
+    },
+    "operator": {
+      "spectral_radius": null,
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_cascade_v2",
+    "truth_regime": "context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "gain_c_per_pct": -0.1,
+    "tau_seconds": [
+      40.0,
+      70.0,
+      210.0
+    ],
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3,
+    "input_delay_steps": 0,
+    "input_delay_seconds": 0.0,
+    "realized_gain_range": [
+      -0.14081506431102753,
+      -0.07077856361865997
+    ],
+    "realized_tau_range": [
+      [
+        29.673667907714844,
+        53.84080505371094
+      ],
+      [
+        52.05440139770508,
+        94.16758728027344
+      ],
+      [
+        155.89540100097656,
+        282.6827392578125
+      ]
+    ],
+    "dt_seconds": 10.0,
+    "seed": 20460816,
+    "split": "test"
+  }
+}

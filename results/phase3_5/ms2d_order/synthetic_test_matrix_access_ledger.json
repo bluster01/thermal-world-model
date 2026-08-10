@@ -1,0 +1,107 @@
+{
+  "protocol_version": "phase3.5-ms2d-d2-test-v1",
+  "status": "completed",
+  "evidence_scope": "synthetic_order_pressure_test_not_field_causality",
+  "authorization": "configs/phase3_5/ms2d_order_test_authorization.json",
+  "authorization_sha256": "20fc3060ec5a1f7800cc1cb9506195a69ee5fa519a4aa9ee8be28461bd2fadcd",
+  "matrix_sha256": "dfa01ad4124c452f3fd5de2f22b0d384f56041fab4837e7c7e5f05c23a854c26",
+  "validation_summary_sha256": "4061353d9c4ef058a6db3dd969505452a3163a9fe957b13aee32251bd11ce701",
+  "checkpoint_archive_sha256": "e8d6d8064fcef58ecb1da154727379fa781b2d80c63afc0aee02d1e2cc25c43f",
+  "evaluation_git_sha": "c22140391906ad86c4d87afd9d60759303e9f649",
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.11.0+cu130",
+    "cuda_runtime": "13.0",
+    "cuda_available": true,
+    "device": "cuda",
+    "platform": "Linux-6.11.0-1016-nvidia-aarch64-with-glibc2.39"
+  },
+  "run_count": 21,
+  "test_samples": 256,
+  "completed_runs": [
+    {
+      "candidate_id": "d2_g2_two_pole",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d2_g2_two_pole",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d2_g2_two_pole",
+      "seed": 2
+    },
+    {
+      "candidate_id": "d2_g3_three_pole",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d2_g3_three_pole",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d2_g3_three_pole",
+      "seed": 2
+    },
+    {
+      "candidate_id": "d2_g3_oracle_structure",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d2_g3_oracle_structure",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d2_g3_oracle_structure",
+      "seed": 2
+    },
+    {
+      "candidate_id": "d2_g2_delay_compensation",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d2_g2_delay_compensation",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d2_g2_delay_compensation",
+      "seed": 2
+    },
+    {
+      "candidate_id": "d2_k4_monotone",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d2_k4_monotone",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d2_k4_monotone",
+      "seed": 2
+    },
+    {
+      "candidate_id": "d2_pi_monotone",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d2_pi_monotone",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d2_pi_monotone",
+      "seed": 2
+    },
+    {
+      "candidate_id": "d2_deeponet",
+      "seed": 0
+    },
+    {
+      "candidate_id": "d2_deeponet",
+      "seed": 1
+    },
+    {
+      "candidate_id": "d2_deeponet",
+      "seed": 2
+    }
+  ]
+}

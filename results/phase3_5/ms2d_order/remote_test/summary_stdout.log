@@ -1,0 +1,631 @@
+{
+  "protocol_version": "phase3.5-ms2d-d2-test-v1",
+  "evidence_scope": "synthetic_order_pressure_test_not_field_causality",
+  "split": "test",
+  "run_count": 21,
+  "test_accessed": true,
+  "frozen_validation_status": {
+    "all_artifact_and_structural_gates_pass": true,
+    "oracle_gate_pass": true,
+    "order_aware_absolute_gate_pass": true,
+    "order_aware_response_gate_pass": true,
+    "tau_recovery_diagnostic_pass": true,
+    "no_true_delay_diagnostic_pass": false,
+    "all_primary_gates_pass": true
+  },
+  "all_artifact_and_structural_gates_pass": true,
+  "gate_failures": [],
+  "candidates": {
+    "d2_deeponet": {
+      "role": "secondary_representation",
+      "route": "deeponet",
+      "clean_effect_nmae_mean": 0.046443877120812736,
+      "clean_effect_nmae_std": 0.007298685655956049,
+      "clean_effect_mae_mean": 0.001483425924864908,
+      "effect_mae_mean": 0.016165996591250103,
+      "all_structural_gates_pass": true
+    },
+    "d2_g2_delay_compensation": {
+      "role": "alternative_mechanism_diagnostic",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.04647740970055262,
+      "clean_effect_nmae_std": 0.0007757034523496658,
+      "clean_effect_mae_mean": 0.0014793069179480274,
+      "effect_mae_mean": 0.016194244225819904,
+      "all_structural_gates_pass": true
+    },
+    "d2_g2_two_pole": {
+      "role": "primary_ablation",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.05971899131933848,
+      "clean_effect_nmae_std": 0.002232955475397734,
+      "clean_effect_mae_mean": 0.0018998185405507684,
+      "effect_mae_mean": 0.016258537769317627,
+      "all_structural_gates_pass": true
+    },
+    "d2_g3_oracle_structure": {
+      "role": "positive_control",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.023426013067364693,
+      "clean_effect_nmae_std": 0.002226607865260188,
+      "clean_effect_mae_mean": 0.0007417917950078845,
+      "effect_mae_mean": 0.01606357532242934,
+      "all_structural_gates_pass": true
+    },
+    "d2_g3_three_pole": {
+      "role": "primary_model",
+      "route": "graybox",
+      "clean_effect_nmae_mean": 0.045093280573685966,
+      "clean_effect_nmae_std": 0.0012083625862363675,
+      "clean_effect_mae_mean": 0.0014347366911048691,
+      "effect_mae_mean": 0.016180083776513737,
+      "all_structural_gates_pass": true
+    },
+    "d2_k4_monotone": {
+      "role": "secondary_representation",
+      "route": "koopman",
+      "clean_effect_nmae_mean": 0.26606543858846027,
+      "clean_effect_nmae_std": 0.010659832760870949,
+      "clean_effect_mae_mean": 0.008449201782544455,
+      "effect_mae_mean": 0.0195897010465463,
+      "all_structural_gates_pass": true
+    },
+    "d2_pi_monotone": {
+      "role": "secondary_representation",
+      "route": "pi_ode",
+      "clean_effect_nmae_mean": 0.06160964444279671,
+      "clean_effect_nmae_std": 0.00280114244299983,
+      "clean_effect_mae_mean": 0.0019564440784355006,
+      "effect_mae_mean": 0.016268715262413025,
+      "all_structural_gates_pass": true
+    }
+  },
+  "validation_to_test_drift": {
+    "d2_deeponet": {
+      "validation_clean_effect_nmae_mean": 0.041898434360822044,
+      "test_clean_effect_nmae_mean": 0.046443877120812736,
+      "absolute_change": 0.004545442759990692,
+      "test_to_validation_ratio": 1.1084871745050455
+    },
+    "d2_g2_delay_compensation": {
+      "validation_clean_effect_nmae_mean": 0.0455701028307279,
+      "test_clean_effect_nmae_mean": 0.04647740970055262,
+      "absolute_change": 0.0009073068698247228,
+      "test_to_validation_ratio": 1.0199101343526686
+    },
+    "d2_g2_two_pole": {
+      "validation_clean_effect_nmae_mean": 0.05825600400567055,
+      "test_clean_effect_nmae_mean": 0.05971899131933848,
+      "absolute_change": 0.0014629873136679308,
+      "test_to_validation_ratio": 1.0251130735559124
+    },
+    "d2_g3_oracle_structure": {
+      "validation_clean_effect_nmae_mean": 0.022214324524005253,
+      "test_clean_effect_nmae_mean": 0.023426013067364693,
+      "absolute_change": 0.0012116885433594397,
+      "test_to_validation_ratio": 1.0545453696802738
+    },
+    "d2_g3_three_pole": {
+      "validation_clean_effect_nmae_mean": 0.044442164401213326,
+      "test_clean_effect_nmae_mean": 0.045093280573685966,
+      "absolute_change": 0.0006511161724726405,
+      "test_to_validation_ratio": 1.0146508654842847
+    },
+    "d2_k4_monotone": {
+      "validation_clean_effect_nmae_mean": 0.25729072093963623,
+      "test_clean_effect_nmae_mean": 0.26606543858846027,
+      "absolute_change": 0.008774717648824037,
+      "test_to_validation_ratio": 1.0341042911177614
+    },
+    "d2_pi_monotone": {
+      "validation_clean_effect_nmae_mean": 0.059816831101973854,
+      "test_clean_effect_nmae_mean": 0.06160964444279671,
+      "absolute_change": 0.0017928133408228533,
+      "test_to_validation_ratio": 1.0299717204638694
+    }
+  },
+  "order_aware_heterogeneity_diagnostic": {
+    "by_action_profile": [
+      {
+        "seed": 0,
+        "profile_id": 0,
+        "profile_name": "hold",
+        "episode_count": 52,
+        "three_pole_clean_effect_mae": 0.0,
+        "two_pole_clean_effect_mae": 0.0,
+        "relative_improvement": null
+      },
+      {
+        "seed": 0,
+        "profile_id": 1,
+        "profile_name": "step",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.0022602647327670746,
+        "two_pole_clean_effect_mae": 0.002701127164946942,
+        "relative_improvement": 0.16321424548278438
+      },
+      {
+        "seed": 0,
+        "profile_id": 2,
+        "profile_name": "pulse",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.0014775492855537153,
+        "two_pole_clean_effect_mae": 0.0024876915073643127,
+        "relative_improvement": 0.40605606395337746
+      },
+      {
+        "seed": 0,
+        "profile_id": 3,
+        "profile_name": "ramp",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.001125489992737843,
+        "two_pole_clean_effect_mae": 0.00127575045032655,
+        "relative_improvement": 0.11778201414723795
+      },
+      {
+        "seed": 0,
+        "profile_id": 4,
+        "profile_name": "multi_step",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.002730744446607252,
+        "two_pole_clean_effect_mae": 0.0034933542517726034,
+        "relative_improvement": 0.218303026318727
+      },
+      {
+        "seed": 1,
+        "profile_id": 0,
+        "profile_name": "hold",
+        "episode_count": 52,
+        "three_pole_clean_effect_mae": 0.0,
+        "two_pole_clean_effect_mae": 0.0,
+        "relative_improvement": null
+      },
+      {
+        "seed": 1,
+        "profile_id": 1,
+        "profile_name": "step",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.0017252193303612135,
+        "two_pole_clean_effect_mae": 0.00225282975046795,
+        "relative_improvement": 0.23419897575355753
+      },
+      {
+        "seed": 1,
+        "profile_id": 2,
+        "profile_name": "pulse",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.0018315158533868288,
+        "two_pole_clean_effect_mae": 0.002568076508503188,
+        "relative_improvement": 0.28681413995164273
+      },
+      {
+        "seed": 1,
+        "profile_id": 3,
+        "profile_name": "ramp",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.0009821515653611107,
+        "two_pole_clean_effect_mae": 0.001181782802436204,
+        "relative_improvement": 0.1689237960338909
+      },
+      {
+        "seed": 1,
+        "profile_id": 4,
+        "profile_name": "multi_step",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.0019967050915618207,
+        "two_pole_clean_effect_mae": 0.0026319790323374465,
+        "relative_improvement": 0.24136740185632954
+      },
+      {
+        "seed": 2,
+        "profile_id": 0,
+        "profile_name": "hold",
+        "episode_count": 52,
+        "three_pole_clean_effect_mae": 0.0,
+        "two_pole_clean_effect_mae": 0.0,
+        "relative_improvement": null
+      },
+      {
+        "seed": 2,
+        "profile_id": 1,
+        "profile_name": "step",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.0022102870528161634,
+        "two_pole_clean_effect_mae": 0.002777564778179843,
+        "relative_improvement": 0.20423564189038312
+      },
+      {
+        "seed": 2,
+        "profile_id": 2,
+        "profile_name": "pulse",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.0014657087467996606,
+        "two_pole_clean_effect_mae": 0.002538936060862433,
+        "relative_improvement": 0.4227074996517303
+      },
+      {
+        "seed": 2,
+        "profile_id": 3,
+        "profile_name": "ramp",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.0012150405822395959,
+        "two_pole_clean_effect_mae": 0.0013073385089941725,
+        "relative_improvement": 0.07059986844997619
+      },
+      {
+        "seed": 2,
+        "profile_id": 4,
+        "profile_name": "multi_step",
+        "episode_count": 51,
+        "three_pole_clean_effect_mae": 0.002584769250710915,
+        "two_pole_clean_effect_mae": 0.003392599973891515,
+        "relative_improvement": 0.2381155247884913
+      }
+    ],
+    "by_horizon": [
+      {
+        "seed": 0,
+        "horizon": "H1",
+        "three_pole_clean_effect_mae": 0.0,
+        "two_pole_clean_effect_mae": 0.0,
+        "relative_improvement": null
+      },
+      {
+        "seed": 0,
+        "horizon": "H6",
+        "three_pole_clean_effect_mae": 2.635662213990031e-05,
+        "two_pole_clean_effect_mae": 0.00028582448024927487,
+        "relative_improvement": 0.9077873871513243
+      },
+      {
+        "seed": 0,
+        "horizon": "H18",
+        "three_pole_clean_effect_mae": 0.000512396940257176,
+        "two_pole_clean_effect_mae": 0.0012950910009177363,
+        "relative_improvement": 0.6043544894574375
+      },
+      {
+        "seed": 0,
+        "horizon": "H60",
+        "three_pole_clean_effect_mae": 0.003103427319729235,
+        "two_pole_clean_effect_mae": 0.0037598428807541495,
+        "relative_improvement": 0.17458590208249622
+      },
+      {
+        "seed": 1,
+        "horizon": "H1",
+        "three_pole_clean_effect_mae": 0.0,
+        "two_pole_clean_effect_mae": 0.0,
+        "relative_improvement": null
+      },
+      {
+        "seed": 1,
+        "horizon": "H6",
+        "three_pole_clean_effect_mae": 1.550011837547771e-05,
+        "two_pole_clean_effect_mae": 0.0001857399510898361,
+        "relative_improvement": 0.9165493568587146
+      },
+      {
+        "seed": 1,
+        "horizon": "H18",
+        "three_pole_clean_effect_mae": 0.0004373344873811469,
+        "two_pole_clean_effect_mae": 0.001278575191806297,
+        "relative_improvement": 0.6579516870155239
+      },
+      {
+        "seed": 1,
+        "horizon": "H60",
+        "three_pole_clean_effect_mae": 0.002449988685839344,
+        "two_pole_clean_effect_mae": 0.003223876527044922,
+        "relative_improvement": 0.24004884638523713
+      },
+      {
+        "seed": 2,
+        "horizon": "H1",
+        "three_pole_clean_effect_mae": 0.0,
+        "two_pole_clean_effect_mae": 0.0,
+        "relative_improvement": null
+      },
+      {
+        "seed": 2,
+        "horizon": "H6",
+        "three_pole_clean_effect_mae": 2.9057023184897446e-05,
+        "two_pole_clean_effect_mae": 0.00024964631480450805,
+        "relative_improvement": 0.883607241678487
+      },
+      {
+        "seed": 2,
+        "horizon": "H18",
+        "three_pole_clean_effect_mae": 0.0004884518268446492,
+        "two_pole_clean_effect_mae": 0.0013278715812514719,
+        "relative_improvement": 0.6321543184286686
+      },
+      {
+        "seed": 2,
+        "horizon": "H60",
+        "three_pole_clean_effect_mae": 0.0029559855383922695,
+        "two_pole_clean_effect_mae": 0.003640526063463767,
+        "relative_improvement": 0.18803340867176585
+      }
+    ],
+    "interpretation": "Prespecified descriptive heterogeneity only; no profile or horizon creates an additional confirmatory gate."
+  },
+  "tau_recovery_diagnostic": {
+    "candidate_results": {
+      "d2_g3_three_pole": [
+        {
+          "reported_tau_seconds_sorted": [
+            32.366943359375,
+            84.18099212646484,
+            175.76695251464844
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.19138809079460783,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 0
+        },
+        {
+          "reported_tau_seconds_sorted": [
+            31.883346557617188,
+            86.24226379394531,
+            206.07723999023438
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.1514390758723689,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 1
+        },
+        {
+          "reported_tau_seconds_sorted": [
+            31.499893188476562,
+            96.54894256591797,
+            206.5262908935547
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.19237664114950925,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 2
+        }
+      ],
+      "d2_g3_oracle_structure": [
+        {
+          "reported_tau_seconds_sorted": [
+            35.150535583496094,
+            92.90052795410156,
+            153.00482177734375
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.24297059353914954,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 0
+        },
+        {
+          "reported_tau_seconds_sorted": [
+            34.902122497558594,
+            97.29049682617188,
+            177.13711547851562
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.21190710603435262,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 1
+        },
+        {
+          "reported_tau_seconds_sorted": [
+            37.818580627441406,
+            98.76067352294922,
+            183.37191772460938
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.17862475548516143,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 2
+        }
+      ]
+    },
+    "all_seeds_pass": true,
+    "interpretation": "Parameter recovery is diagnostic and nonblocking."
+  },
+  "no_true_delay_diagnostic": {
+    "candidate_id": "d2_g2_delay_compensation",
+    "seed_results": [
+      {
+        "delay_weights": [
+          0.29693472385406494,
+          0.027024762704968452,
+          0.16365011036396027,
+          0.24519313871860504,
+          0.26719731092453003
+        ],
+        "expected_delay_seconds": 21.58693504333496,
+        "expected_delay_steps": 2.1586935043334963,
+        "expected_delay_steps_max": 0.5,
+        "zero_step_mass": 0.29693472385406494,
+        "zero_step_mass_min": 0.8,
+        "passes": false,
+        "seed": 0
+      },
+      {
+        "delay_weights": [
+          0.2782495617866516,
+          0.023413361981511116,
+          0.14108265936374664,
+          0.2566114366054535,
+          0.3006429970264435
+        ],
+        "expected_delay_seconds": 22.779848098754883,
+        "expected_delay_steps": 2.2779848098754885,
+        "expected_delay_steps_max": 0.5,
+        "zero_step_mass": 0.2782495617866516,
+        "zero_step_mass_min": 0.8,
+        "passes": false,
+        "seed": 1
+      },
+      {
+        "delay_weights": [
+          0.24074184894561768,
+          0.022097593173384666,
+          0.1505328118801117,
+          0.27277228236198425,
+          0.31385543942451477
+        ],
+        "expected_delay_seconds": 23.969017028808594,
+        "expected_delay_steps": 2.3969017028808595,
+        "expected_delay_steps_max": 0.5,
+        "zero_step_mass": 0.24074184894561768,
+        "zero_step_mass_min": 0.8,
+        "passes": false,
+        "seed": 2
+      }
+    ],
+    "all_seeds_pass": false,
+    "interpretation": "This misspecification diagnostic cannot establish field delay and does not enter the confirmatory result."
+  },
+  "oracle_test": {
+    "candidate_id": "d2_g3_oracle_structure",
+    "clean_effect_nmae_max": 0.05,
+    "seed_results": [
+      {
+        "seed": 0,
+        "clean_effect_nmae": 0.02108215785715074,
+        "passes": true
+      },
+      {
+        "seed": 1,
+        "clean_effect_nmae": 0.025513112299059275,
+        "passes": true
+      },
+      {
+        "seed": 2,
+        "clean_effect_nmae": 0.023682767531799646,
+        "passes": true
+      }
+    ],
+    "all_seeds_pass": true
+  },
+  "order_aware_absolute_test": {
+    "candidate_id": "d2_g3_three_pole",
+    "clean_effect_nmae_max": 0.1,
+    "seed_results": [
+      {
+        "seed": 0,
+        "clean_effect_nmae": 0.044413471245512974,
+        "passes": true
+      },
+      {
+        "seed": 1,
+        "clean_effect_nmae": 0.044377932419044225,
+        "passes": true
+      },
+      {
+        "seed": 2,
+        "clean_effect_nmae": 0.0464884277202083,
+        "passes": true
+      }
+    ],
+    "all_seeds_pass": true
+  },
+  "order_aware_response_test": {
+    "order_aware_id": "d2_g3_three_pole",
+    "two_pole_id": "d2_g2_two_pole",
+    "ci_lower_relative_improvement_min": 0.1,
+    "seed_results": [
+      {
+        "observed": 0.23738633326092293,
+        "ci95": [
+          0.19897609149712667,
+          0.2780190093744847
+        ],
+        "bootstrap_replicates": 10000,
+        "bootstrap_seed": 20260813,
+        "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+        "episode_count": 256,
+        "profile_counts": {
+          "0": 52,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "seed": 0,
+        "ci_lower_meets_threshold": true
+      },
+      {
+        "observed": 0.24309866115113893,
+        "ci95": [
+          0.19976867182969754,
+          0.2884825861197842
+        ],
+        "bootstrap_replicates": 10000,
+        "bootstrap_seed": 20260814,
+        "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+        "episode_count": 256,
+        "profile_counts": {
+          "0": 52,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "seed": 1,
+        "ci_lower_meets_threshold": true
+      },
+      {
+        "observed": 0.2536463914676426,
+        "ci95": [
+          0.21216725688263272,
+          0.2960625305143336
+        ],
+        "bootstrap_replicates": 10000,
+        "bootstrap_seed": 20260815,
+        "bootstrap_unit": "paired_episode_stratified_by_action_profile",
+        "episode_count": 256,
+        "profile_counts": {
+          "0": 52,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "seed": 2,
+        "ci_lower_meets_threshold": true
+      }
+    ],
+    "all_seeds_pass": true
+  },
+  "tau_recovery_diagnostic_pass": true,
+  "no_true_delay_diagnostic_pass": false,
+  "all_confirmatory_gates_pass": true,
+  "all_gates_pass": true,
+  "interpretation_rule": "This one-shot known-truth synthetic test confirms or challenges the frozen D2 order-response result. It neither authorizes retraining nor supports field-causal, unique-order, or world-model claims."
+}

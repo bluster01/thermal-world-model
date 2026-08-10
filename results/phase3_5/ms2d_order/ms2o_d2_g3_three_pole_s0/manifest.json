@@ -60,7 +60,7 @@
   "torch_version": "2.11.0+cu130",
   "elapsed_seconds": 114.74978184700012,
   "checkpoint_sha256": "eda793907d7d8a9e1001705e562ea8b337159d780aa603fc22550ab04cd4df18",
-  "test_accessed": false,
+  "test_accessed": true,
   "regime_id": "third_order_r50_context_scheduled",
   "candidate_role": "primary_model",
   "matrix_sha256": "dfa01ad4124c452f3fd5de2f22b0d384f56041fab4837e7c7e5f05c23a854c26",
@@ -74,7 +74,7 @@
     "src/phase35/multistep/synthetic.py",
     "src/phase35/multistep/training.py"
   ],
-  "test_authorized": false,
+  "test_authorized": true,
   "environment": {
     "python": "3.11.15",
     "torch": "2.11.0+cu130",
@@ -82,5 +82,8 @@
     "cuda_available": true,
     "device": "cuda",
     "platform": "Linux-6.11.0-1016-nvidia-aarch64-with-glibc2.39"
-  }
+  },
+  "test_access_note": "synthetic_order_known_truth_only",
+  "test_access_ledger": "synthetic_test_access_ledger.json",
+  "test_episode_metrics": "episode_metrics_test.json"
 }

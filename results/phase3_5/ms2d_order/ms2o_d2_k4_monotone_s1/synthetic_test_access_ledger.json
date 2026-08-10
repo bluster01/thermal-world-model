@@ -1,0 +1,17 @@
+{
+  "protocol_version": "phase3.5-ms2d-d2-test-v1",
+  "status": "completed",
+  "evidence_scope": "synthetic_order_pressure_test_not_field_causality",
+  "candidate_id": "d2_k4_monotone",
+  "regime_id": "third_order_r50_context_scheduled",
+  "seed": 1,
+  "training_git_sha": "fa6933c718fda884e0a33d4f0371b4bd0cd54fc8",
+  "evaluation_git_sha": "c22140391906ad86c4d87afd9d60759303e9f649",
+  "checkpoint_archive": "results/phase3_5/archive/ms2d_d2_checkpoints_validation.tar",
+  "checkpoint_archive_sha256": "e8d6d8064fcef58ecb1da154727379fa781b2d80c63afc0aee02d1e2cc25c43f",
+  "checkpoint_member": "ms2o_d2_k4_monotone_s1/checkpoint_best_val.pt",
+  "checkpoint_sha256": "3a831465fc984bdc46ad833add3f6906940ca9e2160a0b83ca09210f4acf0bca",
+  "checkpoint_selector": "validation_effect_mae",
+  "test_samples": 256,
+  "trajectory_design_sha256": "73cc1cf26b94e105094058cc591550decf3cb0d0f3922321f7dffc87a1f2b554"
+}

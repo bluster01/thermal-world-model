@@ -1,0 +1,107 @@
+{
+  "effect_mae": 0.016230721026659012,
+  "effect_rmse": 0.020323915407061577,
+  "integrated_absolute_error": 0.9738432168960571,
+  "direction_accuracy_nonzero": 0.6578385233879089,
+  "horizon_mae": {
+    "H1": 0.01668402925133705,
+    "H6": 0.015917085111141205,
+    "H18": 0.015919681638479233,
+    "H60": 0.017551371827721596
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "clean_effect_mae": 0.0014893206534907222,
+  "clean_effect_rmse": 0.0031798246782273054,
+  "clean_effect_scale": 0.032036375254392624,
+  "clean_effect_nmae": 0.04648842662572861,
+  "clean_effect_mae_active": 0.002888904418796301,
+  "noise_mae": 0.016056353226304054,
+  "direction_accuracy_clean_nonzero": 1.0,
+  "clean_horizon_mae": {
+    "H1": 0.0,
+    "H6": 2.9057022402412258e-05,
+    "H18": 0.0004884518566541374,
+    "H60": 0.0029559857212007046
+  },
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.2648892104625702,
+    "positive_step_terminal_effect_max_c": -0.042992688715457916,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": true,
+      "fixed_horizon": false,
+      "direction_constrained": true,
+      "continuous_time": true
+    },
+    "operator": {
+      "gain_c_per_effective_pct": -0.034223128110170364,
+      "gain_range_c_per_effective_pct": [
+        -0.04407794773578644,
+        -0.025311073288321495
+      ],
+      "tau_seconds": [
+        31.499893188476562,
+        96.54894256591797,
+        206.5262908935547
+      ],
+      "tau_range_seconds": [
+        [
+          22.89674186706543,
+          43.65852355957031
+        ],
+        [
+          70.19953918457031,
+          113.28048706054688
+        ],
+        [
+          158.8944091796875,
+          266.9122619628906
+        ]
+      ],
+      "spectral_radius": 0.9632276892662048,
+      "context_scheduled": true,
+      "delay_mode": "none",
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_cascade_v2",
+    "truth_regime": "context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "gain_c_per_pct": -0.1,
+    "tau_seconds": [
+      40.0,
+      70.0,
+      210.0
+    ],
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3,
+    "input_delay_steps": 0,
+    "input_delay_seconds": 0.0,
+    "realized_gain_range": [
+      -0.14180277287960052,
+      -0.07056288421154022
+    ],
+    "realized_tau_range": [
+      [
+        29.715362548828125,
+        53.81771469116211
+      ],
+      [
+        51.98938751220703,
+        94.33057403564453
+      ],
+      [
+        155.79966735839844,
+        283.1844177246094
+      ]
+    ],
+    "dt_seconds": 10.0,
+    "seed": 22460822,
+    "split": "test"
+  }
+}
