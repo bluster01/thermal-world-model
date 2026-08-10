@@ -1,0 +1,340 @@
+{
+  "protocol_version": "phase3.5-ms2d-d2-v1",
+  "evidence_scope": "synthetic_order_pressure_validation_not_field_causality",
+  "split": "validation",
+  "run_count": 21,
+  "test_accessed": false,
+  "execution_git_sha": "fa6933c718fda884e0a33d4f0371b4bd0cd54fc8",
+  "aggregation_git_sha": "fa6933c718fda884e0a33d4f0371b4bd0cd54fc8",
+  "matrix_sha256": "dfa01ad4124c452f3fd5de2f22b0d384f56041fab4837e7c7e5f05c23a854c26",
+  "all_artifact_and_structural_gates_pass": true,
+  "structural_gate_failures": [],
+  "candidates": {
+    "d2_deeponet": {
+      "role": "secondary_representation",
+      "route": "deeponet",
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "clean_effect_nmae_mean": 0.041898434360822044,
+      "clean_effect_nmae_std": 0.007952729105586684,
+      "clean_effect_mae_mean": 0.001283514779061079,
+      "all_structural_gates_pass": true
+    },
+    "d2_g2_delay_compensation": {
+      "role": "alternative_mechanism_diagnostic",
+      "route": "graybox",
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "clean_effect_nmae_mean": 0.0455701028307279,
+      "clean_effect_nmae_std": 0.006819060813843172,
+      "clean_effect_mae_mean": 0.0013961595250293612,
+      "all_structural_gates_pass": true
+    },
+    "d2_g2_two_pole": {
+      "role": "primary_ablation",
+      "route": "graybox",
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "clean_effect_nmae_mean": 0.05825600400567055,
+      "clean_effect_nmae_std": 0.005089024490591445,
+      "clean_effect_mae_mean": 0.0017849028420945008,
+      "all_structural_gates_pass": true
+    },
+    "d2_g3_oracle_structure": {
+      "role": "positive_control",
+      "route": "graybox",
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "clean_effect_nmae_mean": 0.022214324524005253,
+      "clean_effect_nmae_std": 0.0006898272708658846,
+      "clean_effect_mae_mean": 0.0006804803075889746,
+      "all_structural_gates_pass": true
+    },
+    "d2_g3_three_pole": {
+      "role": "primary_model",
+      "route": "graybox",
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "clean_effect_nmae_mean": 0.044442164401213326,
+      "clean_effect_nmae_std": 0.006544878922540992,
+      "clean_effect_mae_mean": 0.0013617445171500246,
+      "all_structural_gates_pass": true
+    },
+    "d2_k4_monotone": {
+      "role": "secondary_representation",
+      "route": "koopman",
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "clean_effect_nmae_mean": 0.25729072093963623,
+      "clean_effect_nmae_std": 0.006680169393680644,
+      "clean_effect_mae_mean": 0.007879212498664856,
+      "all_structural_gates_pass": true
+    },
+    "d2_pi_monotone": {
+      "role": "secondary_representation",
+      "route": "pi_ode",
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "clean_effect_nmae_mean": 0.059816831101973854,
+      "clean_effect_nmae_std": 0.005701408130746432,
+      "clean_effect_mae_mean": 0.0018324764678254724,
+      "all_structural_gates_pass": true
+    }
+  },
+  "oracle_gate": {
+    "candidate_id": "d2_g3_oracle_structure",
+    "clean_effect_nmae_max": 0.05,
+    "seed_results": [
+      {
+        "seed": 0,
+        "clean_effect_nmae": 0.02141779661178589,
+        "passes": true
+      },
+      {
+        "seed": 1,
+        "clean_effect_nmae": 0.022608214989304543,
+        "passes": true
+      },
+      {
+        "seed": 2,
+        "clean_effect_nmae": 0.02261696197092533,
+        "passes": true
+      }
+    ],
+    "all_seeds_pass": true
+  },
+  "order_aware_absolute_gate": {
+    "candidate_id": "d2_g3_three_pole",
+    "clean_effect_nmae_max": 0.1,
+    "seed_results": [
+      {
+        "seed": 0,
+        "clean_effect_nmae": 0.04030235484242439,
+        "passes": true
+      },
+      {
+        "seed": 1,
+        "clean_effect_nmae": 0.05198764428496361,
+        "passes": true
+      },
+      {
+        "seed": 2,
+        "clean_effect_nmae": 0.041036494076251984,
+        "passes": true
+      }
+    ],
+    "all_seeds_pass": true
+  },
+  "order_aware_response_gate": {
+    "order_aware_id": "d2_g3_three_pole",
+    "two_pole_id": "d2_g2_two_pole",
+    "relative_improvement_min": 0.1,
+    "seed_results": [
+      {
+        "seed": 0,
+        "two_pole_clean_effect_nmae": 0.05386405065655708,
+        "three_pole_clean_effect_nmae": 0.04030235484242439,
+        "relative_improvement": 0.251776382370563,
+        "passes": true
+      },
+      {
+        "seed": 1,
+        "two_pole_clean_effect_nmae": 0.06383299082517624,
+        "three_pole_clean_effect_nmae": 0.05198764428496361,
+        "relative_improvement": 0.18556778222493583,
+        "passes": true
+      },
+      {
+        "seed": 2,
+        "two_pole_clean_effect_nmae": 0.05707097053527832,
+        "three_pole_clean_effect_nmae": 0.041036494076251984,
+        "relative_improvement": 0.2809567860619201,
+        "passes": true
+      }
+    ],
+    "all_seeds_pass": true
+  },
+  "tau_recovery_diagnostic": {
+    "candidate_results": {
+      "d2_g3_three_pole": [
+        {
+          "reported_tau_seconds_sorted": [
+            35.79483413696289,
+            87.04777526855469,
+            196.01004028320312
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.13265979424466795,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 0
+        },
+        {
+          "reported_tau_seconds_sorted": [
+            34.93395233154297,
+            90.28387451171875,
+            198.4759979248047
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.14877441079511144,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 1
+        },
+        {
+          "reported_tau_seconds_sorted": [
+            33.68109893798828,
+            87.5107192993164,
+            217.25323486328125
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.1430549366425414,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 2
+        }
+      ],
+      "d2_g3_oracle_structure": [
+        {
+          "reported_tau_seconds_sorted": [
+            39.65187072753906,
+            94.06326293945312,
+            171.496826171875
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.1689188068459893,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 0
+        },
+        {
+          "reported_tau_seconds_sorted": [
+            40.945499420166016,
+            97.87467956542969,
+            169.2373046875
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.19145357172863994,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 1
+        },
+        {
+          "reported_tau_seconds_sorted": [
+            37.19571304321289,
+            100.50050354003906,
+            189.4996337890625
+          ],
+          "truth_tau_seconds_sorted": [
+            40.0,
+            70.0,
+            210.0
+          ],
+          "permutation_invariant_log_mae": 0.1790246249145587,
+          "log_mae_max": 0.35,
+          "passes": true,
+          "seed": 2
+        }
+      ]
+    },
+    "all_seeds_pass": true,
+    "interpretation": "Permutation-invariant parameter recovery is diagnostic only and does not enter the primary response gate."
+  },
+  "no_true_delay_diagnostic": {
+    "candidate_id": "d2_g2_delay_compensation",
+    "seed_results": [
+      {
+        "delay_weights": [
+          0.29693472385406494,
+          0.027024762704968452,
+          0.16365011036396027,
+          0.24519313871860504,
+          0.26719731092453003
+        ],
+        "expected_delay_seconds": 21.58693504333496,
+        "expected_delay_steps": 2.1586935043334963,
+        "expected_delay_steps_max": 0.5,
+        "zero_step_mass": 0.29693472385406494,
+        "zero_step_mass_min": 0.8,
+        "passes": false,
+        "seed": 0
+      },
+      {
+        "delay_weights": [
+          0.2782495617866516,
+          0.023413361981511116,
+          0.14108265936374664,
+          0.2566114366054535,
+          0.3006429970264435
+        ],
+        "expected_delay_seconds": 22.779848098754883,
+        "expected_delay_steps": 2.2779848098754885,
+        "expected_delay_steps_max": 0.5,
+        "zero_step_mass": 0.2782495617866516,
+        "zero_step_mass_min": 0.8,
+        "passes": false,
+        "seed": 1
+      },
+      {
+        "delay_weights": [
+          0.24074184894561768,
+          0.022097593173384666,
+          0.1505328118801117,
+          0.27277228236198425,
+          0.31385543942451477
+        ],
+        "expected_delay_seconds": 23.969017028808594,
+        "expected_delay_steps": 2.3969017028808595,
+        "expected_delay_steps_max": 0.5,
+        "zero_step_mass": 0.24074184894561768,
+        "zero_step_mass_min": 0.8,
+        "passes": false,
+        "seed": 2
+      }
+    ],
+    "all_seeds_pass": false,
+    "interpretation": "This asks whether a misspecified two-pole model invents delay to compensate for an omitted pole; it cannot establish field delay."
+  },
+  "all_primary_gates_pass": true
+}

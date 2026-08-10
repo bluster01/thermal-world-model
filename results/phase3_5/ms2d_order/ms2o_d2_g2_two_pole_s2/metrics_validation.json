@@ -1,0 +1,102 @@
+{
+  "effect_mae": 0.016040485352277756,
+  "effect_rmse": 0.020118780434131622,
+  "integrated_absolute_error": 0.9624291658401489,
+  "direction_accuracy_nonzero": 0.6569673418998718,
+  "horizon_mae": {
+    "H1": 0.015319048427045345,
+    "H6": 0.01651172898709774,
+    "H18": 0.016097934916615486,
+    "H60": 0.014826719649136066
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "clean_effect_mae": 0.0017615815158933401,
+  "clean_effect_rmse": 0.0034367034677416086,
+  "clean_effect_scale": 0.030866507440805435,
+  "clean_effect_nmae": 0.05707097053527832,
+  "clean_effect_mae_active": 0.003191147930920124,
+  "noise_mae": 0.015788808465003967,
+  "direction_accuracy_clean_nonzero": 1.0,
+  "clean_horizon_mae": {
+    "H1": 0.0,
+    "H6": 0.000271515513304621,
+    "H18": 0.0012787517625838518,
+    "H60": 0.0030462692957371473
+  },
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.18861091136932373,
+    "positive_step_terminal_effect_max_c": -0.09650395065546036,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": true,
+      "fixed_horizon": false,
+      "direction_constrained": true,
+      "continuous_time": true
+    },
+    "operator": {
+      "gain_c_per_effective_pct": -0.04941817745566368,
+      "gain_range_c_per_effective_pct": [
+        -0.057990893721580505,
+        -0.03384887054562569
+      ],
+      "tau_seconds": [
+        113.07022094726562,
+        277.028564453125
+      ],
+      "tau_range_seconds": [
+        [
+          78.15186309814453,
+          140.0450897216797
+        ],
+        [
+          247.86083984375,
+          293.5473937988281
+        ]
+      ],
+      "spectral_radius": 0.966507613658905,
+      "context_scheduled": true,
+      "delay_mode": "none",
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_cascade_v2",
+    "truth_regime": "context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "gain_c_per_pct": -0.1,
+    "tau_seconds": [
+      40.0,
+      70.0,
+      210.0
+    ],
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3,
+    "input_delay_steps": 0,
+    "input_delay_seconds": 0.0,
+    "realized_gain_range": [
+      -0.1407480090856552,
+      -0.07064498215913773
+    ],
+    "realized_tau_range": [
+      [
+        29.6541748046875,
+        53.69173049926758
+      ],
+      [
+        52.008216857910156,
+        94.32955169677734
+      ],
+      [
+        155.83087158203125,
+        282.8262023925781
+      ]
+    ],
+    "dt_seconds": 10.0,
+    "seed": 22360822,
+    "split": "validation"
+  }
+}
