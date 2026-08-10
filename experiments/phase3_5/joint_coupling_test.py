@@ -149,11 +149,33 @@ def load_authorization(path: str | Path) -> dict[str, Any]:
 
 def _assert_pinned(path: Path, expected_sha256: str, label: str) -> None:
     actual = _sha256(path)
-    if actual != expected_sha256:
-        raise RuntimeError(
-            f"pinned {label} sha256 mismatch: expected={expected_sha256}, "
-            f"actual={actual}"
+    if actual == expected_sha256:
+        return
+    try:
+        relative = path.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        relative = ""
+    if relative:
+        clean = subprocess.run(
+            ["git", "diff", "--quiet", "HEAD", "--", relative],
+            cwd=ROOT,
+            check=False,
         )
+        try:
+            blob = subprocess.check_output(
+                ["git", "show", f"HEAD:{relative}"],
+                cwd=ROOT,
+                stderr=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            blob = b""
+        blob_sha256 = _sha256_bytes(blob) if blob else None
+        if clean.returncode == 0 and blob_sha256 == expected_sha256:
+            return
+    raise RuntimeError(
+        f"pinned {label} sha256 mismatch: expected={expected_sha256}, "
+        f"working_tree={actual}"
+    )
 
 
 def _assert_frozen_code_equivalent(training_sha: str) -> None:

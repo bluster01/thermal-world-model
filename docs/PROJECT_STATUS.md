@@ -4,7 +4,7 @@
 
 ## 一句话状态
 
-项目已完成预测基线、MPC 方法探索、Phase 3.5 的 42/42 现场 development runs，以及 Phase 3.5-MS1/MS2 和 MS2-J validation+test 的 synthetic known-truth 验证，但**尚未完成真实模型定性，也没有现场独立 lockbox 结论**。现场 E3 不可识别、E4 被阻断，不能打开旧 42-run 模型 test；synthetic 只证明结构化多步响应支路在已知真值下可解。MS2-J 一次性 synthetic test 已执行（`5260d3f`）：联合模块双层 PASS、staged 非劣双层 FAIL，与 validation 一致。synthetic 矩阵停止扩展，进入论文表图与 claim ledger；Phase 4 继续暂停。论文主线见 [`PHASE35_MAINLINE_CONTEXT.md`](PHASE35_MAINLINE_CONTEXT.md)。
+项目已完成 MS0、MS1、MS2-V/C/J；MS2-J test 的 episode bootstrap 已本地精确复算：联合模块双层 PASS、response-internal staged 非劣双层 FAIL。项目**尚未完成真实模型定性，也未进入论文收口**。当前 active Gate 是 MS2-D1 pure-delay 压力，后续仍需 D2/D3、MS5 完整耦合、MS3 真实适配和 MS4 闭环响应。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
 
 ## Phase 3.5 当前状态
 
@@ -110,7 +110,7 @@ exp_025 使用实际绝对阀位，exp_106/旧 A1phys 使用 `二级减温调节
 |---|---|---|
 | PI-ODE | exp_020 使用纯神经动力学与固定 Euler 小步；MS1 在同型二阶 synthetic truth 达噪声下限；MS2-V/C validation/test 误差较低 | MS2 未把 PI-ODE 预注册为主要对照或冠军；PI-ODE 自身的联合非线性/显式调度、Fan 方程、部分可观测状态与真实响应仍未验证 |
 | Controlled Koopman | exp_020 的潜在受控 decoder；exp_112 的 Koopman free-head；MS1 稳定受控模态算子通过结构门禁 | MS2 的 global-context 与四模态阀门版本只作次要对照，不能据此赋予真实 Koopman 谱解释 |
-| 灰箱 / DeepONet 算子 | MS1 证明 2P 灰箱同型可解；MS2-V/C validation+test 的两个预注册响应对比均通过；MS2-J validation 的联合模块门禁通过 | 单调响应模块存在 `K/phi/动力学` 补偿，尚未辨识出真实阀门曲线；MS2-J test、真实数据迁移与 Fan 物理闭合仍缺 |
+| 灰箱 / DeepONet 算子 | MS1 证明 2P 灰箱同型可解；MS2-V/C validation+test 的两个预注册响应对比均通过；MS2-J 联合模块 validation+test 双层通过 | 单调响应模块存在 `K/phi/动力学` 补偿，尚未辨识出真实阀门曲线；MS2-D、完整 free+response、真实数据迁移与 Fan 物理闭合仍缺 |
 
 因此，exp_020 和 exp_112 都不能回答“Fan 物理微分模型是否优于当前模型”。Phase 3.5-MS 新框架也只回答低维动作响应的表示/优化可行性，不等同于 Fan 模型比较或现场因果验证。
 
@@ -138,7 +138,7 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 - 当前正式逻辑位于 `src/phase35/` 与 `experiments/phase3_5/`；`phase3_feedforward/` 只作历史追溯。
 - 仓库没有锁定依赖或可复现环境文件。
 - `data/伊敏6号机` 是 Linux 符号链接，Windows 检出不可直接使用。
-- Phase 3.5 已新增数据、模型、事件、训练、统计、汇总和 CLI smoke 专项测试；当前 36 项通过。全仓历史测试仍有 `TimeXerWM` 测试桩及硬编码 CSV 导入收集错误，不能由专项测试代替或隐去。
+- Phase 3.5 已新增数据、模型、事件、训练、统计、汇总和 CLI smoke 专项测试；当前 88 项通过。全仓历史测试仍有 `TimeXerWM` 测试桩及硬编码 CSV 导入收集错误，不能由专项测试代替或隐去。
 - `eval_protocol.py` 的 PID 物理方向、零误差工作点和导数项实现存在 P0 缺陷；旧控制结果不得恢复证据等级。
 - `exp_106/112` 在 test 上逐 epoch 评估并选 checkpoint；`exp_109/110` 又合并 val+test 构造/筛选事件。
 - 148 个 Python 文件中有 88 个没有 `if __name__ == '__main__'` guard；多个实验依赖导入副作用、全局变量与 `sys.path/sys.argv` 修改。
@@ -147,6 +147,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-MS2-J 一次性 synthetic test 已于 `5260d3f` 执行完成：联合模块跨 split 复现（test CI 下界 0.73–0.89 >> 20%），staged 非劣失败复现（test ratio 1.14–1.20 > 1.10），结论与 validation 一致，无 split 不一致。synthetic 矩阵停止扩展，进入论文表图与 claim ledger。未来若继续现场证据，仍必须使用新时间块执行已冻结的 E3 双 estimand，并解决开/关阀 common support、balance、pre-trend 和 placebo。
+下一判决点是 MS2-D1 validation：20 s pure-delay truth 下，learned-delay graybox 是否相对同结构 no-delay 消融跨 seed 改善，并且 oracle 能关闭生成—优化链。代码、矩阵、汇总器、88 项专项测试、compile、CPU smoke 和 18-run dry-run 已通过，注册表现为 `ready_for_linux`；只授权 validation，不授权 test。
 
-文章完成后，若继续最终世界模型，先进入 W3 状态闭合 simulator 设计，而不是恢复旧 MPC 或扩大当前 A1phys 超参矩阵。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 Gate 计划保留但暂停。
+完整顺序为 MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 保持暂停。

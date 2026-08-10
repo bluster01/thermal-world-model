@@ -84,6 +84,63 @@ def test_context_scheduled_graybox_varies_parameters_without_losing_direction_or
     assert output.diagnostics["spectral_radius"].item() < 1.0
 
 
+def test_fixed_delay_graybox_is_zero_until_the_frozen_delay_and_then_responds():
+    operator = build_response_operator(
+        _config(
+            "graybox",
+            delay_mode="fixed",
+            fixed_delay_steps=2,
+            max_delay_steps=4,
+        )
+    ).eval()
+    context, _, reference = _paths()
+    output = operator(context, reference + 5.0, reference)
+    assert torch.count_nonzero(output.effect[:, :2]).item() == 0
+    assert torch.all(output.effect[:, 2:] < 0)
+    torch.testing.assert_close(
+        output.diagnostics["delay_weights"],
+        torch.tensor([0.0, 0.0, 1.0, 0.0, 0.0]),
+        atol=0,
+        rtol=0,
+    )
+    assert output.diagnostics["expected_delay_seconds"].item() == 20.0
+
+
+def test_learned_delay_graybox_uses_a_causal_probability_simplex():
+    operator = build_response_operator(
+        _config("graybox", delay_mode="learned", max_delay_steps=4)
+    ).eval()
+    context, action, reference = _paths()
+    output = operator(context, action, reference)
+    weights = output.diagnostics["delay_weights"]
+    assert weights.shape == (5,)
+    assert torch.all(weights >= 0)
+    torch.testing.assert_close(weights.sum(), torch.tensor(1.0), atol=1e-7, rtol=0)
+    assert 0 < output.diagnostics["expected_delay_seconds"].item() < 10.0
+
+
+@pytest.mark.parametrize("delay_mode", ["fixed", "learned"])
+def test_delayed_graybox_preserves_state_across_rollout_chunks(delay_mode):
+    operator = build_response_operator(
+        _config(
+            "graybox",
+            delay_mode=delay_mode,
+            fixed_delay_steps=2 if delay_mode == "fixed" else 0,
+            max_delay_steps=4,
+        )
+    ).eval()
+    context, action, reference = _paths()
+    full = operator(context, action, reference)
+    first = operator(context, action[:, :5], reference[:, :5])
+    second = operator(context, action[:, 5:], reference[:, 5:], first.final_state)
+    torch.testing.assert_close(
+        torch.cat((first.effect, second.effect), dim=1),
+        full.effect,
+        atol=1e-6,
+        rtol=1e-6,
+    )
+
+
 def test_controlled_koopman_is_stable_and_not_the_legacy_free_head():
     operator = build_response_operator(_config("koopman", latent_dim=6)).eval()
     context, action, reference = _paths()
@@ -129,3 +186,12 @@ def test_invalid_physical_config_fails_closed():
         _config("unknown").validate()
     with pytest.raises(Phase35MultiStepError, match="only by graybox"):
         _config("koopman", context_scheduled=True).validate()
+    with pytest.raises(Phase35MultiStepError, match="only supported by graybox"):
+        _config("koopman", delay_mode="learned", max_delay_steps=4).validate()
+    with pytest.raises(Phase35MultiStepError, match="within max_delay_steps"):
+        _config(
+            "graybox",
+            delay_mode="fixed",
+            fixed_delay_steps=5,
+            max_delay_steps=4,
+        ).validate()

@@ -137,7 +137,7 @@ A1phys 当前是低阶响应先验，不是守恒模型。若最终目标包含�
 | W5 策略离线验证 | 验证 policy-generated action 分布 | support-aware OPE、独立 plant、鲁棒性和故障注入 | 性能非劣且约束/安全门通过 | 不进 shadow |
 | W6 闭环分级 | 证明可嵌入且安全 | replay→HIL→shadow→advisory→受限闭环 | 每级预注册验收并有回退 | 停留在上一等级 |
 
-对最终真实世界模型，W2 仍是最近的现场科学门；对当前 Phase 3 论文，最近且唯一的实验判决（MS2-J 一次性 synthetic test）已于 `5260d3f` 完成并复现 validation。W3 是从“预测器”成为“仿真器”的结构门；W4 是“反事实”的识别门；W5–W6 才是闭环门。它们不能合并成一个 MAE 或 CFI 分数。
+对最终真实世界模型，W2 仍是现场科学门；当前工程先完成 MS2-D、MS5、MS3、MS4，不能在 MS2-J 后跳到论文。W3 是从“预测器”成为“仿真器”的结构门；W4 是“反事实”的识别门；W5–W6 才是闭环门。它们不能合并成一个 MAE 或 CFI 分数。
 
 ## 6. 论文与工程的两条叙事
 
@@ -178,8 +178,8 @@ A1phys 当前是低阶响应先验，不是守恒模型。若最终目标包含�
 
 ## 8. 当前优先级
 
-1. ~~完成并审计一次 MS2-J synthetic test~~ → 完成（`5260d3f`）：联合模块复现 PASS、staged 非劣复现 FAIL，不重试、不扩 MS2-D，进入论文表图与 claim ledger。
-2. 不再扩大真实 A1phys 训练矩阵；为未来 W2 保留稳态 held-step / 动态 trajectory 双 estimand和真正盲的新时间块。
-3. W2 仍不可识别时，Phase 3.5 以“known-truth 可解性 + 现场识别边界 + fail-closed 方法”收口，不用预测 MAE 或 synthetic PASS 补位。
-4. 文章完成后再设计 W3 的状态闭合 simulator；这不是现有预测头的小改版。
-5. 只有 W3、W4 通过后，才恢复任何 MPC/闭环路线。
+1. 完成 MS2-D1/D2/D3 顺序结构压力；当前实现 D1 pure-delay。
+2. 实施 MS5，单独检验完整 `free+response` 的动作吸收和训练稳定性。
+3. 实施 MS3 A/B validation-only 适配，再以 SP held-step 闭环锚点实施 MS4。
+4. MS 系列完成后再选择模型和形成论文；不以 synthetic 单榜提前定路线冠军。
+5. 只有状态闭合、反事实与独立控制 Gate 通过后，才恢复 MPC/闭环路线。

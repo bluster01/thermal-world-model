@@ -1,6 +1,6 @@
 # Phase 3.5 Linux 执行手册
 
-本目录是 Phase 3 论文核心验证的唯一执行入口。Linux 只运行冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前记录 `git rev-parse HEAD`，且工作树必须干净。
+本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
 ## 0. 环境与路径
 
@@ -322,3 +322,38 @@ python experiments/phase3_5/summarize_joint_coupling_test.py
 ```
 
 runner 在首次生成 test 前核对 authorization、训练矩阵、validation summary、checkpoint tar 的 SHA256，以及 27 个 manifest、30 个实际读取权重（27 canonical + 3 Stage-A）和冻结训练代码等价性。test 以完整 episode 为统计单位，按 action profile 分层做 10,000 次 paired bootstrap：joint 对两个单模块的改善 CI 下界均须 ≥20%；staged/joint 误差比 CI 上界须 ≤1.10；staged 对 Stage-A 改善 CI 下界须 ≥20%。由于 validation 的 staged 门禁已失败，test 汇总器再次以 code 2 退出是预期科学结果；不得删除 started/partial ledger 后重跑。回传全部新增 JSON、更新后的 manifest、stdout/stderr 和环境信息，不重新训练、不改 checkpoint、不访问 A/B 真实数据 test。
+
+## 11. 当前授权：MS2-D1 纯迟延 validation
+
+本节是当前唯一可执行的新批次。MS2-D1 在 MS2-J 的 R50 非线性、context 调度和二阶惯性真值上只增加 20 s 纯迟延，回答显式因果迟延模块是否改善多步响应。它不访问 synthetic test 或 A/B 数据，不启动 D2/D3/MS5。
+
+先核对机器状态、工作树和冻结矩阵：
+
+```bash
+python experiments/phase3_5/experiment_status.py --check --json
+git status --short
+git rev-parse HEAD
+python -m pytest tests/phase35/multistep tests/phase35/test_experiment_status.py -q
+python -m compileall -q src/phase35/multistep \
+  experiments/phase3_5/ms2d_delay.py \
+  experiments/phase3_5/summarize_ms2d_delay.py
+python experiments/phase3_5/ms2d_delay.py --dry-run
+```
+
+状态输出必须是 `active_gate=ms2d_d1`、`status=ready_for_linux`、`linux_authorized_gate=ms2d_d1`；工作树必须为空；dry-run 必须严格得到 `1 regime / 6 candidates / 18 validation runs` 且 `test_authorized=false`。任一条件不符即停止回传。
+
+正式运行与汇总：
+
+```bash
+python experiments/phase3_5/ms2d_delay.py \
+  --device cuda \
+  --output-root results/phase3_5/ms2d_delay \
+  --execute-matrix --skip-existing
+
+python experiments/phase3_5/summarize_ms2d_delay.py \
+  --output-root results/phase3_5/ms2d_delay
+```
+
+六个候选为同结构 no-delay 消融、learned-delay 主模型、fixed-delay+R50 oracle 正控，以及 Koopman、PI-ODE、DeepONet 三个次要表示参考。主要判决只包含：18/18 artifact/结构门通过；oracle 每 seed clean NMAE `<0.05`；learned-delay 相对 no-delay 每 seed 改善 `≥20%`。期望迟延误差 `≤1 step` 与真值 ±1 step 邻域质量 `≥0.80` 单列为参数诊断，不与响应恢复混成同一个结论。
+
+汇总器可能因科学门禁失败以 code 2 退出；仍须原样回传 18 个完整运行目录、`summary_validation.json`、命令输出、环境和 Git SHA。不得改阈值、补 seed、删除失败运行、访问 test，或继续 D2。D1 只有经本地复算后才从 `results_returned` 进入 `audited`。

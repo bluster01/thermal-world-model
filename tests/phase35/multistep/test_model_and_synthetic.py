@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import pytest
 
 from src.phase35.multistep.contracts import OperatorConfig
 from src.phase35.multistep.model import A1PhysMultiStep
@@ -96,3 +97,57 @@ def test_context_scheduled_truth_changes_gain_and_time_constants_but_stays_stabl
     assert batch.truth["realized_gain_range"][0] < batch.truth["realized_gain_range"][1] < 0
     assert all(low > 0 and high > low for low, high in batch.truth["realized_tau_range"])
     assert torch.isfinite(batch.clean_effect).all()
+
+
+def test_delayed_context_truth_is_zero_padded_and_exactly_shifts_the_same_response():
+    common = dict(
+        samples=48,
+        horizon=20,
+        context_dim=4,
+        seed=41,
+        noise_std=0.0,
+        truth_opening_map="equal_percentage_r50",
+        context_gain_log_scale=0.35,
+        context_tau_log_scale=0.30,
+    )
+    base = generate_synthetic_split(
+        SyntheticSpec(**common, truth_regime="context_scheduled"),
+        "validation",
+    )
+    delayed = generate_synthetic_split(
+        SyntheticSpec(
+            **common,
+            truth_regime="delayed_context_scheduled",
+            input_delay_steps=2,
+        ),
+        "validation",
+    )
+    torch.testing.assert_close(delayed.action, base.action)
+    torch.testing.assert_close(delayed.context, base.context)
+    assert torch.count_nonzero(delayed.clean_effect[:, :2]).item() == 0
+    torch.testing.assert_close(
+        delayed.clean_effect[:, 2:], base.clean_effect[:, :-2], atol=1e-7, rtol=0
+    )
+    assert delayed.truth["input_delay_steps"] == 2
+    assert delayed.truth["input_delay_seconds"] == 20.0
+
+
+def test_delayed_truth_requires_a_resolvable_positive_delay():
+    with pytest.raises(ValueError, match="positive input delay"):
+        SyntheticSpec(
+            samples=16,
+            horizon=12,
+            truth_regime="delayed_context_scheduled",
+            context_gain_log_scale=0.3,
+            context_tau_log_scale=0.3,
+            input_delay_steps=0,
+        ).validate()
+    with pytest.raises(ValueError, match="smaller than horizon"):
+        SyntheticSpec(
+            samples=16,
+            horizon=12,
+            truth_regime="delayed_context_scheduled",
+            context_gain_log_scale=0.3,
+            context_tau_log_scale=0.3,
+            input_delay_steps=12,
+        ).validate()

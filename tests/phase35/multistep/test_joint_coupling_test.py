@@ -19,12 +19,35 @@ AUTHORIZATION = ROOT / "configs/phase3_5/joint_coupling_test_authorization.json"
 RUNNER = ROOT / "experiments/phase3_5/joint_coupling_test.py"
 
 
-def test_ms2j_test_dry_run_preflights_frozen_validation_without_access():
+def test_ms2j_test_preflight_is_state_aware_and_refuses_repeat_access():
     root_ledger = (
         ROOT
         / "results/phase3_5/joint_coupling/synthetic_test_matrix_access_ledger.json"
     )
-    assert not root_ledger.exists()
+    if root_ledger.exists():
+        before = root_ledger.read_bytes()
+        ledger = json.loads(before)
+        assert ledger["status"] == "completed"
+        assert ledger["run_count"] == 27
+        assert len(ledger["completed_runs"]) == 27
+        refused = subprocess.run(
+            [
+                sys.executable,
+                str(RUNNER),
+                "--authorization",
+                str(AUTHORIZATION),
+                "--dry-run",
+            ],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert refused.returncode != 0
+        assert "refusing repeat or partial" in refused.stderr
+        assert root_ledger.read_bytes() == before
+        return
+
     completed = subprocess.run(
         [
             sys.executable,

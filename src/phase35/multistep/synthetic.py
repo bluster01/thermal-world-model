@@ -9,7 +9,12 @@ import torch
 
 PROFILE_NAMES = ("hold", "step", "pulse", "ramp", "multi_step")
 _SPLIT_OFFSETS = {"train": 0, "validation": 100_003, "test": 200_003}
-TRUTH_REGIMES = {"two_pole_linear", "nonlinear_valve", "context_scheduled"}
+TRUTH_REGIMES = {
+    "two_pole_linear",
+    "nonlinear_valve",
+    "context_scheduled",
+    "delayed_context_scheduled",
+}
 TRUTH_OPENING_MAPS = {"identity", "equal_percentage_r50"}
 
 
@@ -27,6 +32,7 @@ class SyntheticSpec:
     truth_opening_map: str = "identity"
     context_gain_log_scale: float = 0.0
     context_tau_log_scale: float = 0.0
+    input_delay_steps: int = 0
 
     def validate(self) -> None:
         if self.samples < len(PROFILE_NAMES) or self.horizon < 8 or self.context_dim < 1:
@@ -43,12 +49,21 @@ class SyntheticSpec:
             raise ValueError(f"unknown truth_opening_map={self.truth_opening_map!r}")
         if min(self.context_gain_log_scale, self.context_tau_log_scale) < 0:
             raise ValueError("context scheduling scales must be non-negative")
+        if not isinstance(self.input_delay_steps, int) or self.input_delay_steps < 0:
+            raise ValueError("input_delay_steps must be a non-negative integer")
+        if self.input_delay_steps >= self.horizon:
+            raise ValueError("input delay must be smaller than horizon")
         if self.truth_regime == "nonlinear_valve" and self.truth_opening_map == "identity":
             raise ValueError("nonlinear_valve truth requires a nonlinear opening map")
-        if self.truth_regime == "context_scheduled" and max(
+        if self.truth_regime in {"context_scheduled", "delayed_context_scheduled"} and max(
             self.context_gain_log_scale, self.context_tau_log_scale
         ) <= 0:
-            raise ValueError("context_scheduled truth requires a non-zero scheduling scale")
+            raise ValueError("scheduled truth requires a non-zero scheduling scale")
+        if (
+            self.truth_regime == "delayed_context_scheduled"
+            and self.input_delay_steps <= 0
+        ):
+            raise ValueError("delayed_context_scheduled truth requires a positive input delay")
 
 
 @dataclass
@@ -147,6 +162,14 @@ def _cascade_response(
     return torch.stack(outputs, dim=1)
 
 
+def _pure_delay(dose: torch.Tensor, steps: int) -> torch.Tensor:
+    if steps == 0:
+        return dose
+    delayed = torch.zeros_like(dose)
+    delayed[:, steps:] = dose[:, :-steps]
+    return delayed
+
+
 def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
     spec.validate()
     if split not in _SPLIT_OFFSETS:
@@ -157,6 +180,7 @@ def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
     dose = _effective_opening(action, spec.truth_opening_map) - _effective_opening(
         reference, spec.truth_opening_map
     )
+    dose = _pure_delay(dose, spec.input_delay_steps)
     gain, tau = _scheduled_parameters(spec, context)
     clean_effect = _cascade_response(dose, spec.dt_seconds, tau, gain)
     noise = spec.noise_std * torch.randn(clean_effect.shape, generator=generator)
@@ -171,6 +195,8 @@ def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
         "tau_seconds": list(spec.tau_seconds),
         "context_gain_log_scale": spec.context_gain_log_scale,
         "context_tau_log_scale": spec.context_tau_log_scale,
+        "input_delay_steps": spec.input_delay_steps,
+        "input_delay_seconds": spec.input_delay_steps * spec.dt_seconds,
         "realized_gain_range": [float(gain.min()), float(gain.max())],
         "realized_tau_range": [
             [float(tau[:, pole].min()), float(tau[:, pole].max())]

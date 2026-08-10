@@ -1,12 +1,15 @@
 # 文档地图
 
-文档按“Phase 3.5 活任务、项目状态、历史证据、暂停的 Phase 4 路线”阅读。旧文档记录实验发生时的判断；若与根目录 `TODO.md`、`PHASE3_5_EXPERIMENT_DESIGN.md` 或 `PROJECT_STATUS.md` 冲突，以新文档为准。
+文档按“Phase 3.5-MS 活任务、项目状态、历史证据、暂停的 Phase 4 路线”阅读。旧文档记录实验发生时的判断；若与根目录 `TODO.md`、`PHASE35_CONTEXT_SNAPSHOT.md`、机器实验注册表或 `PROJECT_STATUS.md` 冲突，以这四个入口为准。
 
 ## 当前入口
 
 - [../TODO.md](../TODO.md)：项目唯一活任务队列与本地/Linux 状态机。
-- [PHASE35_MAINLINE_CONTEXT.md](PHASE35_MAINLINE_CONTEXT.md)：当前论文主命题、现场/known-truth 两条证据臂、MS2-J 唯一判决点与收口清单。
-- [PHASE3_5_EXPERIMENT_DESIGN.md](PHASE3_5_EXPERIMENT_DESIGN.md)：Phase 3 论文 E1–E5 核心验证、A1phys-V 与统计门禁。
+- [PHASE35_CONTEXT_SNAPSHOT.md](PHASE35_CONTEXT_SNAPSHOT.md)：上下文丢失后的第一恢复入口、完整 MS 顺序和当前 Gate。
+- [../configs/phase3_5/experiment_registry.json](../configs/phase3_5/experiment_registry.json)：机器可校验的 Gate、Linux 授权、关键脚本和产物状态。
+- [PHASE35_MAINLINE_CONTEXT.md](PHASE35_MAINLINE_CONTEXT.md)：完整 MS 主命题、known-truth/现场两条证据臂与停止规则。
+- [plans/2026-08-10-phase35-ms2d-pressure-design.md](plans/2026-08-10-phase35-ms2d-pressure-design.md)：当前 MS2-D1 纯迟延压力设计。
+- [PHASE3_5_EXPERIMENT_DESIGN.md](PHASE3_5_EXPERIMENT_DESIGN.md)：已废弃 E1–E5 路线的历史设计与失败门禁，不是当前执行协议。
 - [PHASE35_DESIGN.md](PHASE35_DESIGN.md)：exp_201 先导设计与当时推理；其 test-selected 结论已由正式 Phase 3.5 协议降级。
 - [plans/2026-08-08-phase3-5-a1phys-core-validation.md](plans/2026-08-08-phase3-5-a1phys-core-validation.md)：Phase 3.5 实施计划与测试清单。
 - [PHASE35_MS_METHODS_AND_REFERENCES.md](PHASE35_MS_METHODS_AND_REFERENCES.md)：Phase 3.5-MS 的统一 estimand、四路线公式与证明、可辨识性边界、代码追溯及核验参考文献。

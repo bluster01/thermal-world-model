@@ -1,6 +1,6 @@
 # Phase 3.5-MS 多步动作响应：方法、推导与参考文献
 
-> 版本：`phase3.5-ms-v1`，2026-08-09。本文描述当前代码已经实现的内容，不代表 Linux 正式结果，也不恢复被阻断的 E3/E4 现场因果结论。代码入口为 `src/phase35/multistep/`，冻结矩阵为 `configs/phase3_5/multistep_operator_matrix.json`。
+> 版本：`phase3.5-ms-v1`，更新至 2026-08-10。本文描述当前代码已经实现的内容，不代表 Linux 正式结果，也不恢复旧 E3/E4 现场因果结论。代码入口为 `src/phase35/multistep/`；当前 Gate 由 `configs/phase3_5/experiment_registry.json` 指向 `ms2d_delay_matrix.json`。
 
 ## 1. 研究问题与证据边界
 
@@ -116,7 +116,27 @@ K(c)=K_0\exp\{s\tanh(w_K^\top c)\},\qquad
 
 其中 \(s=0.5\)，调度权重零初始化。该形式在全部 context 下保持 \(K(c)<0\)、\(\tau_i(c)>0\)，但单个 \(K/\tau\) 与阀门映射仍可能存在等价补偿，必须结合已知真值参数和响应误差审计。
 
-### 4.2 稳定性与方向
+### 4.2 MS2-D1 因果纯迟延
+
+MS2-D1 在进入惯性环节前引入只依赖当前与过去动作的有限迟延核：
+
+\[
+\widetilde u_k=\sum_{d=0}^{D}w_d u_{k-d},\qquad
+w_d=\frac{\exp(q_d)}{\sum_{j=0}^{D}\exp(q_j)},
+\quad u_{k-d}=0\ (k-d<0).
+\tag{9b}
+\]
+
+因此 \(w_d\ge0\)、\(\sum_dw_d=1\)，不会读取未来动作；模型状态除惯性状态外还包含长度 \(D\) 的动作缓冲区，分段 rollout 必须续传该缓冲区。fixed-delay 正控将 \(w_2=1\)，对应 \(\Delta t=10\,\mathrm s\) 下的 20 s 真值；learned-delay 使用 \(D=4\)，并单独报告
+
+\[
+\widehat L=\Delta t\sum_{d=0}^{D}d\,w_d.
+\tag{9c}
+\]
+
+\(\widehat L\) 接近真值是参数恢复诊断，不是响应门禁的必要同义条件。为避免 0–4 step 的均匀核在未训练时就恰好得到 2 step 期望值，learned logits 初始化偏向 \(d=0\)；参数诊断还要求真值 ±1 step 邻域质量 \(\sum_{d=1}^{3}w_d\ge0.80\)。迟延核与惯性时间常数仍可能补偿，所以必须把 learned-delay 相对同结构 no-delay 的 clean-response 改善和参数恢复分开报告。
+
+### 4.3 稳定性与方向
 
 由 \(\tau_i>0\) 和 \(\Delta t>0\) 可得 \(0<\alpha_i<1\)，每个一阶环节都是 BIBO 稳定。MS2-C 进一步由有限 \(\tau_{\max}\) 给出统一的 \(\alpha_i(c)<1\) 上界。对固定 context 和常值剂量 \(u_k=u^*\)，稳态满足 \(z_{1,\infty}=z_{2,\infty}=u^*\)，故
 
@@ -127,7 +147,7 @@ K(c)=K_0\exp\{s\tanh(w_K^\top c)\},\qquad
 
 当开阀使 \(u^*>0\) 时，\(K<0\) 保证长期降温方向。该约束只针对阀位代理的有效开度，不把 \(K\) 解释成喷水质量流量增益。
 
-一/二阶惯性与热工对象常用的 FOPDT/串联惯性描述一致；主汽温系统的导前区/惰性区分段辨识可作为工程先验，但当前 MS1 没有显式纯迟延项（Cao et al., 2021；Brolese, 2021）。
+一/二阶惯性与热工对象常用的 FOPDT/串联惯性描述一致；主汽温系统的导前区/惰性区分段辨识可作为工程先验。MS1 没有显式纯迟延项；MS2-D1 才把纯迟延作为单独的已知真值压力轴（Cao et al., 2021；Brolese, 2021）。
 
 ## 5. Stable Controlled Modal Operator（Koopman-family）
 
@@ -262,7 +282,9 @@ MS1 真值动力学也不依赖随机 context \(c\)，所以 \(c\) 在这一阶�
 
 MS1 正式 validation 矩阵为 6 routes × 3 seeds：Graybox-1P/2P、Koopman-K2/K4、PI-ODE、Causal-DeepONet。每个 run 使用 train/validation/test = 1024/256/256 条 synthetic trajectory；训练最多 100 epochs。
 
-MS2-V/C 冻结两个独立失配轴：`valve_nonlinear_r50` 的 6 candidates 与 `context_scheduled_2p` 的 5 candidates，共 11 candidates × 3 seeds = 33 runs；validation+一次性 synthetic test 已完成。两轴的主响应对比均通过，但 learned `phi` 不可单独辨识。MS2-J 随后在同一真值同时启用 R50 非线性和 context 调度，以 9 candidates × 3 seeds 比较双模块 joint/staged、单模块消融及灵活路线；validation+一次性 test 均已完成（`5260d3f`）：联合模块双层 PASS（test CI 下界 0.73–0.89 >> 20%），staged 非劣双层 FAIL（test ratio 1.14–1.20），主训练方案定 joint。完整 validation 与 test 门禁分别见 [`plans/2026-08-10-phase35-ms2j-coupling-design.md`](plans/2026-08-10-phase35-ms2j-coupling-design.md) 和 [`docs/PHASE35_MS2J_TEST_REVIEW_2026-08-10.md`](docs/PHASE35_MS2J_TEST_REVIEW_2026-08-10.md)。纯迟延与未建模扰动继续 HOLD。
+MS2-V/C 冻结两个独立失配轴：`valve_nonlinear_r50` 的 6 candidates 与 `context_scheduled_2p` 的 5 candidates，共 11 candidates × 3 seeds = 33 runs；validation+一次性 synthetic test 已完成。两轴的主响应对比均通过，但 learned `phi` 不可单独辨识。MS2-J 随后在同一真值同时启用 R50 非线性和 context 调度，以 9 candidates × 3 seeds 比较双模块 joint/staged、单模块消融及灵活路线；validation+一次性 test 均已完成（`5260d3f`）：联合模块双层 PASS（test CI 下界 0.73–0.89 >> 20%），staged 非劣双层 FAIL（test ratio 1.14–1.20），主训练方案定 joint。
+
+当前 MS2-D1 只在上述联合真值上增加 20 s pure delay，冻结 6 candidates × 3 seeds = 18 validation runs：no-delay 主消融、learned-delay 主模型、fixed-delay+R50 oracle，以及 Koopman/PI-ODE/DeepONet 次要表示参考。主要响应门是 learned-delay 相对 no-delay 每 seed clean NMAE 改善至少 20%；oracle 每 seed clean NMAE 必须小于 0.05；期望迟延误差不超过 1 step 且真值邻域质量不低于 0.80 单列为参数诊断。D1 不提供 test 入口，D2 三阶惯性与 D3 未建模扰动仍等待 D1 审计。完整设计见 [`plans/2026-08-10-phase35-ms2d-pressure-design.md`](plans/2026-08-10-phase35-ms2d-pressure-design.md)。
 
 ## 9. 训练目标、选模与评测
 
@@ -317,6 +339,7 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 | MS1 synthetic | 同型二阶系统上的参数/响应可恢复性 | 路线普遍优越性、真实阀门增益 |
 | MS2-V/C mismatch（validation+test 已完成） | 合成真值内非线性响应容量与 context 通道的模块价值 | learned 阀门曲线、联合收敛、纯迟延/扰动、现场 `do(valve)` |
 | MS2-J coupling（validation+test 双层：联合模块 PASS、staged 非劣 FAIL，`5260d3f`） | 双模块联合响应可辨识；当前 staged 协议未达到 1.10 非劣界 | 单独恢复 `K/phi`、所有 staged 方案优劣、真实数据迁移与现场因果响应 |
+| MS2-D1 pure delay（代码与协议已冻结，validation 待返回） | 可检验显式迟延模块对已知真值响应恢复的增量价值 | 在结果审计前不能声称迟延已恢复；响应 PASS 也不等于迟延核唯一可辨识 |
 | MS3 real validation（未实现） | A/B 观测预测与模型敏感性 | 未控制混杂下的反事实效应 |
 | MS4 new-time E3/E4 | 若门禁通过，可比较经验响应与模型响应 | 超出数据支持域的闭环安全性 |
 
@@ -353,6 +376,7 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 | 递推组合律 | 三条 stateful operator | `test_recursive_routes_preserve_state_across_rollout_chunks` |
 | MS2-V/C 真值与 clean metrics | `multistep/synthetic.py`、`multistep/training.py` | nonlinear/context truth、MS2 CLI 与 checkpoint hash 测试 |
 | MS2-J coupling 与一次性 test | `joint_coupling.py`、`staging.py`、`joint_coupling_test.py`、`summarize_joint_coupling_test.py` | 27-run freeze、stage A/B/C、content-address、repeat refusal、paired episode gate 测试 |
+| MS2-D1 pure delay | `synthetic.py`、`operators.py`、`ms2d_delay.py`、`summarize_ms2d_delay.py` | exact delay timing、simplex、buffer continuation、18-run freeze、artifact/response/parameter 分离门禁 |
 
 ## 13. Reference ledger
 

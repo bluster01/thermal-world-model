@@ -63,6 +63,35 @@ class StableGrayboxOperator(_ValveResponseOperator):
         else:
             self.gain_schedule = None
             self.tau_schedule = None
+        if config.delay_mode == "learned":
+            initial_delay_logits = torch.zeros(
+                config.max_delay_steps + 1, dtype=torch.float32
+            )
+            initial_delay_logits[0] = 2.0
+            self.delay_logits = nn.Parameter(initial_delay_logits)
+        else:
+            self.register_parameter("delay_logits", None)
+        if config.delay_mode == "fixed":
+            fixed_weights = torch.zeros(
+                config.max_delay_steps + 1, dtype=torch.float32
+            )
+            fixed_weights[config.fixed_delay_steps] = 1.0
+            self.register_buffer("fixed_delay_weights", fixed_weights)
+        else:
+            self.register_buffer("fixed_delay_weights", None)
+
+    @property
+    def delay_state_width(self) -> int:
+        if self.config.delay_mode == "none":
+            return 0
+        return self.config.max_delay_steps + 1
+
+    def delay_weights(self) -> torch.Tensor | None:
+        if self.config.delay_mode == "none":
+            return None
+        if self.config.delay_mode == "fixed":
+            return self.fixed_delay_weights
+        return torch.softmax(self.delay_logits, dim=0)
 
     def physical_parameters(self, context: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
         base_gain = -F.softplus(self.raw_gain)
@@ -86,26 +115,49 @@ class StableGrayboxOperator(_ValveResponseOperator):
         gain, tau = self.physical_parameters(context)
         decay = torch.exp(-self.config.dt_seconds / tau)
         batch = context.shape[0]
+        delay_width = self.delay_state_width
+        state_width = delay_width + self.config.poles
         if initial_state is None:
-            state = torch.zeros(batch, self.config.poles, dtype=action.dtype, device=action.device)
+            state = torch.zeros(batch, state_width, dtype=action.dtype, device=action.device)
         else:
-            expected = (batch, self.config.poles)
+            expected = (batch, state_width)
             if tuple(initial_state.shape) != expected:
                 raise Phase35MultiStepError(f"graybox initial_state must have shape {expected}")
             state = initial_state
+        delay_buffer = state[:, :delay_width] if delay_width else None
+        pole_state = state[:, delay_width:]
+        delay_weights = self.delay_weights()
         trajectory = []
         for step in range(action.shape[1]):
-            stage_input = dose[:, step]
+            if delay_buffer is None:
+                stage_input = dose[:, step]
+            else:
+                delay_buffer = torch.cat(
+                    (dose[:, step, None], delay_buffer[:, :-1]), dim=1
+                )
+                stage_input = (delay_buffer * delay_weights[None, :]).sum(dim=1)
             updated = []
             for pole in range(self.config.poles):
                 pole_decay = decay[pole] if decay.ndim == 1 else decay[:, pole]
-                stage = pole_decay * state[:, pole] + (1.0 - pole_decay) * stage_input
+                stage = (
+                    pole_decay * pole_state[:, pole]
+                    + (1.0 - pole_decay) * stage_input
+                )
                 updated.append(stage)
                 stage_input = stage
-            state = torch.stack(updated, dim=1)
+            pole_state = torch.stack(updated, dim=1)
+            state = (
+                pole_state
+                if delay_buffer is None
+                else torch.cat((delay_buffer, pole_state), dim=1)
+            )
             trajectory.append(state)
         states = torch.stack(trajectory, dim=1)
-        effect = gain * states[..., -1] if gain.ndim == 0 else gain[:, None] * states[..., -1]
+        effect = (
+            gain * states[..., -1]
+            if gain.ndim == 0
+            else gain[:, None] * states[..., -1]
+        )
         diagnostics = {
             "gain_c_per_effective_pct": gain.mean(),
             "gain_range_c_per_effective_pct": torch.stack((gain.min(), gain.max())),
@@ -115,8 +167,19 @@ class StableGrayboxOperator(_ValveResponseOperator):
             ) if tau.ndim == 2 else torch.stack((tau, tau), dim=1),
             "spectral_radius": decay.max(),
             "context_scheduled": self.config.context_scheduled,
+            "delay_mode": self.config.delay_mode,
             "reference_identity_max_error": self._identity_error(effect, action, reference),
         }
+        if delay_weights is not None:
+            delay_steps = torch.arange(
+                delay_weights.numel(),
+                dtype=delay_weights.dtype,
+                device=delay_weights.device,
+            )
+            diagnostics["delay_weights"] = delay_weights
+            diagnostics["expected_delay_seconds"] = (
+                delay_weights * delay_steps
+            ).sum() * self.config.dt_seconds
         return ResponseOutput(effect, states, diagnostics)
 
 

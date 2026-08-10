@@ -1,5 +1,7 @@
 # Codex ↔ Linux Handoff（2026-08-10 MS2-J 收口）
 
+> **Supervisor override（同日）**：本文的 MS2-J 数值与产物清单仍有效，但“停止 MS2-D/MS3–MS5、进入论文”的后续决定已被撤销。当前权威状态见 `configs/phase3_5/experiment_registry.json` 与 `PHASE35_CONTEXT_SNAPSHOT.md`；旧 E1–E5 已废弃，完整 MS 系列继续。
+
 > 用途：Codex 上下文丢失后的恢复入口。pull 本 commit 后，以本文为同步基准。本文由 Linux 侧维护，如与本仓库其他文档冲突，以最近 commit 为准。
 
 ## 1. 当前状态一句话

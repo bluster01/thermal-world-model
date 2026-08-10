@@ -12,6 +12,7 @@ import torch.nn as nn
 
 ROUTES = {"graybox", "koopman", "pi_ode", "deeponet"}
 OPENING_MAPS = {"identity", "equal_percentage_r50", "monotone"}
+DELAY_MODES = {"none", "fixed", "learned"}
 
 
 class Phase35MultiStepError(ValueError):
@@ -44,6 +45,9 @@ class OperatorConfig:
     closure_scale: float = 0.02
     context_scheduled: bool = False
     schedule_log_scale: float = 0.5
+    delay_mode: str = "none"
+    fixed_delay_steps: int = 0
+    max_delay_steps: int = 0
 
     def validate(self) -> None:
         if self.route not in ROUTES:
@@ -68,6 +72,32 @@ class OperatorConfig:
             raise Phase35MultiStepError("schedule_log_scale must be positive")
         if self.context_scheduled and self.route != "graybox":
             raise Phase35MultiStepError("context_scheduled is currently supported only by graybox")
+        if self.delay_mode not in DELAY_MODES:
+            raise Phase35MultiStepError(f"unknown delay_mode={self.delay_mode!r}")
+        if not isinstance(self.fixed_delay_steps, int) or not isinstance(
+            self.max_delay_steps, int
+        ):
+            raise Phase35MultiStepError("delay steps must be integers")
+        if self.fixed_delay_steps < 0 or self.max_delay_steps < 0:
+            raise Phase35MultiStepError("delay steps must be non-negative")
+        if self.delay_mode != "none" and self.route != "graybox":
+            raise Phase35MultiStepError("delay is currently only supported by graybox")
+        if self.delay_mode == "none" and (
+            self.fixed_delay_steps != 0 or self.max_delay_steps != 0
+        ):
+            raise Phase35MultiStepError("delay_mode=none requires zero delay steps")
+        if self.delay_mode in {"fixed", "learned"} and self.max_delay_steps < 1:
+            raise Phase35MultiStepError("active delay requires max_delay_steps >= 1")
+        if self.delay_mode == "fixed" and not (
+            0 <= self.fixed_delay_steps <= self.max_delay_steps
+        ):
+            raise Phase35MultiStepError(
+                "fixed_delay_steps must be within max_delay_steps"
+            )
+        if self.delay_mode == "learned" and self.fixed_delay_steps != 0:
+            raise Phase35MultiStepError(
+                "learned delay does not accept fixed_delay_steps"
+            )
 
     @classmethod
     def from_mapping(cls, raw: Mapping[str, object]) -> "OperatorConfig":
