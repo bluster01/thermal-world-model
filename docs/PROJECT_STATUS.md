@@ -4,7 +4,7 @@
 
 ## 一句话状态
 
-项目已完成预测基线、MPC 方法探索、Phase 3.5 的 42/42 现场 development runs，以及 Phase 3.5-MS1/MS2 和 MS2-J validation 的 synthetic known-truth 验证，但**尚未完成真实模型定性，也没有现场独立 lockbox 结论**。现场 E3 不可识别、E4 被阻断，不能打开旧 42-run 模型 test；synthetic 只证明结构化多步响应支路在已知真值下可解。当前唯一实验判决是 MS2-J 一次性 synthetic test；Phase 4 继续暂停。论文主线见 [`PHASE35_MAINLINE_CONTEXT.md`](PHASE35_MAINLINE_CONTEXT.md)。
+项目已完成预测基线、MPC 方法探索、Phase 3.5 的 42/42 现场 development runs，以及 Phase 3.5-MS1/MS2 和 MS2-J validation+test 的 synthetic known-truth 验证，但**尚未完成真实模型定性，也没有现场独立 lockbox 结论**。现场 E3 不可识别、E4 被阻断，不能打开旧 42-run 模型 test；synthetic 只证明结构化多步响应支路在已知真值下可解。MS2-J 一次性 synthetic test 已执行（`5260d3f`）：联合模块双层 PASS、staged 非劣双层 FAIL，与 validation 一致。synthetic 矩阵停止扩展，进入论文表图与 claim ledger；Phase 4 继续暂停。论文主线见 [`PHASE35_MAINLINE_CONTEXT.md`](PHASE35_MAINLINE_CONTEXT.md)。
 
 ## Phase 3.5 当前状态
 
@@ -116,7 +116,7 @@ exp_025 使用实际绝对阀位，exp_106/旧 A1phys 使用 `二级减温调节
 
 Phase 3.5-MS 的统一 estimand、四类路线公式、损失/指标定义、可辨识性边界和来源核验见 [`PHASE35_MS_METHODS_AND_REFERENCES.md`](PHASE35_MS_METHODS_AND_REFERENCES.md)。
 
-MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军。MS2-V/C validation+test 已独立复核：两个主对比的逐 seed paired-episode CI 下界均远高于 20%，但 MS2-V 的 learned `phi` 没有恢复真值曲线，DeepONet 也可隐式表达非线性；论文不能写成“阀门映射必要且已辨识”。MS2-J validation 已得到混合结果：联合模块相对两个单模块消融通过，当前 staged 协议未达到 joint 的 1.10 非劣界；下一步只做一次性 synthetic test，不重训、不扩矩阵。见 [`PHASE35_MS2J_VALIDATION_REVIEW_2026-08-10.md`](PHASE35_MS2J_VALIDATION_REVIEW_2026-08-10.md) 与 [`plans/2026-08-10-phase35-ms2j-test-design.md`](plans/2026-08-10-phase35-ms2j-test-design.md)。
+MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军。MS2-V/C validation+test 已独立复核：两个主对比的逐 seed paired-episode CI 下界均远高于 20%，但 MS2-V 的 learned `phi` 没有恢复真值曲线，DeepONet 也可隐式表达非线性；论文不能写成“阀门映射必要且已辨识”。MS2-J 一次性 test 已执行（`5260d3f`）：联合模块相对两个单模块消融在 validation+test 双层通过（test CI 下界 0.73–0.89 >> 20%），staged 非劣双层失败（test ratio 1.14–1.20，CI 上界 1.09–1.32 > 1.10）——主训练方案定 joint，staged 仅作阴性消融；不重训、不扩矩阵。见 [`PHASE35_MS2J_TEST_REVIEW_2026-08-10.md`](PHASE35_MS2J_TEST_REVIEW_2026-08-10.md)。
 
 ## 已降级或作废的结论
 
@@ -147,6 +147,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-当前批次的 42-run 训练和本地审计已经结束，不补 seed、不打开模型 test。眼前唯一实验判决点是 MS2-J 一次性 synthetic test：确认联合模块是否跨 split 复现，并如实记录 staged 非劣结果；之后停止扩展 synthetic 矩阵，进入论文表图与 claim ledger。未来若继续现场证据，仍必须使用新时间块执行已冻结的 E3 双 estimand，并解决开/关阀 common support、balance、pre-trend 和 placebo。
+MS2-J 一次性 synthetic test 已于 `5260d3f` 执行完成：联合模块跨 split 复现（test CI 下界 0.73–0.89 >> 20%），staged 非劣失败复现（test ratio 1.14–1.20 > 1.10），结论与 validation 一致，无 split 不一致。synthetic 矩阵停止扩展，进入论文表图与 claim ledger。未来若继续现场证据，仍必须使用新时间块执行已冻结的 E3 双 estimand，并解决开/关阀 common support、balance、pre-trend 和 placebo。
 
 文章完成后，若继续最终世界模型，先进入 W3 状态闭合 simulator 设计，而不是恢复旧 MPC 或扩大当前 A1phys 超参矩阵。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 Gate 计划保留但暂停。

@@ -2,7 +2,7 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-10）**：Phase 4 暂停，项目回到 Phase 3 文章收口。现场 42-run development 审计后 E3 不可识别、E4 被阻断，不能声称已获得“完全物理响应”。Phase 3.5-MS 已在 known-truth 中建立多步响应架构的可解性证据；当前只等待 MS2-J 一次性 synthetic test，确认联合非线性/工况调度与 staged-vs-joint 的混合结论。synthetic PASS 不能替代现场因果 reference。
+> **当前判断（2026-08-10）**：Phase 4 暂停，项目回到 Phase 3 文章收口。现场 42-run development 审计后 E3 不可识别、E4 被阻断，不能声称已获得“完全物理响应”。Phase 3.5-MS 已在 known-truth 中建立多步响应架构的可解性证据；MS2-J 一次性 synthetic test 已完成（`5260d3f`）：联合模块跨 split 复现 PASS（test CI 下界 0.73–0.89 >> 20%），staged 非劣失败复现（test ratio 1.14–1.20），主训练方案定 joint。synthetic 矩阵停止扩展，进入论文表图与 claim ledger。synthetic PASS 不能替代现场因果 reference。
 
 ## 当前入口
 
@@ -22,7 +22,7 @@ Phase 4 的 [实验计划](docs/PHASE4_EXPERIMENT_PLAN.md) 和 Fan2017/2020/2021
 
 论文采用两条互不替代的证据臂：现场 E1–E5 判断 historian 是否足以确认真实动作响应；synthetic MS0–MS2-J 判断结构化模型在真值已知时是否具备多步响应能力。前者当前主要得到 `INCONCLUSIVE/BLOCKED`，后者已证明基本递推、单调开度和工况调度可解。
 
-眼前唯一实验是 MS2-J 独立 test：确认非线性开度与 context 调度联合后仍优于任一单模块，并复核当前 staged 训练未达到 joint 的 1.10 非劣界。它不是新一轮架构赛马，也不验证现场物理因果、完整仿真器或闭环控制。完整问题—证据—停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)。
+MS2-J 独立 test 已完成：确认非线性开度与 context 调度联合后仍优于任一单模块（复现 PASS），并复核当前 staged 训练未达到 joint 的 1.10 非劣界（复现 FAIL）。它不是新一轮架构赛马，也不验证现场物理因果、完整仿真器或闭环控制。完整问题—证据—停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)。
 
 ## Phase 3.5 研究命题
 

@@ -7,8 +7,8 @@
 ## Material Passport
 
 - Material Type: project evidence-gap and experiment-gate specification
-- Scope: repository code, Phase 1–3.5 field results，以及截至 MS2-J test 授权提交 `5fa9769` 的 synthetic evidence artifacts
-- Verification Status: ANALYZED；Phase 3.5-MS checkpoint/metrics 已本地复核，真实 42-run 模型 test 未访问
+- Scope: repository code, Phase 1–3.5 field results，以及截至 MS2-J test 完成提交 `5260d3f` 的 synthetic evidence artifacts
+- Verification Status: VERIFIED；Phase 3.5-MS checkpoint/metrics 已本地复核（MS2-J test 27/27 单次访问 ledger completed），真实 42-run 模型 test 未访问
 - Data Boundary: A/B 现场 historian；喷水流量不作真值；实际阀位仅是 plant action 的代理
 - Claim Boundary: 本文定义后续证据要求，不把观测闭环关联升级为随机干预因果效应
 
@@ -53,7 +53,7 @@
 | E3 matching | 暴露了 close-event support 和 matching balance 的不足 | “阀门没有物理响应”或“A1phys 物理响应失败” |
 | SP 多时域探索 | A/B 阀位都存在明显早期响应，600 s 净效应会衰减/反转 | SP 是 plant action；600 s 单点代表完整执行链；B 侧阀门不响应 |
 | G3 参数诊断 | 当前物理支路参数有塌缩，必须阻断强主张 | 两级惯性或所有 physics-guided 路线都不可行 |
-| Phase 3.5-MS1/MS2 | known-truth 下多步递推、单调开度与工况调度可以恢复响应；联合模块 validation 有明确增量 | 现场参数、真实阀门曲线、完整状态闭合、现场因果反事实 |
+| Phase 3.5-MS1/MS2 | known-truth 下多步递推、单调开度与工况调度可以恢复响应；联合模块在 validation+test 双层有明确增量（test CI 下界 0.73–0.89 >> 20%）；staged 双层未达非劣界 | 现场参数、真实阀门曲线、完整状态闭合、现场因果反事实 |
 | 旧 MPC 结果 | 可以作为协议失败和 objective mismatch 的方法学案例 | 世界模型控制优于 PID，或已经通过闭环验证 |
 
 Phase 3.5 论文当前最稳的贡献不是“已经得到完整物理响应”，而是：把 known-truth 架构可解性与现场响应可识别性拆开验证；建立动作层级、结构约束、观测事件门禁和 fail-closed 审计，并展示预测精度或 synthetic PASS 都不能替代现场物理响应 reference。
@@ -137,7 +137,7 @@ A1phys 当前是低阶响应先验，不是守恒模型。若最终目标包含�
 | W5 策略离线验证 | 验证 policy-generated action 分布 | support-aware OPE、独立 plant、鲁棒性和故障注入 | 性能非劣且约束/安全门通过 | 不进 shadow |
 | W6 闭环分级 | 证明可嵌入且安全 | replay→HIL→shadow→advisory→受限闭环 | 每级预注册验收并有回退 | 停留在上一等级 |
 
-对最终真实世界模型，W2 仍是最近的现场科学门；对当前 Phase 3 论文，最近且唯一的实验判决是 MS2-J 一次性 synthetic test。W3 是从“预测器”成为“仿真器”的结构门；W4 是“反事实”的识别门；W5–W6 才是闭环门。它们不能合并成一个 MAE 或 CFI 分数。
+对最终真实世界模型，W2 仍是最近的现场科学门；对当前 Phase 3 论文，最近且唯一的实验判决（MS2-J 一次性 synthetic test）已于 `5260d3f` 完成并复现 validation。W3 是从“预测器”成为“仿真器”的结构门；W4 是“反事实”的识别门；W5–W6 才是闭环门。它们不能合并成一个 MAE 或 CFI 分数。
 
 ## 6. 论文与工程的两条叙事
 
@@ -178,7 +178,7 @@ A1phys 当前是低阶响应先验，不是守恒模型。若最终目标包含�
 
 ## 8. 当前优先级
 
-1. 完成并审计一次 MS2-J synthetic test；无论成败都不重试、不扩 MS2-D，随后进入论文表图与 claim ledger。
+1. ~~完成并审计一次 MS2-J synthetic test~~ → 完成（`5260d3f`）：联合模块复现 PASS、staged 非劣复现 FAIL，不重试、不扩 MS2-D，进入论文表图与 claim ledger。
 2. 不再扩大真实 A1phys 训练矩阵；为未来 W2 保留稳态 held-step / 动态 trajectory 双 estimand和真正盲的新时间块。
 3. W2 仍不可识别时，Phase 3.5 以“known-truth 可解性 + 现场识别边界 + fail-closed 方法”收口，不用预测 MAE 或 synthetic PASS 补位。
 4. 文章完成后再设计 W3 的状态闭合 simulator；这不是现有预测头的小改版。

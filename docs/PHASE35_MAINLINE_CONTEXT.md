@@ -4,9 +4,9 @@
 
 - Material Type: paper mainline and experiment-purpose specification
 - Scope: Phase 3/3.5 field evidence, Phase 3.5-MS synthetic evidence, and the current MS2-J decision
-- Verification Status: ANALYZED；基于截至 MS2-J test 授权提交 `5fa9769` 的实验代码、结果与审计文档
+- Verification Status: VERIFIED；基于截至 MS2-J test 完成提交 `5260d3f` 的实验代码、结果与审计文档（test 27/27 单次访问完成，ledger completed）
 - Evidence Boundary: 阀位是可审计 plant-action proxy，不是喷水质量流量；synthetic known-truth 不是现场因果证据
-- Active Decision: 只等待 MS2-J 一次性 synthetic test；Phase 4、MS2-D、MS3–MS5 均不自动启动
+- Active Decision: MS2-J 一次性 synthetic test 已完成；联合模块跨 split 复现 PASS、staged 非劣 FAIL 复现。Phase 4、MS2-D、MS3–MS5 均不自动启动，进入论文表图与 claim ledger
 
 ## 1. 一句话主线
 
@@ -31,7 +31,7 @@ g_{response}(\text{context},a_{1:H},r_{1:H}),
 | 证据臂 | 回答的问题 | 实验 | 当前结论 |
 |---|---|---|---|
 | A. 现场可识别性 | 真实 historian 是否足以建立 action→temperature reference？ | E1–E5 | E1 正对照通过；E2/E3/E5 不确定；E4 被 E3 阻断 |
-| B. 架构可解性 | 如果真值已知，结构化多步响应模型能否恢复动作响应？ | MS0–MS2-J | MS1、MS2-V/C 通过；MS2-J validation 为联合模块 PASS、staged 非劣 FAIL，待一次性 test |
+| B. 架构可解性 | 如果真值已知，结构化多步响应模型能否恢复动作响应？ | MS0–MS2-J | MS1、MS2-V/C、MS2-J 双层通过（test 复现 validation：联合模块 CI 下界 0.73–0.89 >> 20%）；staged 非劣双层 FAIL（test ratio 1.14–1.20，CI 上界 >1.10） |
 
 两臂不能互相替代：现场 `INCONCLUSIVE` 不等于架构无效；synthetic `PASS` 也不等于现场 `do(valve)` 已识别。
 
@@ -55,25 +55,23 @@ g_{response}(\text{context},a_{1:H},r_{1:H}),
 | MS1 最小可解性 | 二阶惯性多步系统能否递推恢复？ | 同型 known-truth 上通过；属于正对照/inverse-crime 边界 |
 | MS2-V 阀门非线性 | 绝对开度相关的单调模块是否有必要？ | 独立 test 中 learned monotone 明显优于 identity；`K/phi` 仍不可拆分辨识 |
 | MS2-C 工况调度 | 增益和时间常数随 context 变化时能否恢复？ | 独立 test 中 scheduled 明显优于 global |
-| MS2-J 联合耦合 | 非线性开度与工况调度同时存在时能否共同工作？ | validation 联合模块通过；当前 staged 协议未达到 joint 的 1.10 非劣界 |
+| MS2-J 联合耦合 | 非线性开度与工况调度同时存在时能否共同工作？ | 联合模块双层 PASS（validation + test，test CI 下界 0.73–0.89 >> 20%）；staged 双层未达 joint 的 1.10 非劣界（test ratio 1.14–1.20） |
 
 Koopman、PI-ODE 和 DeepONet 在这里是表示能力对照，不承担“谁是最终世界模型”的赛马任务。MS2-J 的主要比较是同一灰箱中的联合模块对两个单模块消融；staged-vs-joint 只决定当前 response 内部训练策略，不回答完整 `free+response` 耦合是否需要分阶段训练。
 
-## 5. 当前唯一实验目的：MS2-J test
+## 5. MS2-J test：已完成，按冻结解释落地
 
-MS2-J test 只确认三个预注册问题：
+MS2-J test 于 `5260d3f` 完成（27/27 单次访问，ledger completed，paired stratified bootstrap 10k reps）。三个预注册问题的结果：
 
-1. joint 模型对 `monotone_global` 与 `identity_scheduled` 的 paired-episode clean MAE 改善，三个 seed 的 95% CI 下界是否都达到 20%；
-2. staged/joint 误差比的 95% CI 上界是否不超过 1.10；
-3. staged 是否相对 Stage A 至少改善 20%，以区分“训练链无效”和“能训练但不如 joint”。
+1. **joint vs `monotone_global` / `identity_scheduled`**：3 seeds × 2 对比 = 6/6，改善 CI 下界 0.73–0.89 >> 20% 门槛 → **通过**；
+2. **staged/joint 误差比**：observed 1.14–1.20，95% CI 上界 1.09–1.32 > 1.10 → **非劣失败**；
+3. **staged vs Stage A**：改善 0.73–0.74，CI 下界 0.68–0.77 ≥ 20% → **通过**（训练链有效，只是不如 joint）。
 
-结果解释已提前冻结：
+结果解释按冻结表落地：
 
 | test 结果 | Supervisor 解释 | 后续动作 |
 |---|---|---|
-| joint 通过；staged 非劣仍失败 | 联合模块收口；当前主训练采用 joint；staged 作为阴性消融 | 停止 synthetic 扩矩阵，进入论文表图与 claim ledger |
-| joint 未通过 | validation 正结果未在 test 复现 | 原样报告，不重试、不补 seed、不启动 MS3 |
-| staged 在 test 通过但 validation 失败 | split 间不一致，不能反转成 staged 胜出 | 报告不一致，主方案不升级为 staged |
+| joint 通过；staged 非劣仍失败 | 联合模块收口；当前主训练采用 joint；staged 作为阴性消融 | **停止 synthetic 扩矩阵，进入论文表图与 claim ledger（当前状态）** |
 
 无论哪种结果，都不启动 Phase 4，也不自动进入 MS2-D、MS3、MS4 或 MS5。
 
@@ -91,8 +89,8 @@ MS2-J test 只确认三个预注册问题：
 
 ## 7. MS2-J 后的收口清单
 
-1. 拉取一次性 test artifacts，复核 ledger、归档、trajectory pairing、结构门禁和 bootstrap；
-2. 写 MS2-J test review，保持 validation/test 与 synthetic/field 口径分离；
+1. ~~拉取一次性 test artifacts，复核 ledger、归档、trajectory pairing、结构门禁和 bootstrap~~ → 完成（`5260d3f`）；
+2. ~~写 MS2-J test review，保持 validation/test 与 synthetic/field 口径分离~~ → 完成（`docs/PHASE35_MS2J_TEST_REVIEW_2026-08-10.md`）；
 3. 冻结主文三张核心表：现场 E1–E5、synthetic MS1–MS2-J、claim/evidence boundary；
 4. 冻结两张核心图：控制层级与 action proxy、`free + response` 架构及证据流；
 5. 开始论文提纲和主文，不再用新模型实验延迟收口。
