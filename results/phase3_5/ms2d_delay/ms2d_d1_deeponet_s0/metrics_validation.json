@@ -1,0 +1,76 @@
+{
+  "effect_mae": 0.016193727031350136,
+  "effect_rmse": 0.02031243033707142,
+  "integrated_absolute_error": 0.9716236591339111,
+  "direction_accuracy_nonzero": 0.6578100919723511,
+  "horizon_mae": {
+    "H1": 0.017062297090888023,
+    "H6": 0.013863136991858482,
+    "H18": 0.01677069254219532,
+    "H60": 0.016285687685012817
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "clean_effect_mae": 0.0011916554067283869,
+  "clean_effect_rmse": 0.0025936050806194544,
+  "clean_effect_scale": 0.03639401122927666,
+  "clean_effect_nmae": 0.0327431745827198,
+  "clean_effect_mae_active": 0.0021575733553618193,
+  "noise_mae": 0.016044151037931442,
+  "direction_accuracy_clean_nonzero": 0.9998728036880493,
+  "clean_horizon_mae": {
+    "H1": 0.0,
+    "H6": 0.00024530733935534954,
+    "H18": 0.000884419190697372,
+    "H60": 0.0020723319612443447
+  },
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.2900104522705078,
+    "positive_step_terminal_effect_max_c": -0.06852221488952637,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": false,
+      "fixed_horizon": true,
+      "direction_constrained": false,
+      "continuous_time": false
+    },
+    "operator": {
+      "spectral_radius": null,
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_cascade_v2",
+    "truth_regime": "delayed_context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "gain_c_per_pct": -0.1,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3,
+    "input_delay_steps": 2,
+    "input_delay_seconds": 20.0,
+    "realized_gain_range": [
+      -0.1412583589553833,
+      -0.07065000385046005
+    ],
+    "realized_tau_range": [
+      [
+        51.91328048706055,
+        94.40428161621094
+      ],
+      [
+        156.0906982421875,
+        283.34503173828125
+      ]
+    ],
+    "dt_seconds": 10.0,
+    "seed": 20360815,
+    "split": "validation"
+  }
+}

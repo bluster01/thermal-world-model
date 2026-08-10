@@ -1,0 +1,213 @@
+{
+ "protocol_version": "phase3.5-ms2d-d1-v1",
+ "evidence_scope": "synthetic_delay_pressure_validation",
+ "split": "validation",
+ "run_count": 18,
+ "test_accessed": false,
+ "execution_git_sha": "95d1dbeebe23068e2a018edb44e6255a75faf6dd",
+ "aggregation_git_sha": "95d1dbeebe23068e2a018edb44e6255a75faf6dd",
+ "all_artifact_and_structural_gates_pass": true,
+ "structural_gate_failures": [],
+ "candidates": {
+  "d1_deeponet": {
+   "role": "secondary_representation",
+   "route": "deeponet",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.03495660424232483,
+   "clean_effect_nmae_std": 0.0036907142771694245,
+   "clean_effect_mae_mean": 0.00119825037351499,
+   "all_structural_gates_pass": true
+  },
+  "d1_g2_learned_delay": {
+   "role": "primary_model",
+   "route": "graybox",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.04354318231344223,
+   "clean_effect_nmae_std": 0.004369820497538156,
+   "clean_effect_mae_mean": 0.0014953748711074393,
+   "all_structural_gates_pass": true
+  },
+  "d1_g2_no_delay": {
+   "role": "primary_ablation",
+   "route": "graybox",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.055428153524796166,
+   "clean_effect_nmae_std": 0.0048077831278414505,
+   "clean_effect_mae_mean": 0.001904557109810412,
+   "all_structural_gates_pass": true
+  },
+  "d1_g2_oracle_delay": {
+   "role": "positive_control",
+   "route": "graybox",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.02065508688489596,
+   "clean_effect_nmae_std": 0.0005418135421068993,
+   "clean_effect_mae_mean": 0.0007094358249257008,
+   "all_structural_gates_pass": true
+  },
+  "d1_k4_monotone": {
+   "role": "secondary_representation",
+   "route": "koopman",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.25285494327545166,
+   "clean_effect_nmae_std": 0.02625507851719688,
+   "clean_effect_mae_mean": 0.008685711460808912,
+   "all_structural_gates_pass": true
+  },
+  "d1_pi_monotone": {
+   "role": "secondary_representation",
+   "route": "pi_ode",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.05811109642187754,
+   "clean_effect_nmae_std": 0.002120911104451336,
+   "clean_effect_mae_mean": 0.0019962231939037642,
+   "all_structural_gates_pass": true
+  }
+ },
+ "oracle_gate": {
+  "candidate_id": "d1_g2_oracle_delay",
+  "clean_effect_nmae_max": 0.05,
+  "seed_results": [
+   {
+    "seed": 0,
+    "clean_effect_nmae": 0.02007073350250721,
+    "passes": true
+   },
+   {
+    "seed": 1,
+    "clean_effect_nmae": 0.02114081010222435,
+    "passes": true
+   },
+   {
+    "seed": 2,
+    "clean_effect_nmae": 0.02075371704995632,
+    "passes": true
+   }
+  ],
+  "all_seeds_pass": true
+ },
+ "delay_response_gate": {
+  "learned_delay_id": "d1_g2_learned_delay",
+  "no_delay_id": "d1_g2_no_delay",
+  "relative_improvement_min": 0.2,
+  "seed_results": [
+   {
+    "seed": 0,
+    "no_delay_clean_effect_nmae": 0.0533347986638546,
+    "learned_delay_clean_effect_nmae": 0.04100995883345604,
+    "relative_improvement": 0.23108439778832798,
+    "passes": true
+   },
+   {
+    "seed": 1,
+    "no_delay_clean_effect_nmae": 0.06092771515250206,
+    "learned_delay_clean_effect_nmae": 0.04858900234103203,
+    "relative_improvement": 0.20251395905108596,
+    "passes": true
+   },
+   {
+    "seed": 2,
+    "no_delay_clean_effect_nmae": 0.052021946758031845,
+    "learned_delay_clean_effect_nmae": 0.04103058576583862,
+    "relative_improvement": 0.2112831540756638,
+    "passes": true
+   }
+  ],
+  "all_seeds_pass": true
+ },
+ "delay_identification_diagnostic": {
+  "candidate_id": "d1_g2_learned_delay",
+  "error_steps_max": 1.0,
+  "truth_plus_minus_one_step_mass_min": 0.8,
+  "seed_results": [
+   {
+    "expected_delay_seconds": 21.954395294189453,
+    "expected_delay_steps": 2.1954395294189455,
+    "truth_delay_steps": 2,
+    "absolute_error_steps": 0.1954395294189455,
+    "truth_plus_minus_one_step_mass": 0.579492200165987,
+    "neighborhood_mass_min": 0.8,
+    "delay_weights": [
+     0.21496792137622833,
+     0.04764332249760628,
+     0.2699097990989685,
+     0.26193907856941223,
+     0.20553983747959137
+    ],
+    "seed": 0,
+    "within_one_step": true,
+    "concentrated_near_truth": false
+   },
+   {
+    "expected_delay_seconds": 20.30367088317871,
+    "expected_delay_steps": 2.0303670883178713,
+    "truth_delay_steps": 2,
+    "absolute_error_steps": 0.03036708831787127,
+    "truth_plus_minus_one_step_mass": 0.5377283021807671,
+    "neighborhood_mass_min": 0.8,
+    "delay_weights": [
+     0.2669498920440674,
+     0.0570668950676918,
+     0.24997127056121826,
+     0.230690136551857,
+     0.19532181322574615
+    ],
+    "seed": 1,
+    "within_one_step": true,
+    "concentrated_near_truth": false
+   },
+   {
+    "expected_delay_seconds": 20.34367561340332,
+    "expected_delay_steps": 2.034367561340332,
+    "truth_delay_steps": 2,
+    "absolute_error_steps": 0.03436756134033203,
+    "truth_plus_minus_one_step_mass": 0.5612848773598671,
+    "neighborhood_mass_min": 0.8,
+    "delay_weights": [
+     0.2526530921459198,
+     0.05950171500444412,
+     0.27473175525665283,
+     0.22705140709877014,
+     0.1860620081424713
+    ],
+    "seed": 2,
+    "within_one_step": true,
+    "concentrated_near_truth": false
+   }
+  ],
+  "all_seeds_within_one_step": true,
+  "all_seeds_concentrated_near_truth": false,
+  "all_seeds_pass": false,
+  "interpretation": "Parameter recovery is a separate diagnostic; response-gate PASS does not require a uniquely identifiable delay distribution."
+ },
+ "all_primary_gates_pass": true,
+ "checkpoint_archive": {
+  "archive_path": "results/phase3_5/archive/ms2d_d1_checkpoints_validation.tar",
+  "archive_sha256": "7ee6393993d209cee255e8d7f09b7d376a135b63fc70572b0c6993d44e1a05f4",
+  "n_checkpoints": 18
+ }
+}
