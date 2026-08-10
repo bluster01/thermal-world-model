@@ -20,8 +20,8 @@
 |---|---|---|---|---|
 | MS0 合同 | 冻结统一输入、参考干预、状态与诊断接口 | 四种方法是否在比较同一 estimand？ | exact identity；future action leakage=0 | ✓ 代码与测试完成 |
 | MS1 已知真值 | 二阶惯性下的 hold/step/pulse/ramp/multi-step | 架构是否至少能恢复一个可解的多步系统？ | 18/18；参数恢复；结构门禁；单次 synthetic test | ✓ PASS：只支持同型可解性，不设路线冠军 |
-| MS2-V 阀门非线性 | R50 真值下 identity/oracle/learned monotone 与灵活算子 | 显式绝对开度非线性是否必要？ | 6 candidates×3 seeds；clean NMAE；独立榜 | ▶ 代码冻结，待 Linux validation 18 runs |
-| MS2-C 工况调度 | 增益/时间常数随 context 变化 | 多步 A1phys 参数调度能否辨识？ | 5 candidates×3 seeds；clean NMAE；独立榜 | ▶ 代码冻结，待 Linux validation 15 runs |
+| MS2-V 阀门非线性 | R50 真值下 identity/oracle/learned monotone 与灵活算子 | 显式绝对开度非线性是否必要？ | 6 candidates×3 seeds；clean NMAE；独立榜 | ✅ validation PASS（18/18 门禁全过；monotone vs identity −90.1%，3seed 一致；oracle 0.0043 确认可解）；test 待授权 |
+| MS2-C 工况调度 | 增益/时间常数随 context 变化 | 多步 A1phys 参数调度能否辨识？ | 5 candidates×3 seeds；clean NMAE；独立榜 | ✅ validation PASS（15/15 门禁全过；scheduled vs global −89.6%，3seed 一致）；test 待授权 |
 | MS2-D 后续压力 | 纯迟延、阶次扩展、未建模扰动 | 结论是否跨更强失配成立？ | MS2-V/C 收口后再决定 | ◻ HOLD，当前不铺开 |
 | MS3 真实数据适配 | 复用 A/B causal cache，交叉阀位已按现场映射 | 合成可解性能否迁移到观测预测？ | validation-only；A/B 分榜；不称因果 | ◻ HOLD |
 | MS4 经验响应校准 | 仅在未来新时间块 E3 通过后连接真实 IRF | 模型响应是否复现可识别物理响应？ | common support、稳态/动态双 estimand | ⛔ 等待新数据证据 |
