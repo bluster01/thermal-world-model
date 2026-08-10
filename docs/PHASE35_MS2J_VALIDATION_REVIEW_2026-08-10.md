@@ -5,7 +5,7 @@
 - Origin Skill: academic-research-suite / experiment-agent
 - Origin Mode: validate
 - Origin Date: 2026-08-10
-- Verification Status: ANALYZED（checkpoint 归档待补，见 §5）
+- Verification Status: VERIFIED（36/36 checkpoint 已归档并完成独立哈希/可加载/有限性复核）
 - Version Label: phase35_ms2j_validation_review_v1
 - Execution Commit: `e3c6144`（manifest git_sha，27/27 一致；frozen paths 与当前 HEAD 逐文件 diff 通过）
 - Evidence Scope: `synthetic_joint_coupling_validation_not_field_causality`；不是 A/B 现场因果验证
@@ -14,8 +14,8 @@
 
 **MS2-J validation：联合模块门禁 PASS，staged 稳定性门禁 FAIL（如实报告，不硬撑）。**
 
-- **联合模块增量成立**：`j_g2_monotone_scheduled_joint`（0.0410）相对两个单模块消融改善 79–91%，3 seeds 全部远超 20% 预声明门槛，方向一致。MS2-V（单调开度）与 MS2-C（context 调度）两个轴合并到同一真值后**不发生补偿或塌缩**，联合模型接近 oracle 正对照（0.0208）。
-- **staged 三阶段训练未通过 non-inferiority**：staged/joint 比 1.154–1.226 > 1.10 上限，3 seeds 一致地劣于 joint-from-scratch。staged 不是失败（相对 Stage A 边界改善 76–79%，训练稳定、A/B/C 全部完成），只是**分阶段解冻的精度上限低于直接联合训练**。
+- **联合模块增量成立**：`j_g2_monotone_scheduled_joint`（0.0410）相对两个单模块消融改善 79–91%，3 seeds 全部远超 20% 预声明门槛，方向一致。MS2-V（单调开度）与 MS2-C（context 调度）两个轴合并到同一真值后没有发生**响应层面的塌缩**；参数层面仍存在已知的 `K/phi` 补偿，不声称分别恢复真实参数。
+- **staged 三阶段训练未通过 non-inferiority**：staged/joint 比 1.154–1.226 > 1.10 上限，3 seeds 一致地劣于 joint-from-scratch。A/B/C 均完成且相对 Stage A 改善 76–79%，说明训练链可运行；但当前 staged 协议的整体门禁仍是 FAIL。现有 validation 不能证明这是所有 staged 方案的普遍“精度上限”。
 
 ## 2. 数值复算（validation，3 seeds）
 
@@ -61,12 +61,13 @@
 
 ## 4. 结论与边界
 
-1. **联合模块正结论**：单调开度映射与 context 调度在同一真值下同时可辨识，且联合优于任一单模块——MS2-V/C 两轴结论在联合设定下互不干扰。oracle 0.0208 确认优化链与数据生成可解性在该 regime 成立。
+1. **联合模块正结论**：单调开度映射与 context 调度在同一真值下的**联合响应**可被当前模型识别，且联合优于任一单模块。oracle 0.0208 与接近真值的 base gain 支持该合成 regime 的生成—优化链可解；learned `K` 与 `phi` 仍不可拆分识别。
 2. **staged 负结论**：三阶段解冻训练（A: base+opening → B: schedules → C: 全解冻 0.2×lr）**不优于** joint-from-scratch，3 seeds 一致超 10% 容忍线。staged 的作用应表述为"训练稳定性的对照"，不推荐为论文主训练方案。
 3. 全部结论仅属 synthetic known-truth；不授权现场 E3/E4、不构成真实阀门曲线或现场调度形式的证据。
-4. `j_deeponet` 数值最低（0.0341）仍按预注册为灵活算子对照，不事后改写冠军。
+4. `j_deeponet` 在非-oracle learned candidates 中数值最低（0.0341），仍按预注册为灵活算子对照，不事后改写物理冠军。
 
-## 5. 待办
+## 5. 本地复核与后续授权
 
-1. **checkpoint 归档**：27 × `.pt`（含 staged 的 A/B/C 共 27+9=36 个文件）打包 tar + SHA 写入 summary（P1-3 同协议）。
-2. 归档后 commit + push；汇总器 exit=2 是**预期行为**（staged 门禁 FAIL，fail-closed 生效），summary_validation.json 已正确落盘。
+1. `ms2j_checkpoints_validation.tar` 共 36 个文件，archive SHA256=`3005fd4b2c3b96bedaf53e273ad39f440670fec5b23eb60e7d64e540d3e06f52`；36/36 与 manifest 匹配、可加载且参数有限。
+2. 本地 Torch 2.5/CPU 从权重重放 27 个 validation run：结构门禁一致；主指标相对差最大 0.894%，低于预注册 10% environment-sensitive 容忍线。trajectory digest 因 Torch 2.11/CUDA 与 2.5/CPU RNG 差异而 27/27 不逐位相同，按协议不伪装成 bitwise replay。
+3. 已另行冻结一次性 MS2-J synthetic test；它确认混合结论，不改变 validation 的 overall FAIL，也不授权重训或现场 test。

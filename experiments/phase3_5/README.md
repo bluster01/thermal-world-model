@@ -302,4 +302,23 @@ python experiments/phase3_5/summarize_joint_coupling.py \
 
 汇总器检查 27 个 checkpoint/manifest/history/validation metrics、同 seed trajectory hash、环境 provenance 和全部结构门禁。staged 的每个 seed 还必须回传 `checkpoint_stage_a/b/c.pt`、`metrics_stage_a/b/c_validation.json` 和阶段摘要。全部 `.pt` 需归档并记录 SHA：27 个 canonical checkpoint 加 staged 三 seed 的 9 个阶段 checkpoint，共 36 个文件。
 
-若预注册的 20% 联合模块 Gate 或 10% staged 非劣 Gate 失败，汇总器会以 code 2 退出；这属于科学结果，不是运行错误，仍须原样回传全部 artifacts。Linux 不改阈值、不补 seed、不自行重训，也不写路线冠军结论。MS2-J test 尚未授权，runner 没有 test 开关。
+若预注册的 20% 联合模块 Gate 或 10% staged 非劣 Gate 失败，汇总器会以 code 2 退出；这属于科学结果，不是运行错误，仍须原样回传全部 artifacts。Linux 不改阈值、不补 seed、不自行重训，也不写路线冠军结论。validation runner 本身没有 test 开关；后续 test 只能走下节独立的一次性授权入口。
+
+## 10. Phase 3.5-MS2-J 一次性 synthetic test
+
+MS2-J validation 已冻结为混合结果：联合模块门禁 PASS，staged 非劣门禁 FAIL。独立 checkpoint/归档/参数审计通过后，test 只用于确认该混合结论，不把 validation 改写成整体 PASS。Linux 先在干净工作树执行无访问预检：
+
+```bash
+python experiments/phase3_5/joint_coupling_test.py --dry-run
+```
+
+必须返回 27 runs、36 archive members、`test_accessed=false`。随后只允许执行一次完整矩阵，不接受 candidate/seed 过滤：
+
+```bash
+python experiments/phase3_5/joint_coupling_test.py \
+  --device cuda --evaluate-test-matrix --allow-synthetic-test
+
+python experiments/phase3_5/summarize_joint_coupling_test.py
+```
+
+runner 在首次生成 test 前核对 authorization、训练矩阵、validation summary、checkpoint tar 的 SHA256，以及 27 个 manifest、30 个实际读取权重（27 canonical + 3 Stage-A）和冻结训练代码等价性。test 以完整 episode 为统计单位，按 action profile 分层做 10,000 次 paired bootstrap：joint 对两个单模块的改善 CI 下界均须 ≥20%；staged/joint 误差比 CI 上界须 ≤1.10；staged 对 Stage-A 改善 CI 下界须 ≥20%。由于 validation 的 staged 门禁已失败，test 汇总器再次以 code 2 退出是预期科学结果；不得删除 started/partial ledger 后重跑。回传全部新增 JSON、更新后的 manifest、stdout/stderr 和环境信息，不重新训练、不改 checkpoint、不访问 A/B 真实数据 test。

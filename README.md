@@ -139,7 +139,7 @@ python -m compileall -q src/phase35 experiments/phase3_5
 python experiments/phase3_5/run_matrix.py
 ```
 
-当前 Phase 3.5 专项测试为 36 项并已通过，其中包含 synthetic train→validation→locked-test CLI smoke、事件 fail-closed、零方差匹配和 split/test-lock 回归测试。42 个真实数据 development runs 已完成；独立模型 test 尚未执行，A/B 旧事件 test 标签则已在探索脚本中暴露，未来正式事件证据必须使用新时间块。
+当前 Phase 3.5 专项测试为 73 项并已通过，其中包含 synthetic train→validation→locked-test CLI smoke、MS2-J 内容寻址与一次性访问预检、事件 fail-closed、零方差匹配和 split/test-lock 回归测试。42 个真实数据 development runs 已完成；独立真实数据模型 test 尚未执行，A/B 旧事件 test 标签则已在探索脚本中暴露，未来正式事件证据必须使用新时间块。
 
 ## 历史证据限制
 

@@ -1,6 +1,6 @@
 # Phase 3.5-MS2-J 联合模块与分阶段训练设计
 
-> 状态：frozen for local implementation and Linux validation。只开放 validation；synthetic test 未授权。证据范围为 `synthetic_joint_coupling_validation_not_field_causality`。
+> 状态：validation completed。联合模块门禁 PASS、staged 非劣门禁 FAIL；一次性 synthetic test 已在独立授权文件中冻结、尚未执行。证据范围为 `synthetic_joint_coupling_validation_not_field_causality`。
 
 ## 1. 为什么是这一 Gate
 
@@ -71,4 +71,3 @@ validation 只用于上述 screening。test 必须在本地审计 checkpoint、�
 ## 6. 可复现性补丁
 
 上一轮发现 Torch 2.11/CUDA 与 Torch 2.5/CPU 会生成不同的 RNG trajectory digest，虽然权重重算指标差异仅 1.47%。因此 MS2-J 每个 manifest/ledger 必须记录 Python、Torch、CUDA、device 和平台版本；validation batch 记录 trajectory design SHA。跨环境复算按 environment-sensitive 协议，以结构一致和主指标相对差 <10% 判定，不再声称 RNG trajectory 跨 Torch 版本逐位相同。
-

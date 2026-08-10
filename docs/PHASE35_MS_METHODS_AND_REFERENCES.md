@@ -262,7 +262,7 @@ MS1 真值动力学也不依赖随机 context \(c\)，所以 \(c\) 在这一阶�
 
 MS1 正式 validation 矩阵为 6 routes × 3 seeds：Graybox-1P/2P、Koopman-K2/K4、PI-ODE、Causal-DeepONet。每个 run 使用 train/validation/test = 1024/256/256 条 synthetic trajectory；训练最多 100 epochs。
 
-MS2-V/C 冻结两个独立失配轴：`valve_nonlinear_r50` 的 6 candidates 与 `context_scheduled_2p` 的 5 candidates，共 11 candidates × 3 seeds = 33 runs；validation+一次性 synthetic test 已完成。两轴的主响应对比均通过，但 learned `phi` 不可单独辨识。下一批 MS2-J 使用同一真值同时启用 R50 非线性和 context 调度，以 9 candidates × 3 seeds 比较双模块 joint/staged、单模块消融及灵活路线；完整门禁见 [`plans/2026-08-10-phase35-ms2j-coupling-design.md`](plans/2026-08-10-phase35-ms2j-coupling-design.md)。纯迟延与未建模扰动继续 HOLD。
+MS2-V/C 冻结两个独立失配轴：`valve_nonlinear_r50` 的 6 candidates 与 `context_scheduled_2p` 的 5 candidates，共 11 candidates × 3 seeds = 33 runs；validation+一次性 synthetic test 已完成。两轴的主响应对比均通过，但 learned `phi` 不可单独辨识。MS2-J 随后在同一真值同时启用 R50 非线性和 context 调度，以 9 candidates × 3 seeds 比较双模块 joint/staged、单模块消融及灵活路线；validation 得到联合模块 PASS、staged 非劣 FAIL，一次性 test 已按独立授权冻结但尚未执行。完整 validation 与 test 门禁分别见 [`plans/2026-08-10-phase35-ms2j-coupling-design.md`](plans/2026-08-10-phase35-ms2j-coupling-design.md) 和 [`plans/2026-08-10-phase35-ms2j-test-design.md`](plans/2026-08-10-phase35-ms2j-test-design.md)。纯迟延与未建模扰动继续 HOLD。
 
 ## 9. 训练目标、选模与评测
 
@@ -316,7 +316,7 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 | 代码恒等式 | 零参考响应、prefix causality、递推状态续传 | 现场因果识别 |
 | MS1 synthetic | 同型二阶系统上的参数/响应可恢复性 | 路线普遍优越性、真实阀门增益 |
 | MS2-V/C mismatch（validation+test 已完成） | 合成真值内非线性响应容量与 context 通道的模块价值 | learned 阀门曲线、联合收敛、纯迟延/扰动、现场 `do(valve)` |
-| MS2-J coupling（待 Linux validation） | 双模块共同收敛与 staged 非劣稳定性 | 真实数据迁移、现场物理参数与因果响应 |
+| MS2-J coupling（validation：联合模块 PASS、staged 非劣 FAIL；test 已冻结未执行） | 双模块联合响应可辨识；当前 staged 协议未达到 1.10 非劣界 | 单独恢复 `K/phi`、所有 staged 方案优劣、真实数据迁移与现场因果响应 |
 | MS3 real validation（未实现） | A/B 观测预测与模型敏感性 | 未控制混杂下的反事实效应 |
 | MS4 new-time E3/E4 | 若门禁通过，可比较经验响应与模型响应 | 超出数据支持域的闭环安全性 |
 
@@ -337,7 +337,7 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 3. 以较小学习率联合微调，同时保留响应与结构损失；
 4. 分阶段保存 checkpoint，不允许只保留联合阶段最优模型。
 
-这是一项待实现设计，不是当前训练代码已有能力。采用短冻结而非长期完全解冻，是为了降低 free head 重新吸收动作信号的风险；是否更稳定必须由 MS5 的 stage-wise gradient、参数漂移和消融结果决定，不能只凭文献或直觉定论。
+这是完整 `free+response` 世界模型的待实现设计，不是当前训练代码已有能力。MS2-J 只在 response 内部测试了 base/opening/schedule 三阶段训练，且当前协议未达到 joint 的 1.10 非劣界；它不能代替 MS5 对 free head 吸收动作信号的检验。是否采用短冻结必须由 MS5 的 stage-wise gradient、参数漂移和消融结果决定，不能只凭文献、直觉或 MS2-J 外推。
 
 ## 12. 代码—公式—测试追溯
 
@@ -352,6 +352,7 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 | 式（22）—（24）与 test ledger | `multistep/training.py` | CLI smoke、artifact、repeat-test refusal 测试 |
 | 递推组合律 | 三条 stateful operator | `test_recursive_routes_preserve_state_across_rollout_chunks` |
 | MS2-V/C 真值与 clean metrics | `multistep/synthetic.py`、`multistep/training.py` | nonlinear/context truth、MS2 CLI 与 checkpoint hash 测试 |
+| MS2-J coupling 与一次性 test | `joint_coupling.py`、`staging.py`、`joint_coupling_test.py`、`summarize_joint_coupling_test.py` | 27-run freeze、stage A/B/C、content-address、repeat refusal、paired episode gate 测试 |
 
 ## 13. Reference ledger
 

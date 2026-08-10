@@ -36,23 +36,24 @@
 
 | 参数 | joint 主模型 | staged 主模型 | oracle 正对照 | 解读 |
 |---|---|---|---|---|
-| raw_gain | -3.253 | -3.240 | **-2.288** | exp(-2.288)=0.101 ≈ 真值 K0=0.10 ✓ oracle 恢复真值增益 |
+| raw_gain（3-seed 均值） | -3.267 | -3.249 | **-2.281** | 代码变换是 `K=-softplus(raw_gain)`，不是 `exp(raw_gain)` |
+| 物理 base gain | 约 -0.0374 | 约 -0.0381 | **-0.0966 / -0.0968 / -0.0984** | oracle 接近真值 `K0=-0.10`；learned monotone 存在 `K/phi` 补偿 |
 | opening 斜率 mean | 0.285 | 0.273 | —（真值 R50 注入） | 学习映射与真值不同（K/φ 补偿不可辨识，同 MS2-V 结论） |
 | gain_schedule std | 0.324 | 0.287 | 0.324 | joint 与 oracle 调度复杂度一致 |
 | tau_schedule std | 0.256 | 0.203 | 0.239 | 同上 |
 
 关键结论：
-- **oracle 恢复真值 K0**（exp(-2.288)=0.101 vs 真值 0.10）→ 优化链与数据生成可解性在联合 regime 再次确认
-- **joint 与 staged 学到的参数在同一解区域**（raw_gain/opening/schedule 分布接近）→ staged 的差距不是"学到不同解"，而是同一解的精度上限更低（微调阶段无法进一步逼近）
+- **oracle 的 base gain 接近真值 K0**：三个 seed 的 `-softplus(raw_gain)` 为 -0.0966、-0.0968、-0.0984，对照真值 -0.10。该结果与 oracle 较低的响应误差共同支持“本合成 regime 的生成—优化链可解”，但不是现场参数恢复证据。
+- joint 与 staged 的 base gain/opening/schedule 摘要相近，只能说明没有明显参数爆炸或符号翻转；**不能据此证明两者位于同一解区域，也不能排除不同局部最优或 staged schedule 的隐式正则化影响**。validation 只能判定当前 staged 协议未达到 1.10 非劣界，不能把差距解释成普遍的“精度上限”。
 - 学习模型的 K/φ 补偿不可辨识（与 MS2-V 结论一致）：open 映射斜率 0.28 与真值 R50 不同，靠 gain 补偿——这是已知的标识性边界，不构成故障
 
 ## 3. 审计判决
 
 **MS2-J validation 产物可信，无训练故障、无参数异常。** 联合模块门禁 PASS、staged 门禁 FAIL 均为真实科学结论：
 
-1. joint-from-scratch 是双模块联合训练的正确方案（staged 不优于它，3 seeds 一致）
+1. 在当前冻结合成协议中，joint-from-scratch 是优先进入独立 test 的主方案；这不是对所有分阶段方案的普遍判决
 2. staged 训练稳定（阶段完整、单调改善、early stop 正常），作为"稳定性对照"成立——论文表述为对照而非主方案
-3. oracle 恢复真值增益，优化链可解性第三重确认（MS1→MS2-V/C→MS2-J）
+3. oracle base gain 接近真值，连同响应误差支持当前合成优化链可解；证据仍限 synthetic known-truth
 
 ## 4. Synthetic test 授权建议
 

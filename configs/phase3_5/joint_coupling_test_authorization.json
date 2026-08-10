@@ -1,0 +1,43 @@
+{
+  "protocol_version": "phase3.5-ms2j-test-v1",
+  "training_protocol_version": "phase3.5-ms2j-v1",
+  "evidence_scope": "synthetic_joint_coupling_test_not_field_causality",
+  "matrix": {
+    "path": "configs/phase3_5/joint_coupling_matrix.json",
+    "sha256": "22d78c52a6c082d23071dc44c97375b97bf37a2556b12e7a8d14d55c427e11f4"
+  },
+  "validation_summary": {
+    "path": "results/phase3_5/joint_coupling/summary_validation.json",
+    "sha256": "788b1bc2e30c440453f6d03d565eadc355f865caad3283cf81d57e0f04bee6f8"
+  },
+  "checkpoint_archive": {
+    "path": "results/phase3_5/archive/ms2j_checkpoints_validation.tar",
+    "sha256": "3005fd4b2c3b96bedaf53e273ad39f440670fec5b23eb60e7d64e540d3e06f52",
+    "member_count": 36
+  },
+  "expected_run_count": 27,
+  "test_samples": 256,
+  "bootstrap": {
+    "replicates": 10000,
+    "seed": 20260810,
+    "unit": "paired_episode_stratified_by_action_profile",
+    "ci": 0.95
+  },
+  "gates": {
+    "joint_relative_improvement_min": 0.20,
+    "staged_to_joint_ratio_max": 1.10,
+    "staged_relative_improvement_from_stage_a_min": 0.20
+  },
+  "frozen_validation_status": {
+    "all_gates_pass": false,
+    "joint_module_gate_pass": true,
+    "staged_stability_gate_pass": false
+  },
+  "authorized_scope": {
+    "synthetic_test_once": true,
+    "retraining": false,
+    "hyperparameter_changes": false,
+    "additional_seeds": false,
+    "real_data_test": false
+  }
+}
