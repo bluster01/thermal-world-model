@@ -228,8 +228,38 @@ python experiments/phase3_5/summarize_multistep_mismatch.py \
   --output-root results/phase3_5/multistep_mismatch
 ```
 
-MS2 runner **没有 synthetic test 开关**。不得调用 MS1 的 test evaluator 读取 MS2 test，也不得依据 validation 临时新增 candidate、seed 或修改 300-epoch cap。33 个 run 均须原样回传 manifest、history、validation metrics 和 checkpoint。
+MS2 validation runner **没有 synthetic test 开关**。不得调用 MS1 的 test evaluator 读取 MS2 test，也不得依据 validation 临时新增 candidate、seed 或修改 300-epoch cap。33 个 run 均须原样回传 manifest、history、validation metrics 和 checkpoint。
 
 `checkpoint_best_val.pt` 受 `.gitignore` 排除，因此在 push JSON 之前必须另外归档全部 checkpoint，并记录归档 SHA-256。每个 manifest 自带单文件 `checkpoint_sha256`；归档回传后本地逐项校验。若只有 JSON、没有可校验 checkpoint，状态只能记 `results_analyzed`，不能记 `reproducibility_passed`。
 
-汇总器要求 33 个 checkpoint 与 hash 全部存在，检查未授权 test 产物、manifest/history 一致性和结构门禁，并生成 `summary_validation.json`；任一失败会以非零退出。Linux 只汇报运行状态和该原始聚合，不作路线冠军判定。MS2-V 与 MS2-C 分榜；`clean_effect_nmae` 为主要已知真值诊断，带噪 `effect_mae` 仍是唯一 checkpoint selector。synthetic test 必须等待本地结构审计和单独授权。
+汇总器要求 33 个 checkpoint 与 hash 全部存在，检查未授权 test 产物、manifest/history 一致性和结构门禁，并生成 `summary_validation.json`；任一失败会以非零退出。Linux 只汇报运行状态和该原始聚合，不作路线冠军判定。MS2-V 与 MS2-C 分榜；`clean_effect_nmae` 为主要已知真值诊断，带噪 `effect_mae` 仍是唯一 checkpoint selector。
+
+### 8.1 MS2 synthetic test 单次授权
+
+本地已完成 checkpoint 权重级复算并签字授权。Linux pull 授权 commit 后，先保证 33 个忽略跟踪的 checkpoint 位于原 run 目录；若本地文件已丢失，从已核验归档恢复：
+
+```bash
+tar -xf results/phase3_5/archive/ms2_checkpoints_validation.tar \
+  -C results/phase3_5/multistep_mismatch
+```
+
+执行测试与固定 bootstrap 汇总：
+
+```bash
+python -m pytest tests/phase35/multistep -q
+python -m compileall -q \
+  experiments/phase3_5/multistep_mismatch_test.py \
+  experiments/phase3_5/summarize_multistep_mismatch_test.py
+
+python experiments/phase3_5/multistep_mismatch_test.py \
+  --device cuda \
+  --output-root results/phase3_5/multistep_mismatch \
+  --evaluate-test-matrix --allow-synthetic-test --skip-existing
+
+python experiments/phase3_5/summarize_multistep_mismatch_test.py \
+  --output-root results/phase3_5/multistep_mismatch
+```
+
+每 run 必须新增 `metrics_test.json`、`episode_metrics_test.json`、`synthetic_test_access_ledger.json`，并只把 manifest 的 `test_accessed` 从 false 改为 true。汇总器默认执行按动作类型分层的 10,000 次 paired-episode bootstrap；两个主对比的三个 seed 均须满足 95% CI 下界不低于 20%。
+
+回传所有 test JSON、更新后的 manifest、`summary_test.json`、完整 stdout/stderr 和环境信息。checkpoint 权重不变，不需要重新训练或重新打包；任一 started/partial ledger 必须原样回传，不得删除后重试。该授权仅覆盖 synthetic MS2 test，不授权 A/B 真实数据 test。

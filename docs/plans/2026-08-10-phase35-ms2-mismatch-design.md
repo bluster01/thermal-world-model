@@ -1,6 +1,6 @@
 # Phase 3.5-MS2 结构失配实验设计
 
-> 状态：frozen for Linux validation。MS2 只部署 validation；synthetic test CLI 尚未授权。
+> 状态：validation VERIFIED；33 个 validation-selected checkpoint 已冻结，synthetic test 单次访问已授权。不得修改候选、seed、训练预算或 selector。
 
 ## 1. 研究问题
 
@@ -54,7 +54,7 @@ K(c)=K_0\exp\{0.35\tanh(c_0)\},\qquad
 - 2 regimes，11 candidates，3 seeds，共 **33 validation runs**。
 - 每 run：train 1024、validation 256、horizon 60、dt 10 s。
 - 最大 300 epochs、patience 30；唯一 checkpoint selector 仍是带噪 validation effect MAE。
-- MS2 test 当前不可访问；本地审计 33 个 validation artifacts 后另行冻结授权。
+- validation 已由本地从 33 个归档 checkpoint 重新加载复算；test 只允许原 checkpoint 一次性访问，不重新训练或选模。
 
 Synthetic known truth 允许评估时读取无噪声响应。主报告指标为 `clean_effect_nmae`、`clean_effect_mae`、H1/H6/H18/H60 clean MAE 和 clean-direction；带噪 MAE 保留，用于训练选择和与 MS1 噪声下限对照。
 
@@ -67,6 +67,15 @@ Synthetic known truth 允许评估时读取无噪声响应。主报告指标为 
 5. 正对照 `v_g2_r50_oracle` 若不能进入低 clean-error 区域，则 MS2-V 判为 benchmark/optimization failure，禁止比较其它候选。
 
 20% 是 synthetic module-screening 阈值，不是现场工程温差阈值。正式 test 需要相同 trajectory 的 paired episode bootstrap 95% CI；3 个优化 seed 单独展示。
+
+### Synthetic test 冻结算法
+
+1. 对 11 candidates×3 seeds 的原 validation-selected checkpoint 全部执行；oracle 只作正对照，不参加主模块结论。
+2. evaluator 必须验证 checkpoint SHA，并证明当前 `matrix`、训练入口及 `contracts/operators/synthetic/training` 与训练 commit `f340163` 内容等价；Git HEAD 不同但任一冻结执行文件有差异时 fail closed。
+3. 每个 run 仅生成一次 `metrics_test.json`、`episode_metrics_test.json` 和 `synthetic_test_access_ledger.json`；存在任一 test/ledger 文件即拒绝再次访问。
+4. 每个 seed 使用相同 256 条 test trajectory 做 candidate/baseline 配对。bootstrap 在 episode 层抽样，并按 hold/step/pulse/ramp/multi-step 分层保持动作构成；固定 10,000 replicates 与 seed `20260810 + regime_offset + optimizer_seed`。
+5. 两个主对比必须在三个优化 seed 中分别满足 95% CI 下界 `>=20%`；只看 pooled 均值或只通过部分 seed 均不足以 PASS。
+6. test 不能用于改变主对比、追加 seed、调 epoch 或把 DeepONet 等次要路线改成事后冠军。
 
 ## 4. 可复现性与产物
 
@@ -83,6 +92,6 @@ manifest 记录 checkpoint SHA-256。由于 `.pt` 默认不入 Git，Linux 必�
 
 ## 5. 暂停项
 
-- 三阶/纯迟延与未建模扰动：MS2-V/C 收口后再决定是否需要；
+- 三阶/纯迟延与未建模扰动：MS2 test 收口后再决定是否需要；
 - 真实 A/B 数据适配：等待 MS2 module 选择，且只能先做 validation-only 观测预测；
 - 现场因果、闭环部署、Fan 方程：证据层级不变，仍不由 synthetic 实验授权。

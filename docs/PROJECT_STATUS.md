@@ -108,15 +108,15 @@ exp_025 使用实际绝对阀位，exp_106/旧 A1phys 使用 `二级减温调节
 
 | 路线 | 仓库已有工作 | 尚缺什么 |
 |---|---|---|
-| PI-ODE | exp_020 使用纯神经动力学与固定 Euler 小步；MS1 在同型二阶 synthetic truth 达噪声下限 | MS2 检验非线性阀门/工况调度失配；Fan 方程、部分可观测状态与真实响应仍未进入 |
-| Controlled Koopman | exp_020 的潜在受控 decoder；exp_112 的 Koopman free-head；MS1 稳定受控模态算子通过结构门禁 | MS1 多数 run 碰到 epoch cap；MS2 只作同 estimand 次要对照，不赋予真实 Koopman 谱解释 |
-| 灰箱 / DeepONet 算子 | MS1 证明 2P 灰箱同型可解，DeepONet 达噪声下限；MS2 新增 context-scheduled A1phys-MS | 待 Linux 33-run validation；真实数据迁移与 Fan 物理闭合仍缺 |
+| PI-ODE | exp_020 使用纯神经动力学与固定 Euler 小步；MS1 在同型二阶 synthetic truth 达噪声下限；MS2-V/C validation 误差较低 | MS2 未把 PI-ODE 预注册为主要对照或冠军；Fan 方程、部分可观测状态与真实响应仍未进入 |
+| Controlled Koopman | exp_020 的潜在受控 decoder；exp_112 的 Koopman free-head；MS1 稳定受控模态算子通过结构门禁 | MS2 的 global-context 与四模态阀门版本只作次要对照，不能据此赋予真实 Koopman 谱解释 |
+| 灰箱 / DeepONet 算子 | MS1 证明 2P 灰箱同型可解；MS2-V 的单调有效开度模块和 MS2-C 的工况调度模块均在 validation 显著降低响应误差 | 单调响应模块存在 `K/phi/动力学` 补偿，尚未辨识出真实阀门曲线；一次性 synthetic test、真实数据迁移与 Fan 物理闭合仍缺 |
 
 因此，exp_020 和 exp_112 都不能回答“Fan 物理微分模型是否优于当前模型”。Phase 3.5-MS 新框架也只回答低维动作响应的表示/优化可行性，不等同于 Fan 模型比较或现场因果验证。
 
 Phase 3.5-MS 的统一 estimand、四类路线公式、损失/指标定义、可辨识性边界和来源核验见 [`PHASE35_MS_METHODS_AND_REFERENCES.md`](PHASE35_MS_METHODS_AND_REFERENCES.md)。
 
-MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军；数值与限制见 [`PHASE35_MS1_REVIEW_2026-08-10.md`](PHASE35_MS1_REVIEW_2026-08-10.md)。当前下一 Gate 为 MS2-V/C validation，设计见 [`plans/2026-08-10-phase35-ms2-mismatch-design.md`](plans/2026-08-10-phase35-ms2-mismatch-design.md)。
+MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军；数值与限制见 [`PHASE35_MS1_REVIEW_2026-08-10.md`](PHASE35_MS1_REVIEW_2026-08-10.md)。MS2-V/C validation 已完成权重级独立复核：主要响应对照分别改善约 90.1% 与 89.6%，但 MS2-V 不能主张阀门特性曲线被物理辨识。当前只开放冻结的 MS2 一次性 synthetic test；按 action-profile 分层做 paired episode bootstrap，并要求 3 个优化 seed 的 95% CI 下界分别不低于 20%。审计结论见 [`PHASE35_MS2_VALIDATION_REVIEW_2026-08-10.md`](PHASE35_MS2_VALIDATION_REVIEW_2026-08-10.md)，测试协议见 [`plans/2026-08-10-phase35-ms2-mismatch-design.md`](plans/2026-08-10-phase35-ms2-mismatch-design.md)。
 
 ## 已降级或作废的结论
 
