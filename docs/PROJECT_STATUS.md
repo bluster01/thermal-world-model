@@ -1,10 +1,10 @@
 # 项目状态
 
-> 更新：2026-08-10。本文是项目现状的权威入口；历史文档保留当时结论，不自动代表当前判断。
+> 更新：2026-08-11。本文是项目现状的权威入口；历史文档保留当时结论，不自动代表当前判断。
 
 ## 一句话状态
 
-项目已完成 MS0、MS1、MS2-V/C/J 和 MS2-D1；MS2-D2 validation 已独立审计为 `AUDITED_SCREENING_PASS`。D2 的 oracle 与三阶绝对误差逐 seed过门，三阶相对二阶的 validation episode bootstrap 95% CI 下界为 15.08%–22.28%，高于冻结的 10%；但 validation 参与 checkpoint 选择，当前只授权原 21 checkpoints 的一次性 synthetic test。项目**尚未完成真实模型定性，也未进入论文收口**；后续仍需 D3、MS5 完整耦合、MS3 真实适配和 MS4 闭环响应。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
+项目已完成 MS0、MS1、MS2-V/C/J、MS2-D1 和 MS2-D2。D2 one-shot test 中 oracle clean NMAE 为 0.0211–0.0255，三阶为 0.0444–0.0465；三阶相对二阶点改善 23.74%–25.36%，冻结 bootstrap 95% CI 下界 19.90%–21.22%，逐 seed高于 10%，故按 `CLOSED / CONFIRMED_SYNTHETIC_ORDER_RESPONSE` 关闭。这只证明 frozen known-truth 下的响应优势，不证明现场阶次唯一或物理因果。当前唯一授权是 D3 colored-disturbance validation。项目**尚未完成真实模型定性，也未进入论文收口**；后续仍需 MS5 完整耦合、MS3 真实适配和 MS4 闭环响应。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
 
 ## Phase 3.5 当前状态
 
@@ -110,7 +110,7 @@ exp_025 使用实际绝对阀位，exp_106/旧 A1phys 使用 `二级减温调节
 |---|---|---|
 | PI-ODE | exp_020 使用纯神经动力学与固定 Euler 小步；MS1 在同型二阶 synthetic truth 达噪声下限；MS2-V/C validation/test 误差较低 | MS2 未把 PI-ODE 预注册为主要对照或冠军；PI-ODE 自身的联合非线性/显式调度、Fan 方程、部分可观测状态与真实响应仍未验证 |
 | Controlled Koopman | exp_020 的潜在受控 decoder；exp_112 的 Koopman free-head；MS1 稳定受控模态算子通过结构门禁 | MS2 的 global-context 与四模态阀门版本只作次要对照，不能据此赋予真实 Koopman 谱解释 |
-| 灰箱 / DeepONet 算子 | MS1 证明 2P 灰箱同型可解；MS2-V/C validation+test 的两个预注册响应对比均通过；MS2-J 联合模块 validation+test 双层通过 | 单调响应模块存在 `K/phi/动力学` 补偿，尚未辨识出真实阀门曲线；MS2-D、完整 free+response、真实数据迁移与 Fan 物理闭合仍缺 |
+| 灰箱 / DeepONet 算子 | MS1 证明 2P 灰箱同型可解；MS2-V/C/J 双层通过；D2 确认 frozen truth 下三阶 response advantage | 单调响应模块存在 `K/phi/动力学` 补偿，尚未辨识出真实阀门曲线；D3、完整 free+response、真实数据迁移与 Fan 物理闭合仍缺 |
 
 因此，exp_020 和 exp_112 都不能回答“Fan 物理微分模型是否优于当前模型”。Phase 3.5-MS 新框架也只回答低维动作响应的表示/优化可行性，不等同于 Fan 模型比较或现场因果验证。
 
@@ -147,6 +147,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-下一判决点是 MS2-D2 one-shot test：在无 pure delay、R50+context scheduling、truth tau `[40,70,210] s` 的独立 test trajectories 上，要求三极点 oracle 每 seed clean NMAE `<0.05`、三极点主模型每 seed `<0.10`，且相对同预算二极点的配对/profile 分层 bootstrap 95% CI 下界每 seed `>=10%`。tau 集合恢复和二极点+learned-delay 的虚假迟延只作诊断，不并入主门禁。注册表为 `test_authorized`；只推理原 checkpoint，不重训，D3 仍未授权。
+下一判决点是 MS2-D3 validation：在 D2 clean truth 上加入不可观测的 stationary AR(1) output nuisance（`sigma=0.03 °C`、`tau=120 s`），要求三极点 oracle 每 seed clean NMAE `<0.05`、三极点主模型每 seed `<0.10`，且相对同预算二极点的配对/profile 分层 bootstrap 95% CI 下界每 seed `>=10%`。扰动 realization、tau/learned-delay、profile/horizon、D2→D3 漂移和 secondary 排名只作诊断。注册表为 `ready_for_linux`；只授权 21-run validation，test/MS5 仍冻结。
 
 完整顺序为 MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 保持暂停。

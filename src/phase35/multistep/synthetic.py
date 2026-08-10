@@ -14,6 +14,7 @@ TRUTH_REGIMES = {
     "nonlinear_valve",
     "context_scheduled",
     "delayed_context_scheduled",
+    "disturbed_context_scheduled",
 }
 TRUTH_OPENING_MAPS = {"identity", "equal_percentage_r50"}
 
@@ -33,6 +34,8 @@ class SyntheticSpec:
     context_gain_log_scale: float = 0.0
     context_tau_log_scale: float = 0.0
     input_delay_steps: int = 0
+    disturbance_std: float = 0.0
+    disturbance_tau_seconds: float = 0.0
 
     def validate(self) -> None:
         if self.samples < len(PROFILE_NAMES) or self.horizon < 8 or self.context_dim < 1:
@@ -55,15 +58,30 @@ class SyntheticSpec:
             raise ValueError("input delay must be smaller than horizon")
         if self.truth_regime == "nonlinear_valve" and self.truth_opening_map == "identity":
             raise ValueError("nonlinear_valve truth requires a nonlinear opening map")
-        if self.truth_regime in {"context_scheduled", "delayed_context_scheduled"} and max(
-            self.context_gain_log_scale, self.context_tau_log_scale
-        ) <= 0:
+        if self.truth_regime in {
+            "context_scheduled",
+            "delayed_context_scheduled",
+            "disturbed_context_scheduled",
+        } and max(self.context_gain_log_scale, self.context_tau_log_scale) <= 0:
             raise ValueError("scheduled truth requires a non-zero scheduling scale")
         if (
             self.truth_regime == "delayed_context_scheduled"
             and self.input_delay_steps <= 0
         ):
             raise ValueError("delayed_context_scheduled truth requires a positive input delay")
+        if self.disturbance_std < 0 or self.disturbance_tau_seconds < 0:
+            raise ValueError("disturbance scale and time constant must be non-negative")
+        if self.truth_regime == "disturbed_context_scheduled":
+            if self.disturbance_std <= 0:
+                raise ValueError("disturbed truth requires a positive disturbance scale")
+            if self.disturbance_tau_seconds < self.dt_seconds:
+                raise ValueError(
+                    "disturbance time constant must be at least one sampling interval"
+                )
+        elif self.disturbance_std != 0 or self.disturbance_tau_seconds != 0:
+            raise ValueError(
+                "disturbance parameters require disturbed_context_scheduled truth"
+            )
 
 
 @dataclass
@@ -74,6 +92,7 @@ class SyntheticBatch:
     clean_effect: torch.Tensor
     target_effect: torch.Tensor
     target_temperature: torch.Tensor
+    colored_disturbance: torch.Tensor
     profile_ids: torch.Tensor
     profile_names: tuple[str, ...]
     truth: dict[str, object]
@@ -170,6 +189,43 @@ def _pure_delay(dose: torch.Tensor, steps: int) -> torch.Tensor:
     return delayed
 
 
+def _colored_disturbance(
+    reference: torch.Tensor,
+    *,
+    dt_seconds: float,
+    stationary_std: float,
+    tau_seconds: float,
+    generator: torch.Generator,
+) -> tuple[torch.Tensor, float]:
+    if stationary_std == 0:
+        return torch.zeros_like(reference), 0.0
+    rho = float(torch.exp(torch.tensor(-dt_seconds / tau_seconds)))
+    innovation_std = stationary_std * (1.0 - rho**2) ** 0.5
+    state = stationary_std * torch.randn(
+        reference.shape[0], generator=generator, dtype=reference.dtype
+    )
+    values = []
+    for _ in range(reference.shape[1]):
+        state = rho * state + innovation_std * torch.randn(
+            reference.shape[0], generator=generator, dtype=reference.dtype
+        )
+        values.append(state)
+    return torch.stack(values, dim=1), rho
+
+
+def _lag_one_correlation(value: torch.Tensor) -> float:
+    if value.shape[1] < 2 or torch.count_nonzero(value).item() == 0:
+        return 0.0
+    left = value[:, :-1].reshape(-1)
+    right = value[:, 1:].reshape(-1)
+    left = left - left.mean()
+    right = right - right.mean()
+    denominator = left.square().sum().sqrt() * right.square().sum().sqrt()
+    if float(denominator) <= 1e-12:
+        return 0.0
+    return float((left * right).sum() / denominator)
+
+
 def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
     spec.validate()
     if split not in _SPLIT_OFFSETS:
@@ -184,7 +240,14 @@ def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
     gain, tau = _scheduled_parameters(spec, context)
     clean_effect = _cascade_response(dose, spec.dt_seconds, tau, gain)
     noise = spec.noise_std * torch.randn(clean_effect.shape, generator=generator)
-    target_effect = clean_effect + noise
+    colored_disturbance, disturbance_rho = _colored_disturbance(
+        clean_effect,
+        dt_seconds=spec.dt_seconds,
+        stationary_std=spec.disturbance_std,
+        tau_seconds=spec.disturbance_tau_seconds,
+        generator=generator,
+    )
+    target_effect = clean_effect + noise + colored_disturbance
     free_level = 565.0 + 0.7 * context[:, :1]
     target_temperature = free_level + target_effect
     truth = {
@@ -197,6 +260,14 @@ def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
         "context_tau_log_scale": spec.context_tau_log_scale,
         "input_delay_steps": spec.input_delay_steps,
         "input_delay_seconds": spec.input_delay_steps * spec.dt_seconds,
+        "disturbance_std": spec.disturbance_std,
+        "disturbance_tau_seconds": spec.disturbance_tau_seconds,
+        "disturbance_rho": disturbance_rho,
+        "disturbance_realized_mean": float(colored_disturbance.mean()),
+        "disturbance_realized_std": float(colored_disturbance.std()),
+        "disturbance_realized_lag1_correlation": _lag_one_correlation(
+            colored_disturbance
+        ),
         "realized_gain_range": [float(gain.min()), float(gain.max())],
         "realized_tau_range": [
             [float(tau[:, pole].min()), float(tau[:, pole].max())]
@@ -213,6 +284,7 @@ def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
         clean_effect=clean_effect,
         target_effect=target_effect,
         target_temperature=target_temperature,
+        colored_disturbance=colored_disturbance,
         profile_ids=profile_ids,
         profile_names=PROFILE_NAMES,
         truth=truth,

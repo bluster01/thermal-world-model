@@ -441,9 +441,9 @@ echo $? > results/phase3_5/ms2d_order/remote_execution/summary_exit_code.txt
 
 tau 集合的 permutation-invariant log-MAE，以及无迟延 truth 下 learned-delay 的期望步数/零步质量，只是诊断，不改变主门禁。该 validation 已由本地审计为 screening PASS；不要重复训练，也不要用 validation 排名升级 secondary 路线。
 
-## 14. 当前唯一授权：MS2-D2 one-shot synthetic test
+## 14. 已完成归档：MS2-D2 one-shot synthetic test
 
-本批只对已归档的 7 candidates × 3 seeds 共 21 个 validation-selected checkpoints 做一次独立 test 推理，不训练、不调参、不补 seed。先在授权 commit 的干净工作树运行无访问预检：
+本批已完成并由本地 Supervisor 关闭，不得重复访问。以下命令只保留审计追溯：它曾对已归档的 7 candidates × 3 seeds 共 21 个 validation-selected checkpoints 做一次独立 test 推理，不训练、不调参、不补 seed。
 
 ```bash
 python experiments/phase3_5/experiment_status.py --check --json
@@ -489,3 +489,50 @@ echo $? > results/phase3_5/ms2d_order/remote_test/summary_exit_code.txt
 确认主门逐 seed为：oracle clean NMAE `<0.05`；三极点 clean NMAE `<0.10`；三极点相对二极点的配对 episode、profile 分层 10,000 次 bootstrap 95% CI 下界 `>=0.10`。tau 恢复和伪迟延仍是非阻断诊断；即使后者失败，不能据此把主门改成 FAIL。汇总器因科学门失败返回 code 2 时，仍须原样提交所有 JSON、ledger、更新后的 manifest 和日志。
 
 Linux 只提交 `results/phase3_5/ms2d_order/**`。不得修改 `configs/`、`src/`、`experiments/`、`tests/`、TODO、README、注册表、PROJECT_STATUS、上下文快照或任何 Supervisor 文档；不得新增自审 review，不得删除 partial ledger、重复 test、重训或启动 D3。远端只报告执行与原始门禁，本地 Supervisor 负责独立复算和状态迁移。
+
+## 15. 当前唯一授权：MS2-D3 colored-disturbance validation
+
+D3 固定继承 D2 的 R50、context scheduling、三阶 `[40,70,210] s` 和无 pure delay clean truth，只在输出端加入 response operator 不可观察的 stationary AR(1) nuisance：`sigma_d=0.03 °C`、`tau_d=120 s`。这不是现场扰动谱、状态观测器或完整 `free+response` 实验。先在授权 commit 的干净工作树预检：
+
+```bash
+python experiments/phase3_5/experiment_status.py --check --json
+git status --short
+git rev-parse HEAD
+python -m pytest tests/phase35/multistep tests/phase35/test_experiment_status.py -q
+python -m compileall -q src/phase35/multistep \
+  experiments/phase3_5/ms2d_disturbance.py \
+  experiments/phase3_5/summarize_ms2d_disturbance.py
+python experiments/phase3_5/ms2d_disturbance.py --dry-run
+```
+
+状态必须严格为 `active_gate=ms2d_d3`、`active_status=ready_for_linux`、`linux_authorized_gate=ms2d_d3`；工作树必须为空。dry-run 必须显示 `protocol_version=phase3.5-ms2d-d3-v1`、`run_count=21`、`test_authorized=false`。任一 D2 reference pin、冻结矩阵、源代码、既有 test artifact 或状态检查失败即停止，不自行修复。
+
+正式训练与汇总：
+
+```bash
+mkdir -p results/phase3_5/ms2d_disturbance/remote_execution
+git rev-parse HEAD > results/phase3_5/ms2d_disturbance/remote_execution/git_commit.txt
+python --version > results/phase3_5/ms2d_disturbance/remote_execution/environment.txt 2>&1
+nvidia-smi >> results/phase3_5/ms2d_disturbance/remote_execution/environment.txt 2>&1
+printf '%s\n' \
+  'python experiments/phase3_5/ms2d_disturbance.py --device cuda --output-root results/phase3_5/ms2d_disturbance --execute-matrix --skip-existing' \
+  > results/phase3_5/ms2d_disturbance/remote_execution/command.txt
+
+python experiments/phase3_5/ms2d_disturbance.py \
+  --device cuda \
+  --output-root results/phase3_5/ms2d_disturbance \
+  --execute-matrix --skip-existing \
+  > results/phase3_5/ms2d_disturbance/remote_execution/train_stdout.log \
+  2> results/phase3_5/ms2d_disturbance/remote_execution/train_stderr.log
+echo $? > results/phase3_5/ms2d_disturbance/remote_execution/train_exit_code.txt
+
+python experiments/phase3_5/summarize_ms2d_disturbance.py \
+  --output-root results/phase3_5/ms2d_disturbance \
+  > results/phase3_5/ms2d_disturbance/remote_execution/summary_stdout.log \
+  2> results/phase3_5/ms2d_disturbance/remote_execution/summary_stderr.log
+echo $? > results/phase3_5/ms2d_disturbance/remote_execution/summary_exit_code.txt
+```
+
+冻结主门逐 seed为：21/21 artifact 与结构合同闭合；`d3_g3_oracle_structure` clean NMAE `<0.05`；`d3_g3_three_pole` clean NMAE `<0.10`；三阶相对 `d3_g2_two_pole` 的 profile-stratified paired episode bootstrap 95% CI 下界 `>=0.10`。扰动 realization、tau、no-true-delay、profile/horizon、D2→D3 drift 和 secondary 路线全部是非阻断诊断。汇总器因科学门失败返回 code 2 时，也必须原样提交全部 21 个运行目录、`summary_validation.json`、checkpoint archive 和日志。
+
+Linux 只提交 `results/phase3_5/ms2d_disturbance/**`。不得修改 `configs/`、`src/`、`experiments/`、`tests/`、TODO、README、注册表或 Supervisor 文档；不得改阈值/seed/split、删除失败或 partial 结果、访问 synthetic test、补跑挑选、启动 MS5，或自行把 validation 写成确认性结论。本地 Supervisor 负责复算、审计和下一状态迁移。

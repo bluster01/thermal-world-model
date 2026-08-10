@@ -1,6 +1,6 @@
 # 主汽温世界模型证据阶梯与缺口
 
-> 更新：2026-08-10
+> 更新：2026-08-11
 > 状态：Phase 3.5 当前批次收口后的 Supervisor 判决
 > 目标：明确“预测、仿真、反事实、闭环”分别需要什么证据，防止用一种能力替代另一种能力。
 
@@ -178,7 +178,7 @@ A1phys 当前是低阶响应先验，不是守恒模型。若最终目标包含�
 
 ## 8. 当前优先级
 
-1. 完成 MS2-D1/D2/D3 顺序结构压力；当前实现 D1 pure-delay。
+1. 完成 MS2-D3 colored-disturbance validation；D1 已按 20% margin 阴性关闭，D2 已确认 frozen known-truth 三阶响应优势。
 2. 实施 MS5，单独检验完整 `free+response` 的动作吸收和训练稳定性。
 3. 实施 MS3 A/B validation-only 适配，再以 SP held-step 闭环锚点实施 MS4。
 4. MS 系列完成后再选择模型和形成论文；不以 synthetic 单榜提前定路线冠军。

@@ -1,18 +1,18 @@
 # TODO — Phase 3.5-MS 完整模型验证
 
-> 更新：2026-08-10。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。MS2-D2 validation 已审计为 screening PASS，当前只授权其一次性 synthetic test。旧 E1–E5 已废弃；Phase 4 仍暂停。
+> 更新：2026-08-11。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。MS2-D2 one-shot test 已确认并关闭，当前唯一授权是 MS2-D3 colored-disturbance validation。旧 E1–E5 已废弃；Phase 4 仍暂停。
 
 ## 当前目标
 
 先完成 Phase 3.5-MS 全系列：MS2-D 结构压力、MS5 完整 `free+response` 耦合、MS3 A/B 真实适配和 MS4 串级闭环物理响应；完成后再选择最终架构并进入论文。喷水流量不作真值，主动作是实际二级减温阀反馈开度代理。完整恢复入口见 [上下文快照](docs/PHASE35_CONTEXT_SNAPSHOT.md)。
 
-当前状态：**MS0、MS1、MS2-V/C/J 和 MS2-D1 已完成；MS2-D2 validation 已独立复核，当前只授权原 21 个 checkpoint 的一次性 synthetic test。**D2 validation 中三阶模型逐 seed clean NMAE 为 0.0403–0.0520，相对二阶改善 18.56%–28.10%；独立 episode bootstrap 95% CI 下界为 15.08%–22.28%，均高于冻结的 10%。该结果仍受 validation 选 checkpoint 影响，不能跳过 test。旧 42-run/E 系列不再定义当前候选；未来现场证据改由 MS3/MS4 承接。
+当前状态：**MS0、MS1、MS2-V/C/J、MS2-D1 和 MS2-D2 已完成；MS2-D3 的设计、矩阵、代码和本地测试已冻结，等待 Linux validation。**D2 独立 test 中 oracle clean NMAE 为 0.0211–0.0255，三阶主模型为 0.0444–0.0465，相对二阶点改善 23.74%–25.36%，冻结 bootstrap 95% CI 下界为 19.90%–21.22%，逐 seed高于 10%。这只确认 frozen known-truth 下的三阶响应优势；二极点+迟延与 DeepONet 仍能在有限 horizon 逼近，不支持现场唯一阶次或机制。
 
 边界保持不变：synthetic 阳性只能证明方法可解与结构压力下的响应恢复，不能替代现场物理响应，不能写成“完全物理响应”或“反事实世界模型已成立”。最终缺口与 W0–W6 门禁见 [主汽温世界模型证据阶梯](docs/WORLD_MODEL_EVIDENCE_LADDER.md)。
 
 ### 当前判决点
 
-MS2-D2 当前判决点是：在**没有 pure delay、真实系统多一个可分辨惯性极点**的独立 test trajectories 上，R50 三极点 oracle 是否逐 seed clean NMAE `<0.05`，三极点主模型是否逐 seed `<0.10`，且其相对同预算二极点的配对、profile 分层 bootstrap 95% CI 下界是否逐 seed `>=10%`。只读取原 21 个 validation-selected checkpoints，不重训、不改阈值、不补 seed。时间常数集合恢复与二极点+learned-delay 的伪迟延继续只作诊断；本地审计 test 前不得启动 D3。
+MS2-D3 当前判决点是：在 D2 三阶、R50、context-scheduled、无 pure delay 真值上，加入 response operator 不可观察的 action-independent stationary AR(1) output disturbance（`sigma=0.03 °C`、`tau=120 s`）后，oracle 是否逐 seed clean NMAE `<0.05`、三阶主模型是否逐 seed `<0.10`，且三阶相对同预算二阶的配对/profile 分层 bootstrap 95% CI 下界是否逐 seed `>=10%`。D3 validation 只作 screening；扰动拟合、tau/迟延、profile/horizon、D2→D3 漂移和 secondary 路线均不参与主门或选冠军，test 继续锁定。
 
 ## Phase 3.5-MS — 多步动作响应可解性
 
@@ -26,8 +26,8 @@ MS2-D2 当前判决点是：在**没有 pure delay、真实系统多一个可分
 | MS2-C 工况调度 | 增益/时间常数随 context 变化 | 多步 A1phys 参数调度能否辨识？ | 5 candidates×3 seeds；clean NMAE；独立榜 | ✅ validation+test 双层 PASS（test: scheduled vs global CI下界 0.884–0.891 >> 20%，3seed×256ep×10k bootstrap；K/τ 调度相关性高） |
 | MS2-J 联合耦合 | 同一真值同时含 R50 非线性与 context 调度 | 双模块能否共同收敛？staged 是否比 joint 更稳定？ | 9 candidates×3 seeds；双模块 joint/staged、单模块消融、灵活路线；一次性 test | ✅ validation+test 双层：联合模块 PASS（test CI下界 0.73–0.89 >> 20%）；staged FAIL 复现（test ratio 1.14–1.20，CI上界 1.09–1.32 > 1.10）；oracle 0.0225 复现 |
 | MS2-D1 纯迟延 | R50+调度 truth 加 20 s delay | delay module 是否必要？响应和参数能否分别恢复？ | 6 candidates×3 seeds；oracle；learned vs no-delay；参数诊断分列 | ⚠️ validation PASS / **test 未确认**：oracle 0.021<0.05 双层复现；test CI 下界 17.2–18.8% < 20%（点估计 20.4–22.5% 方向一致）；E[d] 精确但分布弥散 → capacity 有效、真实迟延未唯一恢复；按冻结解释不重试不调阈值 |
-| MS2-D2 | 无 pure delay 的三阶惯性 truth | 三极点能否优于同预算二极点？遗漏阶次会否被误读为 delay？ | 7 candidates×3 seeds；oracle、绝对 NMAE、三阶 vs 二阶；参数/虚假 delay 单列 | ▶ **validation 已审计 screening PASS；当前唯一 Linux 任务：one-shot test** |
-| MS2-D3 | 未建模扰动 | 结论是否跨 action-independent colored disturbance 成立？ | D2 审计后再设计，不混矩阵 | ◻ 冻结 |
+| MS2-D2 | 无 pure delay 的三阶惯性 truth | 三极点能否优于同预算二极点？遗漏阶次会否被误读为 delay？ | 7 candidates×3 seeds；oracle、绝对 NMAE、三阶 vs 二阶；参数/虚假 delay 单列 | ✅ test 确认并关闭；仅限 frozen known-truth response，不证明现场唯一阶次 |
+| MS2-D3 | 未建模扰动 | 结论是否跨 action-independent colored disturbance 成立？ | D2 truth + stationary AR(1) output nuisance；7 candidates×3 seeds；clean 主门与扰动诊断分离 | ▶ **当前唯一 Linux 任务：21-run validation** |
 | MS5 完整耦合 | free 预训练/冻结/联合与 joint 对照 | response 是否被 free head 吸收？ | stage checkpoint、梯度、参数漂移、动作敏感性 | ◻ MS2-D 后、MS3 前 |
 | MS3 真实数据适配 | 复用 A/B causal cache，交叉链按现场冻结 | 合成可解性能否迁移到观测预测？ | validation-only；A/B 分榜；不称因果 | ◻ 等待 MS5 |
 | MS4 闭环物理响应 | SP→串级 PID→阀位→T2/Tm | 完整模型是否复现现场闭环响应？ | held-step、方向、时标、跨块；不称开环 do(valve) | ◻ 等待 MS3 |
@@ -50,23 +50,21 @@ E1–E5 不再属于当前 Gate 或候选选择；表格只保留失败机制和
 
 | 工作线 | 当前任务 | 放行条件 | 下一步 |
 |---|---|---|---|
-| A. 方法与架构 | D2 三阶惯性 vs 二阶确认 | oracle `<0.05`；三阶 `<0.10`；配对 bootstrap CI 下界逐 seed `≥10%` | test 审计后按冻结规则关闭，不按 secondary 排名挑结论 |
-| B. 训练与计算 | Linux 只推理原 21 个 D2 checkpoint | 唯一授权、干净 commit、21/21 ledger/metrics/log | 原样回传；不重训、不改代码/文档/状态、不重复访问 |
-| C. 统计与审计 | 本地复算 D2 test episode 与门禁 | 主门禁与 tau/delay diagnostic 分离；逐 seed，不用点估计替代 CI | 形成 test Supervisor audit 后才决定 D3 |
+| A. 方法与架构 | D3 三阶响应的有色扰动稳健性 | oracle `<0.05`；三阶 `<0.10`；配对 bootstrap CI 下界逐 seed `≥10%` | 只判 clean response 稳健性，不按 secondary 排名挑结论 |
+| B. 训练与计算 | Linux 执行冻结的 21-run D3 validation | 唯一授权、干净 commit、21/21 manifest/history/checkpoint/episode/log | 原样回传；不改阈值/seed/split，不访问 test，不启动 MS5 |
+| C. 统计与审计 | 本地复算 D3 validation episode 与门禁 | clean 主门与 disturbance/tau/delay/profile/horizon diagnostic 分离 | 只形成 screening 判决，再决定是否授权 one-shot test |
 | D. 数据与现场 | 维护 MS3/MS4 需求，不提前执行 | A/B 分侧、现场交叉链冻结、SP held-step、稳态/动态分层、新时间块 | 等 MS5 完成后进入 MS3，再进入 MS4 |
 
-## 当前 D2 执行清单
+## 当前 D3 执行清单
 
 | 顺序 | 任务 | 负责人 | 完成标准 | 状态 |
 |---:|---|---|---|---|
-| 1 | 独立复核 D1 one-shot test 并关闭 Gate | 本地 | canonical 重算、50k bootstrap、manifest/ledger/pin 审计 | ✓ `TEST_NOT_CONFIRMED_AT_20PCT_MARGIN` |
-| 2 | 冻结无迟延三阶 truth、7 candidates、3 seeds | 本地 | 设计、矩阵、公式和 runner 一致；D1 结构不传播 | ✓ |
-| 3 | D2 runner 与 fail-closed summary | 本地 | 21-run；oracle/绝对/相对主门；tau/虚假 delay 单列 | ✓ |
-| 4 | D2 validation 正式运行 | Linux | 21/21、日志、summary、checkpoint archive 原样回传 | ✓ `fa6933c` 执行 |
-| 5 | D2 validation 独立复算与审计 | 本地 | checkpoint/history/hash/结构门、episode bootstrap 与反例审计 | ✓ `AUDITED_SCREENING_PASS` |
-| 6 | 冻结 one-shot test authorization、runner 与 summary | 本地 | 内容寻址；21 runs；三主门；诊断非阻断；重复访问拒绝 | ✓ 8 个专项测试通过 |
-| 7 | 一次性 D2 synthetic test | Linux | 只推理原 checkpoint；21/21 ledger/metrics；完整日志原样回传 | ◻ **当前唯一远端任务** |
-| 8 | D2 test 独立审计与关闭 | 本地 | episode 重算、逐 seed CI、split 漂移、诊断边界 | ◻ 等回传；D3 冻结 |
+| 1 | 独立复核 D2 one-shot test 并关闭 Gate | 本地 | canonical 重算、50k bootstrap、manifest/ledger/pin/日志审计 | ✓ `CONFIRMED_SYNTHETIC_ORDER_RESPONSE` |
+| 2 | 冻结 D3 单一问题与 nuisance 生成式 | 本地 | D2 clean truth 不变；stationary AR(1) output disturbance；不混 MS5 | ✓ |
+| 3 | D3 matrix、runner 与 fail-closed summary | 本地 | 21-run；clean 主门；诊断隔离；test artifact 拒绝 | ✓ |
+| 4 | D3 本地代码与协议回归 | 本地 | generator determinism/stationarity；matrix drift；episode pairing；status | ✓ |
+| 5 | D3 validation 正式运行 | Linux | 21/21、日志、summary、checkpoint archive 原样回传 | ▶ **当前唯一远端任务** |
+| 6 | D3 validation 独立复算与审计 | 本地 | checkpoint/history/hash/结构门、episode bootstrap 与反例审计 | ◻ 等回传；test/MS5 冻结 |
 
 ## 本地与 Linux 分工
 
@@ -86,9 +84,11 @@ Linux 的唯一运行说明见 [experiments/phase3_5/README.md](experiments/phas
 - [x] MS2-D1 validation 的 summary/checkpoint/history/archive 独立复核完成；降级为 screening PASS，参数辨识诊断 FAIL。
 - [x] 冻结并执行 D1 一次性 synthetic test authorization、访问 ledger、paired episode bootstrap 与 fail-closed 汇总器。
 - [x] 独立审计 D1 test：oracle 通过，但主对比 CI 下界 17.2–18.8% 未达 20%；D1 阴性关闭，不重试。
-- [x] 冻结 D2 三阶惯性设计、21-run matrix、runner、fail-closed summary 与本地测试；test/D3 仍冻结。
+- [x] 冻结 D2 三阶惯性设计、21-run matrix、runner、fail-closed summary 与本地测试。
 - [x] 独立审计 D2 validation：21/21 结构与主门通过；确认其为 screening PASS，并记录三阶/迟延机制补偿边界。
 - [x] 冻结 D2 one-shot test 的 content pins、配对 bootstrap 主门、执行器、汇总器和访问 ledger；只允许原 21 checkpoints 一次推理。
+- [x] 独立审计 D2 test：21/21、内容 pin、episode 重算与独立 50k bootstrap 一致；按 `CONFIRMED_SYNTHETIC_ORDER_RESPONSE` 关闭，同时保留阶次/迟延不可唯一辨识边界。
+- [x] 冻结 D3 的 stationary AR(1) output disturbance 设计、21-run matrix、runner、fail-closed summary、episode 统计和本地专项测试；当前只授权 validation。
 - [x] 审计旧 `exp_106/112` 的 test-selection、CFI fallback 和 ΔSP estimand 问题。
 - [x] 拉取并审计 exp_201：将固定 `R=50` 的方向信号降级为 pilot，并纳入 E2 正式对照。
 - [x] 将 Phase 4 暂停，并把所有论文补充实验收归 Phase 3.5。

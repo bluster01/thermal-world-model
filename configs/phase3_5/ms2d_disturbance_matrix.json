@@ -1,0 +1,129 @@
+{
+  "protocol_version": "phase3.5-ms2d-d3-v1",
+  "evidence_scope": "synthetic_colored_disturbance_pressure_validation_not_field_causality",
+  "seeds": [0, 1, 2],
+  "operator_defaults": {
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "opening_map": "identity",
+    "poles": 2,
+    "latent_dim": 4,
+    "hidden_dim": 32,
+    "tau_min_seconds": 20.0,
+    "tau_max_seconds": 900.0,
+    "ode_substeps": 2,
+    "closure_scale": 0.02,
+    "context_scheduled": false,
+    "schedule_log_scale": 0.5,
+    "delay_mode": "none",
+    "fixed_delay_steps": 0,
+    "max_delay_steps": 0
+  },
+  "synthetic_defaults": {
+    "train_samples": 1024,
+    "validation_samples": 256,
+    "test_samples": 256,
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "seed": 20260813,
+    "noise_std": 0.02,
+    "gain_c_per_pct": -0.10,
+    "tau_seconds": [40.0, 70.0, 210.0],
+    "truth_regime": "disturbed_context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.30,
+    "input_delay_steps": 0,
+    "disturbance_std": 0.03,
+    "disturbance_tau_seconds": 120.0
+  },
+  "training": {
+    "batch_size": 64,
+    "epochs": 300,
+    "patience": 30,
+    "learning_rate": 0.002,
+    "weight_decay": 0.000001,
+    "physics_weight": 0.01,
+    "gradient_clip": 1.0
+  },
+  "gates": {
+    "oracle_clean_nmae_max": 0.05,
+    "disturbance_robust_clean_nmae_max": 0.10,
+    "disturbance_robust_ci_lower_min": 0.10,
+    "bootstrap_replicates": 10000,
+    "bootstrap_seed": 20260814,
+    "tau_set_log_mae_max": 0.35,
+    "no_true_delay_expected_steps_max": 0.50,
+    "no_true_delay_zero_step_mass_min": 0.80
+  },
+  "d2_reference": {
+    "path": "results/phase3_5/ms2d_order/summary_test.json",
+    "sha256": "9c4e9300314379436d9b3e3a3bd004114fb76aeaf406164def86fce95cb71ea0"
+  },
+  "regimes": [
+    {
+      "regime_id": "third_order_r50_context_scheduled_colored_disturbance",
+      "question": "Does the confirmed three-pole response advantage survive an unobserved action-independent stationary AR(1) output disturbance?",
+      "synthetic": {},
+      "candidates": [
+        {
+          "candidate_id": "d3_g2_two_pole",
+          "role": "primary_ablation",
+          "route": "graybox",
+          "opening_map": "monotone",
+          "context_scheduled": true,
+          "poles": 2
+        },
+        {
+          "candidate_id": "d3_g3_three_pole",
+          "role": "primary_model",
+          "route": "graybox",
+          "opening_map": "monotone",
+          "context_scheduled": true,
+          "poles": 3
+        },
+        {
+          "candidate_id": "d3_g3_oracle_structure",
+          "role": "positive_control",
+          "route": "graybox",
+          "opening_map": "equal_percentage_r50",
+          "context_scheduled": true,
+          "poles": 3
+        },
+        {
+          "candidate_id": "d3_g2_delay_compensation",
+          "role": "alternative_mechanism_diagnostic",
+          "route": "graybox",
+          "opening_map": "monotone",
+          "context_scheduled": true,
+          "poles": 2,
+          "delay_mode": "learned",
+          "max_delay_steps": 4
+        },
+        {
+          "candidate_id": "d3_k4_monotone",
+          "role": "secondary_representation",
+          "route": "koopman",
+          "opening_map": "monotone",
+          "latent_dim": 4
+        },
+        {
+          "candidate_id": "d3_pi_monotone",
+          "role": "secondary_representation",
+          "route": "pi_ode",
+          "opening_map": "monotone"
+        },
+        {
+          "candidate_id": "d3_deeponet",
+          "role": "secondary_representation",
+          "route": "deeponet",
+          "opening_map": "identity",
+          "latent_dim": 8,
+          "hidden_dim": 32
+        }
+      ]
+    }
+  ]
+}

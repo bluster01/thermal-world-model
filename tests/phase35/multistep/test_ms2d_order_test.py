@@ -13,28 +13,25 @@ AUTHORIZATION = ROOT / "configs/phase3_5/ms2d_order_test_authorization.json"
 RUNNER = ROOT / "experiments/phase3_5/ms2d_order_test.py"
 
 
-def test_ms2d2_test_dry_run_preflights_21_frozen_runs_without_access():
+def test_ms2d2_closed_test_refuses_repeat_dry_run_after_completed_access():
     root_ledger = (
         ROOT
         / "results/phase3_5/ms2d_order/synthetic_test_matrix_access_ledger.json"
     )
-    assert not root_ledger.exists()
+    assert root_ledger.exists()
+    ledger = json.loads(root_ledger.read_text(encoding="utf-8"))
+    assert ledger["status"] == "completed"
+    assert ledger["run_count"] == 21
     completed = subprocess.run(
         [sys.executable, str(RUNNER), "--dry-run"],
         cwd=ROOT,
-        check=True,
+        check=False,
         capture_output=True,
         text=True,
     )
-    payload = json.loads(completed.stdout)
-    assert payload["protocol_version"] == "phase3.5-ms2d-d2-test-v1"
-    assert payload["run_count"] == 21
-    assert payload["archive_member_count"] == 21
-    assert payload["validation_screening_pass"] is True
-    assert payload["tau_recovery_diagnostic_pass"] is True
-    assert payload["no_true_delay_diagnostic_pass"] is False
-    assert payload["test_accessed"] is False
-    assert not root_ledger.exists()
+    assert completed.returncode != 0
+    assert "refusing repeat or partial MS2-D2 matrix test access" in completed.stderr
+    assert root_ledger.exists()
 
 
 def test_ms2d2_test_requires_explicit_authorization():

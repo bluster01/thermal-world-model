@@ -79,6 +79,6 @@
 
 当前 Phase 3.5-MS 已有正式 synthetic known-truth 结果，但其证据范围不包含现场因果：MS1、MS2-V/C/J 已关闭；`results/phase3_5/ms2d_delay/` 保存 D1 validation 与 one-shot test。D1 的 oracle test 为 0.0206–0.0223；learned-delay 点改善 20.4–22.5%，但预注册 bootstrap CI 下界 17.2–18.8% 未达 20%，因此是确认门禁 FAIL，不得只引用点估计。权威审计见 [`PHASE35_MS2D1_TEST_SUPERVISOR_AUDIT_2026-08-10.md`](../docs/PHASE35_MS2D1_TEST_SUPERVISOR_AUDIT_2026-08-10.md)。
 
-MS2-D2 validation 已回传并由本地审计为 `AUDITED_SCREENING_PASS / TEST_AUTHORIZED`。21/21 artifacts 与结构门通过；oracle clean NMAE 为 0.0214–0.0226，三阶主模型为 0.0403–0.0520；相对二阶的 validation 点改善为 18.56%–28.10%，独立 episode bootstrap 95% CI 下界为 15.08%–22.28%。这些数字仍来自参与 checkpoint 选择的 validation；当前仅授权原 21 checkpoints 的一次性 synthetic test。权威审计见 [`PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md`](../docs/PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md)。无 pure-delay truth 下 learned-delay 诊断失败，说明机制补偿/不可辨识，不是现场迟延证据。
+MS2-D2 one-shot test 已回传并由本地审计为 `CLOSED / CONFIRMED_SYNTHETIC_ORDER_RESPONSE`。21/21 ledger、manifest、checkpoint pin、日志和 canonical episode 重算均闭合；oracle clean NMAE 为 0.0211–0.0255，三阶主模型为 0.0444–0.0465；相对二阶的 test 点改善为 23.74%–25.36%，冻结 10,000 次 bootstrap 95% CI 下界为 19.90%–21.22%，独立 50,000 次复算不改变判决。权威审计见 [`PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md`](../docs/PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md)。该结果只确认 frozen known-truth 下的三阶 response advantage；二极点+learned-delay 与 DeepONet 在有限 horizon 仍可逼近，不是现场阶次或迟延机制证据。
 
 Phase 4 已暂停。Fan20-SST 守恒骨架、Fan17/21 嵌套组件、Fan-state controlled Koopman 和时变灰箱路线目前没有正式结果，也不进入 Phase 3.5 结果目录。

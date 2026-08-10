@@ -1,6 +1,6 @@
 # Phase 3.5-MS 多步动作响应：方法、推导与参考文献
 
-> 版本：`phase3.5-ms-v1`，更新至 2026-08-10。本文描述当前代码已经实现的内容，不代表 Linux 正式结果，也不恢复旧 E3/E4 现场因果结论。代码入口为 `src/phase35/multistep/`；当前 Gate 由 `configs/phase3_5/experiment_registry.json` 指向 `ms2d_delay_matrix.json`。
+> 版本：`phase3.5-ms-v1`，更新至 2026-08-11。本文描述当前代码已经实现的内容，不恢复旧 E3/E4 现场因果结论。代码入口为 `src/phase35/multistep/`；D2 test 已确认并关闭，当前 Gate 由 `configs/phase3_5/experiment_registry.json` 指向 `ms2d_disturbance_matrix.json`。
 
 ## 1. 研究问题与证据边界
 
@@ -284,7 +284,17 @@ MS1 正式 validation 矩阵为 6 routes × 3 seeds：Graybox-1P/2P、Koopman-K2
 
 MS2-V/C 冻结两个独立失配轴：`valve_nonlinear_r50` 的 6 candidates 与 `context_scheduled_2p` 的 5 candidates，共 11 candidates × 3 seeds = 33 runs；validation+一次性 synthetic test 已完成。两轴的主响应对比均通过，但 learned `phi` 不可单独辨识。MS2-J 随后在同一真值同时启用 R50 非线性和 context 调度，以 9 candidates × 3 seeds 比较双模块 joint/staged、单模块消融及灵活路线；validation+一次性 test 均已完成（`5260d3f`）：联合模块双层 PASS（test CI 下界 0.73–0.89 >> 20%），staged 非劣双层 FAIL（test ratio 1.14–1.20），主训练方案定 joint。
 
-当前 MS2-D1 只在上述联合真值上增加 20 s pure delay，冻结 6 candidates × 3 seeds = 18 validation runs：no-delay 主消融、learned-delay 主模型、fixed-delay+R50 oracle，以及 Koopman/PI-ODE/DeepONet 次要表示参考。主要响应门是 learned-delay 相对 no-delay 每 seed clean NMAE 改善至少 20%；oracle 每 seed clean NMAE 必须小于 0.05；期望迟延误差不超过 1 step 且真值邻域质量不低于 0.80 单列为参数诊断。D1 不提供 test 入口，D2 三阶惯性与 D3 未建模扰动仍等待 D1 审计。完整设计见 [`plans/2026-08-10-phase35-ms2d-pressure-design.md`](plans/2026-08-10-phase35-ms2d-pressure-design.md)。
+MS2-D 按正交轴顺序执行。D1 在联合真值上增加 20 s pure delay；one-shot test 点改善方向稳定，但逐 seed CI 下界 17.2%–18.8% 未达冻结 20%，故阴性关闭且不传播 delay 结构。D2 取消 pure delay、改为三极点 `[40,70,210] s`；one-shot test 的 oracle、三阶绝对误差和三阶相对二阶 CI 主门逐 seed通过，确认 frozen known-truth 下的三阶 response advantage，但 learned-delay/DeepONet 的接近表现阻止唯一机制解释。
+
+当前 D3 保持 D2 clean truth，只加入 response operator 不可观察的平稳 AR(1) 输出扰动：
+
+\[
+\rho=\exp(-\Delta t/\tau_d),\qquad
+d_t=\rho d_{t-1}+\sigma_d\sqrt{1-\rho^2}\epsilon_t,
+\tag{21a}
+\]
+
+其中 `sigma_d=0.03 °C`、`tau_d=120 s`、`dt=10 s`。7 candidates × 3 seeds 的 validation 主门仍只计算 known-truth clean response；扰动 realization、tau/delay、profile/horizon、D2→D3 漂移与 secondary 排名均为诊断。完整设计见 [`plans/2026-08-11-phase35-ms2d3-disturbance-design.md`](plans/2026-08-11-phase35-ms2d3-disturbance-design.md)。
 
 ## 9. 训练目标、选模与评测
 
@@ -339,7 +349,9 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 | MS1 synthetic | 同型二阶系统上的参数/响应可恢复性 | 路线普遍优越性、真实阀门增益 |
 | MS2-V/C mismatch（validation+test 已完成） | 合成真值内非线性响应容量与 context 通道的模块价值 | learned 阀门曲线、联合收敛、纯迟延/扰动、现场 `do(valve)` |
 | MS2-J coupling（validation+test 双层：联合模块 PASS、staged 非劣 FAIL，`5260d3f`） | 双模块联合响应可辨识；当前 staged 协议未达到 1.10 非劣界 | 单独恢复 `K/phi`、所有 staged 方案优劣、真实数据迁移与现场因果响应 |
-| MS2-D1 pure delay（代码与协议已冻结，validation 待返回） | 可检验显式迟延模块对已知真值响应恢复的增量价值 | 在结果审计前不能声称迟延已恢复；响应 PASS 也不等于迟延核唯一可辨识 |
+| MS2-D1 pure delay（已关闭，20% margin 未确认） | 改善方向在 known-truth 跨 split稳定 | 不能传播显式迟延为已证实组件或现场 20 s 真值 |
+| MS2-D2 third order（test 已确认关闭） | frozen known-truth 下三阶 response 相对二阶的增量价值 | 现场阶次唯一性、tau 唯一恢复、迟延/阶次机制区分 |
+| MS2-D3 colored disturbance（当前 validation） | 可检验 clean response 在一个 AR(1) output nuisance 下的恢复稳健性 | 现场扰动谱、扰动 observer、过程状态闭合或确认性 test 结论 |
 | MS3 real validation（未实现） | A/B 观测预测与模型敏感性 | 未控制混杂下的反事实效应 |
 | MS4 new-time E3/E4 | 若门禁通过，可比较经验响应与模型响应 | 超出数据支持域的闭环安全性 |
 
@@ -377,6 +389,8 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 | MS2-V/C 真值与 clean metrics | `multistep/synthetic.py`、`multistep/training.py` | nonlinear/context truth、MS2 CLI 与 checkpoint hash 测试 |
 | MS2-J coupling 与一次性 test | `joint_coupling.py`、`staging.py`、`joint_coupling_test.py`、`summarize_joint_coupling_test.py` | 27-run freeze、stage A/B/C、content-address、repeat refusal、paired episode gate 测试 |
 | MS2-D1 pure delay | `synthetic.py`、`operators.py`、`ms2d_delay.py`、`summarize_ms2d_delay.py` | exact delay timing、simplex、buffer continuation、18-run freeze、artifact/response/parameter 分离门禁 |
+| MS2-D2 third order | `synthetic.py`、`ms2d_order.py`、`ms2d_order_test.py` 与对应 summary | 三阶 truth、21-run freeze、content pin、one-shot ledger、paired episode CI、诊断隔离 |
+| MS2-D3 AR(1) nuisance | `synthetic.py`、`ms2d_disturbance.py`、`summarize_ms2d_disturbance.py` | 平稳/确定性/toggle 不变式、21-run freeze、clean pairing、test lock、诊断隔离 |
 
 ## 13. Reference ledger
 

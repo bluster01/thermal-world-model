@@ -1,6 +1,6 @@
 # Phase 3.5-MS 上下文恢复快照
 
-> 更新：2026-08-10。新会话先读本文，再运行状态检查器。机器状态以 `configs/phase3_5/experiment_registry.json` 为准；本文解释为什么。
+> 更新：2026-08-11。新会话先读本文，再运行状态检查器。机器状态以 `configs/phase3_5/experiment_registry.json` 为准；本文解释为什么。
 
 ## 1. 恢复命令
 
@@ -31,13 +31,17 @@ python experiments/phase3_5/experiment_status.py --check --json
 | MS2-C | CLOSED | scheduled K/τ 相对 global 双层 PASS |
 | MS2-J | CLOSED | joint 相对两个单模块双层 PASS；staged 10% 非劣双层 FAIL；采用 joint |
 | MS2-D1 | CLOSED | test 改善方向稳定，但逐 seed CI 下界 17.2–18.8% 未达预注册 20%；参数诊断继续负，不重试 |
-| MS2-D2 | TEST_AUTHORIZED | validation 已审计 screening PASS；只授权原 21 checkpoints 一次性 synthetic test，不重训 |
-| MS2-D3 | PLANNED | 未建模扰动；等待 D2 validation 审计 |
+| MS2-D2 | CLOSED | test 三个主门逐 seed通过；确认 frozen known-truth 三阶响应优势，不确认现场阶次唯一性 |
+| MS2-D3 | READY_FOR_LINUX | D2 truth + action-independent stationary AR(1) output disturbance；只授权 21-run validation |
 | MS5 | PLANNED | 完整 `free+response` 耦合，不被 MS2-J 替代 |
 | MS3 | PLANNED | A/B validation-only 真实数据适配，不称因果 |
 | MS4 | PLANNED | 用 SP held-step 验证串级闭环响应，不恢复旧 E 匹配 |
 
 ## 4. Linux 最新同步与本地审计
+
+Linux 在 `d97538f` 回传 MS2-D2 one-shot test，实际执行 commit 为 `c221403`。远端提交只修改 `results/phase3_5/ms2d_order/**`，21/21 root/run ledger 均为 completed，日志、环境、manifest、checkpoint pin 与冻结 authorization 全部闭合。本地 canonical 重建与 `summary_test.json` 完全一致，episode aggregate 最大差 `2.461e-08`；独立 NumPy PCG64 50,000 次 profile-stratified paired bootstrap 也保持同一判决。oracle clean NMAE 为 0.0211–0.0255，三阶为 0.0444–0.0465，三阶相对二阶点改善 23.74%–25.36%，冻结 95% CI 下界为 19.90%–21.22%，逐 seed高于 10%。因此 D2 以 `CLOSED / CONFIRMED_SYNTHETIC_ORDER_RESPONSE` 关闭。二极点+learned-delay 与 DeepONet 在有限 horizon 仍接近三阶，故不能升级为现场唯一阶次或迟延机制。权威判决见 [`PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md`](PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md)。
+
+当前 D3 已冻结为单一正交压力测试：D2 clean truth 不变，仅在输出端加入每 episode 独立的平稳 AR(1) nuisance，`sigma_d=0.03 °C`、`tau_d=120 s`；response operator 不观察该扰动。7 candidates×3 seeds 共 21 个 validation runs。主门只使用 known-truth clean effect；扰动 realization、tau/delay、profile/horizon、D2→D3 漂移和 secondary 路线均为诊断。设计与边界见 [`plans/2026-08-11-phase35-ms2d3-disturbance-design.md`](plans/2026-08-11-phase35-ms2d3-disturbance-design.md)。
 
 Linux 在 `aedf1be` 回传 MS2-D2 validation，实际训练 commit 为 `fa6933c`。21/21 artifacts、manifest、history、checkpoint archive 与结构门禁已由本地逐项复核：oracle clean NMAE 0.0214–0.0226；三极点主模型 0.0403–0.0520；相对二极点点改善 18.56%–28.10%。独立重建 validation episodes 后，配对/profile 分层 10,000 次 bootstrap 的 95% CI 下界为 15.08%–22.28%，逐 seed 高于预注册 10%。因此只判 `AUDITED_SCREENING_PASS / TEST_AUTHORIZED`；validation 参与 checkpoint 选择，不能代替独立 test。权威判决见 [`PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md`](PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md)。
 
@@ -66,7 +70,7 @@ Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。�
 
 ## 5. 当前下一步
 
-MS2-D2 当前只执行一次 known-truth synthetic test：读取内容寻址归档中的 7 candidates × 3 seeds，不重训。主门禁要求 oracle 每 seed clean NMAE `<0.05`、三极点主模型每 seed `<0.10`，且三极点相对二极点的配对/profile 分层 bootstrap 95% CI 下界每 seed `>=0.10`。tau 集合恢复和无迟延 truth 下的 learned-delay 继续只作非阻断诊断。Linux 只能执行 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 第 14 节，只提交 `results/phase3_5/ms2d_order/**`；不得重训、重复访问、修改权威文档或启动 D3。测试设计见 [`plans/2026-08-10-phase35-ms2d2-test-design.md`](plans/2026-08-10-phase35-ms2d2-test-design.md)。
+MS2-D3 当前只执行冻结的 validation：`7 candidates × 3 seeds = 21 runs`，不访问 synthetic test 或 A/B。主门禁要求 oracle 每 seed clean NMAE `<0.05`、三阶主模型每 seed `<0.10`，且三阶相对二阶的配对/profile 分层 bootstrap 95% CI 下界每 seed `>=0.10`。Linux 只能执行 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 第 15 节，只提交 `results/phase3_5/ms2d_disturbance/**`；即使科学门禁失败也原样回传，不改阈值、不补 seed、不访问 test、不启动 MS5。
 
 ## 6. 上下文读取优先级
 

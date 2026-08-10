@@ -171,3 +171,91 @@ def test_delayed_truth_requires_a_resolvable_positive_delay():
             context_tau_log_scale=0.3,
             input_delay_steps=12,
         ).validate()
+
+
+def test_colored_disturbance_is_deterministic_stationary_and_exposed():
+    spec = SyntheticSpec(
+        samples=256,
+        horizon=60,
+        context_dim=4,
+        seed=53,
+        noise_std=0.0,
+        tau_seconds=(40.0, 70.0, 210.0),
+        truth_regime="disturbed_context_scheduled",
+        truth_opening_map="equal_percentage_r50",
+        context_gain_log_scale=0.35,
+        context_tau_log_scale=0.30,
+        disturbance_std=0.03,
+        disturbance_tau_seconds=120.0,
+    )
+    first = generate_synthetic_split(spec, "validation")
+    second = generate_synthetic_split(spec, "validation")
+    torch.testing.assert_close(first.colored_disturbance, second.colored_disturbance)
+    assert first.colored_disturbance.shape == (256, 60)
+    assert torch.isfinite(first.colored_disturbance).all()
+    torch.testing.assert_close(
+        first.target_effect - first.clean_effect,
+        first.colored_disturbance,
+        atol=1e-7,
+        rtol=0,
+    )
+    assert first.truth["disturbance_std"] == 0.03
+    assert first.truth["disturbance_tau_seconds"] == 120.0
+    assert first.truth["disturbance_rho"] == pytest.approx(
+        torch.exp(torch.tensor(-10.0 / 120.0)).item()
+    )
+    assert abs(float(first.colored_disturbance.mean())) < 0.005
+    assert float(first.colored_disturbance.std()) == pytest.approx(0.03, abs=0.005)
+
+
+def test_colored_disturbance_toggle_does_not_change_action_or_clean_response():
+    common = dict(
+        samples=64,
+        horizon=24,
+        context_dim=4,
+        seed=59,
+        noise_std=0.0,
+        tau_seconds=(40.0, 70.0, 210.0),
+        truth_opening_map="equal_percentage_r50",
+        context_gain_log_scale=0.35,
+        context_tau_log_scale=0.30,
+    )
+    base = generate_synthetic_split(
+        SyntheticSpec(**common, truth_regime="context_scheduled"), "train"
+    )
+    disturbed = generate_synthetic_split(
+        SyntheticSpec(
+            **common,
+            truth_regime="disturbed_context_scheduled",
+            disturbance_std=0.03,
+            disturbance_tau_seconds=120.0,
+        ),
+        "train",
+    )
+    torch.testing.assert_close(base.context, disturbed.context, atol=0, rtol=0)
+    torch.testing.assert_close(base.action, disturbed.action, atol=0, rtol=0)
+    torch.testing.assert_close(base.reference, disturbed.reference, atol=0, rtol=0)
+    torch.testing.assert_close(base.clean_effect, disturbed.clean_effect, atol=0, rtol=0)
+    torch.testing.assert_close(
+        base.colored_disturbance, torch.zeros_like(base.colored_disturbance), atol=0, rtol=0
+    )
+    assert torch.count_nonzero(disturbed.colored_disturbance).item() > 0
+
+
+@pytest.mark.parametrize(
+    ("disturbance_std", "disturbance_tau_seconds"),
+    [(0.03, 0.0), (0.03, 5.0), (0.0, 120.0), (-0.01, 120.0)],
+)
+def test_colored_disturbance_rejects_invalid_scale_or_time_constant(
+    disturbance_std, disturbance_tau_seconds
+):
+    with pytest.raises(ValueError, match="disturbance"):
+        SyntheticSpec(
+            samples=16,
+            horizon=12,
+            truth_regime="disturbed_context_scheduled",
+            context_gain_log_scale=0.3,
+            context_tau_log_scale=0.3,
+            disturbance_std=disturbance_std,
+            disturbance_tau_seconds=disturbance_tau_seconds,
+        ).validate()
