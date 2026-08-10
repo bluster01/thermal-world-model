@@ -1,0 +1,265 @@
+{
+ "protocol_version": "phase3.5-ms2-v1",
+ "evidence_scope": "synthetic_mismatch_validation_not_field_causality",
+ "git_sha": "f3401631edae60b42f8832024de7098305e4d0d7",
+ "split": "validation",
+ "run_count": 33,
+ "test_accessed": false,
+ "all_artifact_and_structural_gates_pass": true,
+ "gate_failures": [],
+ "candidates": {
+  "c_deeponet": {
+   "regime_id": "context_scheduled_2p",
+   "route": "deeponet",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.022070322185754776,
+   "clean_effect_nmae_std": 0.0021556199513726153,
+   "clean_effect_mae_mean": 0.0010783225297927856,
+   "effect_mae_mean": 0.016032351180911064,
+   "direction_accuracy_clean_nonzero_mean": 1.0,
+   "all_structural_gates_pass": true,
+   "epochs_ran": [
+    237,
+    282,
+    294
+   ]
+  },
+  "c_g2_global": {
+   "regime_id": "context_scheduled_2p",
+   "route": "graybox",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.20594479143619537,
+   "clean_effect_nmae_std": 0.013456143559430665,
+   "clean_effect_mae_mean": 0.010061633462707201,
+   "effect_mae_mean": 0.02073755053182443,
+   "direction_accuracy_clean_nonzero_mean": 1.0,
+   "all_structural_gates_pass": true,
+   "epochs_ran": [
+    31,
+    31,
+    31
+   ]
+  },
+  "c_g2_scheduled": {
+   "regime_id": "context_scheduled_2p",
+   "route": "graybox",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.02148456002275149,
+   "clean_effect_nmae_std": 0.0025194265409875767,
+   "clean_effect_mae_mean": 0.0010477879744333525,
+   "effect_mae_mean": 0.016053620725870132,
+   "direction_accuracy_clean_nonzero_mean": 1.0,
+   "all_structural_gates_pass": true,
+   "epochs_ran": [
+    191,
+    206,
+    282
+   ]
+  },
+  "c_k4_global": {
+   "regime_id": "context_scheduled_2p",
+   "route": "koopman",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.22950433691342673,
+   "clean_effect_nmae_std": 0.010959511633435339,
+   "clean_effect_mae_mean": 0.011212576180696487,
+   "effect_mae_mean": 0.021235091611742973,
+   "direction_accuracy_clean_nonzero_mean": 1.0,
+   "all_structural_gates_pass": true,
+   "epochs_ran": [
+    300,
+    214,
+    214
+   ]
+  },
+  "c_pi_ode": {
+   "regime_id": "context_scheduled_2p",
+   "route": "pi_ode",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.024476170539855957,
+   "clean_effect_nmae_std": 0.0014107678446338733,
+   "clean_effect_mae_mean": 0.0011948344763368368,
+   "effect_mae_mean": 0.016018124297261238,
+   "direction_accuracy_clean_nonzero_mean": 1.0,
+   "all_structural_gates_pass": true,
+   "epochs_ran": [
+    256,
+    258,
+    256
+   ]
+  },
+  "v_deeponet": {
+   "regime_id": "valve_nonlinear_r50",
+   "route": "deeponet",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.019515827298164368,
+   "clean_effect_nmae_std": 0.0014176083729915696,
+   "clean_effect_mae_mean": 0.0006839461469401916,
+   "effect_mae_mean": 0.015978519494334858,
+   "direction_accuracy_clean_nonzero_mean": 1.0,
+   "all_structural_gates_pass": true,
+   "epochs_ran": [
+    300,
+    300,
+    300
+   ]
+  },
+  "v_g2_identity": {
+   "regime_id": "valve_nonlinear_r50",
+   "route": "graybox",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.35520153244336444,
+   "clean_effect_nmae_std": 0.02016049523369844,
+   "clean_effect_mae_mean": 0.012435676530003548,
+   "effect_mae_mean": 0.02274189641078313,
+   "direction_accuracy_clean_nonzero_mean": 1.0,
+   "all_structural_gates_pass": true,
+   "epochs_ran": [
+    195,
+    117,
+    142
+   ]
+  },
+  "v_g2_monotone": {
+   "regime_id": "valve_nonlinear_r50",
+   "route": "graybox",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.03525604431827863,
+   "clean_effect_nmae_std": 0.002499066544411251,
+   "clean_effect_mae_mean": 0.001234376026938359,
+   "effect_mae_mean": 0.01604864311714967,
+   "direction_accuracy_clean_nonzero_mean": 1.0,
+   "all_structural_gates_pass": true,
+   "epochs_ran": [
+    300,
+    235,
+    236
+   ]
+  },
+  "v_g2_r50_oracle": {
+   "regime_id": "valve_nonlinear_r50",
+   "route": "graybox",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.004263898202528556,
+   "clean_effect_nmae_std": 0.0010111448594606672,
+   "clean_effect_mae_mean": 0.00014936689694877714,
+   "effect_mae_mean": 0.015936507532993954,
+   "direction_accuracy_clean_nonzero_mean": 1.0,
+   "all_structural_gates_pass": true,
+   "epochs_ran": [
+    219,
+    300,
+    158
+   ]
+  },
+  "v_k4_monotone": {
+   "regime_id": "valve_nonlinear_r50",
+   "route": "koopman",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.08203339080015819,
+   "clean_effect_nmae_std": 0.0021935070365740783,
+   "clean_effect_mae_mean": 0.0028744006219009557,
+   "effect_mae_mean": 0.01643414484957854,
+   "direction_accuracy_clean_nonzero_mean": 1.0,
+   "all_structural_gates_pass": true,
+   "epochs_ran": [
+    300,
+    300,
+    300
+   ]
+  },
+  "v_pi_monotone": {
+   "regime_id": "valve_nonlinear_r50",
+   "route": "pi_ode",
+   "seeds": [
+    0,
+    1,
+    2
+   ],
+   "clean_effect_nmae_mean": 0.039718409379323326,
+   "clean_effect_nmae_std": 0.0017237927700728289,
+   "clean_effect_mae_mean": 0.0013914684144159157,
+   "effect_mae_mean": 0.01605965569615364,
+   "direction_accuracy_clean_nonzero_mean": 1.0,
+   "all_structural_gates_pass": true,
+   "epochs_ran": [
+    216,
+    233,
+    182
+   ]
+  }
+ },
+ "primary_contrasts": {
+  "valve_nonlinear_r50": {
+   "candidate_id": "v_g2_monotone",
+   "baseline_id": "v_g2_identity",
+   "paired_seed_relative_improvement": [
+    0.8956888610858537,
+    0.9059711298899226,
+    0.9004692690359156
+   ],
+   "mean_relative_improvement": 0.9007097533372306,
+   "direction_consistent": true,
+   "meets_20pct_screen": true
+  },
+  "context_scheduled_2p": {
+   "candidate_id": "c_g2_scheduled",
+   "baseline_id": "c_g2_global",
+   "paired_seed_relative_improvement": [
+    0.8909806246689945,
+    0.8918156594499285,
+    0.9046469178449432
+   ],
+   "mean_relative_improvement": 0.895814400654622,
+   "direction_consistent": true,
+   "meets_20pct_screen": true
+  }
+ },
+ "checkpoint_archive": {
+  "archive_path": "results/phase3_5/archive/ms2_checkpoints_validation.tar",
+  "archive_sha256": "1124e356f3fdb71f6cddf065d2d18d15b29ebfe9b259cada5d98a6605e1ec790",
+  "n_checkpoints": 33,
+  "per_run_sha256": "each run manifest.checkpoint_sha256 (33 entries, verified by summarizer)",
+  "comment": "P1-3: reproducibility requires archive tar + SHA, not JSON-only"
+ }
+}

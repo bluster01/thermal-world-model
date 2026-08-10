@@ -1,0 +1,59 @@
+{
+  "protocol_version": "phase3.5-ms2-v1",
+  "evidence_scope": "synthetic_method_feasibility_not_field_causality",
+  "run_id": "synthetic_v_k4_monotone_s1",
+  "route_id": "v_k4_monotone",
+  "seed": 1,
+  "operator_config": {
+    "route": "koopman",
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "opening_map": "monotone",
+    "poles": 2,
+    "latent_dim": 4,
+    "hidden_dim": 32,
+    "tau_min_seconds": 20.0,
+    "tau_max_seconds": 900.0,
+    "ode_substeps": 2,
+    "closure_scale": 0.02,
+    "context_scheduled": false,
+    "schedule_log_scale": 0.5
+  },
+  "training_config": {
+    "batch_size": 64,
+    "epochs": 300,
+    "patience": 30,
+    "learning_rate": 0.002,
+    "weight_decay": 1e-06,
+    "physics_weight": 0.01,
+    "gradient_clip": 1.0
+  },
+  "synthetic_spec": {
+    "samples": 1024,
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "seed": 21260813,
+    "noise_std": 0.02,
+    "gain_c_per_pct": -0.1,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "truth_regime": "nonlinear_valve",
+    "truth_opening_map": "equal_percentage_r50",
+    "context_gain_log_scale": 0.0,
+    "context_tau_log_scale": 0.0
+  },
+  "train_samples": 1024,
+  "validation_samples": 256,
+  "checkpoint_selector": "validation_effect_mae",
+  "best_epoch": 298,
+  "git_sha": "f3401631edae60b42f8832024de7098305e4d0d7",
+  "device": "cuda",
+  "torch_version": "2.11.0+cu130",
+  "elapsed_seconds": 71.74705243110657,
+  "checkpoint_sha256": "dc76b7aedf339f7d22e79259f3f4b54eda1f9f1ebd3db5753b0a21dd8d3eaf45",
+  "test_accessed": false
+}

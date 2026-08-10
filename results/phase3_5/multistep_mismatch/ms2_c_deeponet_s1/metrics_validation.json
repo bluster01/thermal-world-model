@@ -1,0 +1,74 @@
+{
+  "effect_mae": 0.015913495793938637,
+  "effect_rmse": 0.01995791867375374,
+  "integrated_absolute_error": 0.9548097252845764,
+  "direction_accuracy_nonzero": 0.7007293105125427,
+  "horizon_mae": {
+    "H1": 0.015978720039129257,
+    "H6": 0.01684046909213066,
+    "H18": 0.016908371821045876,
+    "H60": 0.016873132437467575
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "clean_effect_mae": 0.0009665379766374826,
+  "clean_effect_rmse": 0.001789809437468648,
+  "clean_effect_scale": 0.04752849042415619,
+  "clean_effect_nmae": 0.0203359704464674,
+  "clean_effect_mae_active": 0.0016256372909992933,
+  "noise_mae": 0.015874287113547325,
+  "direction_accuracy_clean_nonzero": 1.0,
+  "clean_horizon_mae": {
+    "H1": 0.0,
+    "H6": 0.0001420717017026618,
+    "H18": 0.0007992505561560392,
+    "H60": 0.00161144626326859
+  },
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.2674107551574707,
+    "positive_step_terminal_effect_max_c": -0.14333319664001465,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": false,
+      "fixed_horizon": true,
+      "direction_constrained": false,
+      "continuous_time": false
+    },
+    "operator": {
+      "spectral_radius": null,
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_cascade_v2",
+    "truth_regime": "context_scheduled",
+    "truth_opening_map": "identity",
+    "gain_c_per_pct": -0.04,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3,
+    "realized_gain_range": [
+      -0.056472357362508774,
+      -0.02826082333922386
+    ],
+    "realized_tau_range": [
+      [
+        52.221580505371094,
+        94.11028289794922
+      ],
+      [
+        156.6702117919922,
+        283.0509033203125
+      ]
+    ],
+    "dt_seconds": 10.0,
+    "seed": 21360816,
+    "split": "validation"
+  }
+}

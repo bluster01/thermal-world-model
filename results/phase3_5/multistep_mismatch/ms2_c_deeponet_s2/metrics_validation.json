@@ -1,0 +1,74 @@
+{
+  "effect_mae": 0.016073066741228104,
+  "effect_rmse": 0.02013540081679821,
+  "integrated_absolute_error": 0.9643839597702026,
+  "direction_accuracy_nonzero": 0.7047949433326721,
+  "horizon_mae": {
+    "H1": 0.01609203591942787,
+    "H6": 0.0160975344479084,
+    "H18": 0.01659950613975525,
+    "H60": 0.01572323590517044
+  },
+  "sample_count": 256,
+  "horizon": 60,
+  "clean_effect_mae": 0.0010904066730290651,
+  "clean_effect_rmse": 0.002458727452903986,
+  "clean_effect_scale": 0.050974294543266296,
+  "clean_effect_nmae": 0.021391304209828377,
+  "clean_effect_mae_active": 0.0018445785390213132,
+  "noise_mae": 0.015950700268149376,
+  "direction_accuracy_clean_nonzero": 1.0,
+  "clean_horizon_mae": {
+    "H1": 0.0,
+    "H6": 0.00013654046051669866,
+    "H18": 0.0007521823863498867,
+    "H60": 0.001708446303382516
+  },
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.2507789134979248,
+    "positive_step_terminal_effect_max_c": -0.16460633277893066,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": false,
+      "fixed_horizon": true,
+      "direction_constrained": false,
+      "continuous_time": false
+    },
+    "operator": {
+      "spectral_radius": null,
+      "reference_identity_max_error": 0.0
+    }
+  },
+  "truth": {
+    "generator": "stable_cascade_v2",
+    "truth_regime": "context_scheduled",
+    "truth_opening_map": "identity",
+    "gain_c_per_pct": -0.04,
+    "tau_seconds": [
+      70.0,
+      210.0
+    ],
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3,
+    "realized_gain_range": [
+      -0.05657496303319931,
+      -0.028289124369621277
+    ],
+    "realized_tau_range": [
+      [
+        52.013519287109375,
+        94.13914489746094
+      ],
+      [
+        155.7283935546875,
+        283.16656494140625
+      ]
+    ],
+    "dt_seconds": 10.0,
+    "seed": 22360819,
+    "split": "validation"
+  }
+}
