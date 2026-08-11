@@ -718,9 +718,21 @@
         "gatec_local_real_rm0b_config": {
           "path": "configs/phase3_5/ms3r_gatec_local_real_subset_rm0b.json",
           "required": true
+        },
+        "gatec_local_real_rm0b_summary": {
+          "path": "results/phase3_5/ms3r_gatec_local_real_subset_rm0b/summary_validation.json",
+          "required": true
+        },
+        "gatec_local_real_rm0b_audit_json": {
+          "path": "results/phase3_5/ms3r_gatec_local_real_subset_rm0b/supervisor_audit_validation.json",
+          "required": true
+        },
+        "gatec_local_real_rm0b_audit": {
+          "path": "docs/PHASE35_MS3R_GATEC_LOCAL_REAL_RM0B_AUDIT_2026-08-11.md",
+          "required": true
         }
       },
-      "decision": "GATE_C RM0-A AUDITED UNDERFIT / RM0-B LOCAL REAL 1PCT AUTHORIZED：RM0-A四路线不可排名，local-drop差于persistence约142%；RM0-B改为baseline+increment并加response-only logged-action auxiliary；Linux仍未授权",
+      "decision": "GATE_C RM0-B AUDITED：baseline anchor有效，valve/Tin/local均优于persistence；terminal无增益，四路线预测近同但response幅值差约2.5倍，判分解不唯一；下一步固定A1做真实RM1-A attribution；Linux仍未授权",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -739,6 +751,8 @@
         "本地真实1/100 smoke由用户明确授权；只允许train/validation、forecast Tin主接口和单seed单次执行，不访问test",
         "RM0-A四路线composite spread仅0.000513；local-drop MAE约5.57°C而persistence为2.30°C，禁止路线排名",
         "RM0-B必须从observed persistence baseline预测增量；logged future valve只进入response auxiliary，不进入encoder/residual",
+        "RM0-B composite spread仅0.000187，但logged/predicted response幅值分别相差2.49/2.51倍，禁止operator排名",
+        "下一步固定A1phys做paired_free/additive/scheduled capacity/local-supervision真实归因扫描，不扩大到1/10",
         "本地真实smoke不构成Linux或完整真实矩阵授权；linux_authorized_gate保持null"
       ]
     },

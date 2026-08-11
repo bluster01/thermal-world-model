@@ -1,0 +1,45 @@
+{
+  "protocol_version": "phase3.5-ms3r-gatec-local-real-rm0b-audit-v1",
+  "audited_execution_git_sha": "4d737983ce05ccbd3811f9d7be7f15c391db8104",
+  "scope": "local_real_train_validation_subset_not_causal",
+  "artifact_integrity": {
+    "ledger_entries_verified": 6,
+    "all_sha256_match": true,
+    "test_accessed": false
+  },
+  "anchor_contract": {
+    "train_subset": 6957,
+    "validation_subset": 2048,
+    "train_anchor_sha256": "40b948bf06d1d2420d2b30057af1f97e3c834b8a88f3fdcb84d645c3530e88fb",
+    "validation_anchor_sha256": "cb245c37c57215f5044a3a212dc537607cf8974a985769d452b3b8bb2d1329e7"
+  },
+  "persistence_diagnostics": {
+    "valve_ratio_range": [0.975390, 0.975826],
+    "tin_ratio_range": [0.956191, 0.957593],
+    "local_ratio_range": [0.965679, 0.967123],
+    "terminal_ratio_range": [1.000877, 1.001064]
+  },
+  "route_identifiability": {
+    "composite_min": 0.3192061958834529,
+    "composite_max": 0.31939323991537094,
+    "composite_spread": 0.00018704403191804886,
+    "logged_response_max_to_min": 2.4850057371792316,
+    "predicted_response_max_to_min": 2.5144007457931035,
+    "route_ranking_supported": false
+  },
+  "supervisor_decision": {
+    "label": "BASELINE_ANCHOR_EFFECTIVE_RESPONSE_DECOMPOSITION_NONUNIQUE",
+    "components": [
+      "PERSISTENCE_DIAGNOSTICS_PASS",
+      "LOCAL_DROP_IMPROVED",
+      "TERMINAL_NO_GAIN",
+      "RESPONSE_MAGNITUDE_ROUTE_SENSITIVE",
+      "NO_ROUTE_RANKING",
+      "NO_TEST_ACCESS",
+      "NO_LINUX_RELEASE"
+    ],
+    "automatic_scientific_pass": null,
+    "linux_authorized_gate": null,
+    "next": "LOCAL_REAL_RM1_A_ATTRIBUTION_FIXED_A1PHYS"
+  }
+}
