@@ -1,0 +1,100 @@
+{
+  "protocol_version": "phase3.5-ms3r-gatec-v1",
+  "evidence_scope": "validation_only_disturbance_conditioned_closed_loop_world_model_screen_not_causal",
+  "parent_gate_b": {
+    "path": "results/phase3_5/ms3r_gateb_point_closure/supervisor_audit_validation.json",
+    "sha256": "7252704b1cd98bd9a7d3891718345b161bf15a588416b7deaf5c7ddde510da87",
+    "required_label": "GATE_B_FROZEN_PRIMARY_PASS"
+  },
+  "data_contract": {
+    "split": "validation",
+    "test_allowed": false,
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "step_seconds": 10,
+    "history_steps": 96,
+    "horizon_steps": 60,
+    "rolling_fold": 0,
+    "seeds": [0]
+  },
+  "information_flow": {
+    "boundary_modes": ["oracle_boundary", "forecast_boundary", "scenario_boundary"],
+    "forecast_reads_future_tin_truth": false,
+    "forecast_reads_future_terminal_truth": false,
+    "residual_reads_future_logged_valve": false,
+    "primary_action_interface": "future_sp_scenario_to_predicted_valve",
+    "logged_future_valve_role": "diagnostic_oracle_action_only"
+  },
+  "model": {
+    "d_model": 32,
+    "n_heads": 4,
+    "dropout": 0.1,
+    "latent_dim": 16,
+    "local_state_dim": 8,
+    "tau_min_seconds": 20.0,
+    "tau_max_seconds": 1200.0,
+    "opening_map": "monotone",
+    "common_differential_coordinates": true,
+    "terminal_full_mimo_mixing": true,
+    "terminal_side_diagonal_constraint": false
+  },
+  "selector": {
+    "primary_boundary_mode": "forecast_boundary",
+    "oracle_boundary_role": "structure_ceiling_only",
+    "train_scale": "median_absolute_deviation_with_frozen_floor",
+    "scale_floor": 0.001,
+    "weights": {
+      "valve": 0.15,
+      "tin": 0.15,
+      "local": 0.25,
+      "terminal": 0.25,
+      "rollout": 0.1,
+      "structure": 0.1
+    },
+    "hard_gates_before_score": [
+      "finite_rollout",
+      "sp_prefix_causality",
+      "constant_action_identity",
+      "future_truth_isolation",
+      "local_response_noncollapse"
+    ]
+  },
+  "training": {
+    "batch_size": 128,
+    "epochs_cap": 40,
+    "steps_per_epoch": 100,
+    "patience": 8,
+    "learning_rate": 0.001,
+    "weight_decay": 0.00001,
+    "gradient_clip": 1.0,
+    "warmup_update_fraction_max": 0.1,
+    "joint_unfreeze_required": true
+  },
+  "rm1_attribution": [
+    {"candidate_id": "C0_paired_free", "response_route": "none", "residual_capacity": "base", "local_supervision": true, "response_scheduling": "none"},
+    {"candidate_id": "C1_additive_base", "response_route": "a1phys_three_pole", "residual_capacity": "base", "local_supervision": true, "response_scheduling": "additive"},
+    {"candidate_id": "C2_sched_small", "response_route": "a1phys_three_pole", "residual_capacity": "small", "local_supervision": true, "response_scheduling": "scheduled"},
+    {"candidate_id": "C3_sched_base", "response_route": "a1phys_three_pole", "residual_capacity": "base", "local_supervision": true, "response_scheduling": "scheduled"},
+    {"candidate_id": "C4_sched_large", "response_route": "a1phys_three_pole", "residual_capacity": "large", "local_supervision": true, "response_scheduling": "scheduled"},
+    {"candidate_id": "C5_sched_base_terminal_only", "response_route": "a1phys_three_pole", "residual_capacity": "base", "local_supervision": false, "response_scheduling": "scheduled"}
+  ],
+  "rm1_operator": [
+    {"candidate_id": "O0_a1phys", "response_route": "a1phys_three_pole", "residual_capacity": "base", "local_supervision": true, "response_scheduling": "scheduled"},
+    {"candidate_id": "O1_koopman", "response_route": "stable_koopman_lpv", "residual_capacity": "base", "local_supervision": true, "response_scheduling": "scheduled"},
+    {"candidate_id": "O2_pi_ode", "response_route": "pi_neural_ode", "residual_capacity": "base", "local_supervision": true, "response_scheduling": "scheduled"},
+    {"candidate_id": "O3_deeponet", "response_route": "deeponet_response", "residual_capacity": "base", "local_supervision": true, "response_scheduling": "scheduled"}
+  ],
+  "claim_contract": {
+    "open_loop_plant_identification": false,
+    "arbitrary_do_valve": false,
+    "valid_sp_instrument": false,
+    "measured_spray_flow_physics": false,
+    "independent_test": false,
+    "ms4_release": false
+  },
+  "execution_contract": {
+    "linux_authorized": false,
+    "real_training_authorized": false,
+    "automatic_scientific_pass": false,
+    "current_scope": "local_contract_data_model_tests_only"
+  }
+}

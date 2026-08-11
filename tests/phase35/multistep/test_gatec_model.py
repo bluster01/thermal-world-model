@@ -1,0 +1,138 @@
+from __future__ import annotations
+
+import torch
+import pytest
+
+from src.phase35.multistep.gatec_contracts import GateCModelConfig, RESPONSE_ROUTES
+from src.phase35.schema import Phase35ProtocolError
+
+
+FEATURES = (
+    "机组负荷",
+    "主蒸汽压力",
+    "主给水流量",
+    "未校正总煤量",
+    "主蒸汽流量",
+    "A::二级减温器入口温度",
+    "A::二级减温器出口温度",
+    "A::末级过热器出口汽温",
+    "A::二级减温调节阀设定",
+    "A::二级减温调节门阀位",
+    "B::二级减温器入口温度",
+    "B::二级减温器出口温度",
+    "B::末级过热器出口汽温",
+    "B::二级减温调节阀设定",
+    "B::二级减温调节门阀位",
+)
+
+
+def _config(route: str = "a1phys_three_pole") -> GateCModelConfig:
+    return GateCModelConfig(
+        window=12,
+        horizon=8,
+        n_features=len(FEATURES),
+        d_model=16,
+        latent_dim=8,
+        local_state_dim=6,
+        response_route=route,
+        residual_capacity="base",
+        response_scheduling="scheduled" if route != "none" else "none",
+        dropout=0.0,
+    )
+
+
+def _inputs(batch: int = 3):
+    torch.manual_seed(4)
+    history = torch.randn(batch, 12, len(FEATURES))
+    # Put physical-scale baselines in the indexed channels.
+    history[:, :, FEATURES.index("A::二级减温调节门阀位")] = 30.0
+    history[:, :, FEATURES.index("B::二级减温调节门阀位")] = 35.0
+    history[:, :, FEATURES.index("A::二级减温器入口温度")] = 550.0
+    history[:, :, FEATURES.index("B::二级减温器入口温度")] = 552.0
+    history[:, :, FEATURES.index("A::末级过热器出口汽温")] = 540.0
+    history[:, :, FEATURES.index("B::末级过热器出口汽温")] = 541.0
+    future_sp = torch.randn(batch, 8, 2) + 540.0
+    return history, future_sp
+
+
+def test_gatec_model_shapes_boundary_isolation_and_full_terminal_mixing():
+    from src.phase35.multistep.gatec_model import build_gatec_model
+
+    history, future_sp = _inputs()
+    model = build_gatec_model(_config(), FEATURES).eval()
+    forecast = model(history, future_sp, boundary_mode="forecast_boundary")
+    assert forecast["valve_prediction"].shape == (3, 8, 2)
+    assert forecast["tin_prediction"].shape == (3, 8, 2)
+    assert forecast["local_drop_prediction"].shape == (3, 8, 2)
+    assert forecast["tout_prediction"].shape == (3, 8, 2)
+    assert forecast["terminal_prediction"].shape == (3, 8, 2)
+    assert forecast["local_effect"].shape == (3, 8, 2)
+    assert forecast["terminal_effect"].shape == (3, 8, 2)
+    assert torch.isfinite(forecast["terminal_prediction"]).all()
+    with pytest.raises(Phase35ProtocolError, match="must not receive future Tin"):
+        model(history, future_sp, boundary_mode="forecast_boundary", boundary_future=torch.ones(3, 8, 2))
+    with pytest.raises(Phase35ProtocolError, match="requires future Tin"):
+        model(history, future_sp, boundary_mode="scenario_boundary")
+    oracle_tin = torch.full((3, 8, 2), 555.0)
+    oracle = model(history, future_sp, boundary_mode="oracle_boundary", boundary_future=oracle_tin)
+    assert torch.equal(oracle["boundary_used"], oracle_tin)
+    assert model.downstream.input_projection.weight.shape[1] == 2
+    assert model.downstream.output_projection.weight.shape[0] == 2
+
+
+def test_sp_decoder_is_prefix_causal_and_residual_is_future_action_invariant():
+    from src.phase35.multistep.gatec_model import build_gatec_model
+
+    history, future_sp = _inputs()
+    changed = future_sp.clone()
+    changed[:, 4:] += 20.0
+    model = build_gatec_model(_config(), FEATURES).eval()
+    normal = model(history, future_sp, boundary_mode="forecast_boundary")
+    altered = model(history, changed, boundary_mode="forecast_boundary")
+    assert torch.allclose(normal["valve_prediction"][:, :4], altered["valve_prediction"][:, :4], atol=1e-6)
+    assert torch.allclose(normal["residual_local_prediction"], altered["residual_local_prediction"], atol=1e-6)
+    assert not torch.allclose(normal["valve_prediction"][:, 4:], altered["valve_prediction"][:, 4:])
+
+
+def test_every_response_adapter_has_constant_action_identity_and_finite_rollout():
+    from src.phase35.multistep.gatec_model import build_local_response_operator
+
+    torch.manual_seed(8)
+    context = torch.randn(4, 16)
+    baseline = torch.tensor([[30.0, 35.0]]).expand(4, 2)
+    constant = baseline[:, None, :].expand(4, 60, 2)
+    for route in sorted(RESPONSE_ROUTES):
+        operator = build_local_response_operator(
+            route=route,
+            context_dim=16,
+            state_dim=6,
+            horizon=60,
+            dt_seconds=10.0,
+            scheduled=route != "none",
+        ).eval()
+        output = operator(context, constant, baseline)
+        assert output["effect"].shape == (4, 60, 2)
+        assert output["state"].shape[:2] == (4, 60)
+        assert float(output["effect"].abs().max()) < 1e-6
+        assert torch.isfinite(output["state"]).all()
+
+
+def test_all_gatec_modules_receive_gradients_under_joint_multitask_loss():
+    from src.phase35.multistep.gatec_model import build_gatec_model
+
+    history, future_sp = _inputs(batch=2)
+    model = build_gatec_model(_config(), FEATURES).train()
+    output = model(history, future_sp, boundary_mode="forecast_boundary")
+    loss = sum(
+        output[name].square().mean()
+        for name in (
+            "valve_prediction",
+            "tin_prediction",
+            "local_drop_prediction",
+            "terminal_prediction",
+        )
+    )
+    loss.backward()
+    for module_name in ("encoder", "valve_policy", "tin_forecaster", "local_response", "downstream"):
+        module = getattr(model, module_name)
+        assert any(parameter.grad is not None for parameter in module.parameters()), module_name

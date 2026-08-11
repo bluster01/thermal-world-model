@@ -23,7 +23,7 @@ def test_repository_registry_is_valid_and_has_one_active_gate():
     report = module.validate_registry(registry, ROOT)
     assert report["valid"] is True
     assert report["active_gate"] == "ms3_r"
-    assert report["active_status"] == "audited"
+    assert report["active_status"] == "implementation"
     assert report["linux_authorized_gate"] is None
     assert report["errors"] == []
 
@@ -68,7 +68,7 @@ def test_status_cli_emits_machine_readable_summary():
     payload = json.loads(completed.stdout)
     assert payload["valid"] is True
     assert payload["active_gate"] == "ms3_r"
-    assert payload["active_status"] == "audited"
+    assert payload["active_status"] == "implementation"
     assert payload["linux_authorized_gate"] is None
     assert payload["deprecated_tracks"] == ["legacy_e"]
 
