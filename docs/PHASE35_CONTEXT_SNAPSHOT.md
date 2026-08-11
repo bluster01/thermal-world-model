@@ -33,11 +33,13 @@ python experiments/phase3_5/experiment_status.py --check --json
 | MS2-D1 | CLOSED | test 改善方向稳定，但逐 seed CI 下界 17.2–18.8% 未达预注册 20%；参数诊断继续负，不重试 |
 | MS2-D2 | CLOSED | test 三个主门逐 seed通过；确认 frozen known-truth 三阶响应优势，不确认现场阶次唯一性 |
 | MS2-D3 | CLOSED | 21-run validation 主门通过；按预算不追加 test，不称 confirmatory |
-| MS5 | READY_FOR_LINUX | 完整 `free+response` 动作吸收检验；只授权 12-run validation |
-| MS3 | PLANNED | A/B validation-only 真实数据适配，不称因果 |
+| MS5 | CLOSED | joint component recovery validation 通过；冻结 staged 协议拒绝 |
+| MS3 | READY_FOR_LINUX | A/B cross-loop validation-only 真实适配，不称因果 |
 | MS4 | PLANNED | 用 SP held-step 验证串级闭环响应，不恢复旧 E 匹配 |
 
 ## 4. Linux 最新同步与本地审计
+
+Linux 在 `1fb6a23` 回传 MS5 validation，实际执行 commit 为 `af31495`。12/12 runs、21-file checkpoint archive 和 test-access 门闭合；本地从 12 个最佳权重重新生成 validation 后最大指标差 `2.39e-7`，archive 可确定性重建为同一 SHA。component oracle 与 joint 逐 seed全过，joint response NMAE `0.047–0.050`；staged/joint total-error ratio `11.14–14.11`，当前 staged 协议拒绝；free-only 的 response NMAE=`1`、amplitude=`0`，确认总预测误差不能替代组件审计。最终标签 `CLOSED / VALIDATION_ONLY_COMPONENT_RECOVERY_PASS / JOINT_SELECTED / STAGED_PROTOCOL_REJECTED`。Linux 曾在 aarch64 legacy raw-float SHA 预检红项后继续，属流程偏差；本地复核确认非科学回归，测试已换成 1e-6 量化哈希。权威结论见 [`PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md`](PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md)。
 
 Linux 在 `f8a48ec` 回传 MS2-D3 validation，实际执行 commit 为 `040cb27`。21/21 runs、manifest/history/episode/checkpoint archive 和结构门闭合；本地 episode 重算最大差约 `3.35e-8`，独立 50,000 次 profile-stratified paired bootstrap 与冻结 10,000 次判决一致。oracle clean NMAE 为 0.0357–0.0446，三阶为 0.0558–0.0633，三阶相对二阶的冻结 CI 下界为 10.8%–14.3%。按负责人预算决定以 `CLOSED / VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION` 关闭；validation 参与 checkpoint 选择，因此不是独立 test。归档 tar 的容器 path/hash 曾在远端 summary 后处理，但 21 个成员权重逐字节一致，记 provenance advisory 而不重跑。权威判决见 [`PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md`](PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md)。
 
@@ -74,7 +76,7 @@ Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。�
 
 ## 5. 当前下一步
 
-MS5 当前只执行冻结的 validation：`4 modes × 3 seeds = 12 runs`。Linux 只能执行 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 第 16 节，只提交 `results/phase3_5/ms5_full_coupling/**`。任一 run 或科学门失败也原样回传；不改阈值/阶段/seed，不补超参数扫描，不访问 synthetic test/A/B，不启动 MS3。validation 通过后仍须本地重放 artifact、component 指标和决策树才能关闭 MS5。
+MS3 当前只执行冻结的 validation：`joint/free-only × A/B × 3 seeds = 12 runs`。Linux 先按 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 第 17 节从冻结 `all_merged_10s.csv` 生成 A阀→右温、B阀→左温 cache，再训练与汇总；只提交 `results/phase3_5/ms3_real_adaptation/**`，不提交 cache 本体。任一 preflight 红项停止；任一科学门失败仍原样回传。不访问 test、不补阈值/seed/超参数、不启动 MS4。本地必须重放 checkpoint、episode 与 UTC-day bootstrap 后才能关闭 MS3。
 
 ## 6. 上下文读取优先级
 

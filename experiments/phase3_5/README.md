@@ -537,7 +537,7 @@ echo $? > results/phase3_5/ms2d_disturbance/remote_execution/summary_exit_code.t
 
 本批已完成并以 `VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION` 关闭。以上命令只保留追溯，不再授权重复训练或 synthetic test。权威判决见 `docs/PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md`。
 
-## 16. 当前唯一授权：MS5 full free+response coupling validation
+## 16. 已完成归档：MS5 full free+response coupling validation
 
 MS5 只回答 total-only supervision 下 `free` 分支是否吸收动作响应，以及 joint 或短阶段 staged 哪个满足冻结资格门。它不访问 A/B，不比较 Koopman/PI-ODE/DeepONet/Fan 路线，也不启动 MS3。正式执行前在授权 commit 的干净工作树运行：
 
@@ -583,3 +583,73 @@ echo $? > results/phase3_5/ms5_full_coupling/remote_execution/summary_exit_code.
 汇总器以 code 2 退出表示科学门失败，不表示执行产物无效，仍须原样回传。冻结判决顺序为：component-oracle 正控必须通过；joint 全过就选 joint；joint 失败时只有 staged 全过且 staged/joint total error ratio 每 seed `<=1.10` 才选 staged；否则 fail closed。free-only 是 prediction-only 负控，不参与选模。
 
 Linux 只提交 `results/phase3_5/ms5_full_coupling/**`。不得修改 `configs/`、`src/`、`experiments/`、`tests/`、`docs/`、TODO、README 或注册表；不得改阈值、阶段、seed、样本量，不补超参数扫描，不删除失败/partial run，不访问 synthetic test/A/B，不启动 MS3，也不得改写 summary 的 archive path/hash。本地 Supervisor 负责独立复算与状态迁移。
+
+该批现已由本地权重级重放，以 `CLOSED / VALIDATION_ONLY_COMPONENT_RECOVERY_PASS / JOINT_SELECTED / STAGED_PROTOCOL_REJECTED` 关闭，不再授权重复运行。权威判决见 `docs/PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md`。
+
+## 17. 当前唯一授权：MS3 A/B observational validation
+
+MS3 只把 MS5 选中的 joint 三极点架构迁移到真实 A/B 交叉控制回路。它验证条件预测、动作分支非坍缩和 logged-action 时间对齐，不验证 `do(valve)`；test 继续禁止。数据源必须是冻结的 `all_merged_10s.csv`：
+
+```bash
+export PH35_ALL_MERGED=/data/yimin/all_merged_10s.csv
+export PH35_MS3_CACHE_A=/data/thermal-world-model/phase3_5/ms3_cross_A.npz
+export PH35_MS3_CACHE_B=/data/thermal-world-model/phase3_5/ms3_cross_B.npz
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+
+git pull --ff-only origin main
+python experiments/phase3_5/experiment_status.py --check --json
+git status --short
+git rev-parse HEAD
+python -m pytest tests/phase35 -q
+python -m compileall -q src/phase35 experiments/phase3_5
+python experiments/phase3_5/ms3_real_adaptation.py --dry-run
+```
+
+状态必须为 `active_gate=ms3`、`active_status=ready_for_linux`、`linux_authorized_gate=ms3`；工作树必须为空；dry-run 必须为 2 candidates×A/B×3 seeds=`12`、`test_authorized=false`。任一红项立即停止。
+
+先一次扫描 4 GB 源文件，生成写死交叉配对的两个 cache：
+
+```bash
+mkdir -p results/phase3_5/ms3_real_adaptation/remote_execution
+
+python experiments/phase3_5/prepare_ms3_cross_data.py \
+  --input "$PH35_ALL_MERGED" \
+  --output-a "$PH35_MS3_CACHE_A" \
+  --output-b "$PH35_MS3_CACHE_B" \
+  > results/phase3_5/ms3_real_adaptation/remote_execution/cache_stdout.log \
+  2> results/phase3_5/ms3_real_adaptation/remote_execution/cache_stderr.log
+echo $? > results/phase3_5/ms3_real_adaptation/remote_execution/cache_exit_code.txt
+cp "${PH35_MS3_CACHE_A%.npz}.manifest.json" \
+  results/phase3_5/ms3_real_adaptation/cache_A.manifest.json
+cp "${PH35_MS3_CACHE_B%.npz}.manifest.json" \
+  results/phase3_5/ms3_real_adaptation/cache_B.manifest.json
+```
+
+cache manifest 必须显示 source SHA `85a3f926...e4da6`、A=`A_valve_to_right_B_thermal_train`、B=`B_valve_to_left_A_thermal_train`。随后正式训练和汇总：
+
+```bash
+git rev-parse HEAD > results/phase3_5/ms3_real_adaptation/remote_execution/git_commit.txt
+python --version > results/phase3_5/ms3_real_adaptation/remote_execution/environment.txt 2>&1
+python -c "import numpy,pandas,torch; print(numpy.__version__, pandas.__version__, torch.__version__, torch.cuda.is_available())" >> results/phase3_5/ms3_real_adaptation/remote_execution/environment.txt 2>&1
+nvidia-smi >> results/phase3_5/ms3_real_adaptation/remote_execution/environment.txt 2>&1
+printf '%s\n' \
+  'python experiments/phase3_5/ms3_real_adaptation.py --cache-a "$PH35_MS3_CACHE_A" --cache-b "$PH35_MS3_CACHE_B" --device cuda --output-root results/phase3_5/ms3_real_adaptation --execute-matrix --skip-existing' \
+  > results/phase3_5/ms3_real_adaptation/remote_execution/command.txt
+
+python experiments/phase3_5/ms3_real_adaptation.py \
+  --cache-a "$PH35_MS3_CACHE_A" --cache-b "$PH35_MS3_CACHE_B" \
+  --device cuda --output-root results/phase3_5/ms3_real_adaptation \
+  --execute-matrix --skip-existing \
+  > results/phase3_5/ms3_real_adaptation/remote_execution/train_stdout.log \
+  2> results/phase3_5/ms3_real_adaptation/remote_execution/train_stderr.log
+echo $? > results/phase3_5/ms3_real_adaptation/remote_execution/train_exit_code.txt
+
+python experiments/phase3_5/summarize_ms3_real_adaptation.py \
+  --output-root results/phase3_5/ms3_real_adaptation \
+  > results/phase3_5/ms3_real_adaptation/remote_execution/summary_stdout.log \
+  2> results/phase3_5/ms3_real_adaptation/remote_execution/summary_stderr.log
+echo $? > results/phase3_5/ms3_real_adaptation/remote_execution/summary_exit_code.txt
+```
+
+summary exit 2 表示冻结科学门未通过，不是无效运行；12 个目录、summary、archive、两个 cache manifest 和全部日志仍须原样提交。Linux 只提交 `results/phase3_5/ms3_real_adaptation/**` 以及其中复制的 cache manifests；不提交 cache `.npz`，不改代码/配置/文档/状态，不补跑、不改阈值、不访问 test、不启动 MS4。

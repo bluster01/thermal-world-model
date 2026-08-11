@@ -83,6 +83,8 @@ MS2-D2 one-shot test 已回传并由本地审计为 `CLOSED / CONFIRMED_SYNTHETI
 
 MS2-D3 colored-disturbance validation 已回传并由本地审计为 `CLOSED / VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION`。21/21 artifact 与结构门通过；oracle clean NMAE 为 0.0357–0.0446，三阶为 0.0558–0.0633；相对二阶的冻结 bootstrap CI 下界为 10.8%–14.3%，独立 50,000 次复算判决一致。权威审计见 [`PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md`](../docs/PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md)。validation 参与 checkpoint 选择，不能写成 confirmatory test；归档 tar 字段的远端后处理只记 provenance advisory。
 
-当前 MS5 只授权 `results/phase3_5/ms5_full_coupling/**` 的 12-run validation 产物；结果尚未生成。它比较 free-only、joint-total、staged-total 和 component-oracle，不访问 synthetic test 或 A/B。
+MS5 full-coupling validation 已回传并由本地权重级审计为 `CLOSED / VALIDATION_ONLY_COMPONENT_RECOVERY_PASS / JOINT_SELECTED / STAGED_PROTOCOL_REJECTED`。12/12 runs 与 21-file archive 闭合；joint response NMAE 为 0.047–0.050、amplitude ratio 为 0.988–0.994；staged/joint total-error ratio 为 11.14–14.11；free-only response NMAE=`1`、amplitude=`0`。权威审计见 [`PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md`](../docs/PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md)。这些是 synthetic validation 数字，不是现场 component truth。
+
+当前只授权 `results/phase3_5/ms3_real_adaptation/**` 的 12-run A/B observational validation。Linux 将回传 joint/free-only×A/B×3 seeds 的 checkpoint、episode、UTC-day summary 和 cache manifests；不得访问 test。目录尚无正式模型结果。
 
 Phase 4 已暂停。Fan20-SST 守恒骨架、Fan17/21 嵌套组件、Fan-state controlled Koopman 和时变灰箱路线目前没有正式结果，也不进入 Phase 3.5 结果目录。

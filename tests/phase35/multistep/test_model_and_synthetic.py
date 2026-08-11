@@ -326,8 +326,12 @@ def test_full_coupling_parameters_are_opt_in_and_legacy_truth_is_stable():
     assert hashlib.sha256(legacy.action.numpy().tobytes()).hexdigest() == (
         "43a6cc45e2d9ab443b99f1737f65a0510de31a337a7ea69bfd680fb89467e149"
     )
-    assert hashlib.sha256(legacy.clean_effect.numpy().tobytes()).hexdigest() == (
-        "c5f3bd4922e1986243582acb06c7fd9ac1cee112be8c7dfec583a4b2482b288d"
+    # ``torch.exp`` can differ in the final float32 bit between x86 and aarch64.
+    # Freeze the scientifically relevant 1e-6 quantisation instead of a
+    # platform-specific byte representation.
+    quantized_effect = torch.round(legacy.clean_effect * 1_000_000).to(torch.int64)
+    assert hashlib.sha256(quantized_effect.numpy().tobytes()).hexdigest() == (
+        "64ab86a4a6d29adb9959976c667ed9a033426720dfb9d948b319901e112083ba"
     )
 
 

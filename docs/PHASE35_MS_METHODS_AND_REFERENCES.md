@@ -1,6 +1,6 @@
 # Phase 3.5-MS 多步动作响应：方法、推导与参考文献
 
-> 版本：`phase3.5-ms-v1`，更新至 2026-08-11。本文描述当前代码已经实现的内容，不恢复旧 E3/E4 现场因果结论。代码入口为 `src/phase35/multistep/`；D3 validation-only 已关闭，当前 Gate 由 `configs/phase3_5/experiment_registry.json` 指向 `ms5_full_coupling_matrix.json`。
+> 版本：`phase3.5-ms-v1`，更新至 2026-08-11。本文描述当前代码已经实现的内容，不恢复旧 E3/E4 现场因果结论。代码入口为 `src/phase35/multistep/`；MS5 validation-only 已以 joint 选中关闭，当前 Gate 由 `configs/phase3_5/experiment_registry.json` 指向 `ms3_real_adaptation_matrix.json`。
 
 ## 1. 研究问题与证据边界
 
@@ -36,6 +36,34 @@ u_k=\phi(a_k)-\phi(a_k^{\mathrm{ref}}),
 其中 \(\phi:[0,100]\rightarrow[0,100]\) 是端点固定的单调映射。代码提供 identity、固定 equal-percentage 先验和正斜率分段线性映射；MS1 冻结为 \(\phi(a)=a\)，避免把阀门非线性和动力学表示同时改变。非线性 \(\phi\) 属于 MS2 失配压力实验。
 
 所有算子从零增量状态开始：\(z_0=0\)。因此参考路径相等时 \(u_k=0\)，但只有递推或差分结构同时正确时，才能保证全时域零响应。
+
+### 2.1 MS3 真实数据迁移口径
+
+MS3 不再使用遗留“同名侧动作→同名侧温度”接口，而从冻结的 377 列密集表构造两个控制回路：
+
+\[
+\mathcal D_A:\;a_A\rightarrow(T_{2,R},T_{m,R}),\qquad
+\mathcal D_B:\;a_B\rightarrow(T_{2,L},T_{m,L}).
+\tag{3a}
+\]
+
+这只是把已确认的现场 A阀→右(B)温、B阀→左(A)温事实落实到代码，不是再用相关性检验决定接线。处理前 history 还包含负荷、主汽压力、给水、煤量、主汽流量、本回路 SP 和实际阀位。停机段用 history-only 运行门排除；未来只检查阀位量程，不按未来温度筛选。源表的非 10 s transition 原样保留，任何 history→horizon 跨缺口窗口都由 transition-prefix 排除。
+
+对同一 joint checkpoint 定义三种条件预测误差：
+
+\[
+e_i^{log}=\frac1H\sum_k|\widehat T_{ik}(a_i)-T_{ik}|,
+\quad
+e_i^{hold}=\frac1H\sum_k|\widehat T_{ik}(a_{i0})-T_{ik}|,
+\tag{3b}
+\]
+
+\[
+e_i^{shuffle}=\frac1H\sum_k|\widehat T_{ik}(a_{\pi(i)}-a_{\pi(i),0}+a_{i0})-T_{ik}|,
+\tag{3c}
+\]
+
+其中 \(\pi\) 在 10%-baseline valve bin 内循环置换相对轨迹，避免把别的样本绝对工作点直接移植过来。主诊断为 \(e^{hold}-e^{log}\) 和 \(e^{shuffle}-e^{log}\) 的 UTC 日块 bootstrap CI。正值只表示 logged action 路径具有时间对齐的条件预测信息；在串级 PID 下，\(a_{t+1:t+H}\) 同时响应未来误差与未观测扰动，故式（3b–c）不能解释为因果处理效应。
 
 ## 3. 共同结构合同
 

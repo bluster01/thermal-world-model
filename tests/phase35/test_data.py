@@ -72,3 +72,22 @@ def test_validation_history_stays_inside_split_and_rejects_stale_rows():
         cache, "validation", (TARGET_COLUMN,), TARGET_COLUMN, VALVE_COLUMN, window=4, horizon=3
     )
     assert anchors[0] not in filtered
+
+
+def test_window_anchors_never_cross_an_irregular_timestamp_gap():
+    cache = _cache(100)
+    cache.timestamps_ns[65:] += 10_000_000_000
+    anchors = valid_window_anchors(
+        cache,
+        "validation",
+        (TARGET_COLUMN,),
+        TARGET_COLUMN,
+        VALVE_COLUMN,
+        window=4,
+        horizon=3,
+    )
+    assert len(anchors) > 0
+    for anchor in anchors:
+        start = anchor - 3
+        stop = anchor + 3
+        assert np.all(np.diff(cache.timestamps_ns[start : stop + 1]) == 10_000_000_000)

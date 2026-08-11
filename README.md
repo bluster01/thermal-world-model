@@ -2,7 +2,7 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-11）**：Phase 4 暂停，先完成 Phase 3.5-MS 全系列，尚未进入论文收口。MS2-D3 的 21-run colored-disturbance validation 已通过独立复算，按 `VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION` 关闭；它不是 confirmatory test，也不证明现场唯一阶次或扰动机制。当前唯一授权是 MS5 的 12-run validation，用于判定完整 `free+response` 训练是否发生动作吸收；之后仍有真实 A/B 的 MS3 和闭环物理响应 MS4。旧 E1–E5 已废弃，只保留为历史失败证据。
+> **当前判断（2026-08-11）**：Phase 4 暂停，先完成 Phase 3.5-MS 全系列，尚未进入论文收口。MS5 的 12-run synthetic validation 已完成权重级复算：joint 能恢复冻结的 free/response 组件，当前 staged 协议失败；该结果不证明现场因果。当前唯一授权是 MS3 的 12-run A/B observational validation，从 `all_merged_10s.csv` 写死 A阀→右(B)温、B阀→左(A)温的控制回路映射；test 与 MS4 继续冻结。旧 E1–E5 已废弃，只保留为历史失败证据。
 
 ## 当前入口
 
@@ -22,7 +22,7 @@ Phase 4 的 [实验计划](docs/PHASE4_EXPERIMENT_PLAN.md) 和 Fan2017/2020/2021
 
 ## 当前主要实验目的
 
-完整目标是验证结构化多步响应从“已知真值可解”到“结构失配稳健”、再到“完整 `free+response` 不吸收动作”、真实数据适配和现场闭环响应的一条连续证据链。D2 已确认冻结 truth 下的三阶响应优势，D3 说明该优势通过预注册 colored-nuisance validation 压力门。当前 MS5 只比较 joint 与短阶段 staged 两种完整模型训练策略，并设置 free-only 负控和 component-oracle 正控；validation 通过即可按预算关闭，不补 synthetic test。完整顺序和停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)，机器状态可运行 `python experiments/phase3_5/experiment_status.py --check --json` 查询。
+完整目标是验证结构化多步响应从“已知真值可解”到“结构失配稳健”、再到“完整 `free+response` 不吸收动作”、真实数据适配和现场闭环响应的一条连续证据链。D2/D3 与 MS5 已完成 synthetic 方法门；MS5 选择 joint，拒绝当前 staged 协议。当前 MS3 只比较 joint 与 exact-zero response 的 free-only 负控，检查真实 A/B 上的预测非劣、动作分支非坍缩，以及 logged valve 相对保持/置乱动作的 UTC-day 条件预测增益；这仍不是 `do(valve)`。完整顺序和停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)，机器状态可运行 `python experiments/phase3_5/experiment_status.py --check --json` 查询。
 
 ## Phase 3.5 研究命题
 
@@ -55,7 +55,7 @@ SP → 控制器/执行机构 → 阀门指令 → 实际阀位
 世界模型不是一个更准的温度预测器。项目将最终能力拆成五个合同：状态/动作语义、独立预测、状态闭合仿真、可识别反事实和分级闭环。当前大致处于 `C0 PARTIAL + C1 DEVELOPMENT ONLY`：
 
 - 当前模型不生成完整下一状态，也没有 30–60 min 自由递推稳定性证据，因此尚不是可验证的仿真器；
-- E3 未建立可信的实际阀门响应 reference，因此改变模型动作得到的曲线只能称 action sensitivity，不能称已识别反事实；
+- 实际阀位处于 PID 反馈闭环，仍未建立开环 `do(valve)` reference；SP held-step 只提供闭环响应锚点，因此改变模型阀位得到的曲线仍只能称 action sensitivity；
 - 旧 MPC 使用同构 plant 且协议存在缺陷，没有独立闭环效用证据；
 - A1phys 是二阶惯性灰箱先验，没有质量/能量守恒、执行器标定和完整热状态闭合。
 
@@ -82,7 +82,7 @@ T_hat = f_free(历史状态与历史阀位)
 
 ## 数据事实与口径
 
-- A/B 原始文件是异步稀疏 historian CSV，不是天然 10 s 密集表；Phase 3.5 使用只向过去看的 causal LOCF 重建 10 s grid，并保存每个值的 staleness。
+- 旧 A/B 原始文件是异步稀疏 historian CSV，旧框架用 causal LOCF 重建；MS3 改用 SHA 冻结的 377 列 `all_merged_10s.csv` 显式构造交叉控制回路 cache。源文件含 282 个非 10 s transition，窗口构造器硬排除所有跨缺口窗口。
 - `二级减温调节阀设定` 是温度 SP，不是阀门开度设定；SP、指令、实际阀位属于不同控制层。
 - 历史只读分析显示，在稳定工况的 SP 事件中约 4% 在 60 s 内实际阀位几乎不变；这可以由执行链时延、死区、限幅、控制器条件或 tag 层级解释，不能把 SP 直接当 plant action。
 - 喷水流量只作诊断，不进入 loss、事件剂量、模型选择或核心结论。
@@ -94,7 +94,7 @@ T_hat = f_free(历史状态与历史阀位)
 C:\Users\14020\Desktop\时间预测模型\AA数据中心\伊敏12.10\merged_data\A侧主汽温全数据4.csv
 ```
 
-B 侧位于同一目录。远端路径通过环境变量传入，不写进版本化配置。
+B 侧位于同一目录；当前 MS3 数据源是 `merged_all_data/all_merged_10s.csv`。远端路径通过环境变量传入，不写进版本化配置。
 
 ## 仓库骨架
 
@@ -142,10 +142,10 @@ $env:MKL_NUM_THREADS='1'
 python -m pytest tests/phase35 -q
 python -m compileall -q src/phase35 experiments/phase3_5
 python experiments/phase3_5/experiment_status.py --check --json
-python experiments/phase3_5/ms2d_disturbance.py --dry-run
+python experiments/phase3_5/ms3_real_adaptation.py --dry-run
 ```
 
-当前 Phase 3.5 专项测试覆盖 synthetic train→validation→locked-test CLI、已完成 Gate 的重复访问拒绝、D1/D2 content pin 与 paired bootstrap、D2 one-shot test，以及 D3 扰动生成的确定性/平稳性、clean trajectory 配对、冻结矩阵漂移拒绝、episode 重算与诊断隔离。最新通过数以仓库测试命令输出为准。旧 42 个真实数据 development runs 已完成但路线废弃；独立真实数据模型 test 未执行，A/B 旧事件 test 标签已在探索脚本中暴露，未来 MS4 正式事件证据必须使用新时间块。
+当前 Phase 3.5 专项测试覆盖 synthetic Gate、MS5 component recovery、跨平台确定性、MS3 交叉 cache/gap-aware anchor、joint/free 信息流、矩阵漂移拒绝、UTC-day 判决与 CLI smoke。最新通过数以仓库测试命令输出为准。旧 42 个真实数据 development runs 已完成但路线废弃；独立真实数据模型 test 未执行，A/B 旧事件 test 标签已在探索脚本中暴露，未来 MS4 正式事件证据必须使用冻结新时间块或明确内部验证边界。
 
 ## 历史证据限制
 

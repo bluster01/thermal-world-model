@@ -32,7 +32,8 @@ class Phase35Cache:
             raise Phase35ProtocolError("cache matrix shape does not match timestamps/columns")
         if len(self.timestamps_ns) > 1 and np.any(np.diff(self.timestamps_ns) <= 0):
             raise Phase35ProtocolError("cache timestamps must be strictly increasing")
-        validate_columns(self.columns)
+        if not self.columns or len(self.columns) != len(set(self.columns)):
+            raise Phase35ProtocolError("cache columns must be non-empty and unique")
 
     def index(self, name: str) -> int:
         try:
@@ -191,13 +192,24 @@ def valid_window_anchors(
     if last < first:
         return np.empty(0, dtype=np.int64)
     anchors = np.arange(first, last + 1, dtype=np.int64)
+    step_seconds = float(cache.metadata.get("step_seconds", 10.0))
+    expected_step_ns = int(round(step_seconds * 1_000_000_000))
+    transition_bad = np.diff(cache.timestamps_ns) != expected_step_ns
+    transition_prefix = np.concatenate(
+        ([0], np.cumsum(transition_bad, dtype=np.int64))
+    )
+    window_start = anchors - window + 1
+    future_end = anchors + horizon
+    contiguous_ok = (
+        transition_prefix[future_end] - transition_prefix[window_start]
+    ) == 0
     fi = [cache.index(c) for c in feature_columns]
     ti, vi = cache.index(target_column), cache.index(valve_column)
     history_bad = (~np.isfinite(cache.values[:, fi])).any(axis=1)
     history_bad |= (cache.ages_s[:, fi] > max_age_s).any(axis=1)
     prefix = np.concatenate(([0], np.cumsum(history_bad, dtype=np.int64)))
     history_bad_count = prefix[anchors + 1] - prefix[anchors - window + 1]
-    endpoint_ok = history_bad_count == 0
+    endpoint_ok = (history_bad_count == 0) & contiguous_ok
     endpoint_ok &= np.isfinite(cache.values[anchors, vi])
     endpoint_ok &= cache.ages_s[anchors, vi] <= max_age_s
     # All future target/action points must be observed causally and not excessively stale.

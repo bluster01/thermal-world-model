@@ -1,8 +1,8 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
   "updated_at": "2026-08-11",
-  "active_gate": "ms5",
-  "linux_authorized_gate": "ms5",
+  "active_gate": "ms3",
+  "linux_authorized_gate": "ms3",
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -371,18 +371,18 @@
     },
     "ms5": {
       "title": "完整 free+response 耦合与动作吸收检验",
-      "status": "ready_for_linux",
-      "owner": "linux_run_local_audit",
+      "status": "closed",
+      "owner": "local_audited",
       "evidence_scope": "synthetic_full_free_response_coupling_validation_not_field_causality",
       "scripts": {
         "runner": {
           "path": "experiments/phase3_5/ms5_full_coupling.py",
-          "status": "active",
+          "status": "closed",
           "required": true
         },
         "summary": {
           "path": "experiments/phase3_5/summarize_ms5_full_coupling.py",
-          "status": "active",
+          "status": "closed",
           "required": true
         }
       },
@@ -401,19 +401,65 @@
         },
         "validation_summary": {
           "path": "results/phase3_5/ms5_full_coupling/summary_validation.json",
-          "required": false
+          "required": true
+        },
+        "checkpoint_archive": {
+          "path": "results/phase3_5/ms5_full_coupling/checkpoints_validation.tar",
+          "required": true
+        },
+        "supervisor_audit": {
+          "path": "docs/PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md",
+          "required": true
         }
       },
-      "decision": "READY_FOR_LINUX VALIDATION：4 modes×3 seeds=12 runs；oracle 正控、free-only 负控，joint 优先、staged 仅在 joint 失败时按冻结规则候补；不访问 test"
+      "decision": "CLOSED / VALIDATION_ONLY_COMPONENT_RECOVERY_PASS / JOINT_SELECTED / STAGED_PROTOCOL_REJECTED：权重级与 archive 重放一致；不追加 synthetic test，不外推现场因果",
+      "advisories": [
+        "Linux 预检的 legacy raw-float SHA 在 aarch64 红项后仍继续，属流程偏差；本地权重级复核不影响科学产物，测试已改为 1e-6 量化哈希",
+        "staged 失败仅针对冻结的 hold-only 初始化与低学习率恢复协议，不外推所有分阶段训练"
+      ]
     },
     "ms3": {
       "title": "A/B 真实数据适配",
-      "status": "planned",
-      "owner": "local_design_code_linux_run",
+      "status": "ready_for_linux",
+      "owner": "linux_run_local_audit",
       "evidence_scope": "real_observational_validation_not_causal",
-      "scripts": {},
-      "artifacts": {},
-      "decision": "validation-only；固定现场交叉链；不恢复旧 E 系列"
+      "scripts": {
+        "cache_builder": {
+          "path": "experiments/phase3_5/prepare_ms3_cross_data.py",
+          "status": "active",
+          "required": true
+        },
+        "training": {
+          "path": "src/phase35/multistep/real_training.py",
+          "status": "active",
+          "required": true
+        },
+        "runner": {
+          "path": "experiments/phase3_5/ms3_real_adaptation.py",
+          "status": "active",
+          "required": true
+        },
+        "summary": {
+          "path": "experiments/phase3_5/summarize_ms3_real_adaptation.py",
+          "status": "active",
+          "required": true
+        }
+      },
+      "artifacts": {
+        "matrix": {
+          "path": "configs/phase3_5/ms3_real_adaptation_matrix.json",
+          "required": true
+        },
+        "design": {
+          "path": "docs/plans/2026-08-11-phase35-ms3-real-adaptation-design.md",
+          "required": true
+        },
+        "implementation_plan": {
+          "path": "docs/plans/2026-08-11-phase35-ms3-real-adaptation-implementation.md",
+          "required": true
+        }
+      },
+      "decision": "READY_FOR_LINUX VALIDATION：all_merged 交叉控制回路 cache；joint/free-only×A/B×3 seeds=12；只检验条件预测与动作对齐，不访问 test"
     },
     "ms4": {
       "title": "SP→阀位→温度物理闭环响应验证",

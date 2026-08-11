@@ -4,7 +4,7 @@
 
 ## 一句话状态
 
-项目已完成 MS0、MS1、MS2-V/C/J 和 MS2-D1/D2/D3。D3 validation 的 oracle clean NMAE 为 0.0357–0.0446，三阶为 0.0558–0.0633；三阶相对二阶的冻结 bootstrap 95% CI 下界为 10.8%–14.3%，逐 seed达到 10%。按预算以 `CLOSED / VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION` 关闭，不能写成独立 test。当前唯一授权是 MS5 的 12-run `free+response` coupling validation。项目**尚未完成真实模型定性，也未进入论文收口**；后续仍需 MS3 真实适配和 MS4 闭环响应。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
+项目已完成 MS0、MS1、MS2-V/C/J、MS2-D1/D2/D3 和 MS5。MS5 的 12/12 synthetic validation 已完成 checkpoint 重算：joint response NMAE `0.047–0.050`、amplitude ratio `0.988–0.994`，逐 seed过门；冻结 staged 协议相对 joint 误差比 `11.14–14.11`，拒绝。该结果只证明冻结 synthetic truth 的组件恢复。当前唯一授权是 MS3 的 12-run A/B observational validation；项目**尚未完成真实模型定性，也未进入论文收口**，MS4 闭环响应仍冻结。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
 
 ## Phase 3.5 当前状态
 
@@ -19,6 +19,8 @@
 | 训练选择 | 已修正 | validation-only canonical checkpoint；test 显式解锁并写 ledger |
 | 统计 | 已运行并 fail-closed 审计 | A/B 分报；UTC 日块 bootstrap；seed 仅表示优化波动；matching balance/common support 未过 |
 | 正式结果 | 仅 development validation | 模型 test 尚未打开；A/B 旧 event test 标签已暴露，未来事件证据需新时间块 |
+| MS5 完整耦合 | validation-only 已关闭 | joint known-truth component recovery PASS；staged protocol FAIL；不外推现场 |
+| MS3 真实适配 | ready_for_linux | all_merged 交叉回路 cache；joint/free-only×A/B×3 seeds；test 禁止 |
 
 Phase 3.5 的目标不是证明质量/能量守恒，而是建立分层物理一致性：阀门动作可辨认、经验温度响应可复核、模型反事实响应能复现该曲线、SP 未执行时模型不制造阀门效应。完整协议见 [`PHASE3_5_EXPERIMENT_DESIGN.md`](PHASE3_5_EXPERIMENT_DESIGN.md)。
 
@@ -110,7 +112,7 @@ exp_025 使用实际绝对阀位，exp_106/旧 A1phys 使用 `二级减温调节
 |---|---|---|
 | PI-ODE | exp_020 使用纯神经动力学与固定 Euler 小步；MS1 在同型二阶 synthetic truth 达噪声下限；MS2-V/C validation/test 误差较低 | MS2 未把 PI-ODE 预注册为主要对照或冠军；PI-ODE 自身的联合非线性/显式调度、Fan 方程、部分可观测状态与真实响应仍未验证 |
 | Controlled Koopman | exp_020 的潜在受控 decoder；exp_112 的 Koopman free-head；MS1 稳定受控模态算子通过结构门禁 | MS2 的 global-context 与四模态阀门版本只作次要对照，不能据此赋予真实 Koopman 谱解释 |
-| 灰箱 / DeepONet 算子 | MS1 证明 2P 灰箱同型可解；MS2-V/C/J 双层通过；D2 确认 frozen truth 下三阶 response advantage | 单调响应模块存在 `K/phi/动力学` 补偿，尚未辨识出真实阀门曲线；D3、完整 free+response、真实数据迁移与 Fan 物理闭合仍缺 |
+| 灰箱 / DeepONet 算子 | MS1 证明 2P 灰箱同型可解；MS2-V/C/J 双层通过；D2/D3 通过压力门；MS5 joint 完整耦合 validation 通过 | 单调响应模块存在 `K/phi/动力学` 补偿，尚未辨识出真实阀门曲线；真实数据迁移、闭环响应与 Fan 物理闭合仍缺 |
 
 因此，exp_020 和 exp_112 都不能回答“Fan 物理微分模型是否优于当前模型”。Phase 3.5-MS 新框架也只回答低维动作响应的表示/优化可行性，不等同于 Fan 模型比较或现场因果验证。
 
@@ -142,11 +144,11 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 - `eval_protocol.py` 的 PID 物理方向、零误差工作点和导数项实现存在 P0 缺陷；旧控制结果不得恢复证据等级。
 - `exp_106/112` 在 test 上逐 epoch 评估并选 checkpoint；`exp_109/110` 又合并 val+test 构造/筛选事件。
 - 148 个 Python 文件中有 88 个没有 `if __name__ == '__main__'` guard；多个实验依赖导入副作用、全局变量与 `sys.path/sys.argv` 修改。
-- 当前代码对 NaN 静默置零、丢弃时间信息，尚无 episode/gap-aware 窗口与 split manifest。
+- 大量历史脚本仍有 NaN/时间语义问题；当前 MS3 cache 保留原时间戳并用 transition-prefix 排除跨缺口窗口，但 dense merged source 不含原始 tag age。
 - 在模型路线定性前，不进行大规模源码迁移或历史目录重排。
 
 ## 下一判决点
 
-下一判决点是 MS5 validation：在带 context-policy correlation 的 known-truth 下，比较 free-only、joint-total、staged-total 和 component-oracle 四种模式，每种 3 seeds。正控必须逐 seed通过 total/free/response component 门；joint 全过就采用更简单的 joint，只有 joint 失败且 staged 的绝对门与 staged/joint `<=1.10` 门全过才采用 staged。注册表为 `ready_for_linux`；只授权 12-run validation，不访问 synthetic test、A/B 或 MS3。
+下一判决点是 MS3 validation：从冻结 SHA 的 `all_merged_10s.csv` 生成 A阀→右(B)温、B阀→左(A)温两个 cache，比较 joint 与 free-only，A/B 各 3 seeds。主门为预测非劣、动态 response 非坍缩、logged 相对保持/置乱动作的 UTC-day bootstrap 增益，每侧至少 2/3 seeds 通过。注册表为 `ready_for_linux`；只授权 12-run validation，不访问 test、不补超参数、不启动 MS4。即使通过，也只能称 observational conditional-prediction evidence，不能称 `do(valve)`。
 
 完整顺序为 MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 保持暂停。

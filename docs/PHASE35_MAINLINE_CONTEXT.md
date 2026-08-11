@@ -4,9 +4,9 @@
 
 - Material Type: active experiment-purpose specification
 - Scope: Phase 3.5-MS0–MS5、真实数据适配与闭环响应验证
-- Verification Status: ANALYZED；MS2-D3 validation 已独立审计
+- Verification Status: ANALYZED；MS5 validation 已完成权重级独立审计
 - Deprecated Track: 原 E1–E5，仅作历史失败证据
-- Active Decision: 完成完整 MS 系列；MS2-D3 validation-only 关闭，当前仅授权 MS5 validation
+- Active Decision: 完成完整 MS 系列；MS5 选择 joint 并关闭，当前仅授权 MS3 A/B observational validation
 
 ## 1. 一句话主线
 
@@ -49,8 +49,9 @@ MS0 → MS1 → MS2-V/C/J → MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选
 - MS2-D1：learned-delay 的改善方向跨 split 稳定，但 test CI 下界未达到冻结的 20%，按阴性结果关闭；不传播 delay 结构。
 - MS2-D2 test：oracle 与三阶绝对 NMAE 逐 seed过门；三阶相对二阶点改善 23.74%–25.36%，冻结 bootstrap CI 下界 19.90%–21.22%，逐 seed高于 10%。只确认 frozen known-truth 下的响应优势，不确认现场阶次唯一性。
 - MS2-D3 validation：21/21 产物门通过；oracle 0.0357–0.0446、三阶 0.0558–0.0633，相对二阶 CI 下界 10.8%–14.3%。按预算不追加 test，只保留为 colored-nuisance validation 压力证据。
+- MS5 validation：12/12 产物闭合并完成 checkpoint 重算。joint response NMAE 0.047–0.050、amplitude ratio 0.988–0.994，逐 seed过门；冻结 staged 协议相对 joint 误差比 11.14–14.11，拒绝；free-only 证明“预测准不等于组件恢复”。只作 synthetic validation，不追加 test。
 
-Koopman、PI-ODE 与 DeepONet 继续作为表示路线参与压力和真实适配验证；MS2-J 的 secondary 数值不构成最终路线冠军。
+Koopman、PI-ODE 与 DeepONet 的历史 synthetic 结果不构成最终路线冠军，但不在 MS3 当前 Gate 重新赛马。MS3 先验证 MS5 选中主干能否迁移到真实 A/B；表示路线比较在模型选择阶段另行冻结。
 
 ## 4. 原 E 系列的定位
 
@@ -58,7 +59,7 @@ Koopman、PI-ODE 与 DeepONet 继续作为表示路线参与压力和真实适�
 
 现场物理验证改由 MS4 承担。当前最强外部锚点是 SP held-step 的闭环响应：A/B 两侧具有双向事件和 110+ 日块，`SP↑→T2↑→Tm↑` 方向率约 70–86%。它验证的是包含串级 PID 的闭环系统，不是开环 `do(valve)`；双侧 SP 联动仍限制单侧归因。
 
-## 5. 当前 Gate：MS5
+## 5. 当前 Gate：MS3
 
 MS2-D 采用顺序压力测试，不一次铺开大矩阵：
 
@@ -72,7 +73,9 @@ D2 采用正交的阶次压力设计：真值取消 pure delay，只加入第三
 
 D3 保持 D2 clean truth，只加入 response operator 不可观察的 stationary AR(1) output nuisance。validation 的冻结主门逐 seed通过，本地 episode 重算与独立 50k bootstrap 一致；由于 validation 参与 checkpoint 选择，按预算决定以 `VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION` 关闭，不称独立确认。
 
-MS5 现在检验完整 `free+response` 加法模型在 total-only supervision 下是否发生 component absorption。冻结矩阵只有 4 modes×3 seeds：free-only 负控、joint 主策略、短阶段 staged 候补和 component-supervised oracle 正控。oracle 必须先通过；joint 资格门全过即选更简单的 joint，只有 joint 失败而 staged 绝对门和相对 1.10 门逐 seed全过时才选 staged。MS5 只运行 validation，不访问 synthetic test 或 A/B；通过即可按预算关闭并进入 MS3，本地审计前 MS3 仍冻结。
+MS5 已证明在冻结 full-coupled synthetic truth 下，total-only joint 能恢复 free/response 组件；当前冻结 staged 协议失败。该结论已经权重级重算，以 `JOINT_SELECTED` 关闭，但不等于真实数据中的组件真值可观察。
+
+MS3 使用 SHA 冻结的 `all_merged_10s.csv` 构造两个控制回路 cache，把已确认现场映射写死为 A阀→右(B)温、B阀→左(A)温。冻结矩阵为 joint/free-only×A/B×3 seeds=12。主门检验 joint 相对 free-only 预测非劣、动态动作分支非坍缩，以及 logged future valve 相对保持阀位/置乱 delta-path 的 UTC-day block-bootstrap 预测增益。由于未来阀位处于串级 PID 闭环，这仍是 observational conditional-prediction Gate，不是 `do(valve)`；闭环物理响应继续由 MS4 负责。
 
 ## 6. 当前不能声称
 

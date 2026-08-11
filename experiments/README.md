@@ -44,16 +44,19 @@ SP 通道、监督模式、因果评测和当前灰箱候选。
 
 ## `phase3_5/`
 
-Phase 3 论文核心验证的正式入口，覆盖 E1–E5：动作表征、阀门非线性、真实阀门事件响应、A1phys 反事实响应和 SP 未执行负对照。
+Phase 3.5-MS 正式入口。旧 E1–E5 与 42-run 矩阵已废弃，只保留历史追溯；当前按 MS0→MS5→MS3→MS4 的 Gate 状态机推进。
 
 - `prepare_data.py`：从异步稀疏 CSV 构造 causal 10 s cache、staleness 与 SHA256 manifest。
 - `train.py`：单 run、validation-only checkpoint 训练。
 - `evaluate.py`：分离 validation/test 的预测、事件和负对照评估；test 写 access ledger。
 - `run_matrix.py`：42-run 开发矩阵 dry-run/执行及候选 seed 补跑。
 - `summarize.py`：A/B、seed 和 E1–E5 门禁汇总。
+- `prepare_ms3_cross_data.py`：从冻结 377 列 dense source 构造 A阀→右温、B阀→左温交叉控制回路 cache，并保留 gap provenance。
+- `ms3_real_adaptation.py`：当前 joint/free-only×A/B×3 seeds validation runner。
+- `summarize_ms3_real_adaptation.py`：当前 artifact、结构合同与 UTC-day bootstrap fail-closed 汇总。
 - `README.md`：Linux 唯一执行手册。
 
-模型与评测代码位于 `src/phase35/`，版本化矩阵位于 `configs/phase3_5/experiment_matrix.json`，测试位于 `tests/phase35/`。
+当前模型位于 `src/phase35/multistep/real_training.py`，冻结矩阵为 `configs/phase3_5/ms3_real_adaptation_matrix.json`，机器状态见 `configs/phase3_5/experiment_registry.json`，测试位于 `tests/phase35/`。
 
 ## 新实验规则
 

@@ -35,6 +35,22 @@ DEFAULT_HISTORY_FEATURES = (
     VALVE_COLUMN,
 )
 
+# MS3 deliberately omits the legacy generic controller-command fields.  The
+# merged cross-side source exposes unambiguous SP and valve feedback tags, but
+# not the same intermediate-command semantics as the older 40-column exports.
+MS3_HISTORY_FEATURES = (
+    LOAD_COLUMN,
+    PRESSURE_COLUMN,
+    FEEDWATER_COLUMN,
+    COAL_COLUMN,
+    STEAM_COLUMN,
+    TIN2_COLUMN,
+    TOUT2_COLUMN,
+    TARGET_COLUMN,
+    SP_COLUMN,
+    VALVE_COLUMN,
+)
+
 REQUIRED_COLUMNS = tuple(dict.fromkeys(DEFAULT_HISTORY_FEATURES + (VALVE_COLUMN,)))
 
 ACTION_MODES = {

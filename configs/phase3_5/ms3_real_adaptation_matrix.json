@@ -1,0 +1,123 @@
+{
+  "protocol_version": "phase3.5-ms3-v1",
+  "evidence_scope": "real_ab_observational_validation_not_causal",
+  "seeds": [0, 1, 2],
+  "data_contract": {
+    "source_kind": "all_merged_dense_10s",
+    "source_size_bytes": 3987138416,
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "timestamp_column": "time",
+    "step_seconds": 10,
+    "gap_policy": "preserve_source_rows_and_exclude_any_cross_gap_window",
+    "history_features": [
+      "机组负荷",
+      "主蒸汽压力",
+      "主给水流量",
+      "未校正总煤量",
+      "主蒸汽流量",
+      "二级减温器入口温度",
+      "二级减温器出口温度",
+      "末级过热器出口汽温",
+      "二级减温调节阀设定",
+      "二级减温调节门阀位"
+    ],
+    "side_mappings": {
+      "A": {
+        "control_loop": "A_valve_to_right_B_thermal_train",
+        "column_map": {
+          "机组负荷": "机组负荷_GENERATOR_POWER",
+          "主蒸汽压力": "主蒸汽压力",
+          "主给水流量": "选择后的主给水流量",
+          "未校正总煤量": "未校正总煤量",
+          "主蒸汽流量": "主蒸汽流量_60BKAO0312",
+          "二级减温器入口温度": "选择后二级减温器右侧入口蒸汽",
+          "二级减温器出口温度": "选择后右侧二过喷水减温器出口",
+          "末级过热器出口汽温": "选择后右侧末级过热器出口汽温",
+          "二级减温调节阀设定": "过热器二级减温器A喷水调节阀设定",
+          "二级减温调节门阀位": "过热器二级减温器A侧喷水调节门阀位反馈"
+        }
+      },
+      "B": {
+        "control_loop": "B_valve_to_left_A_thermal_train",
+        "column_map": {
+          "机组负荷": "机组负荷_GENERATOR_POWER",
+          "主蒸汽压力": "主蒸汽压力",
+          "主给水流量": "选择后的主给水流量",
+          "未校正总煤量": "未校正总煤量",
+          "主蒸汽流量": "主蒸汽流量_60BKAO0312",
+          "二级减温器入口温度": "选择后二级减温器左侧入口蒸汽",
+          "二级减温器出口温度": "选择后左侧二过喷水减温器出口",
+          "末级过热器出口汽温": "选择后左侧末级过热器出口汽温",
+          "二级减温调节阀设定": "过热器二级减温器B喷水调节阀设定",
+          "二级减温调节门阀位": "过热器二级减温器B侧喷水调节门阀位反馈"
+        }
+      }
+    }
+  },
+  "model": {
+    "window": 96,
+    "horizon": 60,
+    "d_model": 32,
+    "n_heads": 4,
+    "dropout": 0.1,
+    "opening_map": "monotone",
+    "poles": 3,
+    "tau_min_seconds": 20.0,
+    "tau_max_seconds": 900.0,
+    "context_scheduled": true,
+    "schedule_log_scale": 0.5
+  },
+  "training": {
+    "batch_size": 128,
+    "epochs": 40,
+    "patience": 8,
+    "steps_per_epoch": 100,
+    "learning_rate": 0.001,
+    "weight_decay": 0.00001,
+    "gradient_clip": 1.0,
+    "min_delta": 0.0001,
+    "max_train_anchors": 100000,
+    "max_selector_anchors": 2048,
+    "max_validation_anchors": 8192,
+    "max_age_seconds": 180.0,
+    "dynamic_dose_threshold_pct": 1.0,
+    "min_operating_load_mw": 250.0,
+    "min_operating_pressure_mpa": 10.0,
+    "target_temperature_min_c": 500.0,
+    "target_temperature_max_c": 600.0,
+    "sp_temperature_min_c": 500.0,
+    "sp_temperature_max_c": 600.0,
+    "valve_min_pct": -2.0,
+    "valve_max_pct": 102.0
+  },
+  "gates": {
+    "joint_to_free_logged_mae_ratio_max": 1.05,
+    "min_dynamic_windows": 512,
+    "min_dynamic_utc_days": 5,
+    "min_dynamic_mean_abs_effect_c": 0.02,
+    "max_abs_effect_c": 20.0,
+    "structural_tolerance": 0.000001,
+    "min_successful_seeds_per_side": 2,
+    "day_block_bootstrap_samples": 5000,
+    "day_block_bootstrap_seed": 20260818,
+    "logged_vs_baseline_ci_lower_min_c": 0.0,
+    "logged_vs_shuffled_ci_lower_min_c": 0.0
+  },
+  "ms5_reference": {
+    "path": "results/phase3_5/ms5_full_coupling/summary_validation.json",
+    "sha256": "a6dc0f18164a8315dea81ab8c602b48a0a2aa51e92843576418a543e36d4d3f1",
+    "selected_strategy": "ms5_joint_total"
+  },
+  "candidates": [
+    {
+      "candidate_id": "ms3_joint_total",
+      "mode": "joint_total",
+      "role": "ms5_selected_strategy"
+    },
+    {
+      "candidate_id": "ms3_free_only",
+      "mode": "free_only",
+      "role": "prediction_only_negative_control"
+    }
+  ]
+}

@@ -22,9 +22,9 @@ def test_repository_registry_is_valid_and_has_one_active_gate():
     )
     report = module.validate_registry(registry, ROOT)
     assert report["valid"] is True
-    assert report["active_gate"] == "ms5"
+    assert report["active_gate"] == "ms3"
     assert report["active_status"] == "ready_for_linux"
-    assert report["linux_authorized_gate"] == "ms5"
+    assert report["linux_authorized_gate"] == "ms3"
     assert report["errors"] == []
 
 
@@ -67,7 +67,7 @@ def test_status_cli_emits_machine_readable_summary():
     )
     payload = json.loads(completed.stdout)
     assert payload["valid"] is True
-    assert payload["active_gate"] == "ms5"
+    assert payload["active_gate"] == "ms3"
     assert payload["active_status"] == "ready_for_linux"
     assert payload["deprecated_tracks"] == ["legacy_e"]
 
@@ -83,6 +83,7 @@ def test_registry_accepts_test_authorized_active_gate():
     registry["experiments"]["ms2d_d2"]["status"] = "planned"
     registry["experiments"]["ms2d_d3"]["status"] = "planned"
     registry["experiments"]["ms5"]["status"] = "planned"
+    registry["experiments"]["ms3"]["status"] = "planned"
     report = module.validate_registry(registry, ROOT)
     assert report["valid"] is True
     assert report["active_status"] == "test_authorized"
@@ -109,6 +110,7 @@ def test_registry_rejects_linux_authorization_for_a_non_active_gate():
     registry["experiments"]["ms2d_d1"]["status"] = "local_verified"
     registry["experiments"]["ms3"]["status"] = "ready_for_linux"
     registry["linux_authorized_gate"] = "ms3"
+    registry["active_gate"] = "ms5"
     report = module.validate_registry(registry, ROOT)
     assert report["valid"] is False
     assert any("must equal active_gate" in error for error in report["errors"])
