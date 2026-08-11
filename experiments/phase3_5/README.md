@@ -2,7 +2,7 @@
 
 本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
-> 当前状态：`ms3_r=ready_for_linux`、`linux_authorized_gate=ms3_r`。授权仅覆盖下述 `ms3r_gate_a_v1` 单批命令；旧 42-run/E 系列及 Gate B/C 不得执行。
+> 当前状态：`ms3_r=audited`、`linux_authorized_gate=null`。`ms3r_gate_a_v1` 已完成并由本地审计为条件通过；下述命令只保留已执行合同，不得再次运行。Gate B/C、旧 42-run/E 系列均未授权。
 
 ## MS3-R Gate A：点位与可辨识性批次
 

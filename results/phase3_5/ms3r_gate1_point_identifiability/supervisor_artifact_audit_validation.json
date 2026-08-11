@@ -1,0 +1,129 @@
+{
+  "protocol_version": "phase3.5-ms3r-gate1-v1",
+  "audited_remote_result_commit": "2132a3cf",
+  "executed_code_commit": "13170981749b17c92b6a440716f4651f4587eee9",
+  "artifact_integrity": {
+    "required_artifact_count": 8,
+    "required_artifacts_present": 8,
+    "all_ledger_hashes_exact": true,
+    "analysis_arrays_sha256": "18c7fd9598bbc7fc45efc30d947ca3076e133ef6691e3f15c291b21cf81c3145",
+    "config_sha256_exact": true,
+    "parent_matrix_sha256_exact": true,
+    "test_accessed": false,
+    "training_executed": false,
+    "automatic_scientific_pass": null
+  },
+  "execution_contract": {
+    "exit_code": 0,
+    "reported_wall_clock_seconds": 3,
+    "single_attempt": true,
+    "frozen_command_used": true,
+    "peak_rss_recorded": false,
+    "peak_rss_boundary": "Missing and not reconstructed after process exit; no rerun authorized. Add /usr/bin/time -v in later batches."
+  },
+  "analysis_support": {
+    "candidate_anchor_count": 115190,
+    "crossfit_evaluated_count": 103408,
+    "rolling_fold_count": 4,
+    "independent_utc_day_count": 24,
+    "analysis_time_start": "2026-03-18T10:56:00",
+    "analysis_time_end": "2026-04-13T12:06:00",
+    "independent_unit": "UTC_day_for_reported_bootstrap_intervals"
+  },
+  "rank_replay": {
+    "paired_sample_count_exact": true,
+    "maximum_scalar_recomputation_error": 2.220446049250313e-16,
+    "maximum_hankel_singular_value_error": 1.5543122344752192e-15,
+    "standardized_innovation_correlation": 0.17654881855719157,
+    "condition_number": 1.4288021501113202,
+    "common_energy": 0.5882744092785945,
+    "differential_energy": 0.41172559072140535,
+    "differential_to_common_energy_ratio": 0.6998869647012312,
+    "label": "DUAL_INPUT_ALGEBRAIC_RANK_SUPPORTED",
+    "boundary": "Healthy covariance and Hankel spectra rule out simple A/B collinearity in the frozen residualization. They do not establish exogeneity, noise-floor separation, persistent excitation for a unique plant order, or independent channel causality."
+  },
+  "action_information": {
+    "A_past_history_and_current_sp_crossfit_r2": 0.09302827890250276,
+    "B_past_history_and_current_sp_crossfit_r2": 0.2113921650141496,
+    "A_innovation_std_pct": 0.7007334564509319,
+    "B_innovation_std_pct": 0.7993873230984293,
+    "boundary": "Residual variation remains on both sides, but residualization does not make valve innovations exogenous."
+  },
+  "path_assessment": {
+    "local_correct_path": {
+      "label": "DESCRIPTIVE_SHORT_HORIZON_DOMINANCE_WITH_NONZERO_PLACEBOS",
+      "A_correct_local_drop_day_median_H60_H180": [
+        0.5636030699951868,
+        0.773061810704176
+      ],
+      "A_wrong_side_local_drop_day_median_H60_H180": [
+        0.15743612486416445,
+        0.1750100725955915
+      ],
+      "B_correct_local_drop_day_median_H60_H180": [
+        0.42898848954960556,
+        0.49352587628025046
+      ],
+      "B_wrong_side_local_drop_day_median_H60_H180": [
+        0.12217635680987177,
+        0.1480820791062019
+      ],
+      "boundary": "Correct local paths are about 3.3-4.4 times the wrong-side day medians at 60/180 s, but wrong-side and upstream placebos also have nonzero intervals. The artifact does not contain paired per-day correct-minus-placebo contrasts, so superiority is descriptive rather than inferential."
+    },
+    "timing": {
+      "label": "SHORT_HORIZON_TIMING_SUPPORTED_LONG_HORIZON_CONTAMINATED",
+      "boundary": "60/180 s action-lead intervals are near zero for the primary local paths. A-side 300/600 s lead diagnostics are nonzero, preventing a clean long-horizon causal timing claim."
+    },
+    "terminal_side_specificity": {
+      "label": "FAIL",
+      "A_correct_terminal_day_median_H300_H600": [
+        0.09831931774201563,
+        0.03714877940833521
+      ],
+      "A_wrong_side_terminal_day_median_H300_H600": [
+        0.33146164013612905,
+        0.3848941856706312
+      ],
+      "B_correct_terminal_day_median_H300_H600": [
+        0.04602153236842617,
+        0.05404672650601858
+      ],
+      "B_wrong_side_terminal_day_median_H300_H600": [
+        0.2209094334754575,
+        0.25539899139311883
+      ],
+      "boundary": "At 300/600 s the wrong-side terminal association is larger than the correct-side association for both actions. No side-specific terminal plant channel may be claimed or hard-constrained from Gate A."
+    }
+  },
+  "statistical_scope": {
+    "reported_diagnostic_family_size": 192,
+    "multiplicity_correction": null,
+    "primary_inference_boundary": "The panel is a prespecified diagnostic map, not 192 confirmatory tests. Separate bootstrap intervals cannot establish that correct and placebo effects differ; Gate B must report direct paired day-level contrasts with a frozen primary family.",
+    "path_numeric_replay_boundary": "The returned NPZ contains anchors, fold IDs, and A/B innovations, but not per-path outcome residuals or day slopes. Input-rank metrics were independently recomputed; path JSON hashes are exact, while full coefficient replay would require caches or richer saved arrays. No rerun was requested."
+  },
+  "supervisor_decision": {
+    "label": "GATE_A_CONDITIONAL_PASS",
+    "components": [
+      "DUAL_INPUT_ALGEBRAIC_RANK_SUPPORTED",
+      "SHORT_HORIZON_LOCAL_RESPONSE_DESCRIPTIVELY_SUPPORTED",
+      "NONZERO_WRONG_SIDE_AND_UPSTREAM_PLACEBOS",
+      "LONG_HORIZON_TIMING_CONTAMINATION",
+      "TERMINAL_SIDE_SPECIFICITY_FAIL"
+    ],
+    "gate_b_release": "LOCAL_DESIGN_ONLY",
+    "allowed_next_design": [
+      "measured_boundary_latent_MIMO_with_Tin_minus_Tout_intermediate_supervision",
+      "common_only_vs_common_plus_differential_ablation",
+      "residual_capacity_and_context_scheduled_response_attribution",
+      "direct_paired_correct_minus_placebo_day_contrasts"
+    ],
+    "prohibited_claims": [
+      "independently_identified_A_and_B_plant_gains",
+      "side_specific_terminal_causal_response",
+      "arbitrary_do_valve",
+      "fully_physical_world_model",
+      "test_confirmation",
+      "gate_c_or_ms4_release"
+    ]
+  }
+}

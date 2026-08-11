@@ -1,6 +1,6 @@
 # Thermal World Model TODO
 
-> 更新：2026-08-11。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。MS3-D 已完成并审计：B 阀位响应更持久，但现场局部/末端热响应未支持 checkpoint 的 4.63 倍侧差。MS3-R Gate-A 框架已本地验证并签发单批 Linux 授权：仅运行 `ms3r_gate_a_v1`，一次 attempt、2 小时硬停、禁止自动重试和扩展实验；不访问 test、不启动 Gate B/C 或 MS4。旧 E1–E5 已废弃，Phase 4 暂停。
+> 更新：2026-08-11。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。MS3-R Gate A 已审计为条件通过：双阀创新代数秩健康，60/180 s 正确局部路径描述性占优；但错侧/上游 placebo 非零、A 长时 lead 污染，末温侧归因失败。当前只允许本地设计 Gate B 的 measured-boundary MIMO、common/differential 消融与分支归因；无 Linux 授权、不访问 test、不启动 Gate C/MS4。旧 E1–E5 已废弃，Phase 4 暂停。
 
 ## 当前主线
 
@@ -31,7 +31,7 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | MS5 | 完整 `free+response` 动作吸收 | ✓ CLOSED | joint 选中；冻结 staged 协议拒绝 |
 | **MS3** | A/B 真实数据适配 | ✓ **AUDITED FAIL / ASYMMETRIC** | B 3/3 PASS；A 0/3 non-collapse FAIL；不重跑、不访问 test |
 | **MS3-D** | A/B 响应不对称诊断 | ✓ **AUDITED** | 模型 A attenuation 未获现场热链路支持；B 阀位持久性更强；单侧 plant 归因不足 |
-| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ▶ **READY_FOR_LINUX** | 仅 Gate-A 单批授权；190 tests PASS，无科学 PASS |
+| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ✓ **AUDITED / GATE-A CONDITIONAL PASS** | 双输入秩支持；局部短时程条件支持；末温侧归因 FAIL；Gate-B 仅本地设计 |
 | MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-R 冻结前不启动；不恢复旧 E 匹配 |
 
 ## D3 收口
@@ -112,7 +112,8 @@ MS3-R 采用三个批次级大门，避免逐小实验审批：Gate A 一次执�
 | 8 | MS3-D 稳态 A/B 经验响应与 checkpoint IRF 对齐 | 本地 | ✓；独立复算通过 |
 | 9 | 冻结 MS3-R response-identification、分支语义与三大门协议 | 本地 | ✓ |
 | 10 | 实现并测试 Gate A 点位、placebo、residual excitation、结构信息流与输入秩框架 | 本地 | ✓；190 tests PASS |
-| 11 | Gate A 批量 Linux 执行与一次性本地审计 | Linux/本地 | ▶ `ms3r_gate_a_v1` 单批已授权 |
+| 11 | Gate A 批量 Linux 执行与一次性本地审计 | Linux/本地 | ✓ 条件通过；8/8产物闭合，rank复算误差≤1.55e-15 |
+| 12 | Gate B 分支归因、配对placebo、串级与不变性设计/代码 | 本地 | ▶ 当前唯一任务；未授权Linux |
 
 Linux 历史运行说明保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，当前不构成重复运行授权。
 
