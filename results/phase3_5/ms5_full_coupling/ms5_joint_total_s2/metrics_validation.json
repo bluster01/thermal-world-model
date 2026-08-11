@@ -1,0 +1,112 @@
+{
+  "sample_count": 256,
+  "horizon": 60,
+  "total_noisy_mae": 0.017433691769838333,
+  "total_clean_mae": 0.006848053075373173,
+  "total_clean_scale": 0.4709477126598358,
+  "total_clean_nmae": 0.014541004784405231,
+  "free_clean_mae": 0.006447731517255306,
+  "free_clean_scale": 0.4810865521430969,
+  "free_clean_nmae": 0.013402435928583145,
+  "response_clean_mae": 0.0016973174642771482,
+  "response_clean_scale": 0.03407302871346474,
+  "response_clean_nmae": 0.04981410503387451,
+  "response_amplitude_ratio": 0.9884490370750427,
+  "absorption_flag": false,
+  "over_attribution_flag": false,
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "future_action_leakage_max_error": 0.0,
+    "post_change_sensitivity_max_c": 0.22033646702766418,
+    "positive_step_terminal_effect_max_c": -0.09602701663970947,
+    "finite_effect": true,
+    "finite_state": true,
+    "capabilities": {
+      "stateful_rollout": true,
+      "fixed_horizon": false,
+      "direction_constrained": true,
+      "continuous_time": true
+    },
+    "operator": {
+      "gain_c_per_effective_pct": -0.03452334553003311,
+      "gain_range_c_per_effective_pct": [
+        -0.04530460387468338,
+        -0.02702554315328598
+      ],
+      "tau_seconds": [
+        33.634361267089844,
+        87.34432983398438,
+        175.30667114257812
+      ],
+      "tau_range_seconds": [
+        [
+          25.64048957824707,
+          39.33415603637695
+        ],
+        [
+          74.38983917236328,
+          92.9288330078125
+        ],
+        [
+          167.63185119628906,
+          194.97715759277344
+        ]
+      ],
+      "spectral_radius": 0.9500049352645874,
+      "context_scheduled": true,
+      "delay_mode": "none",
+      "reference_identity_max_error": 0.0
+    },
+    "free_future_action_leakage_max_error": 0.0,
+    "finite_prediction": true,
+    "finite_free": true
+  },
+  "truth": {
+    "generator": "stable_cascade_v2",
+    "truth_regime": "full_coupled_context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "gain_c_per_pct": -0.1,
+    "tau_seconds": [
+      40.0,
+      70.0,
+      210.0
+    ],
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.3,
+    "input_delay_steps": 0,
+    "input_delay_seconds": 0.0,
+    "disturbance_std": 0.0,
+    "disturbance_tau_seconds": 0.0,
+    "disturbance_rho": 0.0,
+    "disturbance_realized_mean": 0.0,
+    "disturbance_realized_std": 0.0,
+    "disturbance_realized_lag1_correlation": 0.0,
+    "free_trajectory_scale": 1.0,
+    "action_context_coupling_pct": 4.0,
+    "realized_gain_range": [
+      -0.141367569565773,
+      -0.0705442726612091
+    ],
+    "realized_tau_range": [
+      [
+        29.77523422241211,
+        53.83251953125
+      ],
+      [
+        52.09762954711914,
+        94.21322631835938
+      ],
+      [
+        155.90771484375,
+        282.8900451660156
+      ]
+    ],
+    "dt_seconds": 10.0,
+    "seed": 22360826,
+    "split": "validation"
+  },
+  "parameter_drift": {
+    "free_l2": 8.808436393737793,
+    "response_l2": 3.3792433738708496
+  }
+}
