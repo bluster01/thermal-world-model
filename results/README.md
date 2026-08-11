@@ -87,6 +87,6 @@ MS5 full-coupling validation 已回传并由本地权重级审计为 `CLOSED / V
 
 `results/phase3_5/ms3r_gatec_local_real_rm1a/` 保存本地真实 1/100 RM1-A 六候选 attribution。small/base/large 的 logged response 为 0.043723/0.043807/0.043692°C，未随 free capacity 单调消失；terminal-only 虽把末温 MAE 降至 1.3899°C，却把局部温降 MAE 推到 21.6378°C（persistence 的 9.41 倍），因此必须保留局部监督。权威审计见 [`PHASE35_MS3R_GATEC_LOCAL_REAL_RM1A_AUDIT_2026-08-11.md`](../docs/PHASE35_MS3R_GATEC_LOCAL_REAL_RM1A_AUDIT_2026-08-11.md)。本批只用 train/validation、单 seed、单次 1/100 执行，不是 test、因果响应或 operator 冠军。
 
-当前 `linux_authorized_gate=null`；Linux 没有可执行批次。下一步先在本地设计 RM2 日块/rolling-fold 稳健性门。
+当前唯一 Linux 授权输出目录为 `results/phase3_5/ms3r_gatec_rm2/`。Hermes 将回传 54-run 完整 train/validation 结果、逐run checkpoint/episode、root manifests、summary、archive和日志；在完整回传并经本地 replay 前，该目录没有科学判决。test 与 MS4 未授权。
 
 Phase 4 已暂停。Fan20-SST 守恒骨架、Fan17/21 嵌套组件、Fan-state controlled Koopman 和时变灰箱路线目前没有正式结果，也不进入 Phase 3.5 结果目录。

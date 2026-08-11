@@ -18,6 +18,8 @@ RESPONSE_ROUTES = {
 }
 RESIDUAL_CAPACITIES = {"small", "base", "large"}
 RESPONSE_SCHEDULING = {"none", "additive", "scheduled"}
+RESPONSE_COORDINATE_MODES = {"full_mimo", "common_only"}
+DOWNSTREAM_MODES = {"latent_mimo", "direct_no_latent"}
 
 
 @dataclass(frozen=True)
@@ -43,6 +45,8 @@ class GateCModelConfig:
     response_route: str = "a1phys_three_pole"
     residual_capacity: str = "base"
     response_scheduling: str = "scheduled"
+    response_coordinate_mode: str = "full_mimo"
+    downstream_mode: str = "latent_mimo"
     dropout: float = 0.1
     dt_seconds: float = 10.0
     tau_min_seconds: float = 20.0
@@ -61,8 +65,14 @@ class GateCModelConfig:
             raise Phase35ProtocolError("Gate C model residual capacity is invalid")
         if self.response_scheduling not in RESPONSE_SCHEDULING:
             raise Phase35ProtocolError("Gate C model response scheduling is invalid")
+        if self.response_coordinate_mode not in RESPONSE_COORDINATE_MODES:
+            raise Phase35ProtocolError("Gate C response coordinate mode is invalid")
+        if self.downstream_mode not in DOWNSTREAM_MODES:
+            raise Phase35ProtocolError("Gate C downstream mode is invalid")
         if self.response_route == "none" and self.response_scheduling != "none":
             raise Phase35ProtocolError("Gate C no-response model cannot enable scheduling")
+        if self.response_route == "none" and self.response_coordinate_mode != "full_mimo":
+            raise Phase35ProtocolError("Gate C no-response model cannot restrict coordinates")
         if self.response_route != "none" and self.response_scheduling == "none":
             raise Phase35ProtocolError("Gate C response model requires additive or scheduled mode")
         if not 0.0 <= self.dropout < 1.0:

@@ -116,3 +116,28 @@ def test_paired_data_rejects_misalignment_or_shared_point_drift():
     caches["B"].values[:, caches["B"].index("机组负荷")] += 1.0
     with pytest.raises(Phase35ProtocolError, match="shared feature"):
         paired_valid_anchors(caches, "validation", window=12, horizon=6, max_age_s=30.0)
+
+
+def test_custom_fold_bounds_stay_before_test_and_do_not_borrow_history():
+    from src.phase35.multistep.gatec_data import paired_valid_anchors
+
+    caches = _paired_caches()
+    anchors = paired_valid_anchors(
+        caches,
+        "validation",
+        window=12,
+        horizon=6,
+        max_age_s=30.0,
+        bounds_override=(240, 280),
+    )
+    assert anchors.min() >= 251
+    assert anchors.max() + 6 < 280
+    with pytest.raises(Phase35ProtocolError, match="before the test"):
+        paired_valid_anchors(
+            caches,
+            "validation",
+            window=12,
+            horizon=6,
+            max_age_s=30.0,
+            bounds_override=(280, 330),
+        )

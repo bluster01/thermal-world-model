@@ -76,6 +76,7 @@ def paired_valid_anchors(
     horizon: int,
     max_age_s: float,
     shared_tolerance: float = 1e-5,
+    bounds_override: tuple[int, int] | None = None,
 ) -> np.ndarray:
     _validate_pair(caches, shared_tolerance)
     if split == "test":
@@ -85,7 +86,13 @@ def paired_valid_anchors(
     if min(window, horizon) < 1 or max_age_s <= 0:
         raise Phase35ProtocolError("Gate C window/horizon/age settings are invalid")
     cache = caches["A"]
-    lo, hi = cache.split_bounds()[split]
+    if bounds_override is None:
+        lo, hi = cache.split_bounds()[split]
+    else:
+        lo, hi = map(int, bounds_override)
+        test_start = cache.split_bounds()["test"][0]
+        if not 0 <= lo < hi <= test_start:
+            raise Phase35ProtocolError("Gate C custom bounds must stay before the test split")
     first, last = lo + window - 1, hi - horizon - 1
     if last < first:
         return np.empty(0, dtype=np.int64)
@@ -172,8 +179,10 @@ def extract_gatec_batch(
     window: int,
     horizon: int,
     shared_tolerance: float = 1e-5,
+    validate_pair: bool = True,
 ) -> PairedGateCBatch:
-    _validate_pair(caches, shared_tolerance)
+    if validate_pair:
+        _validate_pair(caches, shared_tolerance)
     anchors = np.asarray(anchors, dtype=np.int64)
     if anchors.ndim != 1 or len(anchors) == 0:
         raise Phase35ProtocolError("Gate C batch needs non-empty one-dimensional anchors")

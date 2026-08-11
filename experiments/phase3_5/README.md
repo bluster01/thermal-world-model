@@ -2,7 +2,59 @@
 
 本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
-> 当前状态：`ms3_r=implementation`、`linux_authorized_gate=null`。真实 RM1-A 已审计：free capacity 扫描未见 response 单调坍缩，terminal-only 的中间状态失真，故保留 scheduled-base 与局部监督作为预注册参考，但不称冠军。下一步仅在本地设计 RM2 日块/rolling-fold 稳健性批。合成只作理论/负控制；Linux、test、MS4 和旧 42-run/E 系列均未授权。
+> 当前状态：`ms3_r=ready_for_linux`、`linux_authorized_gate=ms3_r`。唯一授权批次是 Gate C RM2：9候选×3 seeds×2 expanding folds=`54 runs`，由 Hermes 在完整 train/validation anchors 上按CUDA设备池并行执行。test、自动科学PASS、MS4和旧42-run/E系列均未授权。
+
+## Gate C RM2：Hermes 54-run 并行批（当前唯一授权）
+
+Webhook 拉取本冻结提交后，只有状态检查同时返回 `active_gate=ms3_r`、`active_status=ready_for_linux`、`linux_authorized_gate=ms3_r` 才能执行。设备池由现场按实际 GPU 数设置；这不改变科学矩阵：
+
+```bash
+export PH35_MS3_CACHE_A=/data/thermal-world-model/phase3_5/ms3_cross_A.npz
+export PH35_MS3_CACHE_B=/data/thermal-world-model/phase3_5/ms3_cross_B.npz
+export PH35_RM2_DEVICES=cuda:0,cuda:1,cuda:2,cuda:3
+export PH35_RM2_OUT=results/phase3_5/ms3r_gatec_rm2
+export OMP_NUM_THREADS=4
+export MKL_NUM_THREADS=4
+
+git pull --ff-only origin main
+python experiments/phase3_5/experiment_status.py --check --json
+git status --short
+python experiments/phase3_5/ms3r_gatec_rm2.py --dry-run
+python -m pytest \
+  tests/phase35/multistep/test_gatec_rm2_contracts.py \
+  tests/phase35/multistep/test_gatec_rm2_training.py \
+  tests/phase35/multistep/test_gatec_rm2_cli.py -q
+
+mkdir -p "$PH35_RM2_OUT/remote_execution"
+git rev-parse HEAD > "$PH35_RM2_OUT/remote_execution/git_commit.txt"
+python --version > "$PH35_RM2_OUT/remote_execution/environment.txt" 2>&1
+python -c 'import numpy,torch; print(numpy.__version__,torch.__version__,torch.cuda.is_available(),torch.cuda.device_count())' \
+  >> "$PH35_RM2_OUT/remote_execution/environment.txt" 2>&1
+nvidia-smi >> "$PH35_RM2_OUT/remote_execution/environment.txt" 2>&1
+
+timeout --signal=TERM --kill-after=120s 172800s \
+/usr/bin/time -v -o "$PH35_RM2_OUT/remote_execution/resource_usage.txt" \
+python experiments/phase3_5/ms3r_gatec_rm2.py \
+  --execute-matrix \
+  --cache-a "$PH35_MS3_CACHE_A" \
+  --cache-b "$PH35_MS3_CACHE_B" \
+  --devices "$PH35_RM2_DEVICES" \
+  --groups A,B,C \
+  --output-root "$PH35_RM2_OUT" \
+  > "$PH35_RM2_OUT/remote_execution/train_stdout.log" \
+  2> "$PH35_RM2_OUT/remote_execution/train_stderr.log"
+echo $? > "$PH35_RM2_OUT/remote_execution/train_exit_code.txt"
+
+python experiments/phase3_5/summarize_ms3r_gatec_rm2.py \
+  --results-root "$PH35_RM2_OUT" \
+  > "$PH35_RM2_OUT/remote_execution/summary_stdout.log" \
+  2> "$PH35_RM2_OUT/remote_execution/summary_stderr.log"
+echo $? > "$PH35_RM2_OUT/remote_execution/summary_exit_code.txt"
+```
+
+Runner 将54个run静态分片给设备worker；每个worker只绑定一个device并顺序运行自身队列。单run失败会写 `failure.json`，其它run继续；不自动重试。`--skip-complete` 只允许跳过ledger已闭合的run，任何已有但不完整目录都会被拒绝覆盖。summary exit 2 表示矩阵不完整，仍须原样回传所有成功/失败产物。
+
+Hermes 必须提交 `results/phase3_5/ms3r_gatec_rm2/**`，包括54个run目录、root manifests、checkpoint archive、episode NPZ、全部remote logs和失败记录。RM2 episode NPZ 已有精确 `.gitignore` 例外，必须确认 `git status --short` 能看到；逐run `.pt` 可不单独入库，但 `checkpoints_validation.tar` 必须入库且成员数等于完整run数。不得运行Supervisor audit、改TODO/registry、删失败run、补seed/fold、改预算、访问test或启动MS4。
 
 RM1-A 仅允许本地在冻结真实 cache 上执行一次；以下命令是本地审计入口，不构成 Linux 授权：
 

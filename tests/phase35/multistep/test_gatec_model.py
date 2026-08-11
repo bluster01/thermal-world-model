@@ -238,3 +238,40 @@ def test_all_gatec_modules_receive_gradients_under_joint_multitask_loss():
     for module_name in ("encoder", "valve_policy", "tin_forecaster", "local_response", "downstream"):
         module = getattr(model, module_name)
         assert any(parameter.grad is not None for parameter in module.parameters()), module_name
+
+
+def test_common_only_restricts_explicit_response_but_preserves_two_outputs():
+    from src.phase35.multistep.gatec_model import build_gatec_model
+
+    history, future_sp = _inputs(batch=2)
+    config = _config()
+    config = GateCModelConfig(**{**config.__dict__, "response_coordinate_mode": "common_only"})
+    model = build_gatec_model(config, FEATURES).eval()
+    context = model.encoder(history)
+    baseline = history[:, -1, model.valve_indices]
+    future = baseline[:, None, :].expand(-1, 8, -1).clone()
+    future[:, 2:, 0] += 8.0
+    response = model.local_response(context, future, baseline)
+    assert torch.allclose(response["effect"][..., 0], response["effect"][..., 1])
+    output = model(history, future_sp, boundary_mode="forecast_boundary")
+    assert output["terminal_prediction"].shape == (2, 8, 2)
+
+
+def test_direct_downstream_has_no_recurrent_latent_state_and_is_causal():
+    from src.phase35.multistep.gatec_model import DirectDownstreamMixer, build_gatec_model
+
+    history, future_sp = _inputs(batch=2)
+    config = _config()
+    config = GateCModelConfig(**{**config.__dict__, "downstream_mode": "direct_no_latent"})
+    model = build_gatec_model(config, FEATURES).eval()
+    assert isinstance(model.downstream, DirectDownstreamMixer)
+    output = model(history, future_sp, boundary_mode="forecast_boundary")
+    assert output["latent_state"].shape == (2, 8, 0)
+    changed = future_sp.clone()
+    changed[:, 5:] += 20.0
+    altered = model(history, changed, boundary_mode="forecast_boundary")
+    assert torch.allclose(
+        output["terminal_prediction"][:, :5],
+        altered["terminal_prediction"][:, :5],
+        atol=1e-6,
+    )

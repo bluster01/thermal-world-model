@@ -469,6 +469,49 @@ class StableDownstreamLatentMixer(nn.Module):
         return torch.stack(outputs, dim=1), torch.stack(states, dim=1)
 
 
+class DirectDownstreamMixer(nn.Module):
+    """Causal no-state ablation for testing whether downstream memory is needed."""
+
+    def __init__(self, context_dim: int) -> None:
+        super().__init__()
+        self.context_projection = nn.Linear(context_dim, 2)
+        self.input_projection = nn.Linear(2, 2, bias=False)
+        nn.init.zeros_(self.context_projection.weight)
+        nn.init.zeros_(self.context_projection.bias)
+        nn.init.normal_(self.input_projection.weight, mean=0.0, std=1e-3)
+
+    def forward(
+        self,
+        context: torch.Tensor,
+        future_tout: torch.Tensor,
+        baseline_terminal: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        centered = (future_tout - baseline_terminal[:, None, :]) / 20.0
+        delta = self.input_projection(centered) + self.context_projection(context)[:, None, :]
+        terminal = baseline_terminal[:, None, :] + delta
+        no_latent = future_tout.new_zeros((*future_tout.shape[:2], 0))
+        return terminal, no_latent
+
+
+class CoordinateRestrictedResponse(nn.Module):
+    """Restrict only the explicit response effect to the supported coordinate subspace."""
+
+    def __init__(self, operator: nn.Module, mode: str) -> None:
+        super().__init__()
+        self.operator = operator
+        self.mode = mode
+        self.route = getattr(operator, "route", "unknown")
+
+    def forward(
+        self, context: torch.Tensor, future_valve: torch.Tensor, baseline_valve: torch.Tensor
+    ) -> dict[str, Any]:
+        output = self.operator(context, future_valve, baseline_valve)
+        if self.mode == "common_only":
+            common = output["effect"].mean(dim=-1, keepdim=True)
+            output = {**output, "effect": common.expand_as(output["effect"])}
+        return output
+
+
 class MeasuredBoundaryMIMOWorldModel(nn.Module):
     def __init__(
         self, config: GateCModelConfig, feature_names: Sequence[str]
@@ -507,7 +550,7 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
         )
         nn.init.normal_(self.residual_head[-1].weight, mean=0.0, std=1e-3)
         nn.init.zeros_(self.residual_head[-1].bias)
-        self.local_response = build_local_response_operator(
+        response = build_local_response_operator(
             route=config.response_route,
             context_dim=config.d_model,
             state_dim=config.local_state_dim,
@@ -517,7 +560,14 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
             tau_min_seconds=config.tau_min_seconds,
             tau_max_seconds=config.tau_max_seconds,
         )
-        self.downstream = StableDownstreamLatentMixer(config.d_model, config.latent_dim)
+        self.local_response = CoordinateRestrictedResponse(
+            response, config.response_coordinate_mode
+        )
+        self.downstream = (
+            StableDownstreamLatentMixer(config.d_model, config.latent_dim)
+            if config.downstream_mode == "latent_mimo"
+            else DirectDownstreamMixer(config.d_model)
+        )
 
     def set_history_normalization(
         self, center: torch.Tensor, scale: torch.Tensor

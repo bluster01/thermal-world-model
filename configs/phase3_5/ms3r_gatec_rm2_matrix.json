@@ -1,0 +1,91 @@
+{
+  "protocol_version": "phase3.5-ms3r-gatec-rm2-v1",
+  "batch_id": "ms3r-gatec-rm2-full-validation",
+  "scope": "real_closed_loop_observational_validation_not_causal",
+  "parent_rm1a_audit": {
+    "path": "results/phase3_5/ms3r_gatec_local_real_rm1a/supervisor_audit_validation.json",
+    "sha256": "fdde0cec2bb4a5ec8363cc9ef4913400547f6cda4553060f13563fa98e4d53cf",
+    "required_label": "RM1A_ATTRIBUTION_COMPLETE_CAPACITY_COLLAPSE_NOT_OBSERVED_LOCAL_SUPERVISION_REQUIRED"
+  },
+  "data_contract": {
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "test_allowed": false,
+    "pretest_end_fraction": 0.8,
+    "window": 96,
+    "horizon": 60,
+    "step_seconds": 10,
+    "max_age_s": 180.0,
+    "folds": [
+      {"fold_id": "F0", "train_fraction": [0.0, 0.6], "validation_fraction": [0.6, 0.7]},
+      {"fold_id": "F1", "train_fraction": [0.0, 0.7], "validation_fraction": [0.7, 0.8]}
+    ]
+  },
+  "seeds": [0, 1, 2],
+  "candidates": [
+    {"group": "A", "candidate_id": "A0_paired_free", "response_route": "none", "residual_capacity": "base", "response_scheduling": "none", "response_coordinate_mode": "full_mimo", "downstream_mode": "latent_mimo"},
+    {"group": "A", "candidate_id": "A1_additive_base", "response_route": "a1phys_three_pole", "residual_capacity": "base", "response_scheduling": "additive", "response_coordinate_mode": "full_mimo", "downstream_mode": "latent_mimo"},
+    {"group": "A", "candidate_id": "A2_a1_sched_base", "response_route": "a1phys_three_pole", "residual_capacity": "base", "response_scheduling": "scheduled", "response_coordinate_mode": "full_mimo", "downstream_mode": "latent_mimo"},
+    {"group": "A", "candidate_id": "A3_a1_sched_large", "response_route": "a1phys_three_pole", "residual_capacity": "large", "response_scheduling": "scheduled", "response_coordinate_mode": "full_mimo", "downstream_mode": "latent_mimo"},
+    {"group": "B", "candidate_id": "B1_koopman", "response_route": "stable_koopman_lpv", "residual_capacity": "base", "response_scheduling": "scheduled", "response_coordinate_mode": "full_mimo", "downstream_mode": "latent_mimo"},
+    {"group": "B", "candidate_id": "B2_pi_ode", "response_route": "pi_neural_ode", "residual_capacity": "base", "response_scheduling": "scheduled", "response_coordinate_mode": "full_mimo", "downstream_mode": "latent_mimo"},
+    {"group": "B", "candidate_id": "B3_deeponet", "response_route": "deeponet_response", "residual_capacity": "base", "response_scheduling": "scheduled", "response_coordinate_mode": "full_mimo", "downstream_mode": "latent_mimo"},
+    {"group": "C", "candidate_id": "C1_common_only", "response_route": "a1phys_three_pole", "residual_capacity": "base", "response_scheduling": "scheduled", "response_coordinate_mode": "common_only", "downstream_mode": "latent_mimo"},
+    {"group": "C", "candidate_id": "C2_no_downstream_latent", "response_route": "a1phys_three_pole", "residual_capacity": "base", "response_scheduling": "scheduled", "response_coordinate_mode": "full_mimo", "downstream_mode": "direct_no_latent"}
+  ],
+  "model": {
+    "d_model": 32,
+    "latent_dim": 16,
+    "local_state_dim": 6,
+    "dropout": 0.1,
+    "boundary_mode": "forecast_boundary",
+    "local_supervision": true,
+    "baseline_parameterization": "observed_persistence_plus_learned_increment"
+  },
+  "training": {
+    "batch_size": 128,
+    "optimizer_updates_cap": 4000,
+    "minimum_updates": 1000,
+    "evaluation_interval_updates": 100,
+    "early_stopping_patience_evaluations": 8,
+    "stats_anchor_count": 16384,
+    "selector_anchor_count": 2048,
+    "final_anchor_count": 4096,
+    "evaluation_batch_size": 128,
+    "learning_rate": 0.001,
+    "weight_decay": 0.00001,
+    "gradient_clip": 1.0,
+    "minimum_score_improvement": 0.0001
+  },
+  "execution_contract": {
+    "webhook_execution_authorized": true,
+    "linux_authorized": true,
+    "test_authorized": false,
+    "maximum_attempts_per_run": 1,
+    "expected_unique_candidates": 9,
+    "expected_run_count": 54,
+    "automatic_scientific_pass": false,
+    "required_run_artifacts": [
+      "manifest.json",
+      "checkpoint_best_validation.pt",
+      "metrics_validation.json",
+      "episodes_validation.npz",
+      "artifact_ledger.json"
+    ],
+    "required_root_artifacts": [
+      "run_manifest.json",
+      "matrix_execution_status.json",
+      "summary_validation.json",
+      "checkpoints_validation.tar",
+      "artifact_ledger.json"
+    ]
+  },
+  "claim_contract": {
+    "open_loop_plant_identification": false,
+    "arbitrary_do_valve": false,
+    "valid_sp_instrument": false,
+    "measured_spray_flow_physics": false,
+    "independent_test": false,
+    "operator_champion": false,
+    "closed_loop_release": false
+  }
+}
