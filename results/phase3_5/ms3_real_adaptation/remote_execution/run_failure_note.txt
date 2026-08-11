@@ -1,0 +1,32 @@
+RUN_FAILURE_NOTE (facts only, no scientific conclusion, no fix attempted)
+
+## 现象
+ms3_real_adaptation.py 正式训练启动即失败（exit=1，无任何 run 产物生成）：
+RuntimeError: insufficient MS3 anchors train=0 validation=0
+
+## 根因（已实测定位）
+prepare_ms3_cross_data.py L89-91 用 pd.to_datetime(chunk[time], errors="coerce", utc=True).astype("int64")
+写入 cache 的 timestamps_ns。本机 pandas 3.0.2 的 to_datetime(utc=True) 返回 datetime64[us, UTC]
+（微秒精度），而 pandas 2.x（Codex 本地）返回 datetime64[ns, UTC]。astype("int64") 后：
+- pandas 2.x: 1.766e18 (ns) -> diff=1e10 -> 10s 间隔识别正确
+- pandas 3.0.2: 1.766e15 (us) -> diff=1e7 -> 真实 10s 间隔被记录为 0.01s
+
+实测 diff 分布（本机 cache A, 1,192,329 行）：
+  0.01s x 1,192,046 | 0.02s x 279 | 0.12s x 1 | 0.18s x 1 | 75.75s x 1
+  按 us 解释：10s x 1,192,046 | 20s x 279 | 120s x 1 | 180s x 1 | 75,750s x 1
+  与设计文档"282 个非 10s transition（279 个 20s，另有 120s/180s/75,750s 缺口）"完全吻合。
+
+## 后果
+timestamps_ns 语义错误 -> 1,192,328/1,192,328 transition 被判 irregular ->
+anchor 构造器 transition-prefix 排除所有 history->future 窗口 -> train=0 validation=0。
+
+## 环境
+- Alloftime env: python 3.11.15, pandas 3.0.2, numpy 2.3.5, torch 2.11.0+cu130
+- 数据源 SHA 85a3f926...e4da6 与冻结 contract 完全一致（size 3,987,138,416）
+- 预检全绿（pytest tests/phase35 171/171、compileall、dry-run 12 runs test_authorized=false）——
+  现有测试未覆盖 pandas 3.0 精度路径
+
+## 状态
+- cache A/B npz 与 manifest 已生成但 timestamps 语义错误；重跑 prepare 将覆盖
+- 无任何训练产物、无 test 访问
+- 等待 Supervisor 修复（建议 prepare 显式强制 datetime64[ns]，并在 matrix contract 冻结时间戳单位）

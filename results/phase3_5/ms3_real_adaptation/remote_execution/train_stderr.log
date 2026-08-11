@@ -1,0 +1,10 @@
+[1/12] MS3 A_ms3_joint_total_s0
+Traceback (most recent call last):
+  File "/home/bluster/projectA/thermal-world-model/experiments/phase3_5/ms3_real_adaptation.py", line 326, in <module>
+    main()
+  File "/home/bluster/projectA/thermal-world-model/experiments/phase3_5/ms3_real_adaptation.py", line 280, in main
+    result = train_real_run(
+             ^^^^^^^^^^^^^^^
+  File "/home/bluster/projectA/thermal-world-model/src/phase35/multistep/real_training.py", line 592, in train_real_run
+    raise RuntimeError(
+RuntimeError: insufficient MS3 anchors train=0 validation=0

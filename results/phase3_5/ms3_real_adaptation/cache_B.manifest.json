@@ -1,0 +1,86 @@
+{
+  "protocol_version": "phase3.5-ms3-v1",
+  "side": "B",
+  "step_seconds": 10,
+  "cross_pairing_frozen": true,
+  "control_loop": "B_valve_to_left_A_thermal_train",
+  "column_map": {
+    "机组负荷": "机组负荷_GENERATOR_POWER",
+    "主蒸汽压力": "主蒸汽压力",
+    "主给水流量": "选择后的主给水流量",
+    "未校正总煤量": "未校正总煤量",
+    "主蒸汽流量": "主蒸汽流量_60BKAO0312",
+    "二级减温器入口温度": "选择后二级减温器左侧入口蒸汽",
+    "二级减温器出口温度": "选择后左侧二过喷水减温器出口",
+    "末级过热器出口汽温": "选择后左侧末级过热器出口汽温",
+    "二级减温调节阀设定": "过热器二级减温器B喷水调节阀设定",
+    "二级减温调节门阀位": "过热器二级减温器B侧喷水调节门阀位反馈"
+  },
+  "source": {
+    "path": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/all_merged_10s.csv",
+    "size_bytes": 3987138416,
+    "sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "rows": 1192329
+  },
+  "matrix_sha256": "09dd01d02b4d94cec88b6bec4fbcbc0dc9eb4d3406d68f961de4796886b7b3d2",
+  "grid_start_ns": 1766541870000000,
+  "grid_end_ns": 1778543960000000,
+  "grid_rows": 1192329,
+  "irregular_transition_count": 1192328,
+  "max_transition_seconds": 75.75,
+  "gap_policy": "preserve_source_rows_and_exclude_any_cross_gap_window",
+  "reconstruction": "premerged_dense_10s_no_additional_fill",
+  "age_semantics": "zero_means_dense_merged_row_not_original_tag_age",
+  "quality": {
+    "机组负荷": {
+      "finite_fraction": 1.0,
+      "min": 0.0,
+      "max": 617.0274658203125
+    },
+    "主蒸汽压力": {
+      "finite_fraction": 1.0,
+      "min": 0.026169300079345703,
+      "max": 25.420923233032227
+    },
+    "主给水流量": {
+      "finite_fraction": 1.0,
+      "min": 1.6815581571897805e-44,
+      "max": 1828.603271484375
+    },
+    "未校正总煤量": {
+      "finite_fraction": 1.0,
+      "min": 6.726232628759122e-44,
+      "max": 424.4117736816406
+    },
+    "主蒸汽流量": {
+      "finite_fraction": 1.0,
+      "min": 0.0,
+      "max": 1978.0018310546875
+    },
+    "二级减温器入口温度": {
+      "finite_fraction": 1.0,
+      "min": 75.35789489746094,
+      "max": 564.169677734375
+    },
+    "二级减温器出口温度": {
+      "finite_fraction": 1.0,
+      "min": 88.90423583984375,
+      "max": 546.9927368164062
+    },
+    "末级过热器出口汽温": {
+      "finite_fraction": 1.0,
+      "min": 93.62332916259766,
+      "max": 582.165283203125
+    },
+    "二级减温调节阀设定": {
+      "finite_fraction": 1.0,
+      "min": 93.62332916259766,
+      "max": 579.5779418945312
+    },
+    "二级减温调节门阀位": {
+      "finite_fraction": 1.0,
+      "min": -0.3625926971435547,
+      "max": 99.6986312866211
+    }
+  }
+}
