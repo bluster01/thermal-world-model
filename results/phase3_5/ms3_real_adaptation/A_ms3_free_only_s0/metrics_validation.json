@@ -1,0 +1,41 @@
+{
+  "sample_count": 8192,
+  "horizon": 60,
+  "logged_mae_c": 1.156098484992981,
+  "baseline_action_mae_c": 1.156098484992981,
+  "shuffled_action_mae_c": 1.156098484992981,
+  "logged_rmse_c": 2.026536464691162,
+  "horizon_mae_c": {
+    "H1": 0.23648041486740112,
+    "H6": 0.39491143822669983,
+    "H18": 0.9307433366775513,
+    "H60": 1.6179169416427612
+  },
+  "dynamic_support": {
+    "threshold_pct": 1.0,
+    "window_count": 8034,
+    "day_count": 27
+  },
+  "dynamic_logged_mae_c": 1.1583762168884277,
+  "dynamic_baseline_action_mae_c": 1.1583762168884277,
+  "dynamic_shuffled_action_mae_c": 1.1583762168884277,
+  "dynamic_mean_abs_effect_c": 0.0,
+  "max_abs_effect_c": 0.0,
+  "structural_diagnostics": {
+    "reference_identity_max_error": 0.0,
+    "free_future_action_leakage_max_error": 0.0,
+    "future_action_prefix_leakage_max_error": 0.0,
+    "positive_step_terminal_effect_max_c": 0.0,
+    "finite_prediction": true,
+    "finite_free": true,
+    "finite_effect": true,
+    "finite_state": true
+  },
+  "shuffle_design": {
+    "method": "cyclic_delta_path_permutation_within_baseline_10pct_bins",
+    "seed": 91000,
+    "permuted_group_count": 6,
+    "singleton_count": 2,
+    "fixed_point_count": 2
+  }
+}

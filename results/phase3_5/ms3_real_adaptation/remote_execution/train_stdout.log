@@ -1,0 +1,150 @@
+{
+  "status": "matrix_completed",
+  "run_count": 12,
+  "runs": [
+    {
+      "candidate_id": "ms3_joint_total",
+      "mode": "joint_total",
+      "role": "ms5_selected_strategy",
+      "side": "A",
+      "seed": 0,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/A_ms3_joint_total_s0",
+      "best_epoch": 27,
+      "validation_logged_mae_c": 1.1550405025482178,
+      "test_accessed": false
+    },
+    {
+      "candidate_id": "ms3_joint_total",
+      "mode": "joint_total",
+      "role": "ms5_selected_strategy",
+      "side": "A",
+      "seed": 1,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/A_ms3_joint_total_s1",
+      "best_epoch": 25,
+      "validation_logged_mae_c": 1.1588424444198608,
+      "test_accessed": false
+    },
+    {
+      "candidate_id": "ms3_joint_total",
+      "mode": "joint_total",
+      "role": "ms5_selected_strategy",
+      "side": "A",
+      "seed": 2,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/A_ms3_joint_total_s2",
+      "best_epoch": 12,
+      "validation_logged_mae_c": 1.1792099475860596,
+      "test_accessed": false
+    },
+    {
+      "candidate_id": "ms3_joint_total",
+      "mode": "joint_total",
+      "role": "ms5_selected_strategy",
+      "side": "B",
+      "seed": 0,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/B_ms3_joint_total_s0",
+      "best_epoch": 27,
+      "validation_logged_mae_c": 1.1623117923736572,
+      "test_accessed": false
+    },
+    {
+      "candidate_id": "ms3_joint_total",
+      "mode": "joint_total",
+      "role": "ms5_selected_strategy",
+      "side": "B",
+      "seed": 1,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/B_ms3_joint_total_s1",
+      "best_epoch": 18,
+      "validation_logged_mae_c": 1.1591697931289673,
+      "test_accessed": false
+    },
+    {
+      "candidate_id": "ms3_joint_total",
+      "mode": "joint_total",
+      "role": "ms5_selected_strategy",
+      "side": "B",
+      "seed": 2,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/B_ms3_joint_total_s2",
+      "best_epoch": 28,
+      "validation_logged_mae_c": 1.1508262157440186,
+      "test_accessed": false
+    },
+    {
+      "candidate_id": "ms3_free_only",
+      "mode": "free_only",
+      "role": "prediction_only_negative_control",
+      "side": "A",
+      "seed": 0,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/A_ms3_free_only_s0",
+      "best_epoch": 22,
+      "validation_logged_mae_c": 1.156098484992981,
+      "test_accessed": false
+    },
+    {
+      "candidate_id": "ms3_free_only",
+      "mode": "free_only",
+      "role": "prediction_only_negative_control",
+      "side": "A",
+      "seed": 1,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/A_ms3_free_only_s1",
+      "best_epoch": 25,
+      "validation_logged_mae_c": 1.1581584215164185,
+      "test_accessed": false
+    },
+    {
+      "candidate_id": "ms3_free_only",
+      "mode": "free_only",
+      "role": "prediction_only_negative_control",
+      "side": "A",
+      "seed": 2,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/A_ms3_free_only_s2",
+      "best_epoch": 25,
+      "validation_logged_mae_c": 1.1643513441085815,
+      "test_accessed": false
+    },
+    {
+      "candidate_id": "ms3_free_only",
+      "mode": "free_only",
+      "role": "prediction_only_negative_control",
+      "side": "B",
+      "seed": 0,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/B_ms3_free_only_s0",
+      "best_epoch": 27,
+      "validation_logged_mae_c": 1.163549542427063,
+      "test_accessed": false
+    },
+    {
+      "candidate_id": "ms3_free_only",
+      "mode": "free_only",
+      "role": "prediction_only_negative_control",
+      "side": "B",
+      "seed": 1,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/B_ms3_free_only_s1",
+      "best_epoch": 38,
+      "validation_logged_mae_c": 1.1690723896026611,
+      "test_accessed": false
+    },
+    {
+      "candidate_id": "ms3_free_only",
+      "mode": "free_only",
+      "role": "prediction_only_negative_control",
+      "side": "B",
+      "seed": 2,
+      "status": "completed",
+      "output_dir": "/home/bluster/projectA/thermal-world-model/results/phase3_5/ms3_real_adaptation/B_ms3_free_only_s2",
+      "best_epoch": 27,
+      "validation_logged_mae_c": 1.1481908559799194,
+      "test_accessed": false
+    }
+  ]
+}

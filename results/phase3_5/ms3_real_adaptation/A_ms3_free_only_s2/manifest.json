@@ -1,0 +1,195 @@
+{
+  "protocol_version": "phase3.5-ms3-v1.1",
+  "evidence_scope": "real_ab_observational_validation_not_causal",
+  "run_id": "A_ms3_free_only_s2",
+  "side": "A",
+  "seed": 2,
+  "mode": "free_only",
+  "model_config": {
+    "window": 96,
+    "horizon": 60,
+    "d_model": 32,
+    "n_heads": 4,
+    "dropout": 0.1,
+    "opening_map": "monotone",
+    "poles": 3,
+    "tau_min_seconds": 20.0,
+    "tau_max_seconds": 900.0,
+    "context_scheduled": true,
+    "schedule_log_scale": 0.5
+  },
+  "operator_config": {
+    "route": "graybox",
+    "horizon": 60,
+    "context_dim": 64,
+    "dt_seconds": 10.0,
+    "opening_map": "monotone",
+    "poles": 3,
+    "latent_dim": 4,
+    "hidden_dim": 32,
+    "tau_min_seconds": 20.0,
+    "tau_max_seconds": 900.0,
+    "ode_substeps": 2,
+    "closure_scale": 0.02,
+    "context_scheduled": true,
+    "schedule_log_scale": 0.5,
+    "delay_mode": "none",
+    "fixed_delay_steps": 0,
+    "max_delay_steps": 0
+  },
+  "training_config": {
+    "batch_size": 128,
+    "epochs": 40,
+    "patience": 8,
+    "steps_per_epoch": 100,
+    "learning_rate": 0.001,
+    "weight_decay": 1e-05,
+    "gradient_clip": 1.0,
+    "min_delta": 0.0001,
+    "max_train_anchors": 100000,
+    "max_selector_anchors": 2048,
+    "max_validation_anchors": 8192,
+    "max_age_seconds": 180.0,
+    "dynamic_dose_threshold_pct": 1.0,
+    "min_operating_load_mw": 250.0,
+    "min_operating_pressure_mpa": 10.0,
+    "target_temperature_min_c": 500.0,
+    "target_temperature_max_c": 600.0,
+    "sp_temperature_min_c": 500.0,
+    "sp_temperature_max_c": 600.0,
+    "valve_min_pct": -2.0,
+    "valve_max_pct": 102.0
+  },
+  "feature_columns": [
+    "机组负荷",
+    "主蒸汽压力",
+    "主给水流量",
+    "未校正总煤量",
+    "主蒸汽流量",
+    "二级减温器入口温度",
+    "二级减温器出口温度",
+    "末级过热器出口汽温",
+    "二级减温调节阀设定",
+    "二级减温调节门阀位"
+  ],
+  "cache_path": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/ms3_cross_A.npz",
+  "cache_sha256": "a75cde934e1d459c629959a6921a80d31ec1bf998468525ef82a4ffaaa3f29b8",
+  "cache_metadata": {
+    "age_semantics": "zero_means_dense_merged_row_not_original_tag_age",
+    "column_map": {
+      "主给水流量": "选择后的主给水流量",
+      "主蒸汽压力": "主蒸汽压力",
+      "主蒸汽流量": "主蒸汽流量_60BKAO0312",
+      "二级减温器入口温度": "选择后二级减温器右侧入口蒸汽",
+      "二级减温器出口温度": "选择后右侧二过喷水减温器出口",
+      "二级减温调节门阀位": "过热器二级减温器A侧喷水调节门阀位反馈",
+      "二级减温调节阀设定": "过热器二级减温器A喷水调节阀设定",
+      "未校正总煤量": "未校正总煤量",
+      "末级过热器出口汽温": "选择后右侧末级过热器出口汽温",
+      "机组负荷": "机组负荷_GENERATOR_POWER"
+    },
+    "control_loop": "A_valve_to_right_B_thermal_train",
+    "cross_pairing_frozen": true,
+    "gap_policy": "preserve_source_rows_and_exclude_any_cross_gap_window",
+    "grid_end_ns": 1778543960000000000,
+    "grid_rows": 1192329,
+    "grid_start_ns": 1766541870000000000,
+    "irregular_transition_count": 282,
+    "matrix_sha256": "b2e69d78b949334bfd5d92d100bcb730f444758c57d90920a451138a5b831f8a",
+    "max_transition_seconds": 75750.0,
+    "protocol_version": "phase3.5-ms3-v1.1",
+    "quality": {
+      "主给水流量": {
+        "finite_fraction": 1.0,
+        "max": 1828.603271484375,
+        "min": 1.6815581571897805e-44
+      },
+      "主蒸汽压力": {
+        "finite_fraction": 1.0,
+        "max": 25.420923233032227,
+        "min": 0.026169300079345703
+      },
+      "主蒸汽流量": {
+        "finite_fraction": 1.0,
+        "max": 1978.0018310546875,
+        "min": 0.0
+      },
+      "二级减温器入口温度": {
+        "finite_fraction": 1.0,
+        "max": 566.0862426757812,
+        "min": 62.205692291259766
+      },
+      "二级减温器出口温度": {
+        "finite_fraction": 1.0,
+        "max": 551.9038696289062,
+        "min": 72.60287475585938
+      },
+      "二级减温调节门阀位": {
+        "finite_fraction": 1.0,
+        "max": 98.18798828125,
+        "min": -0.8892192840576172
+      },
+      "二级减温调节阀设定": {
+        "finite_fraction": 1.0,
+        "max": 588.781494140625,
+        "min": 80.70044708251953
+      },
+      "未校正总煤量": {
+        "finite_fraction": 1.0,
+        "max": 424.4117736816406,
+        "min": 6.726232628759122e-44
+      },
+      "末级过热器出口汽温": {
+        "finite_fraction": 1.0,
+        "max": 588.733642578125,
+        "min": 80.74835968017578
+      },
+      "机组负荷": {
+        "finite_fraction": 1.0,
+        "max": 617.0274658203125,
+        "min": 0.0
+      }
+    },
+    "reconstruction": "premerged_dense_10s_no_additional_fill",
+    "side": "A",
+    "source": {
+      "path": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/all_merged_10s.csv",
+      "rows": 1192329,
+      "sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+      "size_bytes": 3987138416
+    },
+    "step_seconds": 10,
+    "timestamp_storage_unit": "ns"
+  },
+  "matrix_sha256": "b2e69d78b949334bfd5d92d100bcb730f444758c57d90920a451138a5b831f8a",
+  "git_sha": "798fcde0b15c6cea89983f6e4d5f6080c6e57d87",
+  "device": "cuda",
+  "torch_version": "2.11.0+cu130",
+  "train_anchor_count": 100000,
+  "validation_anchor_count": 8192,
+  "selector_anchor_count": 2048,
+  "validation_trajectory_sha256": "59e38b9c64102269bd52945da6b749db740a96fc2dfd6607534e6e0203f79305",
+  "best_epoch": 25,
+  "epochs_ran": 33,
+  "elapsed_minutes": 0.2982526620229085,
+  "checkpoint_selector": "validation_logged_mae_c",
+  "checkpoint_sha256": "021337993eaba9f06cae0df563f89d35eb8ca718a0dc4427032fbf06e59a21e2",
+  "test_accessed": false,
+  "test_authorized": false,
+  "candidate_role": "prediction_only_negative_control",
+  "frozen_execution_paths": [
+    "configs/phase3_5/ms3_real_adaptation_matrix.json",
+    "experiments/phase3_5/prepare_ms3_cross_data.py",
+    "experiments/phase3_5/ms3_real_adaptation.py",
+    "experiments/phase3_5/summarize_ms3_real_adaptation.py",
+    "experiments/phase3_5/multistep_mismatch.py",
+    "src/phase35/data.py",
+    "src/phase35/model.py",
+    "src/phase35/schema.py",
+    "src/phase35/multistep/contracts.py",
+    "src/phase35/multistep/full_training.py",
+    "src/phase35/multistep/operators.py",
+    "src/phase35/multistep/real_training.py",
+    "src/phase35/multistep/training.py"
+  ]
+}

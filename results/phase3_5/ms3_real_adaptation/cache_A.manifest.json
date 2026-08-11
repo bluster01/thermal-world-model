@@ -1,7 +1,8 @@
 {
-  "protocol_version": "phase3.5-ms3-v1",
+  "protocol_version": "phase3.5-ms3-v1.1",
   "side": "A",
   "step_seconds": 10,
+  "timestamp_storage_unit": "ns",
   "cross_pairing_frozen": true,
   "control_loop": "A_valve_to_right_B_thermal_train",
   "column_map": {
@@ -22,12 +23,12 @@
     "sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
     "rows": 1192329
   },
-  "matrix_sha256": "09dd01d02b4d94cec88b6bec4fbcbc0dc9eb4d3406d68f961de4796886b7b3d2",
-  "grid_start_ns": 1766541870000000,
-  "grid_end_ns": 1778543960000000,
+  "matrix_sha256": "b2e69d78b949334bfd5d92d100bcb730f444758c57d90920a451138a5b831f8a",
+  "grid_start_ns": 1766541870000000000,
+  "grid_end_ns": 1778543960000000000,
   "grid_rows": 1192329,
-  "irregular_transition_count": 1192328,
-  "max_transition_seconds": 75.75,
+  "irregular_transition_count": 282,
+  "max_transition_seconds": 75750.0,
   "gap_policy": "preserve_source_rows_and_exclude_any_cross_gap_window",
   "reconstruction": "premerged_dense_10s_no_additional_fill",
   "age_semantics": "zero_means_dense_merged_row_not_original_tag_age",
