@@ -546,7 +546,7 @@
     },
     "ms3_r": {
       "title": "真实点位响应辨识与模型扩充",
-      "status": "implementation",
+      "status": "local_verified",
       "owner": "local_design_code_linux_batch_run_local_audit",
       "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
       "scripts": {
@@ -592,6 +592,26 @@
         },
         "gatec_model": {
           "path": "src/phase35/multistep/gatec_model.py",
+          "status": "active",
+          "required": true
+        },
+        "gatec_training": {
+          "path": "src/phase35/multistep/gatec_training.py",
+          "status": "active",
+          "required": true
+        },
+        "gatec_synthetic": {
+          "path": "src/phase35/multistep/gatec_synthetic.py",
+          "status": "active",
+          "required": true
+        },
+        "gatec_local_runner": {
+          "path": "experiments/phase3_5/ms3r_gatec_model_screen.py",
+          "status": "active",
+          "required": true
+        },
+        "gatec_local_summarizer": {
+          "path": "experiments/phase3_5/summarize_ms3r_gatec_model_screen.py",
           "status": "active",
           "required": true
         }
@@ -660,9 +680,13 @@
         "gatec_model_matrix": {
           "path": "configs/phase3_5/ms3r_gatec_model_matrix.json",
           "required": true
+        },
+        "gatec_local_verification": {
+          "path": "docs/PHASE35_MS3R_GATEC_LOCAL_VERIFICATION_2026-08-11.md",
+          "required": true
         }
       },
-      "decision": "GATE_B AUDITED PRIMARY PASS / GATE_C LOCAL IMPLEMENTATION：采用dual-interface measured-boundary latent MIMO；先做分支归因，再在共同外壳中比较A1phys/LPV-Koopman/PI-ODE/DeepONet；Linux仍未授权",
+      "decision": "GATE_C LOCAL_FRAMEWORK_VERIFIED / REAL_TRAINING_NOT_RELEASED / OPERATOR_ROUTES_STRUCTURAL_ADAPTERS_ONLY：信息边界、配对数据、稳定MIMO外壳、多锚点selector、秩亏拒绝和本地CLI已验证；Linux仍未授权",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -675,7 +699,9 @@
         "当前Linux授权已关闭；Gate C只允许本地设计，不访问test或启动MS4",
         "Gate C oracle Tin只作结构上限；forecast/scenario Tin为部署接口，禁止未来真值泄漏",
         "Gate C末温使用full MIMO latent mixing，不施加Gate B未支持的侧别硬约束",
-        "Gate C当前四路线仅完成共同契约和结构适配层；在路线特定方程、损失、合成恢复与CLI完成前不得远端训练或比较优劣"
+        "Gate C四路线当前只完成共同契约和结构适配层；不得据此比较A1phys/Koopman/PI-ODE/DeepONet优劣",
+        "Gate C已通过已知真值解析恢复与秩亏拒绝，但这不是端到端神经网络训练恢复，更不是真实数据物理响应证据",
+        "真实训练runner尚未发布；后续必须补齐路线特定方程和端到端合成训练恢复，再单独决定是否授权Linux"
       ]
     },
     "ms4": {
