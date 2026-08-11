@@ -85,6 +85,8 @@ MS2-D3 colored-disturbance validation 已回传并由本地审计为 `CLOSED / V
 
 MS5 full-coupling validation 已回传并由本地权重级审计为 `CLOSED / VALIDATION_ONLY_COMPONENT_RECOVERY_PASS / JOINT_SELECTED / STAGED_PROTOCOL_REJECTED`。12/12 runs 与 21-file archive 闭合；joint response NMAE 为 0.047–0.050、amplitude ratio 为 0.988–0.994；staged/joint total-error ratio 为 11.14–14.11；free-only response NMAE=`1`、amplitude=`0`。权威审计见 [`PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md`](../docs/PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md)。这些是 synthetic validation 数字，不是现场 component truth。
 
-当前只授权 `results/phase3_5/ms3_real_adaptation/**` 的 12-run A/B observational validation。Linux 将回传 joint/free-only×A/B×3 seeds 的 checkpoint、episode、UTC-day summary 和 cache manifests；不得访问 test。目录尚无正式模型结果。
+`results/phase3_5/ms3r_gatec_local_real_rm1a/` 保存本地真实 1/100 RM1-A 六候选 attribution。small/base/large 的 logged response 为 0.043723/0.043807/0.043692°C，未随 free capacity 单调消失；terminal-only 虽把末温 MAE 降至 1.3899°C，却把局部温降 MAE 推到 21.6378°C（persistence 的 9.41 倍），因此必须保留局部监督。权威审计见 [`PHASE35_MS3R_GATEC_LOCAL_REAL_RM1A_AUDIT_2026-08-11.md`](../docs/PHASE35_MS3R_GATEC_LOCAL_REAL_RM1A_AUDIT_2026-08-11.md)。本批只用 train/validation、单 seed、单次 1/100 执行，不是 test、因果响应或 operator 冠军。
+
+当前 `linux_authorized_gate=null`；Linux 没有可执行批次。下一步先在本地设计 RM2 日块/rolling-fold 稳健性门。
 
 Phase 4 已暂停。Fan20-SST 守恒骨架、Fan17/21 嵌套组件、Fan-state controlled Koopman 和时变灰箱路线目前没有正式结果，也不进入 Phase 3.5 结果目录。

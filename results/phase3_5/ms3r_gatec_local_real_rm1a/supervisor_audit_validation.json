@@ -1,0 +1,76 @@
+{
+  "protocol_version": "phase3.5-ms3r-gatec-local-real-rm1a-audit-v1",
+  "audited_execution_git_sha": "5566a56ac3bec391bb0dabb0843c24f8b369feed",
+  "scope": "local_real_train_validation_attribution_not_causal",
+  "artifact_integrity": {
+    "ledger_entries_verified": 8,
+    "all_sha256_match": true,
+    "candidate_count": 6,
+    "all_finite": true,
+    "test_accessed": false
+  },
+  "anchor_contract": {
+    "train_subset": 6957,
+    "validation_subset": 2048,
+    "train_anchor_sha256": "40b948bf06d1d2420d2b30057af1f97e3c834b8a88f3fdcb84d645c3530e88fb",
+    "validation_anchor_sha256": "cb245c37c57215f5044a3a212dc537607cf8974a985769d452b3b8bb2d1329e7"
+  },
+  "rm0b_a1_reuse": {
+    "path": "results/phase3_5/ms3r_gatec_local_real_subset_rm0b/a1phys_three_pole_validation.json",
+    "shared_train_anchors": true,
+    "shared_validation_anchors": true,
+    "metric_count_compared": 8,
+    "max_abs_metric_difference": 0.0,
+    "duplicate_rm1b_rerun_needed": false
+  },
+  "primary_contrasts": {
+    "scheduled_base_vs_paired_free": {
+      "shared_composite_delta": -0.0004076911136507988,
+      "local_mae_delta_c": -0.007539653778076083,
+      "terminal_mae_delta_c": -0.0002588311831157597,
+      "logged_vs_shuffled_advantage_c": 0.06658238569895403
+    },
+    "scheduled_base_vs_additive_base": {
+      "shared_composite_delta": -0.00012288708239793777,
+      "local_mae_delta_c": -0.0011166413625081084,
+      "logged_effect_ratio": 1.2527646520555806,
+      "logged_vs_shuffled_advantage_delta_c": 0.015017199516296209
+    },
+    "scheduled_capacity_scan": {
+      "logged_effect_mean_abs_c": {
+        "small": 0.043723031381766,
+        "base": 0.043807168304920194,
+        "large": 0.04369198170801004
+      },
+      "relative_range": 0.0026333946521669115,
+      "monotonic_disappearance_with_capacity": false,
+      "large_vs_base_shared_composite_delta": -0.0009240871295332909
+    },
+    "terminal_only_vs_scheduled_base": {
+      "terminal_mae_delta_c": -0.08583257198333727,
+      "local_mae_delta_c": 19.413993811607362,
+      "terminal_only_local_to_persistence_ratio": 9.409684571323785,
+      "semantic_failure": true
+    }
+  },
+  "supervisor_decision": {
+    "label": "RM1A_ATTRIBUTION_COMPLETE_CAPACITY_COLLAPSE_NOT_OBSERVED_LOCAL_SUPERVISION_REQUIRED",
+    "components": [
+      "REAL_1PCT_VALIDATION_ONLY",
+      "CAPACITY_RESPONSE_STABLE_WITHIN_SCAN",
+      "TERMINAL_ONLY_SEMANTIC_PATH_REJECTED",
+      "SCHEDULED_BASE_RETAINED_AS_PREREGISTERED_REFERENCE",
+      "PREDICTION_GAIN_OVER_PAIRED_FREE_NEGLIGIBLE",
+      "NO_OPERATOR_RANKING",
+      "NO_CAUSAL_UPGRADE",
+      "NO_TEST_ACCESS",
+      "NO_LINUX_RELEASE"
+    ],
+    "reference_candidate": "C3_sched_base",
+    "reference_is_empirical_champion": false,
+    "operator_ranking_supported": false,
+    "automatic_scientific_pass": null,
+    "linux_authorized_gate": null,
+    "next": "DESIGN_RM2_DAY_BLOCK_RESPONSE_AND_ROLLING_FOLD_VALIDATION_BEFORE_ANY_OPERATOR_CLAIM"
+  }
+}

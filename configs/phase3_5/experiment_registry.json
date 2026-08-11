@@ -629,6 +629,11 @@
           "path": "experiments/phase3_5/ms3r_gatec_real_attribution.py",
           "status": "active",
           "required": true
+        },
+        "gatec_real_attribution_audit": {
+          "path": "experiments/phase3_5/audit_ms3r_gatec_real_attribution.py",
+          "status": "closed",
+          "required": true
         }
       },
       "artifacts": {
@@ -739,9 +744,21 @@
         "gatec_local_real_rm1a_config": {
           "path": "configs/phase3_5/ms3r_gatec_local_real_rm1a.json",
           "required": true
+        },
+        "gatec_local_real_rm1a_summary": {
+          "path": "results/phase3_5/ms3r_gatec_local_real_rm1a/summary_validation.json",
+          "required": true
+        },
+        "gatec_local_real_rm1a_audit_json": {
+          "path": "results/phase3_5/ms3r_gatec_local_real_rm1a/supervisor_audit_validation.json",
+          "required": true
+        },
+        "gatec_local_real_rm1a_audit": {
+          "path": "docs/PHASE35_MS3R_GATEC_LOCAL_REAL_RM1A_AUDIT_2026-08-11.md",
+          "required": true
         }
       },
-      "decision": "GATE_C RM1-A LOCAL IMPLEMENTED：六候选固定A1归因矩阵、父审计pin、真实1/100和logged-vs-shuffled诊断已闭合；等待一次本地validation执行与审计，Linux仍未授权",
+      "decision": "GATE_C RM1-A AUDITED：small/base/large response相对极差0.263%，未见容量吞噬；terminal-only局部误差为persistence 9.41倍，必须保留局部监督；C3仅作预注册参考、不称冠军；下一步本地设计RM2日块/rolling-fold门，Linux仍未授权",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -764,6 +781,8 @@
         "下一步固定A1phys做paired_free/additive/scheduled capacity/local-supervision真实归因扫描，不扩大到1/10",
         "RM1-A六候选必须共享seed0、train/validation anchors和180 optimizer updates；每候选最多一次attempt",
         "paired-free的response non-collapse门标记为不适用；terminal-only不得使用local或logged-action辅助监督",
+        "RM1-A C3与RM0-B A1的8个核心指标及anchor SHA完全一致；不重复执行相同RM1-B单seed矩阵",
+        "RM2前必须补UTC日/连续块、60/180s方向时序、opening/closing、common/differential及rolling-fold稳健性",
         "本地真实smoke不构成Linux或完整真实矩阵授权；linux_authorized_gate保持null"
       ]
     },

@@ -1,0 +1,46 @@
+{
+  "protocol_version": "phase3.5-ms3r-gatec-local-real-rm1a-v1",
+  "batch_id": "ms3r-gatec-local-real-rm1a",
+  "execution_git_sha": "5566a56ac3bec391bb0dabb0843c24f8b369feed",
+  "config_path": "configs/phase3_5/ms3r_gatec_local_real_rm1a.json",
+  "config_sha256": "783874e6343e78d078bac8cd1a186257d7f468e2c5cd48107822fca304e89d4b",
+  "parent_gatec_matrix": {
+    "path": "configs/phase3_5/ms3r_gatec_model_matrix.json",
+    "sha256": "9b0a7bfc2d83fe0de9de548e929ba85204759355c10545b0bdf23a45d052755a"
+  },
+  "parent_rm0b_audit": {
+    "path": "results/phase3_5/ms3r_gatec_local_real_subset_rm0b/supervisor_audit_validation.json",
+    "sha256": "2e31545cd8831594eca2e2016331d12fa31e7782ee50c71cd0d39b48f300151a",
+    "required_label": "BASELINE_ANCHOR_EFFECTIVE_RESPONSE_DECOMPOSITION_NONUNIQUE"
+  },
+  "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+  "cache_paths": {
+    "A": "C:\\Users\\14020\\Documents\\ChatGPT\\thermal-world-model-local-data\\phase35_ms3\\cache_A.npz",
+    "B": "C:\\Users\\14020\\Documents\\ChatGPT\\thermal-world-model-local-data\\phase35_ms3\\cache_B.npz"
+  },
+  "cache_sha256": {
+    "A": "b2b628b288d03aee8f3b9ba7b59db2466926af019fdd177d2ede2981dbcad7f9",
+    "B": "5cb47f9ad94c9f845e226eed87de6beff73bd1b5a982011a1147e02711b73254"
+  },
+  "code_sha256": {
+    "src/phase35/multistep/gatec_contracts.py": "921dd149ffe444a2e5e04c54cce9067974baf3c4a9cf2570217058b0a974d991",
+    "src/phase35/multistep/gatec_data.py": "927201a21ac30e34248e34dc920a09bd21098e729167c8728cb1caeebee4ece6",
+    "src/phase35/multistep/gatec_model.py": "3291727df6bc6312c62f39d12995a84a73eeec2c94a66bd69945d0d063f99d89",
+    "src/phase35/multistep/gatec_training.py": "a9e1153553bc292f8a5802017dc16183a60b93487c1a00e91c5752b761085004",
+    "src/phase35/multistep/gatec_real_smoke.py": "2abf8ad2c81d29da93ed14318f20f637f4253e43b109f2a4248f5d01d0e42fcf",
+    "experiments/phase3_5/ms3r_gatec_real_attribution.py": "ffbde1c2d223445d03dead118cd257d8cc34a3524abb911d56241e65a0ad9e1b"
+  },
+  "device": "cuda",
+  "python_version": "3.11.9",
+  "numpy_version": "1.26.4",
+  "torch_version": "2.5.1+cu121",
+  "cuda_available": true,
+  "splits_accessed": [
+    "train",
+    "validation"
+  ],
+  "test_accessed": false,
+  "linux_authorized": false,
+  "maximum_attempts_per_candidate": 1,
+  "automatic_scientific_pass": null
+}
