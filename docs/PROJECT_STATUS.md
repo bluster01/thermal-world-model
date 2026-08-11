@@ -20,7 +20,7 @@
 | 统计 | 已运行并 fail-closed 审计 | A/B 分报；UTC 日块 bootstrap；seed 仅表示优化波动；matching balance/common support 未过 |
 | 正式结果 | 仅 development validation | 模型 test 尚未打开；A/B 旧 event test 标签已暴露，未来事件证据需新时间块 |
 | MS5 完整耦合 | validation-only 已关闭 | joint known-truth component recovery PASS；staged protocol FAIL；不外推现场 |
-| MS3 真实适配 | ready_for_linux | all_merged 交叉回路 cache；joint/free-only×A/B×3 seeds；test 禁止 |
+| MS3 真实适配 | ready_for_linux / v1.1 retry | v1 在训练前因 pandas 时间精度停止；显式 ns cache；joint/free-only×A/B×3 seeds；test 禁止 |
 
 Phase 3.5 的目标不是证明质量/能量守恒，而是建立分层物理一致性：阀门动作可辨认、经验温度响应可复核、模型反事实响应能复现该曲线、SP 未执行时模型不制造阀门效应。完整协议见 [`PHASE3_5_EXPERIMENT_DESIGN.md`](PHASE3_5_EXPERIMENT_DESIGN.md)。
 
@@ -149,6 +149,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-下一判决点是 MS3 validation：从冻结 SHA 的 `all_merged_10s.csv` 生成 A阀→右(B)温、B阀→左(A)温两个 cache，比较 joint 与 free-only，A/B 各 3 seeds。主门为预测非劣、动态 response 非坍缩、logged 相对保持/置乱动作的 UTC-day bootstrap 增益，每侧至少 2/3 seeds 通过。注册表为 `ready_for_linux`；只授权 12-run validation，不访问 test、不补超参数、不启动 MS4。即使通过，也只能称 observational conditional-prediction evidence，不能称 `do(valve)`。
+下一判决点是 MS3 validation：从冻结 SHA 的 `all_merged_10s.csv` 生成 A阀→右(B)温、B阀→左(A)温两个 cache，比较 joint 与 free-only，A/B 各 3 seeds。首次 `v1` 在首个训练 run 构造 anchor 时因 pandas 3 的微秒整数语义停止；无 checkpoint、无指标、无 test 访问。`v1.1` 显式写纳秒并在训练前核对源行数、起止时间和缺口分布，不改变模型或判据。主门为预测非劣、动态 response 非坍缩、logged 相对保持/置乱动作的 UTC-day bootstrap 增益，每侧至少 2/3 seeds 通过。注册表为 `ready_for_linux`；只授权 12-run validation，不访问 test、不补超参数、不启动 MS4。即使通过，也只能称 observational conditional-prediction evidence，不能称 `do(valve)`。
 
 完整顺序为 MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 保持暂停。

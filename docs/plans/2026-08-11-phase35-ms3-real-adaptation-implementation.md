@@ -9,7 +9,8 @@
 1. `prepare_ms3_cross_data.py`
    - 校验 4 GB source size/SHA；
    - 一次扫描生成 A阀→右温、B阀→左温两个 cache；
-   - 校验严格 10 s、写 source/mapping/age provenance。
+   - 显式 UTC→`datetime64[ns]`，冻结行数、起止时间、缺口计数与最大缺口；
+   - 写 source/mapping/timestamp-unit/age provenance。
 2. `real_training.py`
    - past-only encoder/free 与 3-pole response；
    - joint/free-only 两模式；
@@ -46,6 +47,8 @@ MS5 weight-level audit
 ```
 
 任一 preflight 红项必须停止。Linux 不裁决“非科学问题后继续”，不改源代码/阈值/状态文档。summary exit 2 表示科学门失败但产物仍须全部提交。
+
+`phase3.5-ms3-v1` 在 pandas 3.0.2 上因隐式 `datetime64[us]` 整数化而在首个 run、首个 optimizer update 前停止；无训练产物、无 test 访问。`v1.1` 只修正时间表示合同并增加 fail-closed 时间线校验，不改样本划分、模型、seed、训练预算、指标或科学门禁。事故记录见 [`PHASE35_MS3_EXECUTION_INCIDENT_2026-08-11.md`](../PHASE35_MS3_EXECUTION_INCIDENT_2026-08-11.md)。
 
 ## 预期产物
 

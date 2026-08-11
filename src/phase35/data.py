@@ -15,6 +15,23 @@ from .schema import DATE_COLUMN, Phase35ProtocolError, SplitSpec, validate_colum
 NAT_INT = np.iinfo(np.int64).min
 
 
+def utc_timestamps_to_ns(values) -> np.ndarray:
+    """Parse timestamps as UTC and return explicit Unix nanoseconds.
+
+    pandas 3 preserves the input/parser resolution (often microseconds), while
+    pandas 2 commonly returned nanoseconds.  Converting the timezone-aware
+    result to ``datetime64[ns]`` before the integer cast keeps the cache
+    contract independent of the installed pandas version.
+    """
+    import pandas as pd
+
+    parsed = pd.to_datetime(values, errors="coerce", utc=True)
+    timestamps_ns = parsed.to_numpy(dtype="datetime64[ns]").astype(
+        np.int64, copy=False
+    )
+    return np.asarray(timestamps_ns, dtype=np.int64)
+
+
 @dataclass
 class Phase35Cache:
     timestamps_ns: np.ndarray
@@ -104,7 +121,7 @@ def collect_sparse_updates(
     first_ns: int | None = None
     last_ns: int | None = None
     for chunk in pd.read_csv(path, usecols=usecols, chunksize=chunksize, low_memory=False):
-        ts = pd.to_datetime(chunk[DATE_COLUMN], errors="coerce", utc=True).astype("int64").to_numpy()
+        ts = utc_timestamps_to_ns(chunk[DATE_COLUMN])
         good_t = ts != NAT_INT
         if good_t.any():
             valid_t = ts[good_t]

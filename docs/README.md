@@ -12,6 +12,7 @@
 - [PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md](PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md)：MS5 权重级组件重放、staged 失败定位、11 项谬误扫描与 joint 选择边界。
 - [plans/2026-08-11-phase35-ms3-real-adaptation-design.md](plans/2026-08-11-phase35-ms3-real-adaptation-design.md)：当前 MS3 交叉控制回路数据合同、joint/free 对照、UTC-day 门禁和因果边界。
 - [plans/2026-08-11-phase35-ms3-real-adaptation-implementation.md](plans/2026-08-11-phase35-ms3-real-adaptation-implementation.md)：MS3 cache、训练、12-run runner、fail-closed summary 和 Linux 交付清单。
+- [PHASE35_MS3_EXECUTION_INCIDENT_2026-08-11.md](PHASE35_MS3_EXECUTION_INCIDENT_2026-08-11.md)：MS3 v1 pandas 3 时间精度事故、无科学产物边界与 v1.1 修复合同。
 - [plans/2026-08-11-phase35-ms5-full-coupling-design.md](plans/2026-08-11-phase35-ms5-full-coupling-design.md)：已关闭 MS5 完整 `free+response` 动作吸收问题、4-mode 设计、门禁和选择规则。
 - [plans/2026-08-11-phase35-ms5-full-coupling-implementation.md](plans/2026-08-11-phase35-ms5-full-coupling-implementation.md)：已完成 MS5 generator、训练模式、runner 与 summary 实施清单。
 - [PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md](PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md)：D2 one-shot test 的 ledger/pin/episode 独立复算、50k bootstrap、确认关闭与机制边界。

@@ -313,21 +313,36 @@ def build_summary(matrix_path: str | Path, output_root: str | Path) -> dict[str,
             "validation_trajectory_sha256"
         ):
             artifact_failures.append(f"{run_id}:trajectory_sha256")
-        if manifest.get("cache_metadata", {}).get("source", {}).get("sha256") != matrix[
-            "data_contract"
-        ]["source_sha256"]:
+        cache_metadata = manifest.get("cache_metadata", {})
+        data_contract = matrix["data_contract"]
+        if cache_metadata.get("source", {}).get("sha256") != data_contract[
+            "source_sha256"
+        ]:
             artifact_failures.append(f"{run_id}:source_sha256")
         side_contract = matrix["data_contract"]["side_mappings"][run["side"]]
-        if manifest.get("cache_metadata", {}).get("control_loop") != side_contract[
+        if cache_metadata.get("control_loop") != side_contract[
             "control_loop"
         ]:
             artifact_failures.append(f"{run_id}:control_loop")
-        if manifest.get("cache_metadata", {}).get("column_map") != side_contract[
+        if cache_metadata.get("column_map") != side_contract[
             "column_map"
         ]:
             artifact_failures.append(f"{run_id}:column_map")
-        if manifest.get("cache_metadata", {}).get("matrix_sha256") != matrix_sha:
+        if cache_metadata.get("matrix_sha256") != matrix_sha:
             artifact_failures.append(f"{run_id}:cache_matrix_sha256")
+        frozen_timeline = {
+            "timestamp_storage_unit": data_contract["timestamp_storage_unit"],
+            "grid_start_ns": data_contract["grid_start_ns"],
+            "grid_end_ns": data_contract["grid_end_ns"],
+            "grid_rows": data_contract["source_rows"],
+            "irregular_transition_count": data_contract[
+                "irregular_transition_count"
+            ],
+            "max_transition_seconds": data_contract["max_transition_seconds"],
+        }
+        for key, expected in frozen_timeline.items():
+            if cache_metadata.get(key) != expected:
+                artifact_failures.append(f"{run_id}:cache_{key}")
         execution_shas.add(str(manifest.get("git_sha")))
         trajectory_pins.setdefault((run["side"], run["seed"]), set()).add(
             str(episodes.get("validation_trajectory_sha256"))

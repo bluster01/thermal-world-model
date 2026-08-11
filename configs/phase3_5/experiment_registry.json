@@ -459,7 +459,11 @@
           "required": true
         }
       },
-      "decision": "READY_FOR_LINUX VALIDATION：all_merged 交叉控制回路 cache；joint/free-only×A/B×3 seeds=12；只检验条件预测与动作对齐，不访问 test"
+      "decision": "READY_FOR_LINUX v1.1 RETRY：v1 在训练前因 pandas 3 时间精度停止；覆盖生成显式 ns cache 后执行 joint/free-only×A/B×3 seeds=12；只检验条件预测与动作对齐，不访问 test",
+      "advisories": [
+        "v1 失败发生在首个 optimizer update 前：无 run 产物、无 test 访问，不构成科学结果",
+        "v1.1 只修复 timestamp representation 并冻结 timeline invariants；模型、split、seed、预算、指标和门禁不变"
+      ]
     },
     "ms4": {
       "title": "SP→阀位→温度物理闭环响应验证",

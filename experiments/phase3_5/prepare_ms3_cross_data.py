@@ -17,7 +17,7 @@ if str(ROOT) not in sys.path:
 import numpy as np
 import pandas as pd
 
-from src.phase35.data import Phase35Cache, save_cache
+from src.phase35.data import Phase35Cache, save_cache, utc_timestamps_to_ns
 from src.phase35.schema import MS3_HISTORY_FEATURES
 
 
@@ -86,9 +86,7 @@ def main() -> None:
         chunksize=args.chunksize,
         low_memory=False,
     ):
-        timestamp = pd.to_datetime(
-            chunk[timestamp_column], errors="coerce", utc=True
-        ).astype("int64").to_numpy(dtype=np.int64)
+        timestamp = utc_timestamps_to_ns(chunk[timestamp_column])
         if np.any(timestamp == np.iinfo(np.int64).min):
             raise ValueError("MS3 source contains invalid timestamps")
         timestamp_parts.append(timestamp)
@@ -110,6 +108,21 @@ def main() -> None:
         raise ValueError("MS3 source timestamps must be strictly increasing")
     expected_step_ns = int(contract["step_seconds"] * 1_000_000_000)
     irregular = differences != expected_step_ns
+    observed_time_contract = {
+        "source_rows": int(row_count),
+        "grid_start_ns": int(timestamps[0]),
+        "grid_end_ns": int(timestamps[-1]),
+        "irregular_transition_count": int(irregular.sum()),
+        "max_transition_seconds": float(differences.max() / 1e9),
+    }
+    expected_time_contract = {
+        key: contract[key] for key in observed_time_contract
+    }
+    if observed_time_contract != expected_time_contract:
+        raise ValueError(
+            "MS3 source timeline differs from the frozen nanosecond contract: "
+            f"observed={observed_time_contract} expected={expected_time_contract}"
+        )
     matrix_sha = sha256_file(matrix_path)
     for side, output_value in (("A", args.output_a), ("B", args.output_b)):
         output = Path(output_value).resolve()
@@ -128,6 +141,7 @@ def main() -> None:
             "protocol_version": matrix["protocol_version"],
             "side": side,
             "step_seconds": contract["step_seconds"],
+            "timestamp_storage_unit": contract["timestamp_storage_unit"],
             "cross_pairing_frozen": True,
             "control_loop": side_contract["control_loop"],
             "column_map": side_contract["column_map"],
@@ -138,11 +152,15 @@ def main() -> None:
                 "rows": int(row_count),
             },
             "matrix_sha256": matrix_sha,
-            "grid_start_ns": int(timestamps[0]),
-            "grid_end_ns": int(timestamps[-1]),
-            "grid_rows": int(len(timestamps)),
-            "irregular_transition_count": int(irregular.sum()),
-            "max_transition_seconds": float(differences.max() / 1e9),
+            "grid_start_ns": observed_time_contract["grid_start_ns"],
+            "grid_end_ns": observed_time_contract["grid_end_ns"],
+            "grid_rows": observed_time_contract["source_rows"],
+            "irregular_transition_count": observed_time_contract[
+                "irregular_transition_count"
+            ],
+            "max_transition_seconds": observed_time_contract[
+                "max_transition_seconds"
+            ],
             "gap_policy": contract["gap_policy"],
             "reconstruction": "premerged_dense_10s_no_additional_fill",
             "age_semantics": "zero_means_dense_merged_row_not_original_tag_age",

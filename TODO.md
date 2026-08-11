@@ -29,7 +29,7 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | MS2-D2 | 三阶惯性压力 | ✓ test 确认 | 仅 frozen known-truth 响应优势 |
 | MS2-D3 | colored nuisance 压力 | ✓ validation-only 关闭 | 不补 test；进入 MS5 |
 | MS5 | 完整 `free+response` 动作吸收 | ✓ CLOSED | joint 选中；冻结 staged 协议拒绝 |
-| **MS3** | A/B 真实数据适配 | ▶ **READY_FOR_LINUX** | 12-run validation-only；不访问 test |
+| **MS3** | A/B 真实数据适配 | ▶ **READY_FOR_LINUX / v1.1 RETRY** | v1 在训练前因 pandas 时间精度停止；12-run 尚未开始，不访问 test |
 | MS4 | SP→阀位→温度闭环响应 | ◻ 冻结 | 等 MS3；不恢复旧 E 匹配 |
 
 ## D3 收口
@@ -90,8 +90,8 @@ JOINT_SELECTED / STAGED_PROTOCOL_REJECTED
 | 1 | MS5 checkpoint/episode/archive 独立审计与关闭 | 本地 | ✓ |
 | 2 | 冻结 all_merged source SHA 与交叉 side mapping | 本地 | ✓ |
 | 3 | cross-cache、joint/free 训练、runner、summary TDD | 本地 | ✓ |
-| 4 | 专项测试、完整回归、compile、dry-run、状态检查 | 本地 | ▶ 收尾 |
-| 5 | 生成两个 cache 并执行 12-run validation | Linux | ◻ 当前唯一远端任务 |
+| 4 | pandas 2/3 纳秒修复、专项/完整回归、compile、dry-run、状态检查 | 本地 | ✓ |
+| 5 | 用 v1.1 覆盖旧 cache 并执行 12-run validation | Linux | ◻ 当前唯一远端任务；旧 v1 无训练产物 |
 | 6 | checkpoint/episode/UTC-day bootstrap 独立复算 | 本地 | ◻ 等回传 |
 | 7 | 若双侧 2/3 seed 过门，冻结 MS4 闭环模型验证 | 本地 | ◻ 不提前启动 |
 

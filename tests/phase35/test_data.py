@@ -6,6 +6,7 @@ from src.phase35.data import (
     extract_windows,
     load_cache,
     save_cache,
+    utc_timestamps_to_ns,
     valid_window_anchors,
 )
 from src.phase35.schema import REQUIRED_COLUMNS, TARGET_COLUMN, VALVE_COLUMN
@@ -36,6 +37,22 @@ def test_causal_grid_never_backfills_future_observation():
     assert values[2, 0] == 1.0 and ages[2, 0] == 5.0
     assert values[3, 0] == 1.0 and ages[3, 0] == 15.0
     assert values[4, 0] == 2.0 and ages[4, 0] == 9.0
+
+
+def test_utc_timestamps_are_explicit_nanoseconds_for_microsecond_input():
+    raw = np.array(
+        ["2025-12-24T00:00:00", "2025-12-24T00:00:10"],
+        dtype="datetime64[us]",
+    )
+    timestamps = utc_timestamps_to_ns(raw)
+    assert timestamps.dtype == np.dtype(np.int64)
+    assert timestamps[0] == 1_766_534_400_000_000_000
+    assert np.diff(timestamps).tolist() == [10_000_000_000]
+
+
+def test_utc_timestamp_conversion_preserves_nat_sentinel():
+    timestamps = utc_timestamps_to_ns(["2025-12-24T00:00:00Z", "invalid"])
+    assert timestamps[1] == np.iinfo(np.int64).min
 
 
 def test_cache_roundtrip_and_chronological_windows(tmp_path):

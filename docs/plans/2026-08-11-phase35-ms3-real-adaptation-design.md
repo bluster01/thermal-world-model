@@ -1,6 +1,6 @@
 # Phase 3.5-MS3 真实 A/B 观测适配设计
 
-- 协议：`phase3.5-ms3-v1`
+- 协议：`phase3.5-ms3-v1.1`
 - 状态：本地实现与验证
 - 证据范围：`real_ab_observational_validation_not_causal`
 - 前置：MS5 已以 `JOINT_SELECTED` 关闭
@@ -34,7 +34,7 @@ MS3 检验 MS5 选中的三极点、工况调度、单调阀门映射与 `free+r
 
 共享 history 包含负荷、主汽压力、给水、煤量、主汽流量；本回路 history 还包含入口/出口/末过温度、SP 和实际阀位。没有把语义不一致的旧 `中间设定/阀门指令` 字段强行映射进来，也不使用不准的喷水流量。源文件含停机段，因此 anchor 只在处理前 16 min history 全程满足负荷≥250 MW、主汽压力≥10 MPa、目标/SP 位于 500–600°C 时进入训练或验证；未来段只检查阀位在 −2%–102% 的传感器容差内，不按未来温度筛选。
 
-源文件时间戳必须严格递增；脚本不再插值或填充。实测存在 282 个非 10 s transition（其中 279 个为单点 20 s 间隔，另有 120 s、180 s 和 75,750 s 缺口），均原样保留。anchor 构造器用 transition-prefix 硬排除 history→future 跨越任一非 10 s transition 的窗口。cache `age=0` 只表示“该 dense merged row 有值”，不表示原始 DCS tag 在该时刻真实更新。该限制写入 cache manifest，禁止把它包装成原始测点时效证明。
+源文件时间戳必须严格递增；脚本不再插值或填充。`v1.1` 将 UTC 解析结果显式转换为 `datetime64[ns]` 后再写整数，并冻结 1,192,329 行、起止纳秒、282 个非 10 s transition 和 75,750 s 最大缺口，消除 pandas 2/3 默认时间精度差异。实测 282 个异常 transition 中 279 个为单点 20 s 间隔，另有 120 s、180 s 和 75,750 s 缺口，均原样保留。anchor 构造器用 transition-prefix 硬排除 history→future 跨越任一非 10 s transition 的窗口。cache `age=0` 只表示“该 dense merged row 有值”，不表示原始 DCS tag 在该时刻真实更新。该限制写入 cache manifest，禁止把它包装成原始测点时效证明。
 
 本地只读 preflight 实际扫描 1,192,329 行并成功生成两个约 37 MB cache。应用连续性和运行工况门后，A/B train anchors 分别为 510,409/510,545，validation 均为 109,528；冻结 8192-anchor 抽样中，各 seed 动态窗口约 7,929–8,034，覆盖 27 个 UTC 日。它只证明矩阵具有足够支持并且代码可执行，不是模型效果结果。
 

@@ -76,7 +76,7 @@ Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。�
 
 ## 5. 当前下一步
 
-MS3 当前只执行冻结的 validation：`joint/free-only × A/B × 3 seeds = 12 runs`。Linux 先按 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 第 17 节从冻结 `all_merged_10s.csv` 生成 A阀→右温、B阀→左温 cache，再训练与汇总；只提交 `results/phase3_5/ms3_real_adaptation/**`，不提交 cache 本体。任一 preflight 红项停止；任一科学门失败仍原样回传。不访问 test、不补阈值/seed/超参数、不启动 MS4。本地必须重放 checkpoint、episode 与 UTC-day bootstrap 后才能关闭 MS3。
+MS3 当前只执行冻结的 validation：`joint/free-only × A/B × 3 seeds = 12 runs`。首次 `v1` 远端执行在首个 optimizer update 前因 pandas 3 默认微秒精度导致 `anchors=0` 而停止，无训练产物、无 test 访问；当前授权为显式纳秒并冻结完整时间线的 `v1.1` 覆盖 cache 重跑。Linux 按 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 第 17 节从冻结 `all_merged_10s.csv` 生成 A阀→右温、B阀→左温 cache，再训练与汇总；只提交 `results/phase3_5/ms3_real_adaptation/**`，不提交 cache 本体。任一 preflight 红项停止；任一科学门失败仍原样回传。不访问 test、不补阈值/seed/超参数、不启动 MS4。本地必须重放 checkpoint、episode 与 UTC-day bootstrap 后才能关闭 MS3。
 
 ## 6. 上下文读取优先级
 

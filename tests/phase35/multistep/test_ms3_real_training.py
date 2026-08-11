@@ -232,6 +232,12 @@ def test_ms3_summary_replays_all_artifacts_and_archives_checkpoints(tmp_path):
                 "control_loop": matrix["data_contract"]["side_mappings"][run["side"]]["control_loop"],
                 "column_map": matrix["data_contract"]["side_mappings"][run["side"]]["column_map"],
                 "matrix_sha256": matrix_sha,
+                "timestamp_storage_unit": matrix["data_contract"]["timestamp_storage_unit"],
+                "grid_start_ns": matrix["data_contract"]["grid_start_ns"],
+                "grid_end_ns": matrix["data_contract"]["grid_end_ns"],
+                "grid_rows": matrix["data_contract"]["source_rows"],
+                "irregular_transition_count": matrix["data_contract"]["irregular_transition_count"],
+                "max_transition_seconds": matrix["data_contract"]["max_transition_seconds"],
             },
             "frozen_execution_paths": list(FROZEN_EXECUTION_PATHS),
         }

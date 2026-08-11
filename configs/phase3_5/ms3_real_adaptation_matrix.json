@@ -1,13 +1,19 @@
 {
-  "protocol_version": "phase3.5-ms3-v1",
+  "protocol_version": "phase3.5-ms3-v1.1",
   "evidence_scope": "real_ab_observational_validation_not_causal",
   "seeds": [0, 1, 2],
   "data_contract": {
     "source_kind": "all_merged_dense_10s",
     "source_size_bytes": 3987138416,
     "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "source_rows": 1192329,
     "timestamp_column": "time",
+    "timestamp_storage_unit": "ns",
     "step_seconds": 10,
+    "grid_start_ns": 1766541870000000000,
+    "grid_end_ns": 1778543960000000000,
+    "irregular_transition_count": 282,
+    "max_transition_seconds": 75750.0,
     "gap_policy": "preserve_source_rows_and_exclude_any_cross_gap_window",
     "history_features": [
       "机组负荷",

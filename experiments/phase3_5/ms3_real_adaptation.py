@@ -10,6 +10,8 @@ import sys
 from dataclasses import asdict, replace
 from pathlib import Path
 
+import numpy as np
+
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -25,9 +27,9 @@ from src.phase35.multistep.training import _json_dump
 from src.phase35.schema import MS3_HISTORY_FEATURES
 
 
-PROTOCOL_VERSION = "phase3.5-ms3-v1"
+PROTOCOL_VERSION = "phase3.5-ms3-v1.1"
 DEFAULT_MATRIX = ROOT / "configs/phase3_5/ms3_real_adaptation_matrix.json"
-FROZEN_MATRIX_SHA256 = "09dd01d02b4d94cec88b6bec4fbcbc0dc9eb4d3406d68f961de4796886b7b3d2"
+FROZEN_MATRIX_SHA256 = "b2e69d78b949334bfd5d92d100bcb730f444758c57d90920a451138a5b831f8a"
 FROZEN_EXECUTION_PATHS = (
     "configs/phase3_5/ms3_real_adaptation_matrix.json",
     "experiments/phase3_5/prepare_ms3_cross_data.py",
@@ -147,6 +149,7 @@ def _assert_no_test_artifacts(output_root: Path) -> None:
 
 def _validate_cache(cache, side: str, matrix: dict, matrix_sha: str) -> None:
     metadata = cache.metadata
+    data_contract = matrix["data_contract"]
     expected_contract = matrix["data_contract"]["side_mappings"][side]
     if metadata.get("side") != side or metadata.get("cross_pairing_frozen") is not True:
         raise ValueError(f"MS3 {side} cache lacks frozen cross-pairing metadata")
@@ -160,6 +163,44 @@ def _validate_cache(cache, side: str, matrix: dict, matrix_sha: str) -> None:
         raise ValueError(f"MS3 {side} cache source SHA changed")
     if metadata.get("matrix_sha256") != matrix_sha:
         raise ValueError(f"MS3 {side} cache matrix pin changed")
+    frozen_timeline = {
+        "timestamp_storage_unit": data_contract["timestamp_storage_unit"],
+        "grid_start_ns": data_contract["grid_start_ns"],
+        "grid_end_ns": data_contract["grid_end_ns"],
+        "grid_rows": data_contract["source_rows"],
+        "irregular_transition_count": data_contract["irregular_transition_count"],
+        "max_transition_seconds": data_contract["max_transition_seconds"],
+    }
+    timeline_mismatches = {
+        key: {"observed": metadata.get(key), "expected": expected}
+        for key, expected in frozen_timeline.items()
+        if metadata.get(key) != expected
+    }
+    if timeline_mismatches:
+        raise ValueError(
+            f"MS3 {side} cache timeline contract changed: {timeline_mismatches}"
+        )
+    if len(cache.timestamps_ns) < 2:
+        raise ValueError(f"MS3 {side} cache timeline is empty")
+    differences = np.diff(cache.timestamps_ns)
+    expected_step_ns = int(data_contract["step_seconds"] * 1_000_000_000)
+    observed_timeline = {
+        "grid_start_ns": int(cache.timestamps_ns[0]),
+        "grid_end_ns": int(cache.timestamps_ns[-1]),
+        "grid_rows": int(len(cache.timestamps_ns)),
+        "irregular_transition_count": int((differences != expected_step_ns).sum()),
+        "max_transition_seconds": float(differences.max() / 1e9),
+    }
+    expected_cache_timeline = {
+        key: expected
+        for key, expected in frozen_timeline.items()
+        if key != "timestamp_storage_unit"
+    }
+    if observed_timeline != expected_cache_timeline:
+        raise ValueError(
+            f"MS3 {side} cache contents differ from the frozen timeline: "
+            f"observed={observed_timeline} expected={expected_cache_timeline}"
+        )
 
 
 def _existing_compatible(output_dir: Path, run: dict, matrix_sha: str, git_sha: str) -> bool:

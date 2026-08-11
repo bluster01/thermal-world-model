@@ -628,6 +628,8 @@ cp "${PH35_MS3_CACHE_B%.npz}.manifest.json" \
 
 cache manifest 必须显示 source SHA `85a3f926...e4da6`、A=`A_valve_to_right_B_thermal_train`、B=`B_valve_to_left_A_thermal_train`。随后正式训练和汇总：
 
+`phase3.5-ms3-v1.1` 还要求两个 manifest 同时显示：`timestamp_storage_unit=ns`、`grid_rows=1192329`、`grid_start_ns=1766541870000000000`、`grid_end_ns=1778543960000000000`、`irregular_transition_count=282`、`max_transition_seconds=75750.0`。任一项不符不得启动训练。旧 `v1` cache 会被 runner 明确拒绝；重新执行 builder 会覆盖 cache 和 manifest，不需要也不允许复用失败 cache。
+
 ```bash
 git rev-parse HEAD > results/phase3_5/ms3_real_adaptation/remote_execution/git_commit.txt
 python --version > results/phase3_5/ms3_real_adaptation/remote_execution/environment.txt 2>&1
