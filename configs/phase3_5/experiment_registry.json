@@ -624,6 +624,11 @@
           "path": "experiments/phase3_5/ms3r_gatec_real_subset.py",
           "status": "active",
           "required": true
+        },
+        "gatec_real_attribution_runner": {
+          "path": "experiments/phase3_5/ms3r_gatec_real_attribution.py",
+          "status": "active",
+          "required": true
         }
       },
       "artifacts": {
@@ -730,9 +735,13 @@
         "gatec_local_real_rm0b_audit": {
           "path": "docs/PHASE35_MS3R_GATEC_LOCAL_REAL_RM0B_AUDIT_2026-08-11.md",
           "required": true
+        },
+        "gatec_local_real_rm1a_config": {
+          "path": "configs/phase3_5/ms3r_gatec_local_real_rm1a.json",
+          "required": true
         }
       },
-      "decision": "GATE_C RM0-B AUDITED：baseline anchor有效，valve/Tin/local均优于persistence；terminal无增益，四路线预测近同但response幅值差约2.5倍，判分解不唯一；下一步固定A1做真实RM1-A attribution；Linux仍未授权",
+      "decision": "GATE_C RM1-A LOCAL IMPLEMENTED：六候选固定A1归因矩阵、父审计pin、真实1/100和logged-vs-shuffled诊断已闭合；等待一次本地validation执行与审计，Linux仍未授权",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -753,6 +762,8 @@
         "RM0-B必须从observed persistence baseline预测增量；logged future valve只进入response auxiliary，不进入encoder/residual",
         "RM0-B composite spread仅0.000187，但logged/predicted response幅值分别相差2.49/2.51倍，禁止operator排名",
         "下一步固定A1phys做paired_free/additive/scheduled capacity/local-supervision真实归因扫描，不扩大到1/10",
+        "RM1-A六候选必须共享seed0、train/validation anchors和180 optimizer updates；每候选最多一次attempt",
+        "paired-free的response non-collapse门标记为不适用；terminal-only不得使用local或logged-action辅助监督",
         "本地真实smoke不构成Linux或完整真实矩阵授权；linux_authorized_gate保持null"
       ]
     },

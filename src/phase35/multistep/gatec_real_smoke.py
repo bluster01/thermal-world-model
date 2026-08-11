@@ -30,10 +30,20 @@ DEFAULT_WEIGHTS = {
     "structure": 0.10,
 }
 
+COMMON_PREDICTION_WEIGHTS = {
+    key: value / (1.0 - DEFAULT_WEIGHTS["structure"])
+    for key, value in DEFAULT_WEIGHTS.items()
+    if key != "structure"
+} | {"structure": 0.0}
+
 
 @dataclass(frozen=True)
 class GateCRealSmokeConfig:
     route: str
+    candidate_id: str | None = None
+    residual_capacity: str = "base"
+    response_scheduling: str = "scheduled"
+    local_supervision: bool = True
     fraction_denominator: int = 100
     seed: int = 0
     window: int = 96
@@ -51,8 +61,18 @@ class GateCRealSmokeConfig:
     dropout: float = 0.1
 
     def validate(self) -> None:
-        if self.route not in RESPONSE_ROUTES - {"none"}:
+        if self.route not in RESPONSE_ROUTES:
             raise Phase35ProtocolError("Gate C real-smoke route is invalid")
+        if self.residual_capacity not in {"small", "base", "large"}:
+            raise Phase35ProtocolError("Gate C real-smoke residual capacity is invalid")
+        if self.response_scheduling not in {"none", "additive", "scheduled"}:
+            raise Phase35ProtocolError("Gate C real-smoke response scheduling is invalid")
+        if self.route == "none" and self.response_scheduling != "none":
+            raise Phase35ProtocolError("Gate C paired-free candidate cannot schedule a response")
+        if self.route != "none" and self.response_scheduling == "none":
+            raise Phase35ProtocolError("Gate C response candidate requires additive/scheduled mode")
+        if not isinstance(self.local_supervision, bool):
+            raise Phase35ProtocolError("Gate C real-smoke local supervision must be boolean")
         counts = (
             self.fraction_denominator,
             self.window,
@@ -117,7 +137,10 @@ def _metric_sums() -> dict[str, float]:
         "oracle_terminal_abs": 0.0,
         "predicted_effect_abs": 0.0,
         "logged_effect_abs": 0.0,
+        "logged_aux_local_abs": 0.0,
+        "shuffled_aux_local_abs": 0.0,
         "composite_loss": 0.0,
+        "candidate_objective_loss": 0.0,
         "persistence_valve_abs": 0.0,
         "persistence_tin_abs": 0.0,
         "persistence_local_abs": 0.0,
@@ -183,8 +206,8 @@ def run_gatec_real_subset_smoke(
         latent_dim=config.latent_dim,
         local_state_dim=6,
         response_route=config.route,
-        residual_capacity="base",
-        response_scheduling="scheduled",
+        residual_capacity=config.residual_capacity,
+        response_scheduling=config.response_scheduling,
         dropout=config.dropout,
     )
     model = build_gatec_model(model_config, train_batch.history_feature_names).to(torch_device)
@@ -195,6 +218,16 @@ def run_gatec_real_subset_smoke(
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay
     )
+    use_logged_action_aux = config.local_supervision and config.route != "none"
+    training_weights = dict(DEFAULT_WEIGHTS)
+    if not config.local_supervision:
+        training_weights["local"] = 0.0
+    if not use_logged_action_aux:
+        training_weights["structure"] = 0.0
+    active_weight = sum(training_weights.values())
+    training_weights = {
+        key: value / active_weight for key, value in training_weights.items()
+    }
     rng = np.random.default_rng(config.seed + 303)
     loss_curve: list[float] = []
     started = time.perf_counter()
@@ -209,12 +242,13 @@ def run_gatec_real_subset_smoke(
             tensors["history"],
             tensors["future_sp"],
             boundary_mode="forecast_boundary",
-            logged_future_valve_for_aux=tensors["valve"],
+            logged_future_valve_for_aux=tensors["valve"] if use_logged_action_aux else None,
         )
-        output["structure_penalty"] = F.smooth_l1_loss(
-            output["logged_local_drop_prediction"] / scales.values["local"],
-            tensors["local"] / scales.values["local"],
-        )
+        if use_logged_action_aux:
+            output["structure_penalty"] = F.smooth_l1_loss(
+                output["logged_local_drop_prediction"] / scales.values["local"],
+                tensors["local"] / scales.values["local"],
+            )
         loss = compute_gatec_loss(
             output,
             {
@@ -224,8 +258,8 @@ def run_gatec_real_subset_smoke(
                 "terminal": tensors["terminal"],
             },
             scales,
-            DEFAULT_WEIGHTS,
-            local_supervision=True,
+            training_weights,
+            local_supervision=config.local_supervision,
         )
         if not torch.isfinite(loss.total):
             raise Phase35ProtocolError("Gate C real-smoke loss became non-finite")
@@ -240,11 +274,18 @@ def run_gatec_real_subset_smoke(
     batch_count = 0
     stable_pole_max = 0.0
     first_tensors: dict[str, torch.Tensor] | None = None
+    shuffle_rng = np.random.default_rng(config.seed + 404)
+    shuffled_rows = shuffle_rng.permutation(len(validation_anchors))
     with torch.no_grad():
         for start in range(0, len(validation_anchors), config.validation_batch_size):
             stop = min(len(validation_anchors), start + config.validation_batch_size)
             indices = np.arange(start, stop, dtype=np.int64)
             tensors = _to_device_batch(validation_batch, indices, torch_device)
+            shuffled_valve = torch.as_tensor(
+                validation_batch.logged_future_valve[shuffled_rows[indices]],
+                dtype=torch.float32,
+                device=torch_device,
+            )
             if first_tensors is None:
                 first_tensors = tensors
             forecast = model(
@@ -268,7 +309,12 @@ def run_gatec_real_subset_smoke(
             logged_response = model.local_response(
                 context, tensors["valve"], baseline_valve
             )
-            validation_loss = compute_gatec_loss(
+            shuffled_response = model.local_response(context, shuffled_valve, baseline_valve)
+            logged_aux_local = forecast["residual_local_prediction"] + logged_response["effect"]
+            shuffled_aux_local = (
+                forecast["residual_local_prediction"] + shuffled_response["effect"]
+            )
+            common_prediction_loss = compute_gatec_loss(
                 forecast,
                 {
                     "valve": tensors["valve"],
@@ -277,8 +323,20 @@ def run_gatec_real_subset_smoke(
                     "terminal": tensors["terminal"],
                 },
                 scales,
-                DEFAULT_WEIGHTS,
+                COMMON_PREDICTION_WEIGHTS,
                 local_supervision=True,
+            )
+            candidate_objective_loss = compute_gatec_loss(
+                forecast,
+                {
+                    "valve": tensors["valve"],
+                    "tin": tensors["tin"],
+                    "local": tensors["local"],
+                    "terminal": tensors["terminal"],
+                },
+                scales,
+                training_weights,
+                local_supervision=config.local_supervision,
             )
             count = int(tensors["terminal"].numel())
             element_count += count
@@ -300,7 +358,16 @@ def run_gatec_real_subset_smoke(
             )
             sums["predicted_effect_abs"] += float(forecast["local_effect"].abs().sum().cpu())
             sums["logged_effect_abs"] += float(logged_response["effect"].abs().sum().cpu())
-            sums["composite_loss"] += float(validation_loss.total.cpu())
+            sums["logged_aux_local_abs"] += float(
+                (logged_aux_local - tensors["local"]).abs().sum().cpu()
+            )
+            sums["shuffled_aux_local_abs"] += float(
+                (shuffled_aux_local - tensors["local"]).abs().sum().cpu()
+            )
+            sums["composite_loss"] += float(common_prediction_loss.total.cpu())
+            sums["candidate_objective_loss"] += float(
+                candidate_objective_loss.total.cpu()
+            )
             sums["persistence_valve_abs"] += float(
                 (tensors["valve"] - baseline_valve[:, None]).abs().sum().cpu()
             )
@@ -354,7 +421,12 @@ def run_gatec_real_subset_smoke(
         "oracle_terminal_mae_c": sums["oracle_terminal_abs"] / element_count,
         "predicted_action_effect_mean_abs_c": sums["predicted_effect_abs"] / element_count,
         "logged_action_effect_mean_abs_c": sums["logged_effect_abs"] / element_count,
+        "logged_aux_local_mae_c": sums["logged_aux_local_abs"] / element_count,
+        "shuffled_aux_local_mae_c": sums["shuffled_aux_local_abs"] / element_count,
         "dimensionless_composite_loss": sums["composite_loss"] / batch_count,
+        "candidate_objective_validation_loss": (
+            sums["candidate_objective_loss"] / batch_count
+        ),
         "persistence_valve_mae": sums["persistence_valve_abs"] / element_count,
         "persistence_tin_mae_c": sums["persistence_tin_abs"] / element_count,
         "persistence_local_drop_mae_c": sums["persistence_local_abs"] / element_count,
@@ -380,12 +452,20 @@ def run_gatec_real_subset_smoke(
         metrics["logged_action_effect_mean_abs_c"]
         / max(metrics["persistence_local_drop_mae_c"], 1e-9)
     )
+    metrics["logged_vs_shuffled_local_advantage_c"] = (
+        metrics["shuffled_aux_local_mae_c"] - metrics["logged_aux_local_mae_c"]
+    )
+    response_expected = config.route != "none"
     structural = {
         "finite_rollout": metrics["finite"] and stable_pole_max < 1.0,
         "sp_prefix_causality": prefix_ok,
         "constant_action_identity": identity_ok,
         "future_truth_isolation": True,
-        "local_response_noncollapse": metrics["logged_action_effect_mean_abs_c"] > 1e-6,
+        "local_response_noncollapse": (
+            metrics["logged_action_effect_mean_abs_c"] > 1e-6
+            if response_expected
+            else True
+        ),
     }
     baseline_diagnostics = {
         "valve_not_worse_than_1p05_persistence": metrics["valve_to_persistence_ratio"] <= 1.05,
@@ -396,7 +476,10 @@ def run_gatec_real_subset_smoke(
     elapsed = time.perf_counter() - started
     return {
         "scope": "local_real_train_validation_subset_not_causal",
+        "candidate_id": config.candidate_id or config.route,
         "route": config.route,
+        "residual_capacity": config.residual_capacity,
+        "response_scheduling": config.response_scheduling,
         "seed": config.seed,
         "fraction_denominator": config.fraction_denominator,
         "train_anchor_count_full": int(len(train_all)),
@@ -410,7 +493,22 @@ def run_gatec_real_subset_smoke(
         "target_scale_source": "train_subset_only",
         "boundary_mode": "forecast_boundary",
         "oracle_boundary_role": "diagnostic_ceiling_only",
-        "local_supervision": True,
+        "local_supervision": config.local_supervision,
+        "logged_action_auxiliary_used_for_training": (
+            config.local_supervision and response_expected
+        ),
+        "training_weights": training_weights,
+        "common_prediction_weights": COMMON_PREDICTION_WEIGHTS,
+        "score_comparability": {
+            "dimensionless_composite_loss": "shared_across_all_candidates",
+            "candidate_objective_validation_loss": "not_comparable_when_supervision_differs",
+        },
+        "structural_applicability": {
+            "local_response_noncollapse": "required" if response_expected else "not_applicable_paired_free"
+        },
+        "trainable_parameter_count": int(
+            sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
+        ),
         "optimizer_updates": config.optimizer_updates,
         "loss_curve": loss_curve,
         "metrics_validation": metrics,

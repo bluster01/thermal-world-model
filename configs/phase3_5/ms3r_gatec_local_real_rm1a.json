@@ -1,0 +1,78 @@
+{
+  "protocol_version": "phase3.5-ms3r-gatec-local-real-rm1a-v1",
+  "batch_id": "ms3r-gatec-local-real-rm1a",
+  "scope": "local_real_train_validation_attribution_not_causal",
+  "parent_gatec_matrix": {
+    "path": "configs/phase3_5/ms3r_gatec_model_matrix.json",
+    "sha256": "9b0a7bfc2d83fe0de9de548e929ba85204759355c10545b0bdf23a45d052755a"
+  },
+  "parent_rm0b_audit": {
+    "path": "results/phase3_5/ms3r_gatec_local_real_subset_rm0b/supervisor_audit_validation.json",
+    "sha256": "2e31545cd8831594eca2e2016331d12fa31e7782ee50c71cd0d39b48f300151a",
+    "required_label": "BASELINE_ANCHOR_EFFECTIVE_RESPONSE_DECOMPOSITION_NONUNIQUE"
+  },
+  "data_contract": {
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "allowed_splits": ["train", "validation"],
+    "test_allowed": false,
+    "fraction_denominator": 100,
+    "anchor_sampling": "deterministic_without_replacement_after_window_validation",
+    "window": 96,
+    "horizon": 60,
+    "max_age_s": 180.0
+  },
+  "seeds": [0],
+  "candidates": [
+    {"candidate_id": "C0_paired_free", "response_route": "none", "residual_capacity": "base", "local_supervision": true, "response_scheduling": "none"},
+    {"candidate_id": "C1_additive_base", "response_route": "a1phys_three_pole", "residual_capacity": "base", "local_supervision": true, "response_scheduling": "additive"},
+    {"candidate_id": "C2_sched_small", "response_route": "a1phys_three_pole", "residual_capacity": "small", "local_supervision": true, "response_scheduling": "scheduled"},
+    {"candidate_id": "C3_sched_base", "response_route": "a1phys_three_pole", "residual_capacity": "base", "local_supervision": true, "response_scheduling": "scheduled"},
+    {"candidate_id": "C4_sched_large", "response_route": "a1phys_three_pole", "residual_capacity": "large", "local_supervision": true, "response_scheduling": "scheduled"},
+    {"candidate_id": "C5_sched_base_terminal_only", "response_route": "a1phys_three_pole", "residual_capacity": "base", "local_supervision": false, "response_scheduling": "scheduled"}
+  ],
+  "model": {
+    "d_model": 32,
+    "latent_dim": 16,
+    "dropout": 0.1,
+    "boundary_mode": "forecast_boundary",
+    "baseline_parameterization": "observed_persistence_plus_learned_increment"
+  },
+  "training": {
+    "batch_size": 64,
+    "optimizer_updates": 180,
+    "validation_batch_size": 128,
+    "max_validation_anchors": 2048,
+    "learning_rate": 0.001,
+    "weight_decay": 0.00001,
+    "gradient_clip": 1.0
+  },
+  "diagnostics": {
+    "primary_contrasts": [
+      "C3_sched_base_vs_C0_paired_free",
+      "C3_sched_base_vs_C1_additive_base",
+      "C2_sched_small_vs_C3_sched_base_vs_C4_sched_large",
+      "C3_sched_base_vs_C5_sched_base_terminal_only"
+    ],
+    "logged_vs_shuffled_action": "validation_diagnostic_not_causal",
+    "operator_ranking_allowed": false,
+    "automatic_scientific_pass": false
+  },
+  "execution_contract": {
+    "local_real_attribution_authorized": true,
+    "linux_authorized": false,
+    "test_authorized": false,
+    "automatic_scientific_pass": false,
+    "maximum_attempts_per_candidate": 1,
+    "required_artifacts": [
+      "run_manifest.json",
+      "C0_paired_free_validation.json",
+      "C1_additive_base_validation.json",
+      "C2_sched_small_validation.json",
+      "C3_sched_base_validation.json",
+      "C4_sched_large_validation.json",
+      "C5_sched_base_terminal_only_validation.json",
+      "summary_validation.json",
+      "artifact_ledger.json"
+    ]
+  }
+}

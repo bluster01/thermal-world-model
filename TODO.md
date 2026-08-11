@@ -31,7 +31,7 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | MS5 | 完整 `free+response` 动作吸收 | ✓ CLOSED | joint 选中；冻结 staged 协议拒绝 |
 | **MS3** | A/B 真实数据适配 | ✓ **AUDITED FAIL / ASYMMETRIC** | B 3/3 PASS；A 0/3 non-collapse FAIL；不重跑、不访问 test |
 | **MS3-D** | A/B 响应不对称诊断 | ✓ **AUDITED** | 模型 A attenuation 未获现场热链路支持；B 阀位持久性更强；单侧 plant 归因不足 |
-| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ▶ **GATE-C LOCAL REAL RM1-A ATTRIBUTION** | 固定A1扫描free容量/调度/local supervision，Linux 无任务 |
+| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ▶ **GATE-C LOCAL REAL RM1-A ATTRIBUTION** | 六候选代码/配置已闭合；执行一次真实1/100 validation，Linux 无任务 |
 | MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-R 冻结前不启动；不恢复旧 E 匹配 |
 
 ## D3 收口
@@ -122,7 +122,7 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 16 | A1phys/LPV-Koopman/PI-ODE/DeepONet 路线特定实现与端到端合成恢复 | 本地 | ✓ 独立方程、held-out合成训练及free×excitation负控制通过；不替代真实值 |
 | 17 | 四路线真实 1/100 RM0-A | 本地 | ✓ 审计为 underfit；四路线不可排名，禁止重跑同协议 |
 | 18 | baseline-anchored + response-only action auxiliary RM0-B | 本地 | ✓ baseline有效；terminal无增益，response分解不唯一，禁止路线排名 |
-| 19 | 固定 A1phys 的真实 RM1-A attribution | 本地 | ▶ paired-free/additive/scheduled small-base-large/terminal-only |
+| 19 | 固定 A1phys 的真实 RM1-A attribution | 本地 | ▶ 六候选实现/专项测试通过；待一次真实1/100 validation与审计 |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)；当前均不构成运行授权。
 

@@ -2,7 +2,19 @@
 
 本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
-> 当前状态：`ms3_r=implementation`、`linux_authorized_gate=null`。真实 RM0-B 已确认 persistence anchor 有效，但四路线预测近同、response 幅值相差约 2.5 倍，禁止 operator 排名。当前转入本地真实 RM1-A：固定 A1phys，扫描 free capacity、additive/scheduled 和 local supervision。合成只作理论/负控制；Linux、test、MS4 和旧 42-run/E 系列均未授权。
+> 当前状态：`ms3_r=implementation`、`linux_authorized_gate=null`。真实 RM0-B 已确认 persistence anchor 有效，但四路线预测近同、response 幅值相差约 2.5 倍，禁止 operator 排名。当前本地真实 RM1-A 六候选代码与配置已闭合：固定 A1phys，扫描 free capacity、additive/scheduled 和 local supervision。合成只作理论/负控制；Linux、test、MS4 和旧 42-run/E 系列均未授权。
+
+RM1-A 仅允许本地在冻结真实 cache 上执行一次；以下命令是本地审计入口，不构成 Linux 授权：
+
+```bash
+python experiments/phase3_5/ms3r_gatec_real_attribution.py --dry-run
+python experiments/phase3_5/ms3r_gatec_real_attribution.py \
+  --cache-a /external/path/cache_A.npz \
+  --cache-b /external/path/cache_B.npz \
+  --device cuda
+```
+
+六候选共享 seed 0、train/validation anchors、180 updates。`paired-free` 的 response non-collapse 门为不适用；`terminal-only` 不读取局部或 logged-action 辅助监督。输出只用于真实数据归因诊断，不自动产生科学 PASS、operator 冠军、因果响应、test 或 Linux 放行。
 
 ## MS3-R Gate A：点位与可辨识性批次
 

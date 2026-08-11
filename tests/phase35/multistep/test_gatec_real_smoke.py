@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from src.phase35.data import Phase35Cache
 from src.phase35.multistep.gatec_real_smoke import (
@@ -100,3 +101,89 @@ def test_real_subset_smoke_is_deterministic_for_frozen_seed() -> None:
     assert first["train_anchor_sha256"] == second["train_anchor_sha256"]
     assert first["validation_anchor_sha256"] == second["validation_anchor_sha256"]
     assert first["metrics_validation"] == second["metrics_validation"]
+
+
+def test_paired_free_marks_response_noncollapse_not_applicable() -> None:
+    result = run_gatec_real_subset_smoke(
+        _caches(),
+        GateCRealSmokeConfig(
+            route="none",
+            candidate_id="C0_paired_free",
+            response_scheduling="none",
+            fraction_denominator=10,
+            window=12,
+            horizon=6,
+            d_model=8,
+            latent_dim=6,
+            batch_size=16,
+            optimizer_updates=1,
+            validation_batch_size=32,
+            max_validation_anchors=24,
+        ),
+        device="cpu",
+    )
+    assert result["candidate_id"] == "C0_paired_free"
+    assert result["metrics_validation"]["logged_action_effect_mean_abs_c"] == 0.0
+    assert result["structural_validation"]["local_response_noncollapse"] is True
+    assert (
+        result["structural_applicability"]["local_response_noncollapse"]
+        == "not_applicable_paired_free"
+    )
+    assert result["logged_action_auxiliary_used_for_training"] is False
+    assert sum(result["training_weights"].values()) == pytest.approx(1.0)
+    assert result["training_weights"]["structure"] == 0.0
+
+
+def test_terminal_only_really_disables_local_and_logged_action_auxiliary() -> None:
+    result = run_gatec_real_subset_smoke(
+        _caches(),
+        GateCRealSmokeConfig(
+            route="a1phys_three_pole",
+            candidate_id="C5_sched_base_terminal_only",
+            local_supervision=False,
+            fraction_denominator=10,
+            window=12,
+            horizon=6,
+            d_model=8,
+            latent_dim=6,
+            batch_size=16,
+            optimizer_updates=1,
+            validation_batch_size=32,
+            max_validation_anchors=24,
+        ),
+        device="cpu",
+    )
+    assert result["local_supervision"] is False
+    assert result["logged_action_auxiliary_used_for_training"] is False
+    assert result["training_weights"]["local"] == 0.0
+    assert result["training_weights"]["structure"] == 0.0
+    assert "logged_vs_shuffled_local_advantage_c" in result["metrics_validation"]
+
+
+def test_capacity_candidates_share_anchors_and_order_parameter_counts() -> None:
+    results = []
+    for capacity in ("small", "base", "large"):
+        results.append(
+            run_gatec_real_subset_smoke(
+                _caches(),
+                GateCRealSmokeConfig(
+                    route="a1phys_three_pole",
+                    residual_capacity=capacity,
+                    fraction_denominator=10,
+                    seed=7,
+                    window=12,
+                    horizon=6,
+                    d_model=8,
+                    latent_dim=6,
+                    batch_size=16,
+                    optimizer_updates=1,
+                    validation_batch_size=32,
+                    max_validation_anchors=24,
+                ),
+                device="cpu",
+            )
+        )
+    assert len({item["train_anchor_sha256"] for item in results}) == 1
+    assert len({item["validation_anchor_sha256"] for item in results}) == 1
+    counts = [item["trainable_parameter_count"] for item in results]
+    assert counts[0] < counts[1] < counts[2]
