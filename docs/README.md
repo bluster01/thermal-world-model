@@ -8,8 +8,11 @@
 - [PHASE35_CONTEXT_SNAPSHOT.md](PHASE35_CONTEXT_SNAPSHOT.md)：上下文丢失后的第一恢复入口、完整 MS 顺序和当前 Gate。
 - [../configs/phase3_5/experiment_registry.json](../configs/phase3_5/experiment_registry.json)：机器可校验的 Gate、Linux 授权、关键脚本和产物状态。
 - [PHASE35_MAINLINE_CONTEXT.md](PHASE35_MAINLINE_CONTEXT.md)：完整 MS 主命题、known-truth/现场两条证据臂与停止规则。
+- [PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md](PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md)：D3 validation 的 artifact/episode 独立复算、50k bootstrap、预算关闭与 provenance advisory。
+- [plans/2026-08-11-phase35-ms5-full-coupling-design.md](plans/2026-08-11-phase35-ms5-full-coupling-design.md)：当前 MS5 完整 `free+response` 动作吸收问题、4-mode 设计、门禁和选择规则。
+- [plans/2026-08-11-phase35-ms5-full-coupling-implementation.md](plans/2026-08-11-phase35-ms5-full-coupling-implementation.md)：MS5 generator、训练模式、12-run runner、fail-closed summary 和 Linux 交付清单。
 - [PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md](PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md)：D2 one-shot test 的 ledger/pin/episode 独立复算、50k bootstrap、确认关闭与机制边界。
-- [plans/2026-08-11-phase35-ms2d3-disturbance-design.md](plans/2026-08-11-phase35-ms2d3-disturbance-design.md)：当前 D3 stationary AR(1) output nuisance 的冻结问题、生成式、门禁和 claim boundary。
+- [plans/2026-08-11-phase35-ms2d3-disturbance-design.md](plans/2026-08-11-phase35-ms2d3-disturbance-design.md)：已关闭 D3 stationary AR(1) output nuisance 的冻结问题、生成式、门禁和 claim boundary。
 - [plans/2026-08-11-phase35-ms2d3-disturbance-implementation.md](plans/2026-08-11-phase35-ms2d3-disturbance-implementation.md)：D3 generator、21-run runner、episode summary、状态和 Linux 交付实施清单。
 - [PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md](PHASE35_MS2D2_SUPERVISOR_AUDIT_2026-08-10.md)：D2 validation 的 checkpoint/episode 独立复算、screening 判决与 test 授权。
 - [plans/2026-08-10-phase35-ms2d2-test-design.md](plans/2026-08-10-phase35-ms2d2-test-design.md)：已完成 D2 one-shot test 的内容寻址、配对统计和停止规则。

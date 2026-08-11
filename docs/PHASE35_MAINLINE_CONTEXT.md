@@ -4,9 +4,9 @@
 
 - Material Type: active experiment-purpose specification
 - Scope: Phase 3.5-MS0–MS5、真实数据适配与闭环响应验证
-- Verification Status: ANALYZED；MS2-D2 test 已独立审计
+- Verification Status: ANALYZED；MS2-D3 validation 已独立审计
 - Deprecated Track: 原 E1–E5，仅作历史失败证据
-- Active Decision: 完成完整 MS 系列；MS2-D2 已确认关闭，当前仅授权 MS2-D3 validation
+- Active Decision: 完成完整 MS 系列；MS2-D3 validation-only 关闭，当前仅授权 MS5 validation
 
 ## 1. 一句话主线
 
@@ -48,6 +48,7 @@ MS0 → MS1 → MS2-V/C/J → MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选
 - MS2-J：joint 相对两个单模块双层通过；response-internal staged 在 1.10 非劣界双层失败，但相对 Stage A 有效。因此当前 response 主训练采用 joint，不能据此决定完整 MS5 staging。
 - MS2-D1：learned-delay 的改善方向跨 split 稳定，但 test CI 下界未达到冻结的 20%，按阴性结果关闭；不传播 delay 结构。
 - MS2-D2 test：oracle 与三阶绝对 NMAE 逐 seed过门；三阶相对二阶点改善 23.74%–25.36%，冻结 bootstrap CI 下界 19.90%–21.22%，逐 seed高于 10%。只确认 frozen known-truth 下的响应优势，不确认现场阶次唯一性。
+- MS2-D3 validation：21/21 产物门通过；oracle 0.0357–0.0446、三阶 0.0558–0.0633，相对二阶 CI 下界 10.8%–14.3%。按预算不追加 test，只保留为 colored-nuisance validation 压力证据。
 
 Koopman、PI-ODE 与 DeepONet 继续作为表示路线参与压力和真实适配验证；MS2-J 的 secondary 数值不构成最终路线冠军。
 
@@ -57,7 +58,7 @@ Koopman、PI-ODE 与 DeepONet 继续作为表示路线参与压力和真实适�
 
 现场物理验证改由 MS4 承担。当前最强外部锚点是 SP held-step 的闭环响应：A/B 两侧具有双向事件和 110+ 日块，`SP↑→T2↑→Tm↑` 方向率约 70–86%。它验证的是包含串级 PID 的闭环系统，不是开环 `do(valve)`；双侧 SP 联动仍限制单侧归因。
 
-## 5. 当前 Gate：MS2-D3
+## 5. 当前 Gate：MS5
 
 MS2-D 采用顺序压力测试，不一次铺开大矩阵：
 
@@ -69,7 +70,9 @@ D1 已关闭：learned causal delay 的改善方向跨 validation/test 稳定，
 
 D2 采用正交的阶次压力设计：真值取消 pure delay，只加入第三个惯性极点 `[40,70,210] s`。one-shot test 的 oracle、三阶绝对误差和三阶相对二阶 CI 主门逐 seed通过，故以 `CONFIRMED_SYNTHETIC_ORDER_RESPONSE` 关闭。但二极点+learned-delay 与 DeepONet 在有限 horizon 仍接近三阶；D2 没有建立现场唯一阶次、参数唯一性或迟延机制。
 
-D3 保持 D2 的 R50、context scheduling、三阶、无 pure delay clean truth，只加入 response operator 不可观察的 action-independent stationary AR(1) output nuisance：`sigma_d=0.03 °C`、`tau_d=120 s`。21-run validation 主门仍为 oracle `<0.05`、三阶 `<0.10`、三阶相对二阶的配对/profile 分层 bootstrap CI 下界逐 seed `>=10%`，且全部基于已知 clean response。扰动 realization、tau、伪迟延、profile/horizon、D2→D3 漂移及 Koopman/PI-ODE/DeepONet 排名只作诊断。当前不访问 test，不启动 MS5。
+D3 保持 D2 clean truth，只加入 response operator 不可观察的 stationary AR(1) output nuisance。validation 的冻结主门逐 seed通过，本地 episode 重算与独立 50k bootstrap 一致；由于 validation 参与 checkpoint 选择，按预算决定以 `VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION` 关闭，不称独立确认。
+
+MS5 现在检验完整 `free+response` 加法模型在 total-only supervision 下是否发生 component absorption。冻结矩阵只有 4 modes×3 seeds：free-only 负控、joint 主策略、短阶段 staged 候补和 component-supervised oracle 正控。oracle 必须先通过；joint 资格门全过即选更简单的 joint，只有 joint 失败而 staged 绝对门和相对 1.10 门逐 seed全过时才选 staged。MS5 只运行 validation，不访问 synthetic test 或 A/B；通过即可按预算关闭并进入 MS3，本地审计前 MS3 仍冻结。
 
 ## 6. 当前不能声称
 

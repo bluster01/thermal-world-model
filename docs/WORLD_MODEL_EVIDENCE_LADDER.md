@@ -137,7 +137,7 @@ A1phys 当前是低阶响应先验，不是守恒模型。若最终目标包含�
 | W5 策略离线验证 | 验证 policy-generated action 分布 | support-aware OPE、独立 plant、鲁棒性和故障注入 | 性能非劣且约束/安全门通过 | 不进 shadow |
 | W6 闭环分级 | 证明可嵌入且安全 | replay→HIL→shadow→advisory→受限闭环 | 每级预注册验收并有回退 | 停留在上一等级 |
 
-对最终真实世界模型，W2 仍是现场科学门；当前工程先完成 MS2-D、MS5、MS3、MS4，不能在 MS2-J 后跳到论文。W3 是从“预测器”成为“仿真器”的结构门；W4 是“反事实”的识别门；W5–W6 才是闭环门。它们不能合并成一个 MAE 或 CFI 分数。
+对最终真实世界模型，W2 仍是现场科学门；MS2-D 已按预注册边界关闭，当前工程先完成 MS5、MS3、MS4，不能从 synthetic pressure test 跳到论文。W3 是从“预测器”成为“仿真器”的结构门；W4 是“反事实”的识别门；W5–W6 才是闭环门。它们不能合并成一个 MAE 或 CFI 分数。
 
 ## 6. 论文与工程的两条叙事
 
@@ -178,8 +178,8 @@ A1phys 当前是低阶响应先验，不是守恒模型。若最终目标包含�
 
 ## 8. 当前优先级
 
-1. 完成 MS2-D3 colored-disturbance validation；D1 已按 20% margin 阴性关闭，D2 已确认 frozen known-truth 三阶响应优势。
-2. 实施 MS5，单独检验完整 `free+response` 的动作吸收和训练稳定性。
+1. 执行并审计 MS5 的 12-run validation，单独检验完整 `free+response` 的动作吸收和训练稳定性；validation 通过即可按预算关闭，不追加 test。
+2. MS2-D 保持关闭：D1 阴性、D2 test 确认 frozen known-truth 三阶优势、D3 validation 压力通过但未做 test。
 3. 实施 MS3 A/B validation-only 适配，再以 SP held-step 闭环锚点实施 MS4。
 4. MS 系列完成后再选择模型和形成论文；不以 synthetic 单榜提前定路线冠军。
 5. 只有状态闭合、反事实与独立控制 Gate 通过后，才恢复 MPC/闭环路线。

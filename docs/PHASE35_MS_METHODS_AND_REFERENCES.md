@@ -1,6 +1,6 @@
 # Phase 3.5-MS 多步动作响应：方法、推导与参考文献
 
-> 版本：`phase3.5-ms-v1`，更新至 2026-08-11。本文描述当前代码已经实现的内容，不恢复旧 E3/E4 现场因果结论。代码入口为 `src/phase35/multistep/`；D2 test 已确认并关闭，当前 Gate 由 `configs/phase3_5/experiment_registry.json` 指向 `ms2d_disturbance_matrix.json`。
+> 版本：`phase3.5-ms-v1`，更新至 2026-08-11。本文描述当前代码已经实现的内容，不恢复旧 E3/E4 现场因果结论。代码入口为 `src/phase35/multistep/`；D3 validation-only 已关闭，当前 Gate 由 `configs/phase3_5/experiment_registry.json` 指向 `ms5_full_coupling_matrix.json`。
 
 ## 1. 研究问题与证据边界
 
@@ -286,7 +286,7 @@ MS2-V/C 冻结两个独立失配轴：`valve_nonlinear_r50` 的 6 candidates 与
 
 MS2-D 按正交轴顺序执行。D1 在联合真值上增加 20 s pure delay；one-shot test 点改善方向稳定，但逐 seed CI 下界 17.2%–18.8% 未达冻结 20%，故阴性关闭且不传播 delay 结构。D2 取消 pure delay、改为三极点 `[40,70,210] s`；one-shot test 的 oracle、三阶绝对误差和三阶相对二阶 CI 主门逐 seed通过，确认 frozen known-truth 下的三阶 response advantage，但 learned-delay/DeepONet 的接近表现阻止唯一机制解释。
 
-当前 D3 保持 D2 clean truth，只加入 response operator 不可观察的平稳 AR(1) 输出扰动：
+D3 保持 D2 clean truth，只加入 response operator 不可观察的平稳 AR(1) 输出扰动：
 
 \[
 \rho=\exp(-\Delta t/\tau_d),\qquad
@@ -294,7 +294,16 @@ d_t=\rho d_{t-1}+\sigma_d\sqrt{1-\rho^2}\epsilon_t,
 \tag{21a}
 \]
 
-其中 `sigma_d=0.03 °C`、`tau_d=120 s`、`dt=10 s`。7 candidates × 3 seeds 的 validation 主门仍只计算 known-truth clean response；扰动 realization、tau/delay、profile/horizon、D2→D3 漂移与 secondary 排名均为诊断。完整设计见 [`plans/2026-08-11-phase35-ms2d3-disturbance-design.md`](plans/2026-08-11-phase35-ms2d3-disturbance-design.md)。
+其中 `sigma_d=0.03 °C`、`tau_d=120 s`、`dt=10 s`。7 candidates × 3 seeds 的 validation 主门逐 seed通过；按预算不追加 test，只保留 known-truth colored-nuisance 压力证据。扰动 realization、tau/delay、profile/horizon、D2→D3 漂移与 secondary 排名均为诊断。完整审计见 [`PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md`](PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md)。
+
+MS5 新增完整分解真值
+
+\[
+y_h=f_h(c)+g_{clean,h}(c,a,r)+\epsilon_h,
+\tag{21b}
+\]
+
+其中 \(f_h(c)\) 是动作盲的动态自由温度轨迹；非 hold action 在 active support 内加入与 \(c_0\) 相关的 policy offset，形成 context/action 相关性，但 hold 保持 \(a=r\)。生成器同时保存 `clean_free`、`clean_effect` 和 `clean_total`。12-run 矩阵比较 free-only、joint-total、staged-total 和 component-oracle；checkpoint 仍只按 validation noisy total MAE 选择，component truth 仅用于评估和 oracle 正控。完整公式和门禁见 [`plans/2026-08-11-phase35-ms5-full-coupling-design.md`](plans/2026-08-11-phase35-ms5-full-coupling-design.md)。
 
 ## 9. 训练目标、选模与评测
 
@@ -351,7 +360,8 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 | MS2-J coupling（validation+test 双层：联合模块 PASS、staged 非劣 FAIL，`5260d3f`） | 双模块联合响应可辨识；当前 staged 协议未达到 1.10 非劣界 | 单独恢复 `K/phi`、所有 staged 方案优劣、真实数据迁移与现场因果响应 |
 | MS2-D1 pure delay（已关闭，20% margin 未确认） | 改善方向在 known-truth 跨 split稳定 | 不能传播显式迟延为已证实组件或现场 20 s 真值 |
 | MS2-D2 third order（test 已确认关闭） | frozen known-truth 下三阶 response 相对二阶的增量价值 | 现场阶次唯一性、tau 唯一恢复、迟延/阶次机制区分 |
-| MS2-D3 colored disturbance（当前 validation） | 可检验 clean response 在一个 AR(1) output nuisance 下的恢复稳健性 | 现场扰动谱、扰动 observer、过程状态闭合或确认性 test 结论 |
+| MS2-D3 colored disturbance（validation-only 关闭） | clean response 在一个冻结 AR(1) output nuisance 下通过 validation 压力门 | 现场扰动谱、扰动 observer、过程状态闭合或确认性 test 结论 |
+| MS5 full coupling（代码冻结、待 Linux validation） | 可检验 total-only supervision 下 component absorption，以及 joint/staged 哪个满足冻结资格门 | 现场 free/response 分解、观测因果、完整状态 simulator |
 | MS3 real validation（未实现） | A/B 观测预测与模型敏感性 | 未控制混杂下的反事实效应 |
 | MS4 new-time E3/E4 | 若门禁通过，可比较经验响应与模型响应 | 超出数据支持域的闭环安全性 |
 
@@ -372,7 +382,7 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 3. 以较小学习率联合微调，同时保留响应与结构损失；
 4. 分阶段保存 checkpoint，不允许只保留联合阶段最优模型。
 
-这是完整 `free+response` 世界模型的待实现设计，不是当前训练代码已有能力。MS2-J 只在 response 内部测试了 base/opening/schedule 三阶段训练，且当前协议未达到 joint 的 1.10 非劣界；它不能代替 MS5 对 free head 吸收动作信号的检验。是否采用短冻结必须由 MS5 的 stage-wise gradient、参数漂移和消融结果决定，不能只凭文献、直觉或 MS2-J 外推。
+该流程现已在 MS5 synthetic runner 中实现为冻结消融，不代表真实数据阶段已验证。MS2-J 只在 response 内部测试了 base/opening/schedule 三阶段训练，且未达到 joint 的 1.10 非劣界；它不能代替 MS5 对 free head 吸收动作信号的检验。MS5 若 joint 资格门全过，按预注册规则直接采用更简单的 joint；只有 joint 失败而 staged 的绝对门和 1.10 相对门全过才传播短阶段训练。
 
 ## 12. 代码—公式—测试追溯
 
@@ -391,6 +401,7 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 | MS2-D1 pure delay | `synthetic.py`、`operators.py`、`ms2d_delay.py`、`summarize_ms2d_delay.py` | exact delay timing、simplex、buffer continuation、18-run freeze、artifact/response/parameter 分离门禁 |
 | MS2-D2 third order | `synthetic.py`、`ms2d_order.py`、`ms2d_order_test.py` 与对应 summary | 三阶 truth、21-run freeze、content pin、one-shot ledger、paired episode CI、诊断隔离 |
 | MS2-D3 AR(1) nuisance | `synthetic.py`、`ms2d_disturbance.py`、`summarize_ms2d_disturbance.py` | 平稳/确定性/toggle 不变式、21-run freeze、clean pairing、test lock、诊断隔离 |
+| MS5 full free+response | `synthetic.py`、`full_training.py`、`ms5_full_coupling.py`、`summarize_ms5_full_coupling.py` | legacy hash、component metrics、4-mode CPU smoke、12-run freeze、artifact replay、ordered decision tree、test lock |
 
 ## 13. Reference ledger
 

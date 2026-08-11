@@ -1,8 +1,8 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
   "updated_at": "2026-08-11",
-  "active_gate": "ms2d_d3",
-  "linux_authorized_gate": "ms2d_d3",
+  "active_gate": "ms5",
+  "linux_authorized_gate": "ms5",
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -322,18 +322,18 @@
     },
     "ms2d_d3": {
       "title": "未建模扰动压力",
-      "status": "ready_for_linux",
+      "status": "closed",
       "owner": "linux_run_local_audit",
       "evidence_scope": "synthetic_colored_disturbance_pressure_validation_not_field_causality",
       "scripts": {
         "runner": {
           "path": "experiments/phase3_5/ms2d_disturbance.py",
-          "status": "active",
+          "status": "closed",
           "required": true
         },
         "summary": {
           "path": "experiments/phase3_5/summarize_ms2d_disturbance.py",
-          "status": "active",
+          "status": "closed",
           "required": true
         }
       },
@@ -352,19 +352,59 @@
         },
         "validation_summary": {
           "path": "results/phase3_5/ms2d_disturbance/summary_validation.json",
-          "required": false
+          "required": true
+        },
+        "checkpoint_archive": {
+          "path": "results/phase3_5/archive/ms2d_d3_checkpoints_validation.tar",
+          "required": true
+        },
+        "supervisor_audit": {
+          "path": "docs/PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md",
+          "required": true
         }
       },
-      "decision": "READY_FOR_LINUX VALIDATION：D2 truth 加 action-independent stationary AR(1) output disturbance；21 runs；主门只用 clean known-truth，扰动、tau、delay、profile/horizon 与 D2 漂移均为诊断"
+      "decision": "CLOSED / VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION：21/21 产物门通过，oracle 0.0357–0.0446、三阶 0.0558–0.0633、相对二阶 CI 下界 10.8–14.3%；只作 validation 压力证据，不升级为独立 test",
+      "advisories": [
+        "validation checkpoint 参与选择，因此不称 confirmatory test；按预算决定不追加 D3 test",
+        "committed summary 的 archive 字段从原始输出路径改写到归档路径；成员权重一致，科学 JSON 与原始 stdout 一致"
+      ]
     },
     "ms5": {
       "title": "完整 free+response 耦合与动作吸收检验",
-      "status": "planned",
-      "owner": "local_design_code",
-      "evidence_scope": "synthetic_full_model_coupling_then_real_validation",
-      "scripts": {},
-      "artifacts": {},
-      "decision": "MS2-D 后、MS3 前；MS2-J staged 结果不能替代本 Gate"
+      "status": "ready_for_linux",
+      "owner": "linux_run_local_audit",
+      "evidence_scope": "synthetic_full_free_response_coupling_validation_not_field_causality",
+      "scripts": {
+        "runner": {
+          "path": "experiments/phase3_5/ms5_full_coupling.py",
+          "status": "active",
+          "required": true
+        },
+        "summary": {
+          "path": "experiments/phase3_5/summarize_ms5_full_coupling.py",
+          "status": "active",
+          "required": true
+        }
+      },
+      "artifacts": {
+        "matrix": {
+          "path": "configs/phase3_5/ms5_full_coupling_matrix.json",
+          "required": true
+        },
+        "design": {
+          "path": "docs/plans/2026-08-11-phase35-ms5-full-coupling-design.md",
+          "required": true
+        },
+        "implementation_plan": {
+          "path": "docs/plans/2026-08-11-phase35-ms5-full-coupling-implementation.md",
+          "required": true
+        },
+        "validation_summary": {
+          "path": "results/phase3_5/ms5_full_coupling/summary_validation.json",
+          "required": false
+        }
+      },
+      "decision": "READY_FOR_LINUX VALIDATION：4 modes×3 seeds=12 runs；oracle 正控、free-only 负控，joint 优先、staged 仅在 joint 失败时按冻结规则候补；不访问 test"
     },
     "ms3": {
       "title": "A/B 真实数据适配",

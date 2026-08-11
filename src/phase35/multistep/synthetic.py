@@ -15,6 +15,7 @@ TRUTH_REGIMES = {
     "context_scheduled",
     "delayed_context_scheduled",
     "disturbed_context_scheduled",
+    "full_coupled_context_scheduled",
 }
 TRUTH_OPENING_MAPS = {"identity", "equal_percentage_r50"}
 
@@ -36,6 +37,8 @@ class SyntheticSpec:
     input_delay_steps: int = 0
     disturbance_std: float = 0.0
     disturbance_tau_seconds: float = 0.0
+    free_trajectory_scale: float = 0.0
+    action_context_coupling_pct: float = 0.0
 
     def validate(self) -> None:
         if self.samples < len(PROFILE_NAMES) or self.horizon < 8 or self.context_dim < 1:
@@ -62,6 +65,7 @@ class SyntheticSpec:
             "context_scheduled",
             "delayed_context_scheduled",
             "disturbed_context_scheduled",
+            "full_coupled_context_scheduled",
         } and max(self.context_gain_log_scale, self.context_tau_log_scale) <= 0:
             raise ValueError("scheduled truth requires a non-zero scheduling scale")
         if (
@@ -82,6 +86,19 @@ class SyntheticSpec:
             raise ValueError(
                 "disturbance parameters require disturbed_context_scheduled truth"
             )
+        if self.truth_regime == "full_coupled_context_scheduled":
+            if (
+                self.context_dim < 4
+                or self.free_trajectory_scale <= 0
+                or self.action_context_coupling_pct <= 0
+            ):
+                raise ValueError(
+                    "full coupling truth requires context_dim>=4 and positive free/policy scales"
+                )
+        elif self.free_trajectory_scale != 0 or self.action_context_coupling_pct != 0:
+            raise ValueError(
+                "full coupling parameters require full_coupled_context_scheduled truth"
+            )
 
 
 @dataclass
@@ -92,6 +109,8 @@ class SyntheticBatch:
     clean_effect: torch.Tensor
     target_effect: torch.Tensor
     target_temperature: torch.Tensor
+    clean_free: torch.Tensor
+    clean_total: torch.Tensor
     colored_disturbance: torch.Tensor
     profile_ids: torch.Tensor
     profile_names: tuple[str, ...]
@@ -226,6 +245,39 @@ def _lag_one_correlation(value: torch.Tensor) -> float:
     return float((left * right).sum() / denominator)
 
 
+def _apply_context_policy(
+    action: torch.Tensor,
+    reference: torch.Tensor,
+    context: torch.Tensor,
+    coupling_pct: float,
+) -> torch.Tensor:
+    if coupling_pct == 0:
+        return action
+    active = (action - reference).abs() > 1e-8
+    offset = coupling_pct * torch.tanh(context[:, :1])
+    return (action + active.to(action.dtype) * offset).clamp(0.0, 100.0)
+
+
+def _free_trajectory(spec: SyntheticSpec, context: torch.Tensor) -> torch.Tensor:
+    if spec.truth_regime != "full_coupled_context_scheduled":
+        level = 565.0 + 0.7 * context[:, :1]
+        return level.expand(-1, spec.horizon).clone()
+    step = torch.arange(
+        1, spec.horizon + 1, dtype=context.dtype, device=context.device
+    )[None, :]
+    unit_time = step / float(spec.horizon)
+    seconds = step * spec.dt_seconds
+    free = (
+        0.8 * torch.tanh(context[:, 0:1])
+        + 0.5 * torch.tanh(context[:, 1:2]) * unit_time
+        + 0.4
+        * torch.tanh(context[:, 2:3])
+        * (1.0 - torch.exp(-seconds / 180.0))
+        + 0.2 * torch.tanh(context[:, 3:4]) * torch.sin(torch.pi * unit_time)
+    )
+    return spec.free_trajectory_scale * free
+
+
 def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
     spec.validate()
     if split not in _SPLIT_OFFSETS:
@@ -233,6 +285,12 @@ def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
     generator = torch.Generator().manual_seed(spec.seed + _SPLIT_OFFSETS[split])
     context = torch.randn((spec.samples, spec.context_dim), generator=generator)
     action, reference, profile_ids = _generate_actions(spec, generator)
+    action = _apply_context_policy(
+        action,
+        reference,
+        context,
+        spec.action_context_coupling_pct,
+    )
     dose = _effective_opening(action, spec.truth_opening_map) - _effective_opening(
         reference, spec.truth_opening_map
     )
@@ -248,8 +306,9 @@ def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
         generator=generator,
     )
     target_effect = clean_effect + noise + colored_disturbance
-    free_level = 565.0 + 0.7 * context[:, :1]
-    target_temperature = free_level + target_effect
+    clean_free = _free_trajectory(spec, context)
+    clean_total = clean_free + clean_effect
+    target_temperature = clean_free + target_effect
     truth = {
         "generator": "stable_cascade_v2" if spec.truth_regime != "two_pole_linear" else "stable_two_pole_v1",
         "truth_regime": spec.truth_regime,
@@ -268,6 +327,8 @@ def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
         "disturbance_realized_lag1_correlation": _lag_one_correlation(
             colored_disturbance
         ),
+        "free_trajectory_scale": spec.free_trajectory_scale,
+        "action_context_coupling_pct": spec.action_context_coupling_pct,
         "realized_gain_range": [float(gain.min()), float(gain.max())],
         "realized_tau_range": [
             [float(tau[:, pole].min()), float(tau[:, pole].max())]
@@ -284,6 +345,8 @@ def generate_synthetic_split(spec: SyntheticSpec, split: str) -> SyntheticBatch:
         clean_effect=clean_effect,
         target_effect=target_effect,
         target_temperature=target_temperature,
+        clean_free=clean_free,
+        clean_total=clean_total,
         colored_disturbance=colored_disturbance,
         profile_ids=profile_ids,
         profile_names=PROFILE_NAMES,

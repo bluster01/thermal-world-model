@@ -1,3 +1,5 @@
+import hashlib
+
 import torch
 import torch.nn as nn
 import pytest
@@ -258,4 +260,93 @@ def test_colored_disturbance_rejects_invalid_scale_or_time_constant(
             context_tau_log_scale=0.3,
             disturbance_std=disturbance_std,
             disturbance_tau_seconds=disturbance_tau_seconds,
+        ).validate()
+
+
+def test_full_coupling_truth_exposes_free_total_and_context_policy():
+    spec = SyntheticSpec(
+        samples=250,
+        horizon=60,
+        context_dim=4,
+        seed=67,
+        noise_std=0.0,
+        gain_c_per_pct=-0.10,
+        tau_seconds=(40.0, 70.0, 210.0),
+        truth_regime="full_coupled_context_scheduled",
+        truth_opening_map="equal_percentage_r50",
+        context_gain_log_scale=0.35,
+        context_tau_log_scale=0.30,
+        free_trajectory_scale=1.0,
+        action_context_coupling_pct=4.0,
+    )
+    first = generate_synthetic_split(spec, "validation")
+    second = generate_synthetic_split(spec, "validation")
+    torch.testing.assert_close(first.clean_free, second.clean_free, atol=0, rtol=0)
+    torch.testing.assert_close(first.action, second.action, atol=0, rtol=0)
+    torch.testing.assert_close(
+        first.clean_total, first.clean_free + first.clean_effect, atol=0, rtol=0
+    )
+    torch.testing.assert_close(first.target_temperature, first.clean_total, atol=1e-7, rtol=0)
+    hold = first.profile_ids == 0
+    torch.testing.assert_close(first.action[hold], first.reference[hold], atol=0, rtol=0)
+    non_hold = ~hold
+    mean_delta = (first.action[non_hold] - first.reference[non_hold]).mean(dim=1)
+    corr = torch.corrcoef(torch.stack((first.context[non_hold, 0], mean_delta)))[0, 1]
+    assert float(corr) > 0.20
+    assert first.truth["free_trajectory_scale"] == 1.0
+    assert first.truth["action_context_coupling_pct"] == 4.0
+
+
+def test_full_coupling_parameters_are_opt_in_and_legacy_truth_is_stable():
+    with pytest.raises(ValueError, match="full coupling"):
+        SyntheticSpec(
+            samples=20,
+            horizon=12,
+            context_dim=4,
+            truth_regime="context_scheduled",
+            context_gain_log_scale=0.35,
+            context_tau_log_scale=0.30,
+            free_trajectory_scale=1.0,
+        ).validate()
+    legacy = generate_synthetic_split(
+        SyntheticSpec(
+            samples=20,
+            horizon=12,
+            context_dim=4,
+            seed=20260815,
+            noise_std=0.0,
+            tau_seconds=(40.0, 70.0, 210.0),
+            truth_regime="context_scheduled",
+            truth_opening_map="equal_percentage_r50",
+            context_gain_log_scale=0.35,
+            context_tau_log_scale=0.30,
+        ),
+        "validation",
+    )
+    assert hashlib.sha256(legacy.action.numpy().tobytes()).hexdigest() == (
+        "43a6cc45e2d9ab443b99f1737f65a0510de31a337a7ea69bfd680fb89467e149"
+    )
+    assert hashlib.sha256(legacy.clean_effect.numpy().tobytes()).hexdigest() == (
+        "c5f3bd4922e1986243582acb06c7fd9ac1cee112be8c7dfec583a4b2482b288d"
+    )
+
+
+@pytest.mark.parametrize(
+    ("context_dim", "free_scale", "policy_coupling"),
+    [(3, 1.0, 4.0), (4, 0.0, 4.0), (4, 1.0, 0.0), (4, -1.0, 4.0)],
+)
+def test_full_coupling_truth_rejects_invalid_contract(
+    context_dim, free_scale, policy_coupling
+):
+    with pytest.raises(ValueError, match="full coupling"):
+        SyntheticSpec(
+            samples=20,
+            horizon=12,
+            context_dim=context_dim,
+            truth_regime="full_coupled_context_scheduled",
+            truth_opening_map="equal_percentage_r50",
+            context_gain_log_scale=0.35,
+            context_tau_log_scale=0.30,
+            free_trajectory_scale=free_scale,
+            action_context_coupling_pct=policy_coupling,
         ).validate()

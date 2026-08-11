@@ -4,7 +4,7 @@
 
 ## 一句话状态
 
-项目已完成 MS0、MS1、MS2-V/C/J、MS2-D1 和 MS2-D2。D2 one-shot test 中 oracle clean NMAE 为 0.0211–0.0255，三阶为 0.0444–0.0465；三阶相对二阶点改善 23.74%–25.36%，冻结 bootstrap 95% CI 下界 19.90%–21.22%，逐 seed高于 10%，故按 `CLOSED / CONFIRMED_SYNTHETIC_ORDER_RESPONSE` 关闭。这只证明 frozen known-truth 下的响应优势，不证明现场阶次唯一或物理因果。当前唯一授权是 D3 colored-disturbance validation。项目**尚未完成真实模型定性，也未进入论文收口**；后续仍需 MS5 完整耦合、MS3 真实适配和 MS4 闭环响应。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
+项目已完成 MS0、MS1、MS2-V/C/J 和 MS2-D1/D2/D3。D3 validation 的 oracle clean NMAE 为 0.0357–0.0446，三阶为 0.0558–0.0633；三阶相对二阶的冻结 bootstrap 95% CI 下界为 10.8%–14.3%，逐 seed达到 10%。按预算以 `CLOSED / VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION` 关闭，不能写成独立 test。当前唯一授权是 MS5 的 12-run `free+response` coupling validation。项目**尚未完成真实模型定性，也未进入论文收口**；后续仍需 MS3 真实适配和 MS4 闭环响应。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
 
 ## Phase 3.5 当前状态
 
@@ -147,6 +147,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-下一判决点是 MS2-D3 validation：在 D2 clean truth 上加入不可观测的 stationary AR(1) output nuisance（`sigma=0.03 °C`、`tau=120 s`），要求三极点 oracle 每 seed clean NMAE `<0.05`、三极点主模型每 seed `<0.10`，且相对同预算二极点的配对/profile 分层 bootstrap 95% CI 下界每 seed `>=10%`。扰动 realization、tau/learned-delay、profile/horizon、D2→D3 漂移和 secondary 排名只作诊断。注册表为 `ready_for_linux`；只授权 21-run validation，test/MS5 仍冻结。
+下一判决点是 MS5 validation：在带 context-policy correlation 的 known-truth 下，比较 free-only、joint-total、staged-total 和 component-oracle 四种模式，每种 3 seeds。正控必须逐 seed通过 total/free/response component 门；joint 全过就采用更简单的 joint，只有 joint 失败且 staged 的绝对门与 staged/joint `<=1.10` 门全过才采用 staged。注册表为 `ready_for_linux`；只授权 12-run validation，不访问 synthetic test、A/B 或 MS3。
 
 完整顺序为 MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 保持暂停。

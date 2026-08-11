@@ -2,7 +2,7 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-11）**：Phase 4 暂停，先完成 Phase 3.5-MS 全系列，尚未进入论文收口。MS2-D2 one-shot test 的 oracle、三阶绝对误差和三阶相对二阶 CI 主门逐 seed通过，已按 `CONFIRMED_SYNTHETIC_ORDER_RESPONSE` 关闭；该结论只覆盖冻结的 known-truth，不证明现场唯一阶次或机制。当前唯一授权是 MS2-D3 的 21-run colored-disturbance validation；之后仍有完整 `free+response` 的 MS5、真实 A/B 的 MS3 和闭环物理响应 MS4。旧 E1–E5 已废弃，只保留为历史失败证据。
+> **当前判断（2026-08-11）**：Phase 4 暂停，先完成 Phase 3.5-MS 全系列，尚未进入论文收口。MS2-D3 的 21-run colored-disturbance validation 已通过独立复算，按 `VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION` 关闭；它不是 confirmatory test，也不证明现场唯一阶次或扰动机制。当前唯一授权是 MS5 的 12-run validation，用于判定完整 `free+response` 训练是否发生动作吸收；之后仍有真实 A/B 的 MS3 和闭环物理响应 MS4。旧 E1–E5 已废弃，只保留为历史失败证据。
 
 ## 当前入口
 
@@ -22,7 +22,7 @@ Phase 4 的 [实验计划](docs/PHASE4_EXPERIMENT_PLAN.md) 和 Fan2017/2020/2021
 
 ## 当前主要实验目的
 
-完整目标是验证结构化多步响应从“已知真值可解”到“结构失配稳健”、再到“完整 `free+response` 不吸收动作”、真实数据适配和现场闭环响应的一条连续证据链。D2 已确认冻结 truth 下的三阶响应优势；当前 D3 检验它在 response operator 不可观察的 action-independent temporal nuisance 下是否仍成立。D3 validation 仍只是 screening，不能证明现场真实阶次或因果响应。完整顺序和停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)，机器状态可运行 `python experiments/phase3_5/experiment_status.py --check --json` 查询。
+完整目标是验证结构化多步响应从“已知真值可解”到“结构失配稳健”、再到“完整 `free+response` 不吸收动作”、真实数据适配和现场闭环响应的一条连续证据链。D2 已确认冻结 truth 下的三阶响应优势，D3 说明该优势通过预注册 colored-nuisance validation 压力门。当前 MS5 只比较 joint 与短阶段 staged 两种完整模型训练策略，并设置 free-only 负控和 component-oracle 正控；validation 通过即可按预算关闭，不补 synthetic test。完整顺序和停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)，机器状态可运行 `python experiments/phase3_5/experiment_status.py --check --json` 查询。
 
 ## Phase 3.5 研究命题
 

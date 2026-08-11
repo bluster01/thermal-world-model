@@ -1,0 +1,98 @@
+{
+  "protocol_version": "phase3.5-ms5-v1",
+  "evidence_scope": "synthetic_full_free_response_coupling_validation_not_field_causality",
+  "seeds": [0, 1, 2],
+  "operator": {
+    "route": "graybox",
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "opening_map": "monotone",
+    "poles": 3,
+    "latent_dim": 4,
+    "hidden_dim": 32,
+    "tau_min_seconds": 20.0,
+    "tau_max_seconds": 900.0,
+    "ode_substeps": 2,
+    "closure_scale": 0.02,
+    "context_scheduled": true,
+    "schedule_log_scale": 0.5,
+    "delay_mode": "none",
+    "fixed_delay_steps": 0,
+    "max_delay_steps": 0
+  },
+  "synthetic": {
+    "train_samples": 1024,
+    "validation_samples": 256,
+    "test_samples": 256,
+    "horizon": 60,
+    "context_dim": 4,
+    "dt_seconds": 10.0,
+    "seed": 20260817,
+    "noise_std": 0.02,
+    "gain_c_per_pct": -0.10,
+    "tau_seconds": [40.0, 70.0, 210.0],
+    "truth_regime": "full_coupled_context_scheduled",
+    "truth_opening_map": "equal_percentage_r50",
+    "context_gain_log_scale": 0.35,
+    "context_tau_log_scale": 0.30,
+    "input_delay_steps": 0,
+    "disturbance_std": 0.0,
+    "disturbance_tau_seconds": 0.0,
+    "free_trajectory_scale": 1.0,
+    "action_context_coupling_pct": 4.0
+  },
+  "training": {
+    "batch_size": 64,
+    "epochs": 300,
+    "patience": 30,
+    "learning_rate": 0.002,
+    "weight_decay": 0.000001,
+    "gradient_clip": 1.0,
+    "free_hidden_dim": 32,
+    "component_weight": 1.0,
+    "stage_a_epochs": 80,
+    "stage_b_epochs": 140,
+    "stage_c_epochs": 80,
+    "stage_patience": 20,
+    "joint_learning_rate_scale": 0.2
+  },
+  "gates": {
+    "oracle_total_clean_nmae_max": 0.10,
+    "oracle_free_clean_nmae_max": 0.10,
+    "oracle_response_clean_nmae_max": 0.10,
+    "eligible_total_clean_nmae_max": 0.10,
+    "eligible_free_clean_nmae_max": 0.10,
+    "eligible_response_clean_nmae_max": 0.15,
+    "response_amplitude_ratio_min": 0.80,
+    "response_amplitude_ratio_max": 1.20,
+    "staged_total_mae_ratio_max": 1.10
+  },
+  "d3_reference": {
+    "path": "results/phase3_5/ms2d_disturbance/summary_validation.json",
+    "sha256": "3e9db6df8d9f8e152eba838c3c1af7f851b4b42d6b99e2799be8d6fb505ea668",
+    "decision": "validation_stress_pass_no_test_by_budget_decision"
+  },
+  "candidates": [
+    {
+      "candidate_id": "ms5_free_only",
+      "mode": "free_only",
+      "role": "prediction_only_negative_control"
+    },
+    {
+      "candidate_id": "ms5_joint_total",
+      "mode": "joint_total",
+      "role": "primary_simple_strategy"
+    },
+    {
+      "candidate_id": "ms5_staged_total",
+      "mode": "staged_total",
+      "role": "fallback_staged_strategy"
+    },
+    {
+      "candidate_id": "ms5_component_oracle",
+      "mode": "component_oracle",
+      "role": "decomposition_positive_control"
+    }
+  ]
+}

@@ -81,4 +81,8 @@
 
 MS2-D2 one-shot test 已回传并由本地审计为 `CLOSED / CONFIRMED_SYNTHETIC_ORDER_RESPONSE`。21/21 ledger、manifest、checkpoint pin、日志和 canonical episode 重算均闭合；oracle clean NMAE 为 0.0211–0.0255，三阶主模型为 0.0444–0.0465；相对二阶的 test 点改善为 23.74%–25.36%，冻结 10,000 次 bootstrap 95% CI 下界为 19.90%–21.22%，独立 50,000 次复算不改变判决。权威审计见 [`PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md`](../docs/PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md)。该结果只确认 frozen known-truth 下的三阶 response advantage；二极点+learned-delay 与 DeepONet 在有限 horizon 仍可逼近，不是现场阶次或迟延机制证据。
 
+MS2-D3 colored-disturbance validation 已回传并由本地审计为 `CLOSED / VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION`。21/21 artifact 与结构门通过；oracle clean NMAE 为 0.0357–0.0446，三阶为 0.0558–0.0633；相对二阶的冻结 bootstrap CI 下界为 10.8%–14.3%，独立 50,000 次复算判决一致。权威审计见 [`PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md`](../docs/PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md)。validation 参与 checkpoint 选择，不能写成 confirmatory test；归档 tar 字段的远端后处理只记 provenance advisory。
+
+当前 MS5 只授权 `results/phase3_5/ms5_full_coupling/**` 的 12-run validation 产物；结果尚未生成。它比较 free-only、joint-total、staged-total 和 component-oracle，不访问 synthetic test 或 A/B。
+
 Phase 4 已暂停。Fan20-SST 守恒骨架、Fan17/21 嵌套组件、Fan-state controlled Koopman 和时变灰箱路线目前没有正式结果，也不进入 Phase 3.5 结果目录。

@@ -490,7 +490,7 @@ echo $? > results/phase3_5/ms2d_order/remote_test/summary_exit_code.txt
 
 Linux 只提交 `results/phase3_5/ms2d_order/**`。不得修改 `configs/`、`src/`、`experiments/`、`tests/`、TODO、README、注册表、PROJECT_STATUS、上下文快照或任何 Supervisor 文档；不得新增自审 review，不得删除 partial ledger、重复 test、重训或启动 D3。远端只报告执行与原始门禁，本地 Supervisor 负责独立复算和状态迁移。
 
-## 15. 当前唯一授权：MS2-D3 colored-disturbance validation
+## 15. 已完成归档：MS2-D3 colored-disturbance validation
 
 D3 固定继承 D2 的 R50、context scheduling、三阶 `[40,70,210] s` 和无 pure delay clean truth，只在输出端加入 response operator 不可观察的 stationary AR(1) nuisance：`sigma_d=0.03 °C`、`tau_d=120 s`。这不是现场扰动谱、状态观测器或完整 `free+response` 实验。先在授权 commit 的干净工作树预检：
 
@@ -505,7 +505,7 @@ python -m compileall -q src/phase35/multistep \
 python experiments/phase3_5/ms2d_disturbance.py --dry-run
 ```
 
-状态必须严格为 `active_gate=ms2d_d3`、`active_status=ready_for_linux`、`linux_authorized_gate=ms2d_d3`；工作树必须为空。dry-run 必须显示 `protocol_version=phase3.5-ms2d-d3-v1`、`run_count=21`、`test_authorized=false`。任一 D2 reference pin、冻结矩阵、源代码、既有 test artifact 或状态检查失败即停止，不自行修复。
+原执行时状态必须严格为 `active_gate=ms2d_d3`、`active_status=ready_for_linux`、`linux_authorized_gate=ms2d_d3`；工作树必须为空。dry-run 必须显示 `protocol_version=phase3.5-ms2d-d3-v1`、`run_count=21`、`test_authorized=false`。当前注册表已进入 MS5，不得为复现本节而回退状态。
 
 正式训练与汇总：
 
@@ -535,4 +535,51 @@ echo $? > results/phase3_5/ms2d_disturbance/remote_execution/summary_exit_code.t
 
 冻结主门逐 seed为：21/21 artifact 与结构合同闭合；`d3_g3_oracle_structure` clean NMAE `<0.05`；`d3_g3_three_pole` clean NMAE `<0.10`；三阶相对 `d3_g2_two_pole` 的 profile-stratified paired episode bootstrap 95% CI 下界 `>=0.10`。扰动 realization、tau、no-true-delay、profile/horizon、D2→D3 drift 和 secondary 路线全部是非阻断诊断。汇总器因科学门失败返回 code 2 时，也必须原样提交全部 21 个运行目录、`summary_validation.json`、checkpoint archive 和日志。
 
-Linux 只提交 `results/phase3_5/ms2d_disturbance/**`。不得修改 `configs/`、`src/`、`experiments/`、`tests/`、TODO、README、注册表或 Supervisor 文档；不得改阈值/seed/split、删除失败或 partial 结果、访问 synthetic test、补跑挑选、启动 MS5，或自行把 validation 写成确认性结论。本地 Supervisor 负责复算、审计和下一状态迁移。
+本批已完成并以 `VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION` 关闭。以上命令只保留追溯，不再授权重复训练或 synthetic test。权威判决见 `docs/PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md`。
+
+## 16. 当前唯一授权：MS5 full free+response coupling validation
+
+MS5 只回答 total-only supervision 下 `free` 分支是否吸收动作响应，以及 joint 或短阶段 staged 哪个满足冻结资格门。它不访问 A/B，不比较 Koopman/PI-ODE/DeepONet/Fan 路线，也不启动 MS3。正式执行前在授权 commit 的干净工作树运行：
+
+```bash
+python experiments/phase3_5/experiment_status.py --check --json
+git status --short
+git rev-parse HEAD
+python -m pytest tests/phase35/multistep tests/phase35/test_experiment_status.py -q
+python -m compileall -q src/phase35/multistep \
+  experiments/phase3_5/ms5_full_coupling.py \
+  experiments/phase3_5/summarize_ms5_full_coupling.py
+python experiments/phase3_5/ms5_full_coupling.py --dry-run
+```
+
+状态必须严格为 `active_gate=ms5`、`active_status=ready_for_linux`、`linux_authorized_gate=ms5`；工作树必须为空。dry-run 必须显示 `protocol_version=phase3.5-ms5-v1`、`run_count=12`、四个冻结 mode、`test_authorized=false`。任一 D3 content pin、矩阵、源码、既有 test artifact 或状态检查失败即停止，不在远端修复。
+
+正式训练与汇总：
+
+```bash
+mkdir -p results/phase3_5/ms5_full_coupling/remote_execution
+git rev-parse HEAD > results/phase3_5/ms5_full_coupling/remote_execution/git_commit.txt
+python --version > results/phase3_5/ms5_full_coupling/remote_execution/environment.txt 2>&1
+nvidia-smi >> results/phase3_5/ms5_full_coupling/remote_execution/environment.txt 2>&1
+printf '%s\n' \
+  'python experiments/phase3_5/ms5_full_coupling.py --device cuda --output-root results/phase3_5/ms5_full_coupling --execute-matrix --skip-existing' \
+  > results/phase3_5/ms5_full_coupling/remote_execution/command.txt
+
+python experiments/phase3_5/ms5_full_coupling.py \
+  --device cuda \
+  --output-root results/phase3_5/ms5_full_coupling \
+  --execute-matrix --skip-existing \
+  > results/phase3_5/ms5_full_coupling/remote_execution/train_stdout.log \
+  2> results/phase3_5/ms5_full_coupling/remote_execution/train_stderr.log
+echo $? > results/phase3_5/ms5_full_coupling/remote_execution/train_exit_code.txt
+
+python experiments/phase3_5/summarize_ms5_full_coupling.py \
+  --output-root results/phase3_5/ms5_full_coupling \
+  > results/phase3_5/ms5_full_coupling/remote_execution/summary_stdout.log \
+  2> results/phase3_5/ms5_full_coupling/remote_execution/summary_stderr.log
+echo $? > results/phase3_5/ms5_full_coupling/remote_execution/summary_exit_code.txt
+```
+
+汇总器以 code 2 退出表示科学门失败，不表示执行产物无效，仍须原样回传。冻结判决顺序为：component-oracle 正控必须通过；joint 全过就选 joint；joint 失败时只有 staged 全过且 staged/joint total error ratio 每 seed `<=1.10` 才选 staged；否则 fail closed。free-only 是 prediction-only 负控，不参与选模。
+
+Linux 只提交 `results/phase3_5/ms5_full_coupling/**`。不得修改 `configs/`、`src/`、`experiments/`、`tests/`、`docs/`、TODO、README 或注册表；不得改阈值、阶段、seed、样本量，不补超参数扫描，不删除失败/partial run，不访问 synthetic test/A/B，不启动 MS3，也不得改写 summary 的 archive path/hash。本地 Supervisor 负责独立复算与状态迁移。
