@@ -68,6 +68,8 @@ def test_gatec_model_shapes_boundary_isolation_and_full_terminal_mixing():
     assert forecast["terminal_prediction"].shape == (3, 8, 2)
     assert forecast["local_effect"].shape == (3, 8, 2)
     assert forecast["terminal_effect"].shape == (3, 8, 2)
+    assert forecast["local_operator_family"] == "a1phys_three_pole"
+    assert torch.all(forecast["local_stable_poles"] < 1)
     assert torch.isfinite(forecast["terminal_prediction"]).all()
     with pytest.raises(Phase35ProtocolError, match="must not receive future Tin"):
         model(history, future_sp, boundary_mode="forecast_boundary", boundary_future=torch.ones(3, 8, 2))
@@ -78,6 +80,22 @@ def test_gatec_model_shapes_boundary_isolation_and_full_terminal_mixing():
     assert torch.equal(oracle["boundary_used"], oracle_tin)
     assert model.downstream.input_projection.weight.shape[1] == 2
     assert model.downstream.output_projection.weight.shape[0] == 2
+
+
+def test_train_frozen_history_normalization_preserves_physical_baselines():
+    from src.phase35.multistep.gatec_model import build_gatec_model
+
+    history, future_sp = _inputs()
+    model = build_gatec_model(_config(), FEATURES).eval()
+    center = history.reshape(-1, len(FEATURES)).mean(dim=0)
+    scale = history.reshape(-1, len(FEATURES)).std(dim=0).clamp_min(0.1)
+    model.set_history_normalization(center, scale)
+    output = model(history, future_sp, boundary_mode="forecast_boundary")
+    assert torch.allclose(model.history_center, center)
+    assert torch.allclose(model.history_scale, scale)
+    assert output["tin_prediction"].mean() > 400.0
+    with pytest.raises(Phase35ProtocolError, match="normalization"):
+        model.set_history_normalization(center[:-1], scale[:-1])
 
 
 def test_sp_decoder_is_prefix_causal_and_residual_is_future_action_invariant():
@@ -115,6 +133,50 @@ def test_every_response_adapter_has_constant_action_identity_and_finite_rollout(
         assert output["state"].shape[:2] == (4, 60)
         assert float(output["effect"].abs().max()) < 1e-6
         assert torch.isfinite(output["state"]).all()
+        assert output["operator_family"] == route
+        assert torch.all(output["stable_poles"] >= 0)
+        assert torch.all(output["stable_poles"] < 1)
+
+
+def test_response_routes_are_distinct_implementations_and_prefix_causal():
+    from src.phase35.multistep.gatec_model import build_local_response_operator
+
+    torch.manual_seed(18)
+    context = torch.randn(3, 16)
+    baseline = torch.tensor([[28.0, 34.0]]).expand(3, 2)
+    future = baseline[:, None, :].expand(3, 12, 2).clone()
+    future[:, 2:, 0] += 8.0
+    future[:, 5:, 1] += 5.0
+    changed = future.clone()
+    changed[:, 8:] += 20.0
+    classes = set()
+    effects = []
+    for route in sorted(RESPONSE_ROUTES - {"none"}):
+        operator = build_local_response_operator(
+            route=route,
+            context_dim=16,
+            state_dim=6,
+            horizon=12,
+            dt_seconds=10.0,
+            scheduled=True,
+        ).eval()
+        classes.add(type(operator).__name__)
+        normal = operator(context, future, baseline)
+        altered = operator(context, changed, baseline)
+        assert torch.allclose(normal["effect"][:, :8], altered["effect"][:, :8], atol=1e-6)
+        assert normal["effect"][:, -1, 0].mean() > 0
+        effects.append(normal["effect"])
+    assert classes == {
+        "A1PhysThreePoleResponse",
+        "StableLPVKoopmanResponse",
+        "PINeuralODEResponse",
+        "CausalDeepONetResponse",
+    }
+    assert all(
+        not torch.allclose(effects[left], effects[right])
+        for left in range(len(effects))
+        for right in range(left + 1, len(effects))
+    )
 
 
 def test_all_gatec_modules_receive_gradients_under_joint_multitask_loss():

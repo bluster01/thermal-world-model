@@ -93,3 +93,17 @@ def test_gatec_rejects_matrix_drift_and_unclosed_weights():
     changed["rm1_operator"][0]["response_route"] = "unknown"
     with pytest.raises(Phase35ProtocolError, match="response route"):
         validate_gatec_matrix(changed)
+
+
+def test_gatec_route_state_contract_is_three_bases_per_mode():
+    from src.phase35.multistep.gatec_contracts import GateCModelConfig
+
+    with pytest.raises(Phase35ProtocolError, match="six local states"):
+        GateCModelConfig(
+            window=12,
+            horizon=8,
+            n_features=15,
+            local_state_dim=8,
+            response_route="a1phys_three_pole",
+            response_scheduling="scheduled",
+        ).validate()

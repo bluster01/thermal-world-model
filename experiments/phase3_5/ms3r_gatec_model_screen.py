@@ -30,6 +30,7 @@ from src.phase35.multistep.gatec_synthetic import (
     evaluate_synthetic_controls,
     generate_gatec_known_truth,
     recover_local_gain,
+    train_synthetic_response_operator,
 )
 
 
@@ -194,6 +195,65 @@ def run_synthetic_smoke(
     return {"manifest": manifest, "diagnostics": diagnostics}
 
 
+def run_operator_smoke_all(
+    *,
+    matrix_path: Path,
+    matrix: dict[str, Any],
+    output: Path,
+    seeds: list[int],
+    steps: int,
+) -> dict[str, Any]:
+    validate_gatec_matrix(matrix)
+    parent = _verify_parent(matrix)
+    if not seeds or steps < 1:
+        raise RuntimeError("Gate C operator smoke budget is invalid")
+    batch = generate_gatec_known_truth(seed=31, n_episodes=40, horizon=36)
+    results = [
+        asdict(
+            train_synthetic_response_operator(
+                route=route,
+                batch=batch,
+                seed=seed,
+                steps=steps,
+                learning_rate=0.03,
+            )
+        )
+        for seed in seeds
+        for route in sorted(RESPONSE_ROUTES - {"none"})
+    ]
+    payload = {
+        "protocol_version": matrix["protocol_version"],
+        "scope": "local_route_specific_known_truth_training",
+        "execution_git_sha": _git_sha(),
+        "config_path": str(matrix_path.relative_to(ROOT)).replace("\\", "/"),
+        "config_sha256": _sha256(matrix_path),
+        "source_sha256": matrix["data_contract"]["source_sha256"],
+        "parent_gate_b": parent,
+        "code_sha256": {path: _sha256(ROOT / path) for path in PINNED_SOURCE_FILES},
+        "synthetic_contract": {
+            "generator_seed": 31,
+            "n_episodes": 40,
+            "horizon_steps": 36,
+            "train_fraction": 0.75,
+            "operator_seeds": seeds,
+            "optimizer_steps": steps,
+            "learning_rate": 0.03,
+        },
+        "results": results,
+        "test_accessed": False,
+        "real_training_executed": False,
+        "linux_authorized": False,
+        "automatic_scientific_pass": None,
+    }
+    artifact = output / "operator_recovery_local.json"
+    _atomic_json(artifact, payload)
+    _atomic_json(
+        output / "operator_artifact_ledger.json",
+        {"operator_recovery_local.json": _sha256(artifact)},
+    )
+    return payload
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
@@ -201,7 +261,10 @@ def parse_args() -> argparse.Namespace:
     actions = parser.add_mutually_exclusive_group(required=True)
     actions.add_argument("--dry-run", action="store_true")
     actions.add_argument("--synthetic-smoke", metavar="CANDIDATE_ID")
+    actions.add_argument("--operator-smoke-all", action="store_true")
     actions.add_argument("--real-run", metavar="CANDIDATE_ID")
+    parser.add_argument("--operator-seeds", default="7")
+    parser.add_argument("--operator-steps", type=int, default=140)
     parser.add_argument("--json", action="store_true")
     return parser.parse_args()
 
@@ -217,6 +280,18 @@ def main() -> None:
         raise SystemExit("Gate C real runner has not been released")
     if args.dry_run:
         payload = dry_run_payload(matrix)
+    elif args.operator_smoke_all:
+        try:
+            seeds = [int(value) for value in args.operator_seeds.split(",") if value.strip()]
+        except ValueError as exc:
+            raise SystemExit("Gate C operator seeds must be comma-separated integers") from exc
+        payload = run_operator_smoke_all(
+            matrix_path=matrix_path,
+            matrix=matrix,
+            output=Path(args.output_dir).resolve(),
+            seeds=seeds,
+            steps=args.operator_steps,
+        )
     else:
         payload = run_synthetic_smoke(
             matrix_path=matrix_path,

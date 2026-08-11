@@ -51,8 +51,10 @@ class GateCModelConfig:
     def validate(self) -> None:
         if min(self.window, self.horizon, self.n_features, self.d_model, self.latent_dim) < 1:
             raise Phase35ProtocolError("Gate C model dimensions must be positive")
-        if self.local_state_dim < 2 or self.local_state_dim % 2:
-            raise Phase35ProtocolError("Gate C local_state_dim must be positive and even")
+        if self.local_state_dim != 6:
+            raise Phase35ProtocolError(
+                "Gate C route contract requires six local states: three bases per common/differential mode"
+            )
         if self.response_route not in RESPONSE_ROUTES:
             raise Phase35ProtocolError("Gate C model response route is invalid")
         if self.residual_capacity not in RESIDUAL_CAPACITIES:

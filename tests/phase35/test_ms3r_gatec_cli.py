@@ -67,6 +67,31 @@ def test_real_training_fails_closed_while_matrix_is_not_authorized() -> None:
     assert "not authorized" in (completed.stdout + completed.stderr)
 
 
+def test_operator_smoke_all_records_four_real_implementations(tmp_path: Path) -> None:
+    completed = _run(
+        "--operator-smoke-all",
+        "--operator-seeds",
+        "7",
+        "--operator-steps",
+        "2",
+        "--output-dir",
+        str(tmp_path),
+        "--json",
+    )
+    payload = json.loads(completed.stdout)
+    assert payload["scope"] == "local_route_specific_known_truth_training"
+    assert {item["route"] for item in payload["results"]} == {
+        "a1phys_three_pole",
+        "stable_koopman_lpv",
+        "pi_neural_ode",
+        "deeponet_response",
+    }
+    assert payload["real_training_executed"] is False
+    assert payload["automatic_scientific_pass"] is None
+    assert "supervisor_decision" not in payload
+    assert (tmp_path / "operator_recovery_local.json").is_file()
+
+
 def test_summarizer_is_diagnostic_only(tmp_path: Path) -> None:
     _run(
         "--synthetic-smoke",

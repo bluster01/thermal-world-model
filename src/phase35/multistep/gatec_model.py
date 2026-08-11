@@ -85,11 +85,34 @@ class ZeroLocalResponse(nn.Module):
         return {
             "effect": future_valve.new_zeros(shape),
             "state": future_valve.new_zeros(state_shape),
+            "stable_poles": future_valve.new_zeros((0,)),
+            "operator_family": self.route,
         }
 
 
-class StableLocalMIMOResponse(nn.Module):
-    """Stable two-output response core shared by every Gate-C operator adapter."""
+def _inverse_sigmoid(value: torch.Tensor) -> torch.Tensor:
+    return torch.logit(value.clamp(1e-5, 1.0 - 1e-5))
+
+
+def _inverse_softplus(value: torch.Tensor) -> torch.Tensor:
+    return torch.log(torch.expm1(value).clamp_min(1e-12))
+
+
+class MonotoneValveOpening(nn.Module):
+    """Normalized monotone proxy for the unmeasured valve-to-flow curve."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.power_logits = nn.Parameter(torch.zeros(3))
+
+    def forward(self, valve: torch.Tensor) -> torch.Tensor:
+        normalized = torch.clamp(valve / 100.0, 0.0, 1.0)
+        powers = torch.stack((normalized, normalized.square(), normalized.pow(3)), dim=-1)
+        return torch.sum(F.softmax(self.power_logits, dim=0) * powers, dim=-1)
+
+
+class StableMIMOResponseBase(nn.Module):
+    """Shared monotone opening and positive equilibrium mixing, not shared dynamics."""
 
     def __init__(
         self,
@@ -98,70 +121,285 @@ class StableLocalMIMOResponse(nn.Module):
         context_dim: int,
         state_dim: int,
         dt_seconds: float,
-        tau_min_seconds: float,
-        tau_max_seconds: float,
         scheduled: bool,
     ) -> None:
         super().__init__()
         if route not in RESPONSE_ROUTES - {"none"}:
             raise Phase35ProtocolError(f"unsupported Gate C response route={route!r}")
-        if state_dim % 2:
-            raise Phase35ProtocolError("Gate C response state must split into two sides")
+        if state_dim != 6:
+            raise Phase35ProtocolError("Gate C response requires three bases per mode")
         self.route = route
         self.state_dim = state_dim
-        self.poles = state_dim // 2
+        self.bases = state_dim // 2
         self.dt_seconds = float(dt_seconds)
+        self.scheduled = bool(scheduled)
+        self.opening = MonotoneValveOpening()
+        self.diagonal_gain = nn.Parameter(torch.full((2,), 2.0))
+        self.cross_gain_logits = nn.Parameter(torch.full((2,), -2.0))
+        self.context_equilibrium = nn.Linear(context_dim, 2) if scheduled else None
+        if self.context_equilibrium is not None:
+            nn.init.zeros_(self.context_equilibrium.weight)
+            nn.init.zeros_(self.context_equilibrium.bias)
+
+    def _equilibrium_modes(
+        self,
+        context: torch.Tensor,
+        future_valve: torch.Tensor,
+        baseline_valve: torch.Tensor,
+    ) -> torch.Tensor:
+        dose = self.opening(future_valve) - self.opening(baseline_valve)[:, None, :]
+        diagonal = F.softplus(self.diagonal_gain) + 1e-3
+        cross = 0.35 * torch.sigmoid(self.cross_gain_logits) * diagonal.flip(0)
+        mixing = torch.stack(
+            (
+                torch.stack((diagonal[0], cross[0])),
+                torch.stack((cross[1], diagonal[1])),
+            )
+        )
+        equilibrium_side = torch.einsum("bhi,oi->bho", dose, mixing)
+        if self.context_equilibrium is not None:
+            schedule = torch.exp(0.25 * torch.tanh(self.context_equilibrium(context)))
+            equilibrium_side = equilibrium_side * schedule[:, None, :]
+        common = 0.5 * (equilibrium_side[..., 0] + equilibrium_side[..., 1])
+        differential = 0.5 * (equilibrium_side[..., 0] - equilibrium_side[..., 1])
+        return torch.stack((common, differential), dim=-1)
+
+    @staticmethod
+    def _modes_to_sides(modes: torch.Tensor) -> torch.Tensor:
+        return torch.stack((modes[..., 0] + modes[..., 1], modes[..., 0] - modes[..., 1]), dim=-1)
+
+
+class A1PhysThreePoleResponse(StableMIMOResponseBase):
+    """Explicit three-time-constant response in common/differential modes."""
+
+    def __init__(
+        self,
+        *,
+        context_dim: int,
+        state_dim: int,
+        dt_seconds: float,
+        tau_min_seconds: float,
+        tau_max_seconds: float,
+        scheduled: bool,
+    ) -> None:
+        super().__init__(
+            route="a1phys_three_pole",
+            context_dim=context_dim,
+            state_dim=state_dim,
+            dt_seconds=dt_seconds,
+            scheduled=scheduled,
+        )
         self.tau_min_seconds = float(tau_min_seconds)
         self.tau_max_seconds = float(tau_max_seconds)
-        self.scheduled = bool(scheduled)
-        initial_tau = torch.linspace(tau_min_seconds * 1.5, tau_max_seconds * 0.5, self.poles)
+        initial_tau = torch.tensor((30.0, 180.0, 900.0)).clamp(
+            tau_min_seconds * 1.01, tau_max_seconds * 0.99
+        )
         fraction = (initial_tau - tau_min_seconds) / (tau_max_seconds - tau_min_seconds)
-        logits = torch.logit(fraction.clamp(1e-4, 1 - 1e-4))
-        self.tau_logits = nn.Parameter(logits.repeat(2, 1))
-        self.diagonal_gain = nn.Parameter(torch.full((2, 2), -1.0))
-        self.off_diagonal_gain = nn.Parameter(torch.zeros(2, 2))
-        self.pole_weights = nn.Parameter(torch.zeros(2, self.poles))
-        self.context_schedule = nn.Linear(context_dim, 2) if scheduled else None
-        if route == "stable_koopman_lpv":
-            self.route_scale = nn.Parameter(torch.tensor(0.0))
-        elif route == "pi_neural_ode":
-            self.route_scale = nn.Parameter(torch.tensor(-0.2))
-        elif route == "deeponet_response":
-            self.route_scale = nn.Parameter(torch.tensor(0.2))
-        else:
-            self.route_scale = nn.Parameter(torch.tensor(-0.5))
-
-    def _mixing(self) -> torch.Tensor:
-        diagonal = F.softplus(torch.diagonal(self.diagonal_gain)) + 1e-3
-        mixing = 0.15 * torch.tanh(self.off_diagonal_gain)
-        mixing = mixing - torch.diag_embed(torch.diagonal(mixing))
-        return mixing + torch.diag(diagonal)
+        self.tau_logits = nn.Parameter(_inverse_sigmoid(fraction).repeat(2, 1))
+        self.pole_weights = nn.Parameter(torch.zeros(2, self.bases))
 
     def forward(
         self, context: torch.Tensor, future_valve: torch.Tensor, baseline_valve: torch.Tensor
-    ) -> dict[str, torch.Tensor]:
+    ) -> dict[str, Any]:
         batch, horizon, _ = future_valve.shape
+        equilibrium = self._equilibrium_modes(context, future_valve, baseline_valve)
         tau = self.tau_min_seconds + (
             self.tau_max_seconds - self.tau_min_seconds
         ) * torch.sigmoid(self.tau_logits)
         decay = torch.exp(-self.dt_seconds / tau)
-        dose = future_valve - baseline_valve[:, None, :]
-        mixed = torch.einsum("bhi,oi->bho", dose, self._mixing())
-        if self.context_schedule is not None:
-            schedule = torch.exp(0.25 * torch.tanh(self.context_schedule(context)))
-            mixed = mixed * schedule[:, None, :]
-        mixed = mixed * torch.exp(0.1 * torch.tanh(self.route_scale))
-        state = future_valve.new_zeros((batch, 2, self.poles))
+        state = future_valve.new_zeros((batch, 2, self.bases))
         states: list[torch.Tensor] = []
         effects: list[torch.Tensor] = []
         weights = F.softmax(self.pole_weights, dim=1)
         for step in range(horizon):
-            state = decay[None] * state + (1.0 - decay[None]) * mixed[:, step, :, None]
-            effect = torch.sum(weights[None] * state, dim=2)
+            state = decay[None] * state + (1.0 - decay[None]) * equilibrium[:, step, :, None]
+            modes = torch.sum(weights[None] * state, dim=2)
             states.append(state.reshape(batch, self.state_dim))
-            effects.append(effect)
-        return {"effect": torch.stack(effects, dim=1), "state": torch.stack(states, dim=1)}
+            effects.append(self._modes_to_sides(modes))
+        return {
+            "effect": torch.stack(effects, dim=1),
+            "state": torch.stack(states, dim=1),
+            "stable_poles": decay,
+            "operator_family": self.route,
+        }
 
+
+class StableLPVKoopmanResponse(StableMIMOResponseBase):
+    """Stable operating-condition-dependent lifted representation."""
+
+    def __init__(
+        self, *, context_dim: int, state_dim: int, dt_seconds: float, scheduled: bool
+    ) -> None:
+        super().__init__(
+            route="stable_koopman_lpv",
+            context_dim=context_dim,
+            state_dim=state_dim,
+            dt_seconds=dt_seconds,
+            scheduled=scheduled,
+        )
+        initial_tau = torch.tensor((40.0, 220.0, 850.0))
+        initial_decay = torch.exp(-dt_seconds / initial_tau)
+        fraction = (initial_decay - 0.05) / 0.945
+        self.decay_logits = nn.Parameter(_inverse_sigmoid(fraction).repeat(2, 1))
+        self.input_scale = nn.Parameter(torch.zeros(2, self.bases))
+        self.output_weights = nn.Parameter(torch.zeros(2, self.bases))
+        self.context_decay = nn.Linear(context_dim, state_dim) if scheduled else None
+        self.context_lift = nn.Linear(context_dim, state_dim) if scheduled else None
+        for layer in (self.context_decay, self.context_lift):
+            if layer is not None:
+                nn.init.zeros_(layer.weight)
+                nn.init.zeros_(layer.bias)
+
+    def forward(
+        self, context: torch.Tensor, future_valve: torch.Tensor, baseline_valve: torch.Tensor
+    ) -> dict[str, Any]:
+        batch, horizon, _ = future_valve.shape
+        modes_input = self._equilibrium_modes(context, future_valve, baseline_valve)
+        decay_logits = self.decay_logits[None].expand(batch, -1, -1)
+        if self.context_decay is not None:
+            decay_logits = decay_logits + 0.25 * torch.tanh(
+                self.context_decay(context).reshape(batch, 2, self.bases)
+            )
+        decay = 0.05 + 0.945 * torch.sigmoid(decay_logits)
+        lift_scale = F.softplus(self.input_scale)[None] + 0.1
+        if self.context_lift is not None:
+            lift_scale = lift_scale * torch.exp(
+                0.25 * torch.tanh(self.context_lift(context).reshape(batch, 2, self.bases))
+            )
+        state = future_valve.new_zeros((batch, 2, self.bases))
+        weights = F.softmax(self.output_weights, dim=1)
+        states: list[torch.Tensor] = []
+        effects: list[torch.Tensor] = []
+        for step in range(horizon):
+            value = modes_input[:, step]
+            lifted = torch.stack(
+                (value, value * value.abs() / (1.0 + value.abs()), torch.tanh(value)),
+                dim=-1,
+            )
+            equilibrium = lift_scale * lifted
+            state = decay * state + (1.0 - decay) * equilibrium
+            modes = torch.sum(weights[None] * state, dim=2)
+            states.append(state.reshape(batch, self.state_dim))
+            effects.append(self._modes_to_sides(modes))
+        return {
+            "effect": torch.stack(effects, dim=1),
+            "state": torch.stack(states, dim=1),
+            "stable_poles": decay,
+            "operator_family": self.route,
+        }
+
+
+class PINeuralODEResponse(StableMIMOResponseBase):
+    """Dissipative neural ODE closure with exact exponential integration."""
+
+    def __init__(
+        self, *, context_dim: int, state_dim: int, dt_seconds: float, scheduled: bool
+    ) -> None:
+        super().__init__(
+            route="pi_neural_ode",
+            context_dim=context_dim,
+            state_dim=state_dim,
+            dt_seconds=dt_seconds,
+            scheduled=scheduled,
+        )
+        initial_rate = 1.0 / torch.tensor((35.0, 240.0, 950.0))
+        self.rate_raw = nn.Parameter(_inverse_softplus(initial_rate).repeat(2, 1))
+        self.output_weights = nn.Parameter(torch.zeros(2, self.bases))
+        self.context_rate = nn.Linear(context_dim, state_dim) if scheduled else None
+        gate_features = context_dim + 2 if scheduled else 2
+        self.closure_gate = nn.Linear(gate_features, state_dim)
+        nn.init.zeros_(self.closure_gate.weight)
+        nn.init.zeros_(self.closure_gate.bias)
+        if self.context_rate is not None:
+            nn.init.zeros_(self.context_rate.weight)
+            nn.init.zeros_(self.context_rate.bias)
+
+    def forward(
+        self, context: torch.Tensor, future_valve: torch.Tensor, baseline_valve: torch.Tensor
+    ) -> dict[str, Any]:
+        batch, horizon, _ = future_valve.shape
+        modes_input = self._equilibrium_modes(context, future_valve, baseline_valve)
+        rate_raw = self.rate_raw[None].expand(batch, -1, -1)
+        if self.context_rate is not None:
+            rate_raw = rate_raw + 0.25 * torch.tanh(
+                self.context_rate(context).reshape(batch, 2, self.bases)
+            )
+        rate = F.softplus(rate_raw) + 1e-5
+        decay = torch.exp(-self.dt_seconds * rate)
+        state = future_valve.new_zeros((batch, 2, self.bases))
+        weights = F.softmax(self.output_weights, dim=1)
+        states: list[torch.Tensor] = []
+        effects: list[torch.Tensor] = []
+        for step in range(horizon):
+            value = modes_input[:, step]
+            gate_input = torch.cat((context, value.abs()), dim=1) if self.scheduled else value.abs()
+            gate = torch.exp(
+                0.35 * torch.tanh(self.closure_gate(gate_input).reshape(batch, 2, self.bases))
+            )
+            equilibrium = value[:, :, None] * gate
+            state = decay * state + (1.0 - decay) * equilibrium
+            modes = torch.sum(weights[None] * state, dim=2)
+            states.append(state.reshape(batch, self.state_dim))
+            effects.append(self._modes_to_sides(modes))
+        return {
+            "effect": torch.stack(effects, dim=1),
+            "state": torch.stack(states, dim=1),
+            "stable_poles": decay,
+            "operator_family": self.route,
+        }
+
+
+class CausalDeepONetResponse(StableMIMOResponseBase):
+    """Prefix-causal branch/memory/trunk response operator."""
+
+    def __init__(
+        self, *, context_dim: int, state_dim: int, dt_seconds: float, scheduled: bool
+    ) -> None:
+        super().__init__(
+            route="deeponet_response",
+            context_dim=context_dim,
+            state_dim=state_dim,
+            dt_seconds=dt_seconds,
+            scheduled=scheduled,
+        )
+        initial_tau = torch.tensor((45.0, 260.0, 1000.0))
+        initial_decay = torch.exp(-dt_seconds / initial_tau)
+        fraction = (initial_decay - 0.05) / 0.945
+        self.memory_decay_logits = nn.Parameter(_inverse_sigmoid(fraction).repeat(2, 1))
+        branch_features = context_dim + 2 if scheduled else 2
+        self.branch_gate = nn.Linear(branch_features, state_dim)
+        self.trunk = nn.Sequential(nn.Linear(1, 12), nn.Tanh(), nn.Linear(12, state_dim))
+        nn.init.zeros_(self.branch_gate.weight)
+        nn.init.zeros_(self.branch_gate.bias)
+
+    def forward(
+        self, context: torch.Tensor, future_valve: torch.Tensor, baseline_valve: torch.Tensor
+    ) -> dict[str, Any]:
+        batch, horizon, _ = future_valve.shape
+        modes_input = self._equilibrium_modes(context, future_valve, baseline_valve)
+        decay = 0.05 + 0.945 * torch.sigmoid(self.memory_decay_logits)
+        state = future_valve.new_zeros((batch, 2, self.bases))
+        states: list[torch.Tensor] = []
+        effects: list[torch.Tensor] = []
+        for step in range(horizon):
+            value = modes_input[:, step]
+            branch_input = torch.cat((context, value.abs()), dim=1) if self.scheduled else value.abs()
+            branch_gain = torch.exp(
+                0.5 * torch.tanh(self.branch_gate(branch_input).reshape(batch, 2, self.bases))
+            )
+            branch = value[:, :, None] * branch_gain
+            state = decay[None] * state + (1.0 - decay[None]) * branch
+            normalized_time = future_valve.new_full((batch, 1), (step + 1) / horizon)
+            trunk = F.softmax(self.trunk(normalized_time).reshape(batch, 2, self.bases), dim=2)
+            modes = torch.sum(trunk * state, dim=2)
+            states.append(state.reshape(batch, self.state_dim))
+            effects.append(self._modes_to_sides(modes))
+        return {
+            "effect": torch.stack(effects, dim=1),
+            "state": torch.stack(states, dim=1),
+            "stable_poles": decay,
+            "operator_family": self.route,
+        }
 
 def build_local_response_operator(
     *,
@@ -177,15 +415,25 @@ def build_local_response_operator(
     del horizon  # The recurrent operator accepts any finite rollout horizon.
     if route == "none":
         return ZeroLocalResponse(state_dim)
-    return StableLocalMIMOResponse(
-        route=route,
-        context_dim=context_dim,
-        state_dim=state_dim,
-        dt_seconds=dt_seconds,
-        tau_min_seconds=tau_min_seconds,
-        tau_max_seconds=tau_max_seconds,
-        scheduled=scheduled,
-    )
+    common = {
+        "context_dim": context_dim,
+        "state_dim": state_dim,
+        "dt_seconds": dt_seconds,
+        "scheduled": scheduled,
+    }
+    if route == "a1phys_three_pole":
+        return A1PhysThreePoleResponse(
+            **common,
+            tau_min_seconds=tau_min_seconds,
+            tau_max_seconds=tau_max_seconds,
+        )
+    if route == "stable_koopman_lpv":
+        return StableLPVKoopmanResponse(**common)
+    if route == "pi_neural_ode":
+        return PINeuralODEResponse(**common)
+    if route == "deeponet_response":
+        return CausalDeepONetResponse(**common)
+    raise Phase35ProtocolError(f"unsupported Gate C response route={route!r}")
 
 
 class StableDownstreamLatentMixer(nn.Module):
@@ -226,6 +474,8 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
             raise Phase35ProtocolError("Gate C feature contract does not match model config")
         self.config = config
         self.feature_names = tuple(feature_names)
+        self.register_buffer("history_center", torch.zeros(config.n_features))
+        self.register_buffer("history_scale", torch.ones(config.n_features))
         required = [
             *(f"{side}::二级减温调节门阀位" for side in ("A", "B")),
             *(f"{side}::二级减温器入口温度" for side in ("A", "B")),
@@ -260,6 +510,16 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
         )
         self.downstream = StableDownstreamLatentMixer(config.d_model, config.latent_dim)
 
+    def set_history_normalization(
+        self, center: torch.Tensor, scale: torch.Tensor
+    ) -> None:
+        if center.shape != self.history_center.shape or scale.shape != self.history_scale.shape:
+            raise Phase35ProtocolError("Gate C history normalization shape mismatch")
+        if not torch.isfinite(center).all() or not torch.isfinite(scale).all() or torch.any(scale <= 0):
+            raise Phase35ProtocolError("Gate C history normalization values are invalid")
+        self.history_center.copy_(center.detach().to(self.history_center))
+        self.history_scale.copy_(scale.detach().to(self.history_scale))
+
     def forward(
         self,
         history: torch.Tensor,
@@ -281,7 +541,10 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
                 raise Phase35ProtocolError("Gate C oracle/scenario boundary requires future Tin")
             if boundary_future.shape != future_sp.shape or not torch.isfinite(boundary_future).all():
                 raise Phase35ProtocolError("Gate C future Tin boundary is invalid")
-        context = self.encoder(history)
+        normalized_history = (history - self.history_center[None, None, :]) / self.history_scale[
+            None, None, :
+        ]
+        context = self.encoder(normalized_history)
         baseline_valve = history[:, -1, self.valve_indices]
         baseline_tin = history[:, -1, self.tin_indices]
         baseline_terminal = history[:, -1, self.terminal_indices]
@@ -307,6 +570,8 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
             "local_effect": response["effect"],
             "terminal_effect": terminal - terminal_reference,
             "local_state": response["state"],
+            "local_stable_poles": response["stable_poles"],
+            "local_operator_family": response["operator_family"],
             "latent_state": latent,
             "boundary_mode": boundary_mode,
             "response_route": self.config.response_route,

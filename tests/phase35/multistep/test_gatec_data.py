@@ -89,6 +89,22 @@ def test_paired_anchors_stay_inside_validation_and_do_not_cross_gap():
     assert not np.any((anchors - 11 <= 250) & (anchors + 6 >= 251))
 
 
+def test_paired_anchors_allow_train_but_refuse_test():
+    from src.phase35.multistep.gatec_data import paired_valid_anchors
+
+    caches = _paired_caches()
+    train = paired_valid_anchors(
+        caches, "train", window=12, horizon=6, max_age_s=30.0
+    )
+    lo, hi = caches["A"].split_bounds()["train"]
+    assert train.min() >= lo + 11
+    assert train.max() + 6 < hi
+    with pytest.raises(Phase35ProtocolError, match="test split"):
+        paired_valid_anchors(
+            caches, "test", window=12, horizon=6, max_age_s=30.0
+        )
+
+
 def test_paired_data_rejects_misalignment_or_shared_point_drift():
     from src.phase35.multistep.gatec_data import paired_valid_anchors
 

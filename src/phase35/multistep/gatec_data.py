@@ -78,8 +78,10 @@ def paired_valid_anchors(
     shared_tolerance: float = 1e-5,
 ) -> np.ndarray:
     _validate_pair(caches, shared_tolerance)
-    if split != "validation":
-        raise Phase35ProtocolError("Gate C paired windows are validation-only")
+    if split == "test":
+        raise Phase35ProtocolError("Gate C paired windows prohibit the test split")
+    if split not in {"train", "validation"}:
+        raise Phase35ProtocolError(f"unknown Gate C split={split!r}")
     if min(window, horizon) < 1 or max_age_s <= 0:
         raise Phase35ProtocolError("Gate C window/horizon/age settings are invalid")
     cache = caches["A"]

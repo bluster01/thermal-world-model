@@ -1,0 +1,59 @@
+{
+  "protocol_version": "phase3.5-ms3r-gatec-local-real-subset-v1",
+  "scope": "local_real_train_validation_subset_not_causal",
+  "parent_gatec_matrix": {
+    "path": "configs/phase3_5/ms3r_gatec_model_matrix.json",
+    "sha256": "9b0a7bfc2d83fe0de9de548e929ba85204759355c10545b0bdf23a45d052755a"
+  },
+  "data_contract": {
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "allowed_splits": ["train", "validation"],
+    "test_allowed": false,
+    "fraction_denominator": 100,
+    "anchor_sampling": "deterministic_without_replacement_after_window_validation",
+    "window": 96,
+    "horizon": 60,
+    "max_age_s": 180.0
+  },
+  "routes": [
+    "a1phys_three_pole",
+    "stable_koopman_lpv",
+    "pi_neural_ode",
+    "deeponet_response"
+  ],
+  "seeds": [0],
+  "model": {
+    "d_model": 32,
+    "latent_dim": 16,
+    "local_state_dim": 6,
+    "dropout": 0.1,
+    "boundary_mode": "forecast_boundary",
+    "oracle_boundary_role": "diagnostic_ceiling_only",
+    "local_supervision": true
+  },
+  "training": {
+    "batch_size": 64,
+    "optimizer_updates": 60,
+    "validation_batch_size": 128,
+    "max_validation_anchors": 2048,
+    "learning_rate": 0.001,
+    "weight_decay": 0.00001,
+    "gradient_clip": 1.0
+  },
+  "execution_contract": {
+    "local_real_smoke_authorized": true,
+    "linux_authorized": false,
+    "real_full_matrix_authorized": false,
+    "automatic_scientific_pass": false,
+    "maximum_attempts_per_route": 1,
+    "required_artifacts": [
+      "run_manifest.json",
+      "a1phys_three_pole_validation.json",
+      "stable_koopman_lpv_validation.json",
+      "pi_neural_ode_validation.json",
+      "deeponet_response_validation.json",
+      "summary_validation.json",
+      "artifact_ledger.json"
+    ]
+  }
+}

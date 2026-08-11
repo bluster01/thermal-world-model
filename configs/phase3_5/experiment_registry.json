@@ -546,7 +546,7 @@
     },
     "ms3_r": {
       "title": "真实点位响应辨识与模型扩充",
-      "status": "local_verified",
+      "status": "implementation",
       "owner": "local_design_code_linux_batch_run_local_audit",
       "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
       "scripts": {
@@ -612,6 +612,16 @@
         },
         "gatec_local_summarizer": {
           "path": "experiments/phase3_5/summarize_ms3r_gatec_model_screen.py",
+          "status": "active",
+          "required": true
+        },
+        "gatec_real_smoke_core": {
+          "path": "src/phase35/multistep/gatec_real_smoke.py",
+          "status": "active",
+          "required": true
+        },
+        "gatec_real_smoke_runner": {
+          "path": "experiments/phase3_5/ms3r_gatec_real_subset.py",
           "status": "active",
           "required": true
         }
@@ -684,9 +694,17 @@
         "gatec_local_verification": {
           "path": "docs/PHASE35_MS3R_GATEC_LOCAL_VERIFICATION_2026-08-11.md",
           "required": true
+        },
+        "gatec_operator_implementation_plan": {
+          "path": "docs/plans/2026-08-11-phase35-ms3r-gatec-operator-implementation.md",
+          "required": true
+        },
+        "gatec_local_real_subset_config": {
+          "path": "configs/phase3_5/ms3r_gatec_local_real_subset.json",
+          "required": true
         }
       },
-      "decision": "GATE_C LOCAL_FRAMEWORK_VERIFIED / REAL_TRAINING_NOT_RELEASED / OPERATOR_ROUTES_STRUCTURAL_ADAPTERS_ONLY：信息边界、配对数据、稳定MIMO外壳、多锚点selector、秩亏拒绝和本地CLI已验证；Linux仍未授权",
+      "decision": "GATE_C LOCAL_REAL_1PCT_SMOKE_AUTHORIZED_BY_USER / LINUX_NOT_AUTHORIZED：四条路线已改为独立动力学实现；先用冻结真实cache的train/validation 1/100 anchor做本地RM0，合成只保留理论/负控制角色",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -701,7 +719,9 @@
         "Gate C末温使用full MIMO latent mixing，不施加Gate B未支持的侧别硬约束",
         "Gate C四路线当前只完成共同契约和结构适配层；不得据此比较A1phys/Koopman/PI-ODE/DeepONet优劣",
         "Gate C已通过已知真值解析恢复与秩亏拒绝，但这不是端到端神经网络训练恢复，更不是真实数据物理响应证据",
-        "真实训练runner尚未发布；后续必须补齐路线特定方程和端到端合成训练恢复，再单独决定是否授权Linux"
+        "合成真值只能验证理论可解性和代码负控制，不能取代真实现场train/validation证据",
+        "本地真实1/100 smoke由用户明确授权；只允许train/validation、forecast Tin主接口和单seed单次执行，不访问test",
+        "本地真实smoke不构成Linux或完整真实矩阵授权；linux_authorized_gate保持null"
       ]
     },
     "ms4": {

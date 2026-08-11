@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 
 import numpy as np
+import torch
+import torch.nn as nn
 
 from ..schema import Phase35ProtocolError
 from .gatec_training import GateCStructuralMetrics
@@ -12,6 +15,7 @@ from .gatec_training import GateCStructuralMetrics
 
 @dataclass(frozen=True)
 class GateCSyntheticBatch:
+    baseline_valve: np.ndarray
     valve: np.ndarray
     opening_dose: np.ndarray
     tin: np.ndarray
@@ -38,6 +42,36 @@ class GateCLocalRecovery:
     gain: np.ndarray
     decay: float
     residual_mse: float
+
+
+@dataclass(frozen=True)
+class GateCSyntheticTrainingResult:
+    route: str
+    seed: int
+    steps: int
+    initial_train_loss: float
+    final_train_loss: float
+    heldout_relative_rollout_error: float
+    heldout_direction_accuracy: float
+    heldout_amplitude_ratio: float
+    stable_pole_max: float
+    finite: bool
+
+
+@dataclass(frozen=True)
+class GateCAttributionCompetitionResult:
+    residual_capacity: str
+    excitation: str
+    seed: int
+    residual_excitation_fraction: float
+    heldout_total_relative_error: float
+    heldout_response_amplitude_ratio: float
+    heldout_response_relative_error: float
+    heldout_free_relative_error: float
+    local_supervision: bool
+    free_reads_future_action: bool
+    finite: bool
+    automatic_scientific_pass: None = None
 
 
 def _colored_noise(
@@ -130,6 +164,7 @@ def generate_gatec_known_truth(
     terminal_baseline = rng.uniform(535.0, 545.0, size=(n_episodes, 2))
     terminal = terminal_baseline[:, None, :] - downstream + disturbance
     return GateCSyntheticBatch(
+        baseline_valve=baseline_valve,
         valve=valve,
         opening_dose=opening_dose,
         tin=tin,
@@ -227,6 +262,260 @@ def recover_local_gain(
             best = candidate
     assert best is not None
     return best
+
+
+def train_synthetic_response_operator(
+    *,
+    route: str,
+    batch: GateCSyntheticBatch,
+    seed: int,
+    steps: int,
+    learning_rate: float = 0.02,
+) -> GateCSyntheticTrainingResult:
+    """Fit one route on train episodes and score held-out known-truth rollouts."""
+
+    from .gatec_model import build_local_response_operator
+
+    if steps < 1 or learning_rate <= 0:
+        raise Phase35ProtocolError("Gate C synthetic training budget is invalid")
+    assert_independent_channel_support(batch.opening_dose)
+    n_episodes, horizon, sides = batch.valve.shape
+    if sides != 2 or n_episodes < 8:
+        raise Phase35ProtocolError("Gate C synthetic training batch is too small")
+    split = max(4, int(n_episodes * 0.75))
+    if split >= n_episodes:
+        raise Phase35ProtocolError("Gate C synthetic training requires held-out episodes")
+    torch.manual_seed(seed)
+    dtype = torch.float32
+    valve = torch.as_tensor(batch.valve, dtype=dtype)
+    baseline = torch.as_tensor(batch.baseline_valve, dtype=dtype)
+    target = torch.as_tensor(batch.local_effect, dtype=dtype)
+    context = torch.zeros((n_episodes, 8), dtype=dtype)
+    operator = build_local_response_operator(
+        route=route,
+        context_dim=context.shape[1],
+        state_dim=6,
+        horizon=horizon,
+        dt_seconds=10.0,
+        scheduled=True,
+    )
+    optimizer = torch.optim.Adam(operator.parameters(), lr=learning_rate)
+    scale = target[:split].square().mean().sqrt().clamp_min(1e-3)
+
+    def train_loss() -> torch.Tensor:
+        output = operator(context[:split], valve[:split], baseline[:split])
+        return ((output["effect"] - target[:split]) / scale).square().mean()
+
+    operator.train()
+    initial_loss = float(train_loss().detach().item())
+    final_loss = initial_loss
+    for _ in range(steps):
+        optimizer.zero_grad(set_to_none=True)
+        loss = train_loss()
+        if not torch.isfinite(loss):
+            break
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(operator.parameters(), 2.0)
+        optimizer.step()
+        final_loss = float(loss.detach().item())
+
+    operator.eval()
+    with torch.no_grad():
+        heldout = operator(context[split:], valve[split:], baseline[split:])
+        prediction = heldout["effect"]
+        truth = target[split:]
+        relative = (
+            (prediction - truth).square().mean().sqrt()
+            / truth.square().mean().sqrt().clamp_min(1e-6)
+        )
+        mask = truth.abs() > 1e-3
+        direction = (
+            (torch.sign(prediction[mask]) == torch.sign(truth[mask])).float().mean()
+            if bool(mask.any())
+            else prediction.new_tensor(1.0)
+        )
+        amplitude = prediction.abs().sum() / truth.abs().sum().clamp_min(1e-6)
+        poles = heldout["stable_poles"]
+        pole_max = float(poles.max().item()) if poles.numel() else 0.0
+        finite = bool(
+            torch.isfinite(prediction).all()
+            and torch.isfinite(poles).all()
+            and pole_max < 1.0
+        )
+    return GateCSyntheticTrainingResult(
+        route=route,
+        seed=int(seed),
+        steps=int(steps),
+        initial_train_loss=initial_loss,
+        final_train_loss=final_loss,
+        heldout_relative_rollout_error=float(relative.item()),
+        heldout_direction_accuracy=float(direction.item()),
+        heldout_amplitude_ratio=float(amplitude.item()),
+        stable_pole_max=pole_max,
+        finite=finite,
+    )
+
+
+def run_attribution_competition(
+    *,
+    residual_capacity: str,
+    excitation: str,
+    seed: int,
+    steps: int,
+    learning_rate: float = 0.02,
+) -> GateCAttributionCompetitionResult:
+    """Train free+response branches under known conditional action innovation.
+
+    This is an attribution sensitivity diagnostic. It deliberately returns no
+    automatic scientific decision.
+    """
+
+    from .gatec_model import build_local_response_operator
+
+    if residual_capacity not in {"small", "base", "large"}:
+        raise Phase35ProtocolError("Gate C attribution residual capacity is invalid")
+    if excitation not in {"low", "high"}:
+        raise Phase35ProtocolError("Gate C attribution excitation label is invalid")
+    if steps < 1:
+        raise Phase35ProtocolError("Gate C attribution training budget is invalid")
+    torch.manual_seed(seed)
+    n_episodes, horizon, context_dim = 48, 30, 4
+    context = torch.randn(n_episodes, context_dim)
+    normalized_time = torch.linspace(0.0, 1.0, horizon)[None, :, None]
+    sinusoid = torch.sin(torch.linspace(0.0, math.pi, horizon))[None, :, None]
+    predictable_a = 3.0 * (
+        context[:, None, 0:1] * normalized_time
+        + context[:, None, 1:2] * sinusoid
+    )
+    predictable_b = 3.0 * (
+        context[:, None, 0:1] * normalized_time
+        - context[:, None, 1:2] * sinusoid
+    )
+    predictable = torch.cat((predictable_a, predictable_b), dim=2)
+    innovation_scale = 0.12 if excitation == "low" else 3.0
+    innovation = torch.zeros_like(predictable)
+    for step in range(horizon):
+        previous = innovation[:, step - 1] if step else 0.0
+        innovation[:, step] = 0.55 * previous + innovation_scale * torch.randn(
+            n_episodes, 2
+        )
+    baseline = 35.0 + 4.0 * torch.tanh(context[:, :2])
+    valve = torch.clamp(baseline[:, None, :] + predictable + innovation, 2.0, 98.0)
+    opening = (valve / 100.0).pow(1.6)
+    opening_baseline = (baseline / 100.0).pow(1.6)
+    dose = opening - opening_baseline[:, None, :]
+    true_gain = torch.tensor(((18.0, 2.4), (1.8, 15.0)))
+    local_truth = torch.zeros_like(dose)
+    state = torch.zeros(n_episodes, 2)
+    for step in range(horizon):
+        equilibrium = torch.einsum("bi,oi->bo", dose[:, step], true_gain)
+        state = 0.88 * state + 0.12 * equilibrium
+        local_truth[:, step] = state
+    nuisance = torch.cat(
+        (
+            0.12 * context[:, None, 2:3] * sinusoid
+            + 0.08 * context[:, None, 3:4] * normalized_time,
+            -0.10 * context[:, None, 2:3] * sinusoid
+            + 0.07 * context[:, None, 3:4] * normalized_time,
+        ),
+        dim=2,
+    )
+    target = local_truth + nuisance
+    residual_fraction = float(
+        innovation.square().mean()
+        / (predictable + innovation).square().mean().clamp_min(1e-8)
+    )
+
+    hidden = {"small": 8, "base": 24, "large": 64}[residual_capacity]
+    if residual_capacity == "small":
+        free_head: nn.Module = nn.Linear(context_dim, horizon * 2)
+    elif residual_capacity == "base":
+        free_head = nn.Sequential(
+            nn.Linear(context_dim, hidden), nn.GELU(), nn.Linear(hidden, horizon * 2)
+        )
+    else:
+        free_head = nn.Sequential(
+            nn.Linear(context_dim, hidden),
+            nn.GELU(),
+            nn.Linear(hidden, hidden),
+            nn.GELU(),
+            nn.Linear(hidden, horizon * 2),
+        )
+    response = build_local_response_operator(
+        route="a1phys_three_pole",
+        context_dim=context_dim,
+        state_dim=6,
+        horizon=horizon,
+        dt_seconds=10.0,
+        scheduled=False,
+    )
+    optimizer = torch.optim.Adam(
+        [*free_head.parameters(), *response.parameters()],
+        lr=learning_rate,
+        weight_decay=1e-5,
+    )
+    split = 36
+    scale = target[:split].square().mean().sqrt().clamp_min(1e-3)
+    free_head.train()
+    response.train()
+    for _ in range(steps):
+        optimizer.zero_grad(set_to_none=True)
+        free_prediction = free_head(context[:split]).reshape(split, horizon, 2)
+        response_prediction = response(
+            context[:split], valve[:split], baseline[:split]
+        )["effect"]
+        loss = ((free_prediction + response_prediction - target[:split]) / scale).square().mean()
+        if not torch.isfinite(loss):
+            break
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(
+            [*free_head.parameters(), *response.parameters()], 2.0
+        )
+        optimizer.step()
+
+    free_head.eval()
+    response.eval()
+    with torch.no_grad():
+        free_prediction = free_head(context[split:]).reshape(-1, horizon, 2)
+        response_output = response(context[split:], valve[split:], baseline[split:])
+        response_prediction = response_output["effect"]
+        total_prediction = free_prediction + response_prediction
+        heldout_target = target[split:]
+        heldout_local = local_truth[split:]
+        heldout_nuisance = nuisance[split:]
+        total_relative = (
+            (total_prediction - heldout_target).square().mean().sqrt()
+            / heldout_target.square().mean().sqrt().clamp_min(1e-6)
+        )
+        response_relative = (
+            (response_prediction - heldout_local).square().mean().sqrt()
+            / heldout_local.square().mean().sqrt().clamp_min(1e-6)
+        )
+        free_relative = (
+            (free_prediction - heldout_nuisance).square().mean().sqrt()
+            / heldout_nuisance.square().mean().sqrt().clamp_min(1e-6)
+        )
+        amplitude = response_prediction.abs().sum() / heldout_local.abs().sum().clamp_min(1e-6)
+        poles = response_output["stable_poles"]
+        finite = bool(
+            torch.isfinite(total_prediction).all()
+            and torch.isfinite(poles).all()
+            and float(poles.max()) < 1.0
+        )
+    return GateCAttributionCompetitionResult(
+        residual_capacity=residual_capacity,
+        excitation=excitation,
+        seed=int(seed),
+        residual_excitation_fraction=residual_fraction,
+        heldout_total_relative_error=float(total_relative),
+        heldout_response_amplitude_ratio=float(amplitude),
+        heldout_response_relative_error=float(response_relative),
+        heldout_free_relative_error=float(free_relative),
+        local_supervision=False,
+        free_reads_future_action=False,
+        finite=finite,
+        automatic_scientific_pass=None,
+    )
 
 
 def evaluate_synthetic_controls(

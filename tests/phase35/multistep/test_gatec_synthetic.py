@@ -8,6 +8,8 @@ from src.phase35.multistep.gatec_synthetic import (
     evaluate_synthetic_controls,
     generate_gatec_known_truth,
     recover_local_gain,
+    run_attribution_competition,
+    train_synthetic_response_operator,
 )
 from src.phase35.schema import Phase35ProtocolError
 
@@ -46,3 +48,64 @@ def test_leakage_and_response_collapse_mutants_fail_closed() -> None:
     assert clean.eligible is True
     assert evaluate_synthetic_controls(leakage_mutant=True).eligible is False
     assert evaluate_synthetic_controls(collapse_mutant=True).eligible is False
+
+
+@pytest.mark.parametrize(
+    "route",
+    [
+        "a1phys_three_pole",
+        "stable_koopman_lpv",
+        "pi_neural_ode",
+        "deeponet_response",
+    ],
+)
+def test_route_specific_training_recovers_heldout_known_truth(route: str) -> None:
+    batch = generate_gatec_known_truth(seed=31, n_episodes=40, horizon=36)
+    result = train_synthetic_response_operator(
+        route=route,
+        batch=batch,
+        seed=7,
+        steps=140,
+        learning_rate=0.03,
+    )
+    assert result.final_train_loss < 0.4 * result.initial_train_loss
+    assert result.heldout_relative_rollout_error < 0.65
+    assert result.heldout_direction_accuracy > 0.85
+    assert 0.45 < result.heldout_amplitude_ratio < 1.55
+    assert result.stable_pole_max < 1.0
+    assert result.finite is True
+
+
+def test_route_training_refuses_collinear_independent_channels() -> None:
+    batch = generate_gatec_known_truth(
+        seed=37, n_episodes=20, horizon=24, collinear_inputs=True
+    )
+    with pytest.raises(Phase35ProtocolError, match="common spray mode"):
+        train_synthetic_response_operator(
+            route="a1phys_three_pole", batch=batch, seed=3, steps=2
+        )
+
+
+def test_free_capacity_by_residual_excitation_scan_is_diagnostic_only() -> None:
+    results = [
+        run_attribution_competition(
+            residual_capacity=capacity,
+            excitation=excitation,
+            seed=41,
+            steps=120,
+        )
+        for excitation in ("low", "high")
+        for capacity in ("small", "large")
+    ]
+    low = [result for result in results if result.excitation == "low"]
+    high = [result for result in results if result.excitation == "high"]
+    assert max(result.residual_excitation_fraction for result in low) < 0.05
+    assert min(result.residual_excitation_fraction for result in high) > 0.25
+    assert all(result.finite for result in results)
+    assert all(result.local_supervision is False for result in results)
+    assert all(result.free_reads_future_action is False for result in results)
+    assert all(result.automatic_scientific_pass is None for result in results)
+    assert max(result.heldout_response_amplitude_ratio for result in low) < min(
+        result.heldout_response_amplitude_ratio for result in high
+    )
+    assert all(result.heldout_total_relative_error >= 0 for result in results)
