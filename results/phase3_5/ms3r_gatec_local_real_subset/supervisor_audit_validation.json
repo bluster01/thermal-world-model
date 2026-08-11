@@ -1,0 +1,45 @@
+{
+  "protocol_version": "phase3.5-ms3r-gatec-local-real-subset-audit-v1",
+  "audited_execution_git_sha": "54687ac1c77ce2f7e8a24b5fd2b2e6f7df3bf5da",
+  "scope": "local_real_train_validation_subset_not_causal",
+  "artifact_integrity": {
+    "ledger_entries_verified": 6,
+    "all_sha256_match": true,
+    "test_accessed": false
+  },
+  "anchor_contract": {
+    "train_full": 695780,
+    "validation_full": 229785,
+    "train_subset": 6957,
+    "validation_subset": 2048,
+    "train_anchor_sha256": "40b948bf06d1d2420d2b30057af1f97e3c834b8a88f3fdcb84d645c3530e88fb",
+    "validation_anchor_sha256": "cb245c37c57215f5044a3a212dc537607cf8974a985769d452b3b8bb2d1329e7"
+  },
+  "persistence_baseline_validation": {
+    "valve_mae": 3.8139517307281494,
+    "tin_mae_c": 2.0571205615997314,
+    "local_drop_mae_c": 2.2995262145996094,
+    "terminal_mae_c": 1.474402904510498
+  },
+  "route_spread": {
+    "dimensionless_composite_min": 0.461439,
+    "dimensionless_composite_max": 0.461952,
+    "maximum_absolute_spread": 0.000513,
+    "route_ranking_supported": false
+  },
+  "supervisor_decision": {
+    "label": "REAL_1PCT_RM0_UNDERFIT",
+    "components": [
+      "NO_ROUTE_RANKING",
+      "PERSISTENCE_ANCHOR_MISSING",
+      "LOCAL_DROP_WORSE_THAN_PERSISTENCE",
+      "TERMINAL_PERSISTENCE_ONLY",
+      "RESPONSE_BRANCH_WEAK",
+      "NO_TEST_ACCESS",
+      "NO_LINUX_RELEASE"
+    ],
+    "automatic_scientific_pass": null,
+    "linux_authorized_gate": null,
+    "next": "LOCAL_REAL_1PCT_RM0_B_BASELINE_ANCHORED_MODEL_ONLY"
+  }
+}

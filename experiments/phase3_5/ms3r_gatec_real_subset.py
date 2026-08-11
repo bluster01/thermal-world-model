@@ -78,7 +78,10 @@ def _dirty_paths() -> list[str]:
 
 
 def validate_config(config: dict[str, Any], config_path: Path) -> None:
-    if config.get("protocol_version") != "phase3.5-ms3r-gatec-local-real-subset-v1":
+    if config.get("protocol_version") not in {
+        "phase3.5-ms3r-gatec-local-real-subset-v1",
+        "phase3.5-ms3r-gatec-local-real-subset-rm0b-v1",
+    }:
         raise RuntimeError("unsupported Gate C local real-subset protocol")
     data = config.get("data_contract", {})
     if data.get("allowed_splits") != ["train", "validation"] or data.get("test_allowed") is not False:
@@ -98,12 +101,24 @@ def validate_config(config: dict[str, Any], config_path: Path) -> None:
         raise RuntimeError("Gate C local real route/seed matrix changed")
     if config_path.resolve() == parent_path.resolve():
         raise RuntimeError("Gate C local smoke config cannot be the parent matrix")
+    parent_audit = config.get("parent_rm0a_audit")
+    if parent_audit is not None:
+        audit_path = ROOT / parent_audit["path"]
+        if _sha256(audit_path) != parent_audit["sha256"]:
+            raise RuntimeError("Gate C RM0-A supervisor audit pin changed")
+        audit = _read_json(audit_path)
+        if (
+            audit.get("supervisor_decision", {}).get("label")
+            != parent_audit["required_label"]
+        ):
+            raise RuntimeError("Gate C RM0-A supervisor label changed")
 
 
 def dry_run(config: dict[str, Any]) -> dict[str, Any]:
     return {
         "protocol_version": config["protocol_version"],
         "scope": config["scope"],
+        "batch_id": config.get("batch_id", "ms3r-gatec-local-real-rm0a"),
         "routes": config["routes"],
         "seeds": config["seeds"],
         "fraction_denominator": config["data_contract"]["fraction_denominator"],
@@ -137,10 +152,12 @@ def run(
             raise RuntimeError(f"Gate C cache source pin mismatch for {side}")
     manifest = {
         "protocol_version": config["protocol_version"],
+        "batch_id": config.get("batch_id", "ms3r-gatec-local-real-rm0a"),
         "execution_git_sha": _git_sha(),
         "config_path": str(config_path.relative_to(ROOT)).replace("\\", "/"),
         "config_sha256": _sha256(config_path),
         "parent_gatec_matrix": config["parent_gatec_matrix"],
+        "parent_rm0a_audit": config.get("parent_rm0a_audit"),
         "source_sha256": expected_source,
         "cache_paths": {side: str(path) for side, path in cache_paths.items()},
         "cache_sha256": {side: _sha256(path) for side, path in cache_paths.items()},

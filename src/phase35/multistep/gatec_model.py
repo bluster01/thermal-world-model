@@ -34,6 +34,8 @@ class CausalValvePolicyDecoder(nn.Module):
         self.cell = nn.GRUCell(4, context_dim)
         self.output = nn.Linear(context_dim, 2)
         self.dropout = nn.Dropout(dropout)
+        nn.init.normal_(self.output.weight, mean=0.0, std=1e-3)
+        nn.init.zeros_(self.output.bias)
 
     def forward(
         self, context: torch.Tensor, future_sp: torch.Tensor, baseline_valve: torch.Tensor
@@ -57,6 +59,8 @@ class TinBoundaryForecaster(nn.Module):
         self.cell = nn.GRUCell(2, context_dim)
         self.output = nn.Linear(context_dim, 2)
         self.dropout = nn.Dropout(dropout)
+        nn.init.normal_(self.output.weight, mean=0.0, std=1e-3)
+        nn.init.zeros_(self.output.bias)
 
     def forward(
         self, context: torch.Tensor, baseline_tin: torch.Tensor, horizon: int
@@ -443,6 +447,7 @@ class StableDownstreamLatentMixer(nn.Module):
         self.input_projection = nn.Linear(2, latent_dim, bias=False)
         self.output_projection = nn.Linear(latent_dim, 2, bias=False)
         self.decay_logits = nn.Parameter(torch.zeros(latent_dim))
+        nn.init.normal_(self.output_projection.weight, mean=0.0, std=1e-3)
 
     def forward(
         self,
@@ -479,6 +484,7 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
         required = [
             *(f"{side}::二级减温调节门阀位" for side in ("A", "B")),
             *(f"{side}::二级减温器入口温度" for side in ("A", "B")),
+            *(f"{side}::二级减温器出口温度" for side in ("A", "B")),
             *(f"{side}::末级过热器出口汽温" for side in ("A", "B")),
         ]
         missing = set(required) - set(self.feature_names)
@@ -486,6 +492,7 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
             raise Phase35ProtocolError(f"Gate C model is missing features: {sorted(missing)}")
         self.valve_indices = [self.feature_names.index(f"{side}::二级减温调节门阀位") for side in ("A", "B")]
         self.tin_indices = [self.feature_names.index(f"{side}::二级减温器入口温度") for side in ("A", "B")]
+        self.tout_indices = [self.feature_names.index(f"{side}::二级减温器出口温度") for side in ("A", "B")]
         self.terminal_indices = [self.feature_names.index(f"{side}::末级过热器出口汽温") for side in ("A", "B")]
         self.encoder = PairedHistoryEncoder(config.n_features, config.d_model, config.dropout)
         self.valve_policy = CausalValvePolicyDecoder(config.d_model, config.dropout)
@@ -498,6 +505,8 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
             nn.Dropout(config.dropout),
             nn.Linear(hidden, config.horizon * 2),
         )
+        nn.init.normal_(self.residual_head[-1].weight, mean=0.0, std=1e-3)
+        nn.init.zeros_(self.residual_head[-1].bias)
         self.local_response = build_local_response_operator(
             route=config.response_route,
             context_dim=config.d_model,
@@ -527,6 +536,7 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
         *,
         boundary_mode: str,
         boundary_future: torch.Tensor | None = None,
+        logged_future_valve_for_aux: torch.Tensor | None = None,
     ) -> dict[str, Any]:
         if boundary_mode not in BOUNDARY_MODES:
             raise Phase35ProtocolError(f"unknown Gate C boundary mode={boundary_mode!r}")
@@ -547,23 +557,27 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
         context = self.encoder(normalized_history)
         baseline_valve = history[:, -1, self.valve_indices]
         baseline_tin = history[:, -1, self.tin_indices]
+        baseline_tout = history[:, -1, self.tout_indices]
+        baseline_local_drop = baseline_tin - baseline_tout
         baseline_terminal = history[:, -1, self.terminal_indices]
         valve = self.valve_policy(context, future_sp, baseline_valve)
         tin_prediction = self.tin_forecaster(context, baseline_tin, self.config.horizon)
         boundary_used = tin_prediction if boundary_mode == "forecast_boundary" else boundary_future
         assert boundary_used is not None
-        residual_local = self.residual_head(context).reshape(-1, self.config.horizon, 2)
+        residual_local_delta = self.residual_head(context).reshape(-1, self.config.horizon, 2)
+        residual_local = baseline_local_drop[:, None, :] + residual_local_delta
         response = self.local_response(context, valve, baseline_valve)
         local_drop = residual_local + response["effect"]
         tout = boundary_used - local_drop
         terminal, latent = self.downstream(context, tout, baseline_terminal)
         reference_tout = boundary_used - residual_local
         terminal_reference, _ = self.downstream(context, reference_tout, baseline_terminal)
-        return {
+        result = {
             "valve_prediction": valve,
             "tin_prediction": tin_prediction,
             "boundary_used": boundary_used,
             "residual_local_prediction": residual_local,
+            "residual_local_delta_prediction": residual_local_delta,
             "local_drop_prediction": local_drop,
             "tout_prediction": tout,
             "terminal_prediction": terminal,
@@ -576,6 +590,18 @@ class MeasuredBoundaryMIMOWorldModel(nn.Module):
             "boundary_mode": boundary_mode,
             "response_route": self.config.response_route,
         }
+        if logged_future_valve_for_aux is not None:
+            if (
+                logged_future_valve_for_aux.shape != future_sp.shape
+                or not torch.isfinite(logged_future_valve_for_aux).all()
+            ):
+                raise Phase35ProtocolError("Gate C logged future valve auxiliary is invalid")
+            logged_response = self.local_response(
+                context, logged_future_valve_for_aux, baseline_valve
+            )
+            result["logged_local_effect"] = logged_response["effect"]
+            result["logged_local_drop_prediction"] = residual_local + logged_response["effect"]
+        return result
 
 
 def build_gatec_model(

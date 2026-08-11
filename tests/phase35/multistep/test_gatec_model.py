@@ -49,6 +49,8 @@ def _inputs(batch: int = 3):
     history[:, :, FEATURES.index("B::二级减温调节门阀位")] = 35.0
     history[:, :, FEATURES.index("A::二级减温器入口温度")] = 550.0
     history[:, :, FEATURES.index("B::二级减温器入口温度")] = 552.0
+    history[:, :, FEATURES.index("A::二级减温器出口温度")] = 538.0
+    history[:, :, FEATURES.index("B::二级减温器出口温度")] = 539.0
     history[:, :, FEATURES.index("A::末级过热器出口汽温")] = 540.0
     history[:, :, FEATURES.index("B::末级过热器出口汽温")] = 541.0
     future_sp = torch.randn(batch, 8, 2) + 540.0
@@ -98,6 +100,39 @@ def test_train_frozen_history_normalization_preserves_physical_baselines():
         model.set_history_normalization(center[:-1], scale[:-1])
 
 
+def test_initialization_is_persistence_anchored_and_logged_action_is_aux_only():
+    from src.phase35.multistep.gatec_model import build_gatec_model
+
+    history, future_sp = _inputs(batch=2)
+    model = build_gatec_model(_config(), FEATURES).eval()
+    logged = history[:, -1:, model.valve_indices].expand(-1, 8, -1).clone()
+    logged[:, 3:, 0] += 5.0
+    output = model(
+        history,
+        future_sp,
+        boundary_mode="forecast_boundary",
+        logged_future_valve_for_aux=logged,
+    )
+    baseline_valve = history[:, -1, model.valve_indices]
+    baseline_tin = history[:, -1, model.tin_indices]
+    baseline_local = baseline_tin - history[:, -1, model.tout_indices]
+    baseline_terminal = history[:, -1, model.terminal_indices]
+    assert (output["valve_prediction"] - baseline_valve[:, None]).abs().mean() < 0.1
+    assert (output["tin_prediction"] - baseline_tin[:, None]).abs().mean() < 0.1
+    assert (output["residual_local_prediction"] - baseline_local[:, None]).abs().mean() < 0.1
+    assert (output["terminal_prediction"] - baseline_terminal[:, None]).abs().mean() < 0.1
+    changed = model(
+        history,
+        future_sp,
+        boundary_mode="forecast_boundary",
+        logged_future_valve_for_aux=logged.flip(1),
+    )
+    assert torch.allclose(
+        output["residual_local_prediction"], changed["residual_local_prediction"], atol=1e-6
+    )
+    assert not torch.allclose(output["logged_local_effect"], changed["logged_local_effect"])
+
+
 def test_sp_decoder_is_prefix_causal_and_residual_is_future_action_invariant():
     from src.phase35.multistep.gatec_model import build_gatec_model
 
@@ -109,7 +144,12 @@ def test_sp_decoder_is_prefix_causal_and_residual_is_future_action_invariant():
     altered = model(history, changed, boundary_mode="forecast_boundary")
     assert torch.allclose(normal["valve_prediction"][:, :4], altered["valve_prediction"][:, :4], atol=1e-6)
     assert torch.allclose(normal["residual_local_prediction"], altered["residual_local_prediction"], atol=1e-6)
-    assert not torch.allclose(normal["valve_prediction"][:, 4:], altered["valve_prediction"][:, 4:])
+    assert not torch.allclose(
+        normal["valve_prediction"][:, 4:],
+        altered["valve_prediction"][:, 4:],
+        atol=1e-7,
+        rtol=0.0,
+    )
 
 
 def test_every_response_adapter_has_constant_action_identity_and_finite_rollout():

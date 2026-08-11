@@ -11,6 +11,7 @@ from typing import Any, Mapping
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 from ..data import Phase35Cache, deterministic_anchor_subset
 from ..schema import Phase35ProtocolError
@@ -117,6 +118,10 @@ def _metric_sums() -> dict[str, float]:
         "predicted_effect_abs": 0.0,
         "logged_effect_abs": 0.0,
         "composite_loss": 0.0,
+        "persistence_valve_abs": 0.0,
+        "persistence_tin_abs": 0.0,
+        "persistence_local_abs": 0.0,
+        "persistence_terminal_abs": 0.0,
     }
 
 
@@ -201,7 +206,14 @@ def run_gatec_real_subset_smoke(
         tensors = _to_device_batch(train_batch, indices, torch_device)
         optimizer.zero_grad(set_to_none=True)
         output = model(
-            tensors["history"], tensors["future_sp"], boundary_mode="forecast_boundary"
+            tensors["history"],
+            tensors["future_sp"],
+            boundary_mode="forecast_boundary",
+            logged_future_valve_for_aux=tensors["valve"],
+        )
+        output["structure_penalty"] = F.smooth_l1_loss(
+            output["logged_local_drop_prediction"] / scales.values["local"],
+            tensors["local"] / scales.values["local"],
         )
         loss = compute_gatec_loss(
             output,
@@ -249,6 +261,10 @@ def run_gatec_real_subset_smoke(
             ) / model.history_scale[None, None, :]
             context = model.encoder(normalized)
             baseline_valve = tensors["history"][:, -1, model.valve_indices]
+            baseline_tin = tensors["history"][:, -1, model.tin_indices]
+            baseline_tout = tensors["history"][:, -1, model.tout_indices]
+            baseline_local = baseline_tin - baseline_tout
+            baseline_terminal = tensors["history"][:, -1, model.terminal_indices]
             logged_response = model.local_response(
                 context, tensors["valve"], baseline_valve
             )
@@ -285,6 +301,18 @@ def run_gatec_real_subset_smoke(
             sums["predicted_effect_abs"] += float(forecast["local_effect"].abs().sum().cpu())
             sums["logged_effect_abs"] += float(logged_response["effect"].abs().sum().cpu())
             sums["composite_loss"] += float(validation_loss.total.cpu())
+            sums["persistence_valve_abs"] += float(
+                (tensors["valve"] - baseline_valve[:, None]).abs().sum().cpu()
+            )
+            sums["persistence_tin_abs"] += float(
+                (tensors["tin"] - baseline_tin[:, None]).abs().sum().cpu()
+            )
+            sums["persistence_local_abs"] += float(
+                (tensors["local"] - baseline_local[:, None]).abs().sum().cpu()
+            )
+            sums["persistence_terminal_abs"] += float(
+                (tensors["terminal"] - baseline_terminal[:, None]).abs().sum().cpu()
+            )
             if forecast["local_stable_poles"].numel():
                 stable_pole_max = max(
                     stable_pole_max, float(forecast["local_stable_poles"].max().cpu())
@@ -327,15 +355,43 @@ def run_gatec_real_subset_smoke(
         "predicted_action_effect_mean_abs_c": sums["predicted_effect_abs"] / element_count,
         "logged_action_effect_mean_abs_c": sums["logged_effect_abs"] / element_count,
         "dimensionless_composite_loss": sums["composite_loss"] / batch_count,
+        "persistence_valve_mae": sums["persistence_valve_abs"] / element_count,
+        "persistence_tin_mae_c": sums["persistence_tin_abs"] / element_count,
+        "persistence_local_drop_mae_c": sums["persistence_local_abs"] / element_count,
+        "persistence_terminal_mae_c": sums["persistence_terminal_abs"] / element_count,
         "stable_pole_max": stable_pole_max,
         "finite": bool(all(math.isfinite(value) for value in sums.values())),
     }
+    metrics["valve_to_persistence_ratio"] = (
+        metrics["forecast_valve_mae"] / max(metrics["persistence_valve_mae"], 1e-9)
+    )
+    metrics["tin_to_persistence_ratio"] = (
+        metrics["forecast_tin_mae_c"] / max(metrics["persistence_tin_mae_c"], 1e-9)
+    )
+    metrics["local_to_persistence_ratio"] = (
+        metrics["forecast_local_drop_mae_c"]
+        / max(metrics["persistence_local_drop_mae_c"], 1e-9)
+    )
+    metrics["terminal_to_persistence_ratio"] = (
+        metrics["forecast_terminal_mae_c"]
+        / max(metrics["persistence_terminal_mae_c"], 1e-9)
+    )
+    metrics["logged_effect_to_local_delta_ratio"] = (
+        metrics["logged_action_effect_mean_abs_c"]
+        / max(metrics["persistence_local_drop_mae_c"], 1e-9)
+    )
     structural = {
         "finite_rollout": metrics["finite"] and stable_pole_max < 1.0,
         "sp_prefix_causality": prefix_ok,
         "constant_action_identity": identity_ok,
         "future_truth_isolation": True,
         "local_response_noncollapse": metrics["logged_action_effect_mean_abs_c"] > 1e-6,
+    }
+    baseline_diagnostics = {
+        "valve_not_worse_than_1p05_persistence": metrics["valve_to_persistence_ratio"] <= 1.05,
+        "tin_not_worse_than_1p05_persistence": metrics["tin_to_persistence_ratio"] <= 1.05,
+        "local_not_worse_than_1p05_persistence": metrics["local_to_persistence_ratio"] <= 1.05,
+        "terminal_not_worse_than_1p05_persistence": metrics["terminal_to_persistence_ratio"] <= 1.05,
     }
     elapsed = time.perf_counter() - started
     return {
@@ -359,6 +415,7 @@ def run_gatec_real_subset_smoke(
         "loss_curve": loss_curve,
         "metrics_validation": metrics,
         "structural_validation": structural,
+        "baseline_diagnostics": baseline_diagnostics,
         "selector_eligible": all(structural.values()),
         "elapsed_seconds": elapsed,
         "peak_cuda_bytes": int(torch.cuda.max_memory_allocated(torch_device))

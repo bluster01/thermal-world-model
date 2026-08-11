@@ -1,0 +1,42 @@
+{
+  "protocol_version": "phase3.5-ms3r-gatec-local-real-subset-v1",
+  "execution_git_sha": "54687ac1c77ce2f7e8a24b5fd2b2e6f7df3bf5da",
+  "config_path": "configs/phase3_5/ms3r_gatec_local_real_subset.json",
+  "config_sha256": "b645a3b341d21b521d6934c38342d4c3dc9bed705e727248fd44d4cdb55f0b3f",
+  "parent_gatec_matrix": {
+    "path": "configs/phase3_5/ms3r_gatec_model_matrix.json",
+    "sha256": "9b0a7bfc2d83fe0de9de548e929ba85204759355c10545b0bdf23a45d052755a"
+  },
+  "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+  "cache_paths": {
+    "A": "C:\\Users\\14020\\Documents\\ChatGPT\\thermal-world-model-local-data\\phase35_ms3\\cache_A.npz",
+    "B": "C:\\Users\\14020\\Documents\\ChatGPT\\thermal-world-model-local-data\\phase35_ms3\\cache_B.npz"
+  },
+  "cache_sha256": {
+    "A": "b2b628b288d03aee8f3b9ba7b59db2466926af019fdd177d2ede2981dbcad7f9",
+    "B": "5cb47f9ad94c9f845e226eed87de6beff73bd1b5a982011a1147e02711b73254"
+  },
+  "code_sha256": {
+    "src/phase35/multistep/gatec_contracts.py": "921dd149ffe444a2e5e04c54cce9067974baf3c4a9cf2570217058b0a974d991",
+    "src/phase35/multistep/gatec_data.py": "927201a21ac30e34248e34dc920a09bd21098e729167c8728cb1caeebee4ece6",
+    "src/phase35/multistep/gatec_model.py": "6cdc6b60ad29384589c5c78cfbbd15b6deb2178bbcfeb594fff8ad2e329608b4",
+    "src/phase35/multistep/gatec_training.py": "a9e1153553bc292f8a5802017dc16183a60b93487c1a00e91c5752b761085004",
+    "src/phase35/multistep/gatec_real_smoke.py": "47490efa9af59cfa417143b5a90ff5b9cbca6c22fb9549332efc8129830f17e4",
+    "experiments/phase3_5/ms3r_gatec_real_subset.py": "7537eccbb44f5e1b38393b3dd79f2197779924f1f0a784a5f336fead35418a6a"
+  },
+  "device": "cuda",
+  "python_version": "3.11.9",
+  "numpy_version": "1.26.4",
+  "torch_version": "2.5.1+cu121",
+  "cuda_available": true,
+  "fraction_denominator": 100,
+  "splits_accessed": [
+    "train",
+    "validation"
+  ],
+  "test_accessed": false,
+  "linux_authorized": false,
+  "real_full_matrix_authorized": false,
+  "maximum_attempts_per_route": 1,
+  "automatic_scientific_pass": null
+}

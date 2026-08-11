@@ -702,9 +702,25 @@
         "gatec_local_real_subset_config": {
           "path": "configs/phase3_5/ms3r_gatec_local_real_subset.json",
           "required": true
+        },
+        "gatec_local_real_rm0a_summary": {
+          "path": "results/phase3_5/ms3r_gatec_local_real_subset/summary_validation.json",
+          "required": true
+        },
+        "gatec_local_real_rm0a_audit_json": {
+          "path": "results/phase3_5/ms3r_gatec_local_real_subset/supervisor_audit_validation.json",
+          "required": true
+        },
+        "gatec_local_real_rm0a_audit": {
+          "path": "docs/PHASE35_MS3R_GATEC_LOCAL_REAL_RM0_AUDIT_2026-08-11.md",
+          "required": true
+        },
+        "gatec_local_real_rm0b_config": {
+          "path": "configs/phase3_5/ms3r_gatec_local_real_subset_rm0b.json",
+          "required": true
         }
       },
-      "decision": "GATE_C LOCAL_REAL_1PCT_SMOKE_AUTHORIZED_BY_USER / LINUX_NOT_AUTHORIZED：四条路线已改为独立动力学实现；先用冻结真实cache的train/validation 1/100 anchor做本地RM0，合成只保留理论/负控制角色",
+      "decision": "GATE_C RM0-A AUDITED UNDERFIT / RM0-B LOCAL REAL 1PCT AUTHORIZED：RM0-A四路线不可排名，local-drop差于persistence约142%；RM0-B改为baseline+increment并加response-only logged-action auxiliary；Linux仍未授权",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -721,6 +737,8 @@
         "Gate C已通过已知真值解析恢复与秩亏拒绝，但这不是端到端神经网络训练恢复，更不是真实数据物理响应证据",
         "合成真值只能验证理论可解性和代码负控制，不能取代真实现场train/validation证据",
         "本地真实1/100 smoke由用户明确授权；只允许train/validation、forecast Tin主接口和单seed单次执行，不访问test",
+        "RM0-A四路线composite spread仅0.000513；local-drop MAE约5.57°C而persistence为2.30°C，禁止路线排名",
+        "RM0-B必须从observed persistence baseline预测增量；logged future valve只进入response auxiliary，不进入encoder/residual",
         "本地真实smoke不构成Linux或完整真实矩阵授权；linux_authorized_gate保持null"
       ]
     },

@@ -75,6 +75,8 @@ def test_real_subset_smoke_uses_train_validation_and_never_test() -> None:
     assert result["boundary_mode"] == "forecast_boundary"
     assert result["oracle_boundary_role"] == "diagnostic_ceiling_only"
     assert result["metrics_validation"]["finite"] is True
+    assert result["metrics_validation"]["persistence_local_drop_mae_c"] >= 0
+    assert "local_not_worse_than_1p05_persistence" in result["baseline_diagnostics"]
     assert result["structural_validation"]["constant_action_identity"] is True
     assert result["automatic_scientific_pass"] is None
 

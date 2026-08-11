@@ -1,0 +1,74 @@
+{
+  "protocol_version": "phase3.5-ms3r-gatec-local-real-subset-rm0b-v1",
+  "batch_id": "ms3r-gatec-local-real-rm0b",
+  "scope": "local_real_train_validation_subset_not_causal",
+  "parent_gatec_matrix": {
+    "path": "configs/phase3_5/ms3r_gatec_model_matrix.json",
+    "sha256": "9b0a7bfc2d83fe0de9de548e929ba85204759355c10545b0bdf23a45d052755a"
+  },
+  "parent_rm0a_audit": {
+    "path": "results/phase3_5/ms3r_gatec_local_real_subset/supervisor_audit_validation.json",
+    "sha256": "ab645f46af3ccb23b154087eb57ca266bb63ef5c9f94037f7dc9f3d63fc8ddd9",
+    "required_label": "REAL_1PCT_RM0_UNDERFIT"
+  },
+  "data_contract": {
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "allowed_splits": ["train", "validation"],
+    "test_allowed": false,
+    "fraction_denominator": 100,
+    "anchor_sampling": "deterministic_without_replacement_after_window_validation",
+    "window": 96,
+    "horizon": 60,
+    "max_age_s": 180.0
+  },
+  "routes": [
+    "a1phys_three_pole",
+    "stable_koopman_lpv",
+    "pi_neural_ode",
+    "deeponet_response"
+  ],
+  "seeds": [0],
+  "model": {
+    "d_model": 32,
+    "latent_dim": 16,
+    "local_state_dim": 6,
+    "dropout": 0.1,
+    "boundary_mode": "forecast_boundary",
+    "oracle_boundary_role": "diagnostic_ceiling_only",
+    "local_supervision": true,
+    "baseline_parameterization": "observed_persistence_plus_learned_increment",
+    "logged_action_auxiliary": "response_branch_only"
+  },
+  "training": {
+    "batch_size": 64,
+    "optimizer_updates": 180,
+    "validation_batch_size": 128,
+    "max_validation_anchors": 2048,
+    "learning_rate": 0.001,
+    "weight_decay": 0.00001,
+    "gradient_clip": 1.0
+  },
+  "diagnostic_gates": {
+    "max_valve_to_persistence_ratio": 1.05,
+    "max_tin_to_persistence_ratio": 1.05,
+    "max_local_to_persistence_ratio": 1.05,
+    "max_terminal_to_persistence_ratio": 1.05,
+    "route_ranking_automatic": false
+  },
+  "execution_contract": {
+    "local_real_smoke_authorized": true,
+    "linux_authorized": false,
+    "real_full_matrix_authorized": false,
+    "automatic_scientific_pass": false,
+    "maximum_attempts_per_route": 1,
+    "required_artifacts": [
+      "run_manifest.json",
+      "a1phys_three_pole_validation.json",
+      "stable_koopman_lpv_validation.json",
+      "pi_neural_ode_validation.json",
+      "deeponet_response_validation.json",
+      "summary_validation.json",
+      "artifact_ledger.json"
+    ]
+  }
+}

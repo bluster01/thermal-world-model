@@ -2,7 +2,7 @@
 
 本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
-> 当前状态：`ms3_r=implementation`、`linux_authorized_gate=null`。Gate C 四条路线已改为独立动力学实现；按用户明确授权，只在本地 `ALLoftime` 环境运行冻结真实 cache 的 1/100 train/validation RM0。合成只作理论/负控制，不能替代真实证据。Linux 当前无任务；test、MS4 和旧 42-run/E 系列均未授权。
+> 当前状态：`ms3_r=implementation`、`linux_authorized_gate=null`。真实 1/100 RM0-A 已审计为 underfit，禁止路线排名或重跑同协议；当前只在本地执行 RM0-B（persistence baseline + learned increment，logged action 仅进入 response auxiliary）。合成只作理论/负控制，不能替代真实证据。Linux 当前无任务；test、MS4 和旧 42-run/E 系列均未授权。
 
 ## MS3-R Gate A：点位与可辨识性批次
 
