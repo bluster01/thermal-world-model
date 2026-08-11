@@ -1,7 +1,7 @@
 # Phase 3.5-MS3 真实 A/B 观测适配设计
 
 - 协议：`phase3.5-ms3-v1.1`
-- 状态：本地实现与验证
+- 状态：已执行并审计；`OBSERVATIONAL_VALIDATION_FAIL_ASYMMETRIC`
 - 证据范围：`real_ab_observational_validation_not_causal`
 - 前置：MS5 已以 `JOINT_SELECTED` 关闭
 

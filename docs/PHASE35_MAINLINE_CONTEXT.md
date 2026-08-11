@@ -4,9 +4,9 @@
 
 - Material Type: active experiment-purpose specification
 - Scope: Phase 3.5-MS0–MS5、真实数据适配与闭环响应验证
-- Verification Status: ANALYZED；MS5 validation 已完成权重级独立审计
+- Verification Status: ANALYZED；MS3 validation 已完成 checkpoint/episode 独立审计
 - Deprecated Track: 原 E1–E5，仅作历史失败证据
-- Active Decision: 完成完整 MS 系列；MS5 选择 joint 并关闭，当前仅授权 MS3 A/B observational validation
+- Active Decision: MS3 以 A/B 不对称科学失败审计；不重跑、不访问 test，当前仅做本地 MS3-D 诊断
 
 ## 1. 一句话主线
 
@@ -50,8 +50,9 @@ MS0 → MS1 → MS2-V/C/J → MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选
 - MS2-D2 test：oracle 与三阶绝对 NMAE 逐 seed过门；三阶相对二阶点改善 23.74%–25.36%，冻结 bootstrap CI 下界 19.90%–21.22%，逐 seed高于 10%。只确认 frozen known-truth 下的响应优势，不确认现场阶次唯一性。
 - MS2-D3 validation：21/21 产物门通过；oracle 0.0357–0.0446、三阶 0.0558–0.0633，相对二阶 CI 下界 10.8%–14.3%。按预算不追加 test，只保留为 colored-nuisance validation 压力证据。
 - MS5 validation：12/12 产物闭合并完成 checkpoint 重算。joint response NMAE 0.047–0.050、amplitude ratio 0.988–0.994，逐 seed过门；冻结 staged 协议相对 joint 误差比 11.14–14.11，拒绝；free-only 证明“预测准不等于组件恢复”。只作 synthetic validation，不追加 test。
+- MS3 validation：12/12 真实 A/B 产物与 checkpoint/episode 重放闭合。B 回路 3/3 seeds 过门；A 回路动态响应仅 0.00663–0.00854°C、0/3 过 non-collapse 门，整体以 asymmetric FAIL 收口。B 只属 observational conditional-prediction evidence；不访问 test，不启动正式 MS4。
 
-Koopman、PI-ODE 与 DeepONet 的历史 synthetic 结果不构成最终路线冠军，但不在 MS3 当前 Gate 重新赛马。MS3 先验证 MS5 选中主干能否迁移到真实 A/B；表示路线比较在模型选择阶段另行冻结。
+Koopman、PI-ODE 与 DeepONet 的历史 synthetic 结果不构成最终路线冠军，也不能用来事后替换失败的 A 侧。表示路线比较只有在 MS3-D 定位“不对称来自模型而非经验 plant scale”后才能另立新协议。
 
 ## 4. 原 E 系列的定位
 
@@ -59,7 +60,7 @@ Koopman、PI-ODE 与 DeepONet 的历史 synthetic 结果不构成最终路线冠
 
 现场物理验证改由 MS4 承担。当前最强外部锚点是 SP held-step 的闭环响应：A/B 两侧具有双向事件和 110+ 日块，`SP↑→T2↑→Tm↑` 方向率约 70–86%。它验证的是包含串级 PID 的闭环系统，不是开环 `do(valve)`；双侧 SP 联动仍限制单侧归因。
 
-## 5. 当前 Gate：MS3
+## 5. 当前 Gate：MS3-D local diagnosis
 
 MS2-D 采用顺序压力测试，不一次铺开大矩阵：
 
@@ -75,7 +76,9 @@ D3 保持 D2 clean truth，只加入 response operator 不可观察的 stationar
 
 MS5 已证明在冻结 full-coupled synthetic truth 下，total-only joint 能恢复 free/response 组件；当前冻结 staged 协议失败。该结论已经权重级重算，以 `JOINT_SELECTED` 关闭，但不等于真实数据中的组件真值可观察。
 
-MS3 使用 SHA 冻结的 `all_merged_10s.csv` 构造两个控制回路 cache，把已确认现场映射写死为 A阀→右(B)温、B阀→左(A)温。冻结矩阵为 joint/free-only×A/B×3 seeds=12。主门检验 joint 相对 free-only 预测非劣、动态动作分支非坍缩，以及 logged future valve 相对保持阀位/置乱 delta-path 的 UTC-day block-bootstrap 预测增益。由于未来阀位处于串级 PID 闭环，这仍是 observational conditional-prediction Gate，不是 `do(valve)`；闭环物理响应继续由 MS4 负责。
+MS3 使用 SHA 冻结的 `all_merged_10s.csv` 构造两个控制回路 cache，把现场映射写死为 A阀→右(B)温、B阀→左(A)温。冻结的 joint/free-only×A/B×3 seeds=12 已完成。B 动态效应为 0.04289–0.04851°C、3/3 通过；A 为 0.00663–0.00854°C、0/3 通过。B/A 效应比 5.03–7.32，但动作剂量中位数比仅 1.052–1.059；标准化 +5% H60 checkpoint 响应同样显示 B 约为 A 的 4–5 倍。
+
+当前 MS3-D 不训练模型，只在负荷、主汽压力和处理前主汽温稳定的 SP held-step 中估计 A/B 经验 `SP→阀位→温度` 响应，并与现有 checkpoint IRF 对齐。若经验 A 也弱，后续使用 side-specific empirical scale；若经验 A 与 B 接近，则另立 response-identification 新协议。两种情形都不能把 MS3 v1.1 事后改判 PASS。
 
 ## 6. 当前不能声称
 

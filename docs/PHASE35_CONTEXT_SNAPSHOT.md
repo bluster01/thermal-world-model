@@ -34,16 +34,19 @@ python experiments/phase3_5/experiment_status.py --check --json
 | MS2-D2 | CLOSED | test 三个主门逐 seed通过；确认 frozen known-truth 三阶响应优势，不确认现场阶次唯一性 |
 | MS2-D3 | CLOSED | 21-run validation 主门通过；按预算不追加 test，不称 confirmatory |
 | MS5 | CLOSED | joint component recovery validation 通过；冻结 staged 协议拒绝 |
-| MS3 | READY_FOR_LINUX | A/B cross-loop validation-only 真实适配，不称因果 |
-| MS4 | PLANNED | 用 SP held-step 验证串级闭环响应，不恢复旧 E 匹配 |
+| MS3 | AUDITED FAIL | B 3/3 PASS；A 0/3 response non-collapse FAIL；不重跑、不访问 test |
+| MS3-D | LOCAL ONLY | 稳态 A/B `SP→阀位→温度` 经验响应与 checkpoint IRF 对齐，不训练 |
+| MS4 | HOLD | MS3-D 前不启动；不恢复旧 E 匹配 |
 
 ## 4. Linux 最新同步与本地审计
+
+Linux 在 `597180f` 回传 MS3 v1.1 validation，实际训练 commit 为 `798fcde`。12/12 runs、12-file checkpoint archive、manifest/cache timeline、结构门和 no-test 边界闭合；本地重建全部 validation anchors，逐 checkpoint 在 x86 CPU 重放，aggregate metric 最大差 `1.1623e-5`、单窗口最大差 `8.4734e-4°C`，冻结 CI 下界漂移 `<9.5e-8°C`，所有判决一致。B 回路动态效应 `0.04289–0.04851°C`、3/3 seeds 通过；A 仅 `0.00663–0.00854°C`、0/3 通过。B/A 效应比 `5.03–7.32`，动作剂量中位数比仅 `1.052–1.059`；标准化 +5% H60 checkpoint 响应也显示 B 约为 A 的 4–5 倍。最终标签 `AUDITED / OBSERVATIONAL_VALIDATION_FAIL_ASYMMETRIC / NO_RETRY / MS4_HOLD`。权威判决见 [`PHASE35_MS3_SUPERVISOR_AUDIT_2026-08-11.md`](PHASE35_MS3_SUPERVISOR_AUDIT_2026-08-11.md)。
 
 Linux 在 `1fb6a23` 回传 MS5 validation，实际执行 commit 为 `af31495`。12/12 runs、21-file checkpoint archive 和 test-access 门闭合；本地从 12 个最佳权重重新生成 validation 后最大指标差 `2.39e-7`，archive 可确定性重建为同一 SHA。component oracle 与 joint 逐 seed全过，joint response NMAE `0.047–0.050`；staged/joint total-error ratio `11.14–14.11`，当前 staged 协议拒绝；free-only 的 response NMAE=`1`、amplitude=`0`，确认总预测误差不能替代组件审计。最终标签 `CLOSED / VALIDATION_ONLY_COMPONENT_RECOVERY_PASS / JOINT_SELECTED / STAGED_PROTOCOL_REJECTED`。Linux 曾在 aarch64 legacy raw-float SHA 预检红项后继续，属流程偏差；本地复核确认非科学回归，测试已换成 1e-6 量化哈希。权威结论见 [`PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md`](PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md)。
 
 Linux 在 `f8a48ec` 回传 MS2-D3 validation，实际执行 commit 为 `040cb27`。21/21 runs、manifest/history/episode/checkpoint archive 和结构门闭合；本地 episode 重算最大差约 `3.35e-8`，独立 50,000 次 profile-stratified paired bootstrap 与冻结 10,000 次判决一致。oracle clean NMAE 为 0.0357–0.0446，三阶为 0.0558–0.0633，三阶相对二阶的冻结 CI 下界为 10.8%–14.3%。按负责人预算决定以 `CLOSED / VALIDATION_STRESS_PASS / NO_TEST_BY_BUDGET_DECISION` 关闭；validation 参与 checkpoint 选择，因此不是独立 test。归档 tar 的容器 path/hash 曾在远端 summary 后处理，但 21 个成员权重逐字节一致，记 provenance advisory 而不重跑。权威判决见 [`PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md`](PHASE35_MS2D3_SUPERVISOR_AUDIT_2026-08-11.md)。
 
-当前 MS5 已冻结为 4 modes×3 seeds：free-only 负控、joint-total 主策略、staged-total 候补、component-oracle 正控。它只回答 total-only 训练时 response 是否被 free head 吸收，不重新比较 D2/D3 路线，也不访问 A/B。
+MS5 的 4 modes×3 seeds 已关闭归档；它只回答 frozen truth 中 total-only 训练时 response 是否被 free head 吸收，不能覆盖 MS3 的真实 A/B 不对称失败。
 
 Linux 在 `d97538f` 回传 MS2-D2 one-shot test，实际执行 commit 为 `c221403`。远端提交只修改 `results/phase3_5/ms2d_order/**`，21/21 root/run ledger 均为 completed，日志、环境、manifest、checkpoint pin 与冻结 authorization 全部闭合。本地 canonical 重建与 `summary_test.json` 完全一致，episode aggregate 最大差 `2.461e-08`；独立 NumPy PCG64 50,000 次 profile-stratified paired bootstrap 也保持同一判决。oracle clean NMAE 为 0.0211–0.0255，三阶为 0.0444–0.0465，三阶相对二阶点改善 23.74%–25.36%，冻结 95% CI 下界为 19.90%–21.22%，逐 seed高于 10%。因此 D2 以 `CLOSED / CONFIRMED_SYNTHETIC_ORDER_RESPONSE` 关闭。二极点+learned-delay 与 DeepONet 在有限 horizon 仍接近三阶，故不能升级为现场唯一阶次或迟延机制。权威判决见 [`PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md`](PHASE35_MS2D2_TEST_SUPERVISOR_AUDIT_2026-08-11.md)。
 
@@ -76,7 +79,7 @@ Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。�
 
 ## 5. 当前下一步
 
-MS3 当前只执行冻结的 validation：`joint/free-only × A/B × 3 seeds = 12 runs`。首次 `v1` 远端执行在首个 optimizer update 前因 pandas 3 默认微秒精度导致 `anchors=0` 而停止，无训练产物、无 test 访问；当前授权为显式纳秒并冻结完整时间线的 `v1.1` 覆盖 cache 重跑。Linux 按 [`experiments/phase3_5/README.md`](../experiments/phase3_5/README.md) 第 17 节从冻结 `all_merged_10s.csv` 生成 A阀→右温、B阀→左温 cache，再训练与汇总；只提交 `results/phase3_5/ms3_real_adaptation/**`，不提交 cache 本体。任一 preflight 红项停止；任一科学门失败仍原样回传。不访问 test、不补阈值/seed/超参数、不启动 MS4。本地必须重放 checkpoint、episode 与 UTC-day bootstrap 后才能关闭 MS3。
+MS3 已审计为 A/B 不对称 FAIL，Linux 授权已清空。当前只做本地 MS3-D：从稳定负荷、稳定主汽压力、处理前温度稳定的 SP held-step 估计 A/B 经验闭环响应，并与现有 checkpoint `±5%` IRF 对齐。动态工况只作分层描述；不重训、不改门槛、不访问 test。经验 A 若同样弱，后续转向 side-specific scale；经验 A 若与 B 接近，另立 response-identification 新协议。在 MS3-D 审计前，正式 MS4、模型选择和论文均保持 HOLD。
 
 ## 6. 上下文读取优先级
 

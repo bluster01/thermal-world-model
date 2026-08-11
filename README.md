@@ -2,7 +2,7 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-11）**：Phase 4 暂停，先完成 Phase 3.5-MS 全系列，尚未进入论文收口。MS5 的 12-run synthetic validation 已完成权重级复算：joint 能恢复冻结的 free/response 组件，当前 staged 协议失败；该结果不证明现场因果。当前唯一授权是 MS3 的 12-run A/B observational validation，从 `all_merged_10s.csv` 写死 A阀→右(B)温、B阀→左(A)温的控制回路映射；test 与 MS4 继续冻结。旧 E1–E5 已废弃，只保留为历史失败证据。
+> **当前判断（2026-08-11）**：Phase 4 暂停，先完成 Phase 3.5-MS 全系列，尚未进入论文收口。MS3 的 12-run A/B observational validation 已完成 checkpoint/episode 独立重放，结论为不对称科学失败：B 回路 3/3 seeds 通过，A 回路 0/3 response non-collapse 失败。不得重跑、降低门槛或只保留 B；test 与正式 MS4 继续冻结。当前唯一任务是本地 MS3-D：用稳态 SP→实际阀位→温度经验响应判断 A 侧是真实增益较弱还是模型 response absorption。Linux 当前无授权；旧 E1–E5 仍废弃。
 
 ## 当前入口
 
@@ -22,7 +22,7 @@ Phase 4 的 [实验计划](docs/PHASE4_EXPERIMENT_PLAN.md) 和 Fan2017/2020/2021
 
 ## 当前主要实验目的
 
-完整目标是验证结构化多步响应从“已知真值可解”到“结构失配稳健”、再到“完整 `free+response` 不吸收动作”、真实数据适配和现场闭环响应的一条连续证据链。D2/D3 与 MS5 已完成 synthetic 方法门；MS5 选择 joint，拒绝当前 staged 协议。当前 MS3 只比较 joint 与 exact-zero response 的 free-only 负控，检查真实 A/B 上的预测非劣、动作分支非坍缩，以及 logged valve 相对保持/置乱动作的 UTC-day 条件预测增益；这仍不是 `do(valve)`。完整顺序和停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)，机器状态可运行 `python experiments/phase3_5/experiment_status.py --check --json` 查询。
+完整目标是验证结构化多步响应从“已知真值可解”到“结构失配稳健”、再到“完整 `free+response` 不吸收动作”、真实数据适配和现场闭环响应的一条连续证据链。D2/D3 与 MS5 已完成 synthetic 方法门；MS5 选择 joint，拒绝当前 staged 协议。MS3 进一步显示真实数据迁移不能由 synthetic PASS 直接保证：两侧预测非劣与动态 support 均过门，但只有 B 侧形成稳定的 logged-action 条件预测增益，A 侧响应分支明显偏弱。当前先完成不训练的 A/B 不对称诊断；这仍不是 `do(valve)`。完整顺序和停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)，机器状态可运行 `python experiments/phase3_5/experiment_status.py --check --json` 查询。
 
 ## Phase 3.5 研究命题
 

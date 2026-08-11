@@ -4,23 +4,24 @@
 
 ## 一句话状态
 
-项目已完成 MS0、MS1、MS2-V/C/J、MS2-D1/D2/D3 和 MS5。MS5 的 12/12 synthetic validation 已完成 checkpoint 重算：joint response NMAE `0.047–0.050`、amplitude ratio `0.988–0.994`，逐 seed过门；冻结 staged 协议相对 joint 误差比 `11.14–14.11`，拒绝。该结果只证明冻结 synthetic truth 的组件恢复。当前唯一授权是 MS3 的 12-run A/B observational validation；项目**尚未完成真实模型定性，也未进入论文收口**，MS4 闭环响应仍冻结。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
+项目已完成 MS0、MS1、MS2-V/C/J、MS2-D1/D2/D3、MS5 和 MS3 validation。MS3 的 12/12 checkpoint/episode 已独立重放：B 回路 3/3 seeds 通过 observational action-alignment 门，A 回路 0/3 response non-collapse 失败，整体以 `OBSERVATIONAL_VALIDATION_FAIL_ASYMMETRIC` 审计关闭，不重跑、不访问 test。项目**尚未完成真实模型定性，也未进入论文收口**；当前只做本地 MS3-D 稳态 A/B 响应不对称诊断，正式 MS4 继续 HOLD。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
 
 ## Phase 3.5 当前状态
 
 | 项目 | 状态 | 当前边界 |
 |---|---|---|
-| 原始数据口径 | 已完成只读探索，待 Linux manifest | A/B 为异步稀疏 historian；不能把原始行称为 10 s 样本 |
+| 原始数据口径 | all_merged SHA/timeline manifest 已审计 | MS3 使用 dense merged 10 s 表且硬排除 282 个缺口；原始 tag age 不可从 dense 表恢复 |
 | 动作定义 | 已冻结 | 主动作是实际二级减温阀反馈开度；SP 是监督层信号；喷水流量不作真值 |
 | 数据框架 | 已实现 | causal LOCF 10 s grid、staleness、SHA256、60/20/20 split 内窗口 |
 | A1phys-V | 已实现 | 历史阀位可作处理前状态；未来阀位只进入受约束干预分支 |
 | exp_201 pilot | 已回传并审计降级 | A 侧固定 `R=50`：ff10 三 seed 为 100%×3，no-freeze 三 seed 均值约 98.3%；原始绝对阀位多为 60–75%。均为 test-selected，且手工先验未标定，不能作正式证据 |
 | 核心实验 | 42/42 development runs 已完成并审计 | E1 PASS；E2/E3/E5 INCONCLUSIVE；E4 BLOCKED；没有 test 候选 |
 | 训练选择 | 已修正 | validation-only canonical checkpoint；test 显式解锁并写 ledger |
-| 统计 | 已运行并 fail-closed 审计 | A/B 分报；UTC 日块 bootstrap；seed 仅表示优化波动；matching balance/common support 未过 |
+| 统计 | 已运行并 fail-closed 审计 | A/B 分报；UTC 日为顶层 n；seed 同时含优化与 anchor 子抽样波动，不是独立重复 |
 | 正式结果 | 仅 development validation | 模型 test 尚未打开；A/B 旧 event test 标签已暴露，未来事件证据需新时间块 |
 | MS5 完整耦合 | validation-only 已关闭 | joint known-truth component recovery PASS；staged protocol FAIL；不外推现场 |
-| MS3 真实适配 | ready_for_linux / v1.1 retry | v1 在训练前因 pandas 时间精度停止；显式 ns cache；joint/free-only×A/B×3 seeds；test 禁止 |
+| MS3 真实适配 | audited asymmetric fail | B 3/3 PASS；A 0/3 non-collapse FAIL；checkpoint/episode 重放通过；test 禁止 |
+| MS3-D 不对称诊断 | local only | 稳态 SP→实际阀位→温度经验响应与 checkpoint ±5% IRF 对齐；不训练 |
 
 Phase 3.5 的目标不是证明质量/能量守恒，而是建立分层物理一致性：阀门动作可辨认、经验温度响应可复核、模型反事实响应能复现该曲线、SP 未执行时模型不制造阀门效应。完整协议见 [`PHASE3_5_EXPERIMENT_DESIGN.md`](PHASE3_5_EXPERIMENT_DESIGN.md)。
 
@@ -149,6 +150,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-下一判决点是 MS3 validation：从冻结 SHA 的 `all_merged_10s.csv` 生成 A阀→右(B)温、B阀→左(A)温两个 cache，比较 joint 与 free-only，A/B 各 3 seeds。首次 `v1` 在首个训练 run 构造 anchor 时因 pandas 3 的微秒整数语义停止；无 checkpoint、无指标、无 test 访问。`v1.1` 显式写纳秒并在训练前核对源行数、起止时间和缺口分布，不改变模型或判据。主门为预测非劣、动态 response 非坍缩、logged 相对保持/置乱动作的 UTC-day bootstrap 增益，每侧至少 2/3 seeds 通过。注册表为 `ready_for_linux`；只授权 12-run validation，不访问 test、不补超参数、不启动 MS4。即使通过，也只能称 observational conditional-prediction evidence，不能称 `do(valve)`。
+下一判决点是本地 MS3-D asymmetry diagnosis。MS3 v1.1 已按冻结矩阵执行并整体失败：B 3/3 seeds 通过，A 0/3 response non-collapse 失败。当前不重跑、不访问 test、不启动正式 MS4；先在负荷、主汽压力和处理前温度稳定的 SP held-step 中估计 A/B `SP→实际阀位→末过温度` 经验响应，并与已归档 checkpoint 的 `±5%` IRF 对齐。若经验 A 也弱，则后续采用 side-specific empirical scale；若经验 A 与 B 接近，则另立 response-identification 新协议。两条路径都不改变 MS3 的 FAIL 判决，也不能称 `do(valve)`。
 
 完整顺序为 MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 保持暂停。

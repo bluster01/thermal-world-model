@@ -586,7 +586,9 @@ Linux 只提交 `results/phase3_5/ms5_full_coupling/**`。不得修改 `configs/
 
 该批现已由本地权重级重放，以 `CLOSED / VALIDATION_ONLY_COMPONENT_RECOVERY_PASS / JOINT_SELECTED / STAGED_PROTOCOL_REJECTED` 关闭，不再授权重复运行。权威判决见 `docs/PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md`。
 
-## 17. 当前唯一授权：MS3 A/B observational validation
+## 17. 已完成归档：MS3 A/B observational validation
+
+本节只保留 `phase3.5-ms3-v1.1` 的历史复现命令，不再构成运行授权。该批 12/12 已回传并由本地审计为 `OBSERVATIONAL_VALIDATION_FAIL_ASYMMETRIC`：B 3/3 PASS，A 0/3 response non-collapse FAIL。不得重复训练、访问 test 或启动 MS4；当前 Linux 无授权任务。权威判决见 `docs/PHASE35_MS3_SUPERVISOR_AUDIT_2026-08-11.md`。
 
 MS3 只把 MS5 选中的 joint 三极点架构迁移到真实 A/B 交叉控制回路。它验证条件预测、动作分支非坍缩和 logged-action 时间对齐，不验证 `do(valve)`；test 继续禁止。数据源必须是冻结的 `all_merged_10s.csv`：
 
@@ -606,7 +608,7 @@ python -m compileall -q src/phase35 experiments/phase3_5
 python experiments/phase3_5/ms3_real_adaptation.py --dry-run
 ```
 
-状态必须为 `active_gate=ms3`、`active_status=ready_for_linux`、`linux_authorized_gate=ms3`；工作树必须为空；dry-run 必须为 2 candidates×A/B×3 seeds=`12`、`test_authorized=false`。任一红项立即停止。
+原执行时状态必须为 `active_gate=ms3`、`active_status=ready_for_linux`、`linux_authorized_gate=ms3`；工作树为空；dry-run 为 2 candidates×A/B×3 seeds=`12`、`test_authorized=false`。当前注册表已迁移为 `audited` 且 `linux_authorized_gate=null`，不得为复现而回退。
 
 先一次扫描 4 GB 源文件，生成写死交叉配对的两个 cache：
 

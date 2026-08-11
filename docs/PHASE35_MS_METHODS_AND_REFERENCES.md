@@ -389,8 +389,8 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 | MS2-D1 pure delay（已关闭，20% margin 未确认） | 改善方向在 known-truth 跨 split稳定 | 不能传播显式迟延为已证实组件或现场 20 s 真值 |
 | MS2-D2 third order（test 已确认关闭） | frozen known-truth 下三阶 response 相对二阶的增量价值 | 现场阶次唯一性、tau 唯一恢复、迟延/阶次机制区分 |
 | MS2-D3 colored disturbance（validation-only 关闭） | clean response 在一个冻结 AR(1) output nuisance 下通过 validation 压力门 | 现场扰动谱、扰动 observer、过程状态闭合或确认性 test 结论 |
-| MS5 full coupling（代码冻结、待 Linux validation） | 可检验 total-only supervision 下 component absorption，以及 joint/staged 哪个满足冻结资格门 | 现场 free/response 分解、观测因果、完整状态 simulator |
-| MS3 real validation（未实现） | A/B 观测预测与模型敏感性 | 未控制混杂下的反事实效应 |
+| MS5 full coupling（validation 已关闭） | frozen truth 下 joint 可恢复 total/free/response；当前 staged 协议失败 | 现场 free/response 分解、观测因果、完整状态 simulator |
+| MS3 real validation（已审计 asymmetric FAIL） | B 侧有条件预测/动作对齐证据；A 侧当前 response non-collapse 失败 | 未控制混杂下的反事实效应、双侧真实响应已识别 |
 | MS4 new-time E3/E4 | 若门禁通过，可比较经验响应与模型响应 | 超出数据支持域的闭环安全性 |
 
 特别地：
@@ -401,16 +401,10 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 - DeepONet 的 fixed-horizon operator 不能替代 state-closed simulator；
 - synthetic test 阳性不能解除真实 E3 的 common-support 阻断。
 
-## 11. 多阶段耦合训练的冻结原则
+## 11. 多阶段耦合训练的当前结论
 
-真实数据阶段拟采用：
-
-1. 单独预训练或加载 `f_free`；
-2. 冻结 `f_free`，训练 \(g_R\) 并检查动作敏感性/参数健康；
-3. 以较小学习率联合微调，同时保留响应与结构损失；
-4. 分阶段保存 checkpoint，不允许只保留联合阶段最优模型。
-
-该流程现已在 MS5 synthetic runner 中实现为冻结消融，不代表真实数据阶段已验证。MS2-J 只在 response 内部测试了 base/opening/schedule 三阶段训练，且未达到 joint 的 1.10 非劣界；它不能代替 MS5 对 free head 吸收动作信号的检验。MS5 若 joint 资格门全过，按预注册规则直接采用更简单的 joint；只有 joint 失败而 staged 的绝对门和 1.10 相对门全过才传播短阶段训练。
+历史上提出过 `free预训练→冻结free训练response→低学习率联合微调`。MS5 已证明该冻结 staged 协议明显劣于 joint，因此 MS3 实际采用 joint-from-scratch，并以 exact-zero response 的 free-only 作负控。MS3 又显示 joint 在 B 侧形成动作响应、A 侧未过 non-collapse；这不能用恢复旧 staged 方案直接解释。只有 MS3-D 证明经验 A 响应存在而当前模型未恢复时，才允许另立新的 response-identification/staging 协议。
+MS5 已归档各阶段 checkpoint，因此 staged 失败可追溯到冻结的 hold-only 初始化和有限恢复预算；不能外推为所有分阶段方法必然失败。任何未来 staged 新协议仍须保存阶段 checkpoint，并与 joint 在相同数据、更新预算和 selector 下比较，不能只保留联合阶段最优模型。
 
 ## 12. 代码—公式—测试追溯
 
@@ -430,6 +424,7 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 | MS2-D2 third order | `synthetic.py`、`ms2d_order.py`、`ms2d_order_test.py` 与对应 summary | 三阶 truth、21-run freeze、content pin、one-shot ledger、paired episode CI、诊断隔离 |
 | MS2-D3 AR(1) nuisance | `synthetic.py`、`ms2d_disturbance.py`、`summarize_ms2d_disturbance.py` | 平稳/确定性/toggle 不变式、21-run freeze、clean pairing、test lock、诊断隔离 |
 | MS5 full free+response | `synthetic.py`、`full_training.py`、`ms5_full_coupling.py`、`summarize_ms5_full_coupling.py` | legacy hash、component metrics、4-mode CPU smoke、12-run freeze、artifact replay、ordered decision tree、test lock |
+| MS3 real A/B validation | `real_training.py`、`ms3_real_adaptation.py`、`summarize_ms3_real_adaptation.py`、`audit_ms3_real_adaptation.py` | ns timeline、cross-side mapping、joint/free information flow、12-checkpoint replay、UTC-day/block diagnosis、test lock |
 
 ## 13. Reference ledger
 

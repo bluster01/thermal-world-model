@@ -1,6 +1,6 @@
 # Thermal World Model TODO
 
-> 更新：2026-08-11。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。MS5 已完成权重级审计，当前唯一授权为 Phase 3.5-MS3 A/B observational validation。旧 E1–E5 已废弃，Phase 4 暂停。
+> 更新：2026-08-11。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。MS3 已以 A/B 不对称科学失败完成 Supervisor 审计：B 3/3 PASS、A 0/3 FAIL，不重跑、不访问 test。当前只有本地 MS3-D asymmetry diagnosis，无 Linux 授权；旧 E1–E5 已废弃，Phase 4 暂停。
 
 ## 当前主线
 
@@ -10,13 +10,13 @@
 MS0 → MS1 → MS2-V/C/J → MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文
 ```
 
-当前目的不是提前写论文，而是把已通过 synthetic component-recovery 门的完整模型迁移到真实 A/B：
+当前目的不是提前写论文，而是解释为什么同一完整模型迁移到真实 A/B 后只在 B 回路保留动作响应：
 
 \[
 \widehat T_{1:H}=f_{free}(history,context)+g_{response}(context,a_{1:H},r_{1:H})
 \]
 
-MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支吸收。MS3 现在检查真实观测数据中的条件预测、动作非坍缩和时间对齐；`free` 不读取未来动作，`g_response(c,r,r)=0`，开阀长期增益非正。喷水流量不作真值，现场实际阀位仅作为有效喷水作用代理；logged-action 增益仍不等于因果效应。
+MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支吸收。MS3 的真实观测验证现已完成：`free` 不读取未来动作，`g_response(c,r,r)=0`，开阀长期增益非正；但 A 侧 response non-collapse 3/3 失败。喷水流量不作真值，现场实际阀位仅作为有效喷水作用代理；logged-action 增益仍不等于因果效应。
 
 ## Gate 总表
 
@@ -29,8 +29,9 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | MS2-D2 | 三阶惯性压力 | ✓ test 确认 | 仅 frozen known-truth 响应优势 |
 | MS2-D3 | colored nuisance 压力 | ✓ validation-only 关闭 | 不补 test；进入 MS5 |
 | MS5 | 完整 `free+response` 动作吸收 | ✓ CLOSED | joint 选中；冻结 staged 协议拒绝 |
-| **MS3** | A/B 真实数据适配 | ▶ **READY_FOR_LINUX / v1.1 RETRY** | v1 在训练前因 pandas 时间精度停止；12-run 尚未开始，不访问 test |
-| MS4 | SP→阀位→温度闭环响应 | ◻ 冻结 | 等 MS3；不恢复旧 E 匹配 |
+| **MS3** | A/B 真实数据适配 | ✓ **AUDITED FAIL / ASYMMETRIC** | B 3/3 PASS；A 0/3 non-collapse FAIL；不重跑、不访问 test |
+| **MS3-D** | A/B 响应不对称诊断 | ▶ **LOCAL ONLY** | 稳态 SP→阀位→温度经验响应与 checkpoint ±5% IRF 对齐；不训练 |
+| MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-D 前不启动；不恢复旧 E 匹配 |
 
 ## D3 收口
 
@@ -53,9 +54,20 @@ JOINT_SELECTED / STAGED_PROTOCOL_REJECTED
 
 权威审计见 [MS5 Supervisor Audit](docs/PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md)。
 
-## 当前唯一任务：MS3
+## MS3 结果与当前唯一任务：MS3-D
 
-### 冻结 12-run 矩阵
+Linux 12/12 runs 已由本地从 12 个 checkpoint、8,192-anchor episode 与 UTC-day bootstrap 独立重放。archive/trajectory/结构门闭合，test 未访问。冻结结论为：
+
+```text
+AUDITED / OBSERVATIONAL_VALIDATION_FAIL_ASYMMETRIC /
+NO_RETRY / MS4_HOLD
+```
+
+B 动态平均绝对响应为 `0.04289–0.04851°C`，3/3 seeds 的 logged-vs-baseline/shuffled 日块 CI 下界均大于 0；A 仅 `0.00663–0.00854°C`，3/3 均未过 `0.02°C` non-collapse 门。B/A 动态效应比为 `5.03–7.32`，而 B/A 动作剂量中位数比仅 `1.052–1.059`。权威审计见 [MS3 Supervisor Audit](docs/PHASE35_MS3_SUPERVISOR_AUDIT_2026-08-11.md)。
+
+当前只允许本地冻结 MS3-D：在稳定负荷、稳定主汽压力、处理前主汽温稳定的 SP held-step 中，分别估计 A/B 的 `SP→实际阀位→末过温度` 响应，再与现有 checkpoint 的标准化 `±5%` IRF 对齐。动态工况可作分层诊断，但不能与稳态主估计混合。MS3-D 不训练、不访问 test，也不事后修改 MS3 阈值。
+
+### 已执行的冻结 12-run 矩阵
 
 | 候选 | side/seeds | 作用 |
 |---|---|---|
@@ -64,7 +76,7 @@ JOINT_SELECTED / STAGED_PROTOCOL_REJECTED
 
 合计 12 runs；history=96、horizon=60，最多 40 epochs×100 updates。数据从冻结 SHA 的 `all_merged_10s.csv` 构造两个控制回路 cache：A阀→右(B)温、B阀→左(A)温。只运行 chronological train/validation，不访问 test。
 
-### 判决规则
+### 已执行的判决规则
 
 1. 12/12 manifest/history/checkpoint/episode/结构合同闭合；
 2. joint/free logged MAE ratio `≤1.05`；
@@ -80,8 +92,8 @@ JOINT_SELECTED / STAGED_PROTOCOL_REJECTED
 
 | 本地 / Codex | Linux 远端 |
 |---|---|
-| 设计协议、写代码和测试、冻结矩阵、审计日志与重算统计、迁移状态 | 只在指定干净 commit 执行 README 第 17 节命令，原样提交结果 |
-| 只有本地可改 TODO、注册表、阈值、结论和 Supervisor 文档 | 不改 `configs/src/experiments/tests/docs`，不挑 seed、不补跑、不后处理 summary |
+| 设计并执行不训练的 MS3-D 数据诊断；审计日志、重算统计、迁移状态 | 当前无授权任务；不得重跑 MS3、访问 test 或启动 MS4 |
+| 只有本地可改 TODO、注册表、阈值、结论和 Supervisor 文档 | 等本地冻结新矩阵/命令后才能恢复执行角色 |
 
 ## MS3 执行清单
 
@@ -91,11 +103,13 @@ JOINT_SELECTED / STAGED_PROTOCOL_REJECTED
 | 2 | 冻结 all_merged source SHA 与交叉 side mapping | 本地 | ✓ |
 | 3 | cross-cache、joint/free 训练、runner、summary TDD | 本地 | ✓ |
 | 4 | pandas 2/3 纳秒修复、专项/完整回归、compile、dry-run、状态检查 | 本地 | ✓ |
-| 5 | 用 v1.1 覆盖旧 cache 并执行 12-run validation | Linux | ◻ 当前唯一远端任务；旧 v1 无训练产物 |
-| 6 | checkpoint/episode/UTC-day bootstrap 独立复算 | 本地 | ◻ 等回传 |
-| 7 | 若双侧 2/3 seed 过门，冻结 MS4 闭环模型验证 | 本地 | ◻ 不提前启动 |
+| 5 | 用 v1.1 覆盖旧 cache 并执行 12-run validation | Linux | ✓；summary exit 2 为科学失败 |
+| 6 | checkpoint/episode/UTC-day bootstrap 与连续日块稳健性复算 | 本地 | ✓ |
+| 7 | 记录 asymmetric FAIL，冻结重跑/test/MS4 | 本地 | ✓ |
+| 8 | MS3-D 稳态 A/B 经验响应与 checkpoint IRF 对齐 | 本地 | ▶ 当前唯一任务 |
+| 9 | 根据经验 A/B 比例决定 side-specific scale 或新 response-identification 协议 | 本地 | ◻ 等 MS3-D |
 
-Linux 唯一运行说明见 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)。
+Linux 历史运行说明保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，当前不构成重复运行授权。
 
 ## 不可提前声称
 

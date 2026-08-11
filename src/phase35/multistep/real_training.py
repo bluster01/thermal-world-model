@@ -289,7 +289,7 @@ def shuffled_delta_paths(
     baseline_valve: np.ndarray,
     seed: int,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Permute delta trajectories within 10%-baseline bins without fixed points."""
+    """Permute delta paths within baseline bins; report unavoidable singleton fixed points."""
 
     future = np.asarray(future_valve, dtype=np.float32)
     baseline = np.asarray(baseline_valve, dtype=np.float32)

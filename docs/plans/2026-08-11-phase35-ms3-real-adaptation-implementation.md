@@ -1,5 +1,7 @@
 # Phase 3.5-MS3 实施计划
 
+> 执行状态：已完成并审计。B 3/3 PASS、A 0/3 response non-collapse FAIL；不重跑、不访问 test，正式 MS4 HOLD。权威判决见 [`PHASE35_MS3_SUPERVISOR_AUDIT_2026-08-11.md`](../PHASE35_MS3_SUPERVISOR_AUDIT_2026-08-11.md)。
+
 ## 目标
 
 实现并冻结 A/B 交叉控制回路的 validation-only 真实适配批次；Linux 只生成 cache、训练 12 runs、运行冻结汇总并原样回传。
