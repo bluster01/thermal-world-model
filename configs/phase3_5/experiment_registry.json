@@ -1,8 +1,8 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
   "updated_at": "2026-08-11",
-  "active_gate": "ms3_d",
-  "linux_authorized_gate": null,
+  "active_gate": "ms3_r",
+  "linux_authorized_gate": "ms3_r",
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -14,6 +14,7 @@
     "ms5",
     "ms3",
     "ms3_d",
+    "ms3_r",
     "ms4"
   ],
   "status_vocabulary": [
@@ -541,6 +542,49 @@
       "advisories": [
         "checkpoint 4.632倍侧差分布于opening map、scheduled gain与dynamics；未被局部温降和末温主对比复现",
         "另一回路安静与严格600s clean support不足；CI跨0不等于物理等价"
+      ]
+    },
+    "ms3_r": {
+      "title": "真实点位响应辨识与模型扩充",
+      "status": "ready_for_linux",
+      "owner": "local_design_code_linux_batch_run_local_audit",
+      "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
+      "scripts": {
+        "core": {
+          "path": "src/phase35/ms3r.py",
+          "status": "active",
+          "required": true
+        },
+        "gate1_runner": {
+          "path": "experiments/phase3_5/ms3r_gate1_point_identifiability.py",
+          "status": "active",
+          "required": true
+        },
+        "gate1_replay": {
+          "path": "experiments/phase3_5/audit_ms3r_gate1_point_identifiability.py",
+          "status": "active",
+          "required": true
+        }
+      },
+      "artifacts": {
+        "gate1_config": {
+          "path": "configs/phase3_5/ms3r_gate1_point_identifiability.json",
+          "required": true
+        },
+        "design": {
+          "path": "docs/plans/2026-08-11-phase35-ms3r-response-identification-design.md",
+          "required": true
+        },
+        "gate1_implementation_plan": {
+          "path": "docs/plans/2026-08-11-phase35-ms3r-gate1-implementation.md",
+          "required": true
+        }
+      },
+      "decision": "READY_FOR_LINUX / GATE_A_SINGLE_BATCH：仅授权 ms3r_gate_a_v1 一次执行；预计30分钟、2小时硬停、8 CPU/16GiB、不自动重试；禁止启动 Gate B/C",
+      "advisories": [
+        "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
+        "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
+        "Linux 按批执行并回传机器产物；本地负责唯一 supervisor 判决"
       ]
     },
     "ms4": {

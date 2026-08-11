@@ -2,6 +2,37 @@
 
 本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
+> 当前状态：`ms3_r=ready_for_linux`、`linux_authorized_gate=ms3_r`。授权仅覆盖下述 `ms3r_gate_a_v1` 单批命令；旧 42-run/E 系列及 Gate B/C 不得执行。
+
+## MS3-R Gate A：点位与可辨识性批次
+
+Gate A 不训练正式模型、不访问 test、不输出科学 PASS。授权边界是一个 batch、一次 attempt、一个冻结命令；预计 30 分钟，硬上限 2 小时，最多 8 CPU threads、16 GiB RSS，不需要 GPU。Linux 在注册表同时满足 `active_gate=ms3_r`、`active_status=ready_for_linux`、`linux_authorized_gate=ms3_r` 后运行：
+
+```bash
+export PYTHONPATH="$PWD"
+export PH35_MS3_CACHE_A=/data/thermal-world-model/phase3_5/ms3_cross_A.npz
+export PH35_MS3_CACHE_B=/data/thermal-world-model/phase3_5/ms3_cross_B.npz
+export OMP_NUM_THREADS=8
+export MKL_NUM_THREADS=8
+
+timeout --signal=TERM --kill-after=60s 7200s \
+python experiments/phase3_5/ms3r_gate1_point_identifiability.py \
+  --config configs/phase3_5/ms3r_gate1_point_identifiability.json \
+  --cache-a "$PH35_MS3_CACHE_A" \
+  --cache-b "$PH35_MS3_CACHE_B" \
+  --output-dir results/phase3_5/ms3r_gate1_point_identifiability
+```
+
+必须原样回传 stdout/stderr、退出码、wall-clock、峰值 RSS、环境、Git SHA 和整个输出目录。以下任一情况立即停止并回传，不自动重试：
+
+- 超过 2 小时或 RSS 接近 16 GiB；
+- 退出码非 0、出现非有限值、SHA/缓存/时间戳合同失败；
+- 必需的 8 个产物有任意缺失；
+- 状态注册表不是本批授权，或工作树不干净；
+- 结果不符合预期，但程序本身正常结束——不得据此调参、换点位或追加实验。
+
+远端不得运行本地 replay、修改阈值、补跑变体、启动 MS3-RA/R3-R5/B0-B5，或更新 TODO/registry。若超时或失败，唯一允许动作是返回现场证据，由本地决定优化代码、缩减诊断或签发新的 batch。Gate A 完整回传后，本地只进行一次 artifact replay 与 supervisor 判决。
+
 ## 0. 环境与路径
 
 从仓库根目录执行。以下路径仅为示例，按远端挂载修改环境变量，不修改版本化配置：
