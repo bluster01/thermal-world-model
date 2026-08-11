@@ -75,13 +75,15 @@ def _load_events(path: Path) -> list[dict[str, Any]]:
 
 
 def _paired_differences(
-    events: list[dict[str, Any]], key: str
+    events: list[dict[str, Any]], key: str, direction: str | None = None
 ) -> tuple[list[str], np.ndarray]:
     daily: dict[str, dict[str, list[float]]] = defaultdict(
         lambda: {"A": [], "B": []}
     )
     for event in events:
         if not event["primary_dual_steady"]:
+            continue
+        if direction is not None and event["direction"] != direction:
             continue
         value = event.get(key)
         if value is None or not math.isfinite(float(value)):
@@ -207,6 +209,29 @@ def run_audit(results_root: Path) -> dict[str, Any]:
         )
 
     field_intervals = {key: recomputed[key]["ci95"] for key in PHYSICAL_KEYS}
+    direction_stratified: dict[str, Any] = {}
+    for direction_index, direction in enumerate(("sp_up", "sp_down")):
+        direction_stratified[direction] = {
+            "physical_valve_direction": (
+                "expected_valve_closing" if direction == "sp_up" else "expected_valve_opening"
+            ),
+            "metrics": {},
+        }
+        for index, key in enumerate(metric_keys):
+            days, differences = _paired_differences(events, key, direction)
+            direction_stratified[direction]["metrics"][key] = {
+                "paired_utc_day_count": len(days),
+                "paired_utc_days": days,
+                "median_B_minus_A": (
+                    float(np.median(differences)) if len(differences) else None
+                ),
+                "ci95": independent_bootstrap_median_ci(
+                    differences,
+                    samples=samples,
+                    seed=base_seed + 50_000 + direction_index * 10_000 + index * 100,
+                ),
+                "diagnostic_only": True,
+            }
     no_field_lower_positive = all(
         interval is None or interval[0] <= 0 for interval in field_intervals.values()
     )
@@ -238,6 +263,7 @@ def run_audit(results_root: Path) -> dict[str, Any]:
         "max_numeric_recomputation_error": max_error,
         "checkpoint_B_to_A_abs_h600_effect_ratio_median": model_ratio,
         "field_physical_contrast_ci95": field_intervals,
+        "direction_stratified_paired_day_diagnostic": direction_stratified,
         "supervisor_label": expected_label,
         "passes": passes,
         "independent_unit": "UTC_day",
