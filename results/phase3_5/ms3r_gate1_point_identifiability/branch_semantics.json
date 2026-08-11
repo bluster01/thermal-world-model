@@ -1,0 +1,22 @@
+{
+  "residual_branch_label": "past_state_and_unmeasured_disturbance_residual_branch",
+  "response_branch_label": "constrained_valve_conditional_response_branch",
+  "residual_branch_future_action_access": false,
+  "response_constant_action_identity_required": true,
+  "semantic_promotion_allowed": false,
+  "prohibited_claims": [
+    "explicit_combustion_model",
+    "measured_spray_flow_model",
+    "identified_open_loop_plant",
+    "arbitrary_do_valve",
+    "independent_test",
+    "ms4_release"
+  ],
+  "structural_probe": {
+    "probe_kind": "untrained_structural_information_flow_not_field_evidence",
+    "residual_branch_future_action_permutation_max_error": 0.0,
+    "response_constant_action_identity_max_error": 0.0,
+    "future_action_prefix_leakage_max_error": 0.0,
+    "semantic_promotion_allowed": false
+  }
+}

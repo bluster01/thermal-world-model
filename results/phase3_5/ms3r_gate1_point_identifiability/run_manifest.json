@@ -1,0 +1,37 @@
+{
+  "protocol_version": "phase3.5-ms3r-gate1-v1",
+  "batch_id": "ms3r_gate_a_v1",
+  "execution_git_sha": "13170981749b17c92b6a440716f4651f4587eee9",
+  "config_path": "configs/phase3_5/ms3r_gate1_point_identifiability.json",
+  "config_sha256": "f1a551263b58acb585997bf0ac11d116fc56153141754f8484853f3458b7233e",
+  "parent_matrix_path": "configs/phase3_5/ms3_real_adaptation_matrix.json",
+  "parent_matrix_sha256": "b2e69d78b949334bfd5d92d100bcb730f444758c57d90920a451138a5b831f8a",
+  "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+  "cache_paths": {
+    "A": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/ms3_cross_A.npz",
+    "B": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/ms3_cross_B.npz"
+  },
+  "cache_sha256": {
+    "A": "a75cde934e1d459c629959a6921a80d31ec1bf998468525ef82a4ffaaa3f29b8",
+    "B": "7005d027b97cad9e26c2f8f36ed8ffb77aa83a68ed83d6da786f0369abe0b8fa"
+  },
+  "split": "validation",
+  "split_bounds": [
+    715397,
+    953862
+  ],
+  "python_version": "3.11.15",
+  "numpy_version": "2.3.5",
+  "test_accessed": false,
+  "training_executed": false,
+  "automatic_scientific_pass": null,
+  "execution_budget": {
+    "maximum_attempts": 1,
+    "expected_wall_clock_minutes": 30,
+    "hard_wall_clock_seconds": 7200,
+    "cpu_threads_max": 8,
+    "gpu_required": false,
+    "expected_peak_rss_gib_max": 16,
+    "automatic_retry_allowed": false
+  }
+}
