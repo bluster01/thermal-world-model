@@ -35,10 +35,12 @@ python experiments/phase3_5/experiment_status.py --check --json
 | MS2-D3 | CLOSED | 21-run validation 主门通过；按预算不追加 test，不称 confirmatory |
 | MS5 | CLOSED | joint component recovery validation 通过；冻结 staged 协议拒绝 |
 | MS3 | AUDITED FAIL | B 3/3 PASS；A 0/3 response non-collapse FAIL；不重跑、不访问 test |
-| MS3-D | LOCAL ONLY | 稳态 A/B `SP→阀位→温度` 经验响应与 checkpoint IRF 对齐，不训练 |
-| MS4 | HOLD | MS3-D 前不启动；不恢复旧 E 匹配 |
+| MS3-D | AUDITED | B 阀位持久性更强；checkpoint A attenuation 未获现场热链路支持；单侧归因不足 |
+| MS4 | HOLD | 新 MS3-R response-identification 协议前不启动；不恢复旧 E 匹配 |
 
 ## 4. Linux 最新同步与本地审计
+
+本地 MS3-D 在 `1ad3347` 执行 validation-only held-step 诊断，并由 `c559310` 的独立复算器从事件 JSONL 重建全部日级统计，最大误差 0。主层 A=41/B=42 事件、各19日、17个配对日；B-A 阀位响应在 H300/H600 为 `+2.947 [+0.544,+5.486]` 与 `+2.627 [+1.655,+4.107] %/°C-SP`，但局部温降、阀位归一化温降和末温主对比均跨0。checkpoint `+5%` 的 B/A H600 效应比中位数 `4.632` 由 opening map、scheduled gain 与 dynamics 共同形成，未获现场热链路复现。主层另一回路安静仅 A=2/B=1，严格600s且阀位稳定仅A=1/B=3，因此标签为 `MODEL_A_RESPONSE_ATTENUATION_EXCEEDS_FIELD_EVIDENCE / SIDE_ATTRIBUTION_INCONCLUSIVE`；不是物理等价，也未证明 free-head absorption。权威判决见 [`PHASE35_MS3D_SUPERVISOR_AUDIT_2026-08-11.md`](PHASE35_MS3D_SUPERVISOR_AUDIT_2026-08-11.md)。
 
 Linux 在 `597180f` 回传 MS3 v1.1 validation，实际训练 commit 为 `798fcde`。12/12 runs、12-file checkpoint archive、manifest/cache timeline、结构门和 no-test 边界闭合；本地重建全部 validation anchors，逐 checkpoint 在 x86 CPU 重放，aggregate metric 最大差 `1.1623e-5`、单窗口最大差 `8.4734e-4°C`，冻结 CI 下界漂移 `<9.5e-8°C`，所有判决一致。B 回路动态效应 `0.04289–0.04851°C`、3/3 seeds 通过；A 仅 `0.00663–0.00854°C`、0/3 通过。B/A 效应比 `5.03–7.32`，动作剂量中位数比仅 `1.052–1.059`；标准化 +5% H60 checkpoint 响应也显示 B 约为 A 的 4–5 倍。最终标签 `AUDITED / OBSERVATIONAL_VALIDATION_FAIL_ASYMMETRIC / NO_RETRY / MS4_HOLD`。权威判决见 [`PHASE35_MS3_SUPERVISOR_AUDIT_2026-08-11.md`](PHASE35_MS3_SUPERVISOR_AUDIT_2026-08-11.md)。
 
@@ -79,7 +81,7 @@ Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。�
 
 ## 5. 当前下一步
 
-MS3 已审计为 A/B 不对称 FAIL，Linux 授权已清空。当前只做本地 MS3-D：从稳定负荷、稳定主汽压力、处理前温度稳定的 SP held-step 估计 A/B 经验闭环响应，并与现有 checkpoint `±5%` IRF 对齐。动态工况只作分层描述；不重训、不改门槛、不访问 test。经验 A 若同样弱，后续转向 side-specific scale；经验 A 若与 B 接近，另立 response-identification 新协议。在 MS3-D 审计前，正式 MS4、模型选择和论文均保持 HOLD。
+MS3-D 已审计，Linux 授权仍为空。当前只在本地冻结 MS3-R：用测得的实际阀位、局部 `Tin-Tout` 温降和末温把 response chain 分段监督，并比较 MIMO/SISO、shared-physics+side-scale/独立侧、方向 opening map 与 response-aware selector。它是新协议，不是 MS3 retry；在设计、代码和本地 smoke 通过前不训练、不生成 Linux 矩阵。正式 MS4、test、模型选择和论文均保持 HOLD。
 
 ## 6. 上下文读取优先级
 

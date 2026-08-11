@@ -4,7 +4,7 @@
 
 ## 一句话状态
 
-项目已完成 MS0、MS1、MS2-V/C/J、MS2-D1/D2/D3、MS5 和 MS3 validation。MS3 的 12/12 checkpoint/episode 已独立重放：B 回路 3/3 seeds 通过 observational action-alignment 门，A 回路 0/3 response non-collapse 失败，整体以 `OBSERVATIONAL_VALIDATION_FAIL_ASYMMETRIC` 审计关闭，不重跑、不访问 test。项目**尚未完成真实模型定性，也未进入论文收口**；当前只做本地 MS3-D 稳态 A/B 响应不对称诊断，正式 MS4 继续 HOLD。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
+项目已完成 MS0、MS1、MS2-V/C/J、MS2-D1/D2/D3、MS5、MS3 和 MS3-D。MS3-D 的 83 个主层 held-step 事件显示 B 阀位在 H300/H600 更持久，但局部温降和末温未复现 checkpoint 的 4.63 倍 B/A 差；严格干净事件和另一回路安静支持不足，不能作单侧 plant gain 或等价性结论。项目**尚未完成真实模型定性，也未进入论文收口**；当前只设计本地 MS3-R 分段/MIMO response-identification，正式 MS4、test 和 Linux 执行继续 HOLD。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
 
 ## Phase 3.5 当前状态
 
@@ -21,7 +21,7 @@
 | 正式结果 | 仅 development validation | 模型 test 尚未打开；A/B 旧 event test 标签已暴露，未来事件证据需新时间块 |
 | MS5 完整耦合 | validation-only 已关闭 | joint known-truth component recovery PASS；staged protocol FAIL；不外推现场 |
 | MS3 真实适配 | audited asymmetric fail | B 3/3 PASS；A 0/3 non-collapse FAIL；checkpoint/episode 重放通过；test 禁止 |
-| MS3-D 不对称诊断 | local only | 稳态 SP→实际阀位→温度经验响应与 checkpoint ±5% IRF 对齐；不训练 |
+| MS3-D 不对称诊断 | audited | B 阀位持久性更强；模型 A response attenuation 未获现场热链路支持；归因仍受双回路联动限制 |
 
 Phase 3.5 的目标不是证明质量/能量守恒，而是建立分层物理一致性：阀门动作可辨认、经验温度响应可复核、模型反事实响应能复现该曲线、SP 未执行时模型不制造阀门效应。完整协议见 [`PHASE3_5_EXPERIMENT_DESIGN.md`](PHASE3_5_EXPERIMENT_DESIGN.md)。
 
@@ -150,6 +150,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-下一判决点是本地 MS3-D asymmetry diagnosis。MS3 v1.1 已按冻结矩阵执行并整体失败：B 3/3 seeds 通过，A 0/3 response non-collapse 失败。当前不重跑、不访问 test、不启动正式 MS4；先在负荷、主汽压力和处理前温度稳定的 SP held-step 中估计 A/B `SP→实际阀位→末过温度` 经验响应，并与已归档 checkpoint 的 `±5%` IRF 对齐。若经验 A 也弱，则后续采用 side-specific empirical scale；若经验 A 与 B 接近，则另立 response-identification 新协议。两条路径都不改变 MS3 的 FAIL 判决，也不能称 `do(valve)`。
+下一判决点是本地 MS3-R 设计。MS3-D 已将 83 个主层事件、17 个配对 UTC 日和 checkpoint attenuation 分解完成独立复算：B 的阀位轨迹更持久，但现场局部温降与末温不足以支持 4.63 倍 thermal side ratio；该结果也不构成 A/B 等价或 free-head absorption 证明。当前不重跑 MS3、不访问 test、不启动正式 MS4；先冻结 `SP→双阀→双局部温降→双末温` 的分段 MIMO 监督、方向 opening map、shared/side-specific 参数和 response-aware selector，再决定是否值得生成 Linux 训练矩阵。
 
 完整顺序为 MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 保持暂停。

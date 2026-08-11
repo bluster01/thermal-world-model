@@ -657,3 +657,16 @@ echo $? > results/phase3_5/ms3_real_adaptation/remote_execution/summary_exit_cod
 ```
 
 summary exit 2 表示冻结科学门未通过，不是无效运行；12 个目录、summary、archive、两个 cache manifest 和全部日志仍须原样提交。Linux 只提交 `results/phase3_5/ms3_real_adaptation/**` 以及其中复制的 cache manifests；不提交 cache `.npz`，不改代码/配置/文档/状态，不补跑、不改阈值、不访问 test、不启动 MS4。
+
+## 18. MS3-D 本地诊断归档（无 Linux 授权）
+
+MS3-D 已在本地以 `phase3.5-ms3d-v1` 完成。它只读取 MS3 A/B cache 的 validation split，不训练、不访问 test。以下命令用于审计性复现，不构成远端任务：
+
+```bash
+python experiments/phase3_5/ms3d_asymmetry_diagnosis.py \
+  --cache-a /external/path/cache_A.npz \
+  --cache-b /external/path/cache_B.npz
+python experiments/phase3_5/audit_ms3d_asymmetry_diagnosis.py
+```
+
+运行前工作树必须干净，cache source/matrix/reference SHA 必须与 config 一致。权威结论是 `MODEL_A_RESPONSE_ATTENUATION_EXCEEDS_FIELD_EVIDENCE / SIDE_ATTRIBUTION_INCONCLUSIVE`：B 阀位持久性更强，但局部温降和末温不支持把 checkpoint 的 4.63 倍侧差解释成已验证 plant gain。注册表状态为 `audited`、`linux_authorized_gate=null`；不得在 Linux 重跑或据此启动 MS4。

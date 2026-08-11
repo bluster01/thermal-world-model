@@ -1,6 +1,6 @@
 # Thermal World Model TODO
 
-> 更新：2026-08-11。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。MS3 已以 A/B 不对称科学失败完成 Supervisor 审计：B 3/3 PASS、A 0/3 FAIL，不重跑、不访问 test。当前只有本地 MS3-D asymmetry diagnosis，无 Linux 授权；旧 E1–E5 已废弃，Phase 4 暂停。
+> 更新：2026-08-11。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。MS3-D 已完成并审计：B 阀位响应更持久，但现场局部/末端热响应未支持 checkpoint 的 4.63 倍侧差。MS3 仍为 FAIL，当前只允许本地设计 MS3-R response-identification；无 Linux 授权、不访问 test、不启动 MS4。旧 E1–E5 已废弃，Phase 4 暂停。
 
 ## 当前主线
 
@@ -30,8 +30,8 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | MS2-D3 | colored nuisance 压力 | ✓ validation-only 关闭 | 不补 test；进入 MS5 |
 | MS5 | 完整 `free+response` 动作吸收 | ✓ CLOSED | joint 选中；冻结 staged 协议拒绝 |
 | **MS3** | A/B 真实数据适配 | ✓ **AUDITED FAIL / ASYMMETRIC** | B 3/3 PASS；A 0/3 non-collapse FAIL；不重跑、不访问 test |
-| **MS3-D** | A/B 响应不对称诊断 | ▶ **LOCAL ONLY** | 稳态 SP→阀位→温度经验响应与 checkpoint ±5% IRF 对齐；不训练 |
-| MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-D 前不启动；不恢复旧 E 匹配 |
+| **MS3-D** | A/B 响应不对称诊断 | ✓ **AUDITED** | 模型 A attenuation 未获现场热链路支持；B 阀位持久性更强；单侧 plant 归因不足 |
+| MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-R 冻结前不启动；不恢复旧 E 匹配 |
 
 ## D3 收口
 
@@ -54,7 +54,7 @@ JOINT_SELECTED / STAGED_PROTOCOL_REJECTED
 
 权威审计见 [MS5 Supervisor Audit](docs/PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md)。
 
-## MS3 结果与当前唯一任务：MS3-D
+## MS3/MS3-D 结果与当前唯一任务：MS3-R 设计
 
 Linux 12/12 runs 已由本地从 12 个 checkpoint、8,192-anchor episode 与 UTC-day bootstrap 独立重放。archive/trajectory/结构门闭合，test 未访问。冻结结论为：
 
@@ -65,7 +65,9 @@ NO_RETRY / MS4_HOLD
 
 B 动态平均绝对响应为 `0.04289–0.04851°C`，3/3 seeds 的 logged-vs-baseline/shuffled 日块 CI 下界均大于 0；A 仅 `0.00663–0.00854°C`，3/3 均未过 `0.02°C` non-collapse 门。B/A 动态效应比为 `5.03–7.32`，而 B/A 动作剂量中位数比仅 `1.052–1.059`。权威审计见 [MS3 Supervisor Audit](docs/PHASE35_MS3_SUPERVISOR_AUDIT_2026-08-11.md)。
 
-当前只允许本地冻结 MS3-D：在稳定负荷、稳定主汽压力、处理前主汽温稳定的 SP held-step 中，分别估计 A/B 的 `SP→实际阀位→末过温度` 响应，再与现有 checkpoint 的标准化 `±5%` IRF 对齐。动态工况可作分层诊断，但不能与稳态主估计混合。MS3-D 不训练、不访问 test，也不事后修改 MS3 阈值。
+MS3-D 的独立事件/日块复算误差为 0。主层为 A=41、B=42 个事件，各 19 日、17 个可配对日。B-A 的阀位响应差在 H300/H600 为 `+2.947 [+0.544,+5.486]` 与 `+2.627 [+1.655,+4.107] %/°C-SP`；局部温降、阀位归一化温降和 H600 末温主对比均跨 0。严格 600 s 且阀位稳定仅 A=1/B=3，主层另一回路安静仅 A=2/B=1，故不能升级成单侧 plant gain 或等价性结论。权威审计见 [MS3-D Supervisor Audit](docs/PHASE35_MS3D_SUPERVISOR_AUDIT_2026-08-11.md)。
+
+当前唯一任务是本地冻结 MS3-R：显式分成 `SP→A/B阀位`、`双阀→双侧局部Tin-Tout`、`局部热状态→双侧末温` 三段，并比较 shared-physics+side-scale、独立侧、方向性 opening map、MIMO/SISO mediator 和 response-aware/terminal-only selector。尚不训练、不生成 Linux 矩阵。
 
 ### 已执行的冻结 12-run 矩阵
 
@@ -92,7 +94,7 @@ B 动态平均绝对响应为 `0.04289–0.04851°C`，3/3 seeds 的 logged-vs-b
 
 | 本地 / Codex | Linux 远端 |
 |---|---|
-| 设计并执行不训练的 MS3-D 数据诊断；审计日志、重算统计、迁移状态 | 当前无授权任务；不得重跑 MS3、访问 test 或启动 MS4 |
+| 设计 MS3-R 分段/MIMO response-identification；冻结信息流、selector 和消融 | 当前无授权任务；不得重跑 MS3、访问 test 或启动 MS4 |
 | 只有本地可改 TODO、注册表、阈值、结论和 Supervisor 文档 | 等本地冻结新矩阵/命令后才能恢复执行角色 |
 
 ## MS3 执行清单
@@ -106,8 +108,8 @@ B 动态平均绝对响应为 `0.04289–0.04851°C`，3/3 seeds 的 logged-vs-b
 | 5 | 用 v1.1 覆盖旧 cache 并执行 12-run validation | Linux | ✓；summary exit 2 为科学失败 |
 | 6 | checkpoint/episode/UTC-day bootstrap 与连续日块稳健性复算 | 本地 | ✓ |
 | 7 | 记录 asymmetric FAIL，冻结重跑/test/MS4 | 本地 | ✓ |
-| 8 | MS3-D 稳态 A/B 经验响应与 checkpoint IRF 对齐 | 本地 | ▶ 当前唯一任务 |
-| 9 | 根据经验 A/B 比例决定 side-specific scale 或新 response-identification 协议 | 本地 | ◻ 等 MS3-D |
+| 8 | MS3-D 稳态 A/B 经验响应与 checkpoint IRF 对齐 | 本地 | ✓；独立复算通过 |
+| 9 | 根据经验链路与 checkpoint 差异冻结 MS3-R response-identification 协议 | 本地 | ▶ 当前唯一任务 |
 
 Linux 历史运行说明保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，当前不构成重复运行授权。
 

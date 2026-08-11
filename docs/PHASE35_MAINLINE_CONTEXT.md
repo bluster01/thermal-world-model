@@ -4,9 +4,9 @@
 
 - Material Type: active experiment-purpose specification
 - Scope: Phase 3.5-MS0–MS5、真实数据适配与闭环响应验证
-- Verification Status: ANALYZED；MS3 validation 已完成 checkpoint/episode 独立审计
+- Verification Status: ANALYZED；MS3 与 MS3-D 已完成独立审计
 - Deprecated Track: 原 E1–E5，仅作历史失败证据
-- Active Decision: MS3 以 A/B 不对称科学失败审计；不重跑、不访问 test，当前仅做本地 MS3-D 诊断
+- Active Decision: MS3 保持 A/B 不对称 FAIL；MS3-D 显示模型 A attenuation 未获现场热链路支持，当前仅设计本地 MS3-R
 
 ## 1. 一句话主线
 
@@ -32,6 +32,7 @@ g_{response}(\text{context},a_{1:H},r_{1:H}),
 | 结构压力 | MS2-D1/D2/D3 | 纯迟延、额外阶次、未建模扰动下结论是否仍成立？ |
 | 完整耦合 | MS5 | `free+response` 联合训练时动作响应会不会被 free head 吸收？ |
 | 真实适配 | MS3 | 在 A/B 观测数据上能否保持预测、结构和动作敏感性？ |
+| 不对称诊断 | MS3-D | 模型侧差来自可观察闭环链还是 response operator attenuation？ |
 | 物理闭环 | MS4 | 是否复现 SP→控制器→阀位→温度的现场闭环响应？ |
 
 顺序冻结为：
@@ -60,7 +61,7 @@ Koopman、PI-ODE 与 DeepONet 的历史 synthetic 结果不构成最终路线冠
 
 现场物理验证改由 MS4 承担。当前最强外部锚点是 SP held-step 的闭环响应：A/B 两侧具有双向事件和 110+ 日块，`SP↑→T2↑→Tm↑` 方向率约 70–86%。它验证的是包含串级 PID 的闭环系统，不是开环 `do(valve)`；双侧 SP 联动仍限制单侧归因。
 
-## 5. 当前 Gate：MS3-D local diagnosis
+## 5. 当前 Gate：MS3-D audited，MS3-R local design
 
 MS2-D 采用顺序压力测试，不一次铺开大矩阵：
 
@@ -78,7 +79,9 @@ MS5 已证明在冻结 full-coupled synthetic truth 下，total-only joint 能�
 
 MS3 使用 SHA 冻结的 `all_merged_10s.csv` 构造两个控制回路 cache，把现场映射写死为 A阀→右(B)温、B阀→左(A)温。冻结的 joint/free-only×A/B×3 seeds=12 已完成。B 动态效应为 0.04289–0.04851°C、3/3 通过；A 为 0.00663–0.00854°C、0/3 通过。B/A 效应比 5.03–7.32，但动作剂量中位数比仅 1.052–1.059；标准化 +5% H60 checkpoint 响应同样显示 B 约为 A 的 4–5 倍。
 
-当前 MS3-D 不训练模型，只在负荷、主汽压力和处理前主汽温稳定的 SP held-step 中估计 A/B 经验 `SP→阀位→温度` 响应，并与现有 checkpoint IRF 对齐。若经验 A 也弱，后续使用 side-specific empirical scale；若经验 A 与 B 接近，则另立 response-identification 新协议。两种情形都不能把 MS3 v1.1 事后改判 PASS。
+MS3-D 已在 validation-only held-step 中完成：B 的 H300/H600 阀位执行更持久，且开/关方向分层均保留 H600 差；局部 `Tin-Tout` 温降、阀位归一化温降和末温没有复现 checkpoint `+5%` 响应的 `4.632` 倍侧差。由于另一回路几乎总在动作、严格 clean support 极少，结论只能是模型 A response attenuation 未获现场链路 corroboration，不能写成 A/B 等价或 absorption 已识别。
+
+下一步 MS3-R 先做本地设计：用 `SP_A/SP_B→valve_A/valve_B→drop_left/drop_right→T_left/T_right` 的测得中间状态分段监督，plant mediator 使用双阀双输出 MIMO；free/residual 不读取未来动作，checkpoint selector 同时报 terminal forecast 与 intermediate response。比较 shared physics+side scale、完全独立 sides、方向性 opening map、MIMO/SISO 和 response-aware/terminal-only selector。冻结前不训练、不访问 test、不授权 Linux。
 
 ## 6. 当前不能声称
 

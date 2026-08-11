@@ -2,7 +2,7 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-11）**：Phase 4 暂停，先完成 Phase 3.5-MS 全系列，尚未进入论文收口。MS3 的 12-run A/B observational validation 已完成 checkpoint/episode 独立重放，结论为不对称科学失败：B 回路 3/3 seeds 通过，A 回路 0/3 response non-collapse 失败。不得重跑、降低门槛或只保留 B；test 与正式 MS4 继续冻结。当前唯一任务是本地 MS3-D：用稳态 SP→实际阀位→温度经验响应判断 A 侧是真实增益较弱还是模型 response absorption。Linux 当前无授权；旧 E1–E5 仍废弃。
+> **当前判断（2026-08-11）**：Phase 4 暂停，Phase 3.5-MS 尚未进入论文收口。MS3-D 已完成 validation-only SP held-step 诊断：B 的实际阀位在 H300/H600 更持久，但 A/B 局部减温温降和末端温度没有复现 checkpoint 的 `4.63` 倍侧差。该差异已写入 learned opening map、scheduled gain 和 dynamics，却未获当前现场链路支持；不能据此声称 A/B 物理等价或已经证明 free-head absorption。MS3 保持 FAIL，test 与正式 MS4 继续冻结；下一步仅在本地冻结 MS3-R 分段/MIMO response-identification 架构。Linux 当前无授权，旧 E1–E5 仍废弃。
 
 ## 当前入口
 
@@ -22,7 +22,7 @@ Phase 4 的 [实验计划](docs/PHASE4_EXPERIMENT_PLAN.md) 和 Fan2017/2020/2021
 
 ## 当前主要实验目的
 
-完整目标是验证结构化多步响应从“已知真值可解”到“结构失配稳健”、再到“完整 `free+response` 不吸收动作”、真实数据适配和现场闭环响应的一条连续证据链。D2/D3 与 MS5 已完成 synthetic 方法门；MS5 选择 joint，拒绝当前 staged 协议。MS3 进一步显示真实数据迁移不能由 synthetic PASS 直接保证：两侧预测非劣与动态 support 均过门，但只有 B 侧形成稳定的 logged-action 条件预测增益，A 侧响应分支明显偏弱。当前先完成不训练的 A/B 不对称诊断；这仍不是 `do(valve)`。完整顺序和停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)，机器状态可运行 `python experiments/phase3_5/experiment_status.py --check --json` 查询。
+完整目标是验证结构化多步响应从“已知真值可解”到“结构失配稳健”、再到“完整 `free+response` 不吸收动作”、真实数据适配和现场闭环响应的一条连续证据链。D2/D3 与 MS5 已完成 synthetic 方法门；MS5 选择 joint，拒绝当前 staged 协议。MS3/MS3-D 进一步显示真实迁移不能由 synthetic PASS 保证：terminal-only joint loss 学出的 A 响应衰减超出现有现场链路证据。下一步不是调低门槛，而是把 `SP→阀位→局部温降→末温` 分段测点显式纳入 MIMO response-identification 与 selector；这仍不是 `do(valve)`。完整顺序和停止规则见 [主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)。
 
 ## Phase 3.5 研究命题
 

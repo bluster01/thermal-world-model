@@ -491,7 +491,7 @@
     },
     "ms3_d": {
       "title": "A/B 闭环响应不对称诊断",
-      "status": "implementation",
+      "status": "audited",
       "owner": "local_only",
       "evidence_scope": "validation_only_observational_cascade_diagnosis_not_causal",
       "scripts": {
@@ -503,6 +503,11 @@
         "runner": {
           "path": "experiments/phase3_5/ms3d_asymmetry_diagnosis.py",
           "status": "active",
+          "required": true
+        },
+        "supervisor_replay": {
+          "path": "experiments/phase3_5/audit_ms3d_asymmetry_diagnosis.py",
+          "status": "closed",
           "required": true
         }
       },
@@ -518,9 +523,25 @@
         "implementation_plan": {
           "path": "docs/plans/2026-08-11-phase35-ms3d-asymmetry-diagnosis-implementation.md",
           "required": true
+        },
+        "validation_summary": {
+          "path": "results/phase3_5/ms3d_asymmetry_diagnosis/summary_validation.json",
+          "required": true
+        },
+        "supervisor_replay": {
+          "path": "results/phase3_5/ms3d_asymmetry_diagnosis/supervisor_replay_validation.json",
+          "required": true
+        },
+        "supervisor_audit": {
+          "path": "docs/PHASE35_MS3D_SUPERVISOR_AUDIT_2026-08-11.md",
+          "required": true
         }
       },
-      "decision": "LOCAL IMPLEMENTATION：只诊断MS3 A/B响应不对称，不训练、不访问test、不修改MS3 FAIL、不释放MS4"
+      "decision": "AUDITED / MODEL_A_RESPONSE_ATTENUATION_EXCEEDS_FIELD_EVIDENCE / CONTROLLER_PERSISTENCE_ASYMMETRY / SIDE_ATTRIBUTION_INCONCLUSIVE / MS4_HOLD；下一步仅本地设计MS3-R",
+      "advisories": [
+        "checkpoint 4.632倍侧差分布于opening map、scheduled gain与dynamics；未被局部温降和末温主对比复现",
+        "另一回路安静与严格600s clean support不足；CI跨0不等于物理等价"
+      ]
     },
     "ms4": {
       "title": "SP→阀位→温度物理闭环响应验证",

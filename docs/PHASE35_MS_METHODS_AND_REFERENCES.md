@@ -403,7 +403,7 @@ validation 审计后才冻结候选。synthetic test 使用独立命令原样加
 
 ## 11. 多阶段耦合训练的当前结论
 
-历史上提出过 `free预训练→冻结free训练response→低学习率联合微调`。MS5 已证明该冻结 staged 协议明显劣于 joint，因此 MS3 实际采用 joint-from-scratch，并以 exact-zero response 的 free-only 作负控。MS3 又显示 joint 在 B 侧形成动作响应、A 侧未过 non-collapse；这不能用恢复旧 staged 方案直接解释。只有 MS3-D 证明经验 A 响应存在而当前模型未恢复时，才允许另立新的 response-identification/staging 协议。
+历史上提出过 `free预训练→冻结free训练response→低学习率联合微调`。MS5 已证明该冻结 staged 协议明显劣于 joint，因此 MS3 实际采用 joint-from-scratch，并以 exact-zero response 的 free-only 作负控。MS3-D 现已显示 checkpoint 的 A attenuation 未被局部温降和末温链路稳定复现，但它也没有识别 free-head absorption 机制。后续只能另立带中间测点监督和 response-aware selector 的 MS3-R；不能直接恢复旧 staged 方案。
 MS5 已归档各阶段 checkpoint，因此 staged 失败可追溯到冻结的 hold-only 初始化和有限恢复预算；不能外推为所有分阶段方法必然失败。任何未来 staged 新协议仍须保存阶段 checkpoint，并与 joint 在相同数据、更新预算和 selector 下比较，不能只保留联合阶段最优模型。
 
 ## 12. 代码—公式—测试追溯
@@ -425,6 +425,7 @@ MS5 已归档各阶段 checkpoint，因此 staged 失败可追溯到冻结的 ho
 | MS2-D3 AR(1) nuisance | `synthetic.py`、`ms2d_disturbance.py`、`summarize_ms2d_disturbance.py` | 平稳/确定性/toggle 不变式、21-run freeze、clean pairing、test lock、诊断隔离 |
 | MS5 full free+response | `synthetic.py`、`full_training.py`、`ms5_full_coupling.py`、`summarize_ms5_full_coupling.py` | legacy hash、component metrics、4-mode CPU smoke、12-run freeze、artifact replay、ordered decision tree、test lock |
 | MS3 real A/B validation | `real_training.py`、`ms3_real_adaptation.py`、`summarize_ms3_real_adaptation.py`、`audit_ms3_real_adaptation.py` | ns timeline、cross-side mapping、joint/free information flow、12-checkpoint replay、UTC-day/block diagnosis、test lock |
+| MS3-D asymmetry diagnosis | `ms3d.py`、`ms3d_asymmetry_diagnosis.py`、`audit_ms3d_asymmetry_diagnosis.py` | held-SP/stability funnel、signed cascade response、UTC-day A/B pairing、direction strata、artifact replay、test lock |
 
 ## 13. Reference ledger
 
