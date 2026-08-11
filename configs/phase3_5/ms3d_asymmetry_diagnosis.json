@@ -1,0 +1,82 @@
+{
+  "protocol_version": "phase3.5-ms3d-v1",
+  "evidence_scope": "local_validation_only_observational_cascade_diagnosis_not_causal",
+  "data_contract": {
+    "parent_matrix": "configs/phase3_5/ms3_real_adaptation_matrix.json",
+    "parent_matrix_sha256": "b2e69d78b949334bfd5d92d100bcb730f444758c57d90920a451138a5b831f8a",
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "split": "validation",
+    "test_allowed": false,
+    "step_seconds": 10,
+    "sides": ["A", "B"]
+  },
+  "event_contract": {
+    "sp_step_min_abs_c": 1.0,
+    "sp_step_max_abs_c": 3.0,
+    "sp_hold_seconds": 600,
+    "sp_hold_abs_tolerance_c": 0.1,
+    "sp_hold_relative_tolerance": 0.05,
+    "pre_sp_stability_seconds": 60,
+    "pre_sp_range_max_c": 0.1,
+    "min_same_side_gap_seconds": 600,
+    "operating": {
+      "min_load_mw": 250.0,
+      "min_pressure_mpa": 10.0,
+      "terminal_temperature_min_c": 500.0,
+      "terminal_temperature_max_c": 600.0
+    },
+    "steady_60s": {
+      "window_seconds": 60,
+      "load_range_max_mw": 5.0,
+      "pressure_range_max_mpa": 0.2,
+      "terminal_temperature_range_max_c": 1.0,
+      "valve_range_max_pct_for_clean_chain": 1.0
+    },
+    "steady_180s": {
+      "window_seconds": 180,
+      "load_range_max_mw": 10.0,
+      "pressure_range_max_mpa": 0.5,
+      "terminal_temperature_range_max_c": 2.0,
+      "valve_range_max_pct_for_clean_chain": 2.0
+    },
+    "strict_600s_support": {
+      "window_seconds": 600,
+      "load_range_max_mw": 15.0,
+      "pressure_range_max_mpa": 0.4,
+      "terminal_temperature_range_max_c": 3.0,
+      "valve_range_max_pct_for_clean_chain": 3.0
+    },
+    "other_loop_quiet_diagnostic": {
+      "sp_max_abs_change_c": 0.5,
+      "valve_max_abs_change_pct": 5.0
+    }
+  },
+  "response_contract": {
+    "baseline_seconds": 60,
+    "endpoint_median_seconds": 30,
+    "horizons_seconds": [60, 180, 300, 600],
+    "gain_min_abs_valve_dose_pct": 0.5
+  },
+  "statistics": {
+    "independent_unit": "UTC_day",
+    "within_day_aggregate": "median",
+    "paired_side_contrast": "B_minus_A_on_common_UTC_days",
+    "bootstrap_samples": 20000,
+    "bootstrap_seed": 20260811,
+    "diagnostic_block_lengths_days": [1, 2, 3]
+  },
+  "checkpoint_reference": {
+    "path": "results/phase3_5/ms3_real_adaptation/supervisor_replay_validation.json",
+    "sha256": "62aefc3d3be1f7705c6f32ea37e820c1b09e50967610b682c2b49782400b08ac",
+    "candidate_id": "ms3_joint_total",
+    "standardized_raw_valve_step_pct": 5.0,
+    "minimum_large_model_side_ratio": 3.0
+  },
+  "claim_boundary": {
+    "ms3_decision_immutable": true,
+    "training_allowed": false,
+    "linux_authorized": false,
+    "causal_claim_allowed": false,
+    "ms4_release_allowed": false
+  }
+}

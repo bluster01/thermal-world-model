@@ -15,7 +15,7 @@ The A-labelled SP/valve is paired with the right thermal train; the B-labelled S
 
 ## 2. Alternatives considered
 
-1. A strict 600 s pre-event steady-state window is physically cleanest, but the validation-only feasibility scan yields only about 1 A and 4 B candidates. It is retained only as a support diagnostic.
+1. A strict 600 s pre-event operating-state window is reported as support. Adding a 3-point actual-valve pre-range condition leaves only about 1 A and 4 B candidates in the validation-only feasibility scan, so that clean 600 s subgroup cannot be the main analysis.
 2. The selected primary layer is the intersection of a strict 60 s screen and a moderate 180 s screen. These thresholds were already documented before MS3-D in `PHASE35_STEADY_STATE_ANALYSIS_2026-08-09.md`; the current analysis therefore does not tune them against response outcomes.
 3. SP-held events that fail the primary steady-state layer remain a dynamic-operation secondary stratum. They are never pooled with the primary layer to improve a result.
 
@@ -24,12 +24,15 @@ The A-labelled SP/valve is paired with the right thermal train; the B-labelled S
 - Source: the MS3 v1.1 `all_merged_10s.csv` contract, SHA-256 `85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6`.
 - Split: chronological validation rows only, about 2026-03-16 to 2026-04-13. Test rows and outcomes are not evaluated.
 - SP onset: one-step signed change with `1.0 <= |delta SP| <= 3.0 degC`.
+- Pre-onset SP: range no greater than 0.1 degC over the previous 60 s, preventing the tail of a ramp from being relabelled as a new held step.
+- Pre-onset SP: range no greater than 0.1 degC over the preceding 60 s, preventing a pulse return edge from being relabelled as a new held step.
 - Held requirement: the new SP remains within `max(0.1 degC, 0.05*|delta SP|)` for the complete 600 s response horizon.
 - Continuity: the 180 s pre-window and 600 s response window must contain only 10 s transitions.
 - Independence filter: accepted onsets on the same side are at least 600 s apart.
 - Operating screen: pre-event mean load at least 250 MW, pressure at least 10 MPa, and terminal temperature in 500--600 degC.
 - Primary dual-steady layer: the 60 s ranges satisfy load <=5 MW, pressure <=0.2 MPa and terminal temperature <=1 degC, and the 180 s ranges satisfy load <=10 MW, pressure <=0.5 MPa and terminal temperature <=2 degC.
 - Clean-chain subgroup: additionally requires actual-valve pre-range <=1 percentage point over 60 s and <=2 points over 180 s.
+- Strict-600 support is reported both as operating-state stability alone and with an actual-valve pre-range <=3 points; neither replaces the primary dual-steady layer.
 - The other loop's SP and valve motion are reported as contamination features. They are not screened using post-event temperature.
 
 All rejection reasons are counted. Events above 3 degC, non-held events and dynamic-operation events remain in the audit funnel rather than silently disappearing.
