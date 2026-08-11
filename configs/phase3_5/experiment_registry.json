@@ -546,7 +546,7 @@
     },
     "ms3_r": {
       "title": "真实点位响应辨识与模型扩充",
-      "status": "audited",
+      "status": "local_verified",
       "owner": "local_design_code_linux_batch_run_local_audit",
       "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
       "scripts": {
@@ -562,6 +562,21 @@
         },
         "gate1_replay": {
           "path": "experiments/phase3_5/audit_ms3r_gate1_point_identifiability.py",
+          "status": "active",
+          "required": true
+        },
+        "gateb_core": {
+          "path": "src/phase35/ms3r_gateb.py",
+          "status": "active",
+          "required": true
+        },
+        "gateb_runner": {
+          "path": "experiments/phase3_5/ms3r_gateb_point_closure.py",
+          "status": "active",
+          "required": true
+        },
+        "gateb_replay": {
+          "path": "experiments/phase3_5/audit_ms3r_gateb_point_closure.py",
           "status": "active",
           "required": true
         }
@@ -590,15 +605,28 @@
         "gate1_supervisor_audit": {
           "path": "docs/PHASE35_MS3R_GATE1_SUPERVISOR_AUDIT_2026-08-11.md",
           "required": true
+        },
+        "gateb_config": {
+          "path": "configs/phase3_5/ms3r_gateb_point_closure.json",
+          "required": true
+        },
+        "gateb_design": {
+          "path": "docs/plans/2026-08-11-phase35-ms3r-gateb-point-closure-design.md",
+          "required": true
+        },
+        "gateb_implementation_plan": {
+          "path": "docs/plans/2026-08-11-phase35-ms3r-gateb-point-closure-implementation.md",
+          "required": true
         }
       },
-      "decision": "AUDITED / GATE_A_CONDITIONAL_PASS：双输入代数秩支持，60/180s局部正确路径描述性占优；错侧/上游placebo非零、A长时lead污染、末温侧归因FAIL。仅放行本地Gate-B设计，无Linux授权",
+      "decision": "GATE_A AUDITED / GATE_B LOCAL_VERIFIED：Gate B 已冻结逐日配对路径特异性、短时程timing、2x2 MIMO、工况不变性与SP-IV可行性；尚无Linux授权",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
         "Linux 按批执行并回传机器产物；本地负责唯一 supervisor 判决",
         "Gate-B必须加入逐日配对correct-minus-placebo主对比；不得用分开的CI推断路径差异",
-        "后续远端批次用/usr/bin/time -v记录peak RSS"
+        "Gate-B主门仅60/180s局部Tin-Tout；300/600s、末温、不变性与IV只作诊断",
+        "远端必须单次执行、用/usr/bin/time -v记录peak RSS并完整回传replay NPZ；缺件只补传不重跑"
       ]
     },
     "ms4": {

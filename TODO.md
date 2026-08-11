@@ -1,6 +1,6 @@
 # Thermal World Model TODO
 
-> 更新：2026-08-11。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。MS3-R Gate A 已审计为条件通过：双阀创新代数秩健康，60/180 s 正确局部路径描述性占优；但错侧/上游 placebo 非零、A 长时 lead 污染，末温侧归因失败。当前只允许本地设计 Gate B 的 measured-boundary MIMO、common/differential 消融与分支归因；无 Linux 授权、不访问 test、不启动 Gate C/MS4。旧 E1–E5 已废弃，Phase 4 暂停。
+> 更新：2026-08-11。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。MS3-R Gate A 已审计为条件通过；Gate B 的逐日配对路径闭合、2×2 MIMO、不变性与 SP-IV feasibility 已完成本地实现和合成验证，状态为 `local_verified`。当前无 Linux 授权、不访问 test、不启动 Gate C/MS4；旧 E1–E5 已废弃，Phase 4 暂停。
 
 ## 当前主线
 
@@ -31,7 +31,7 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | MS5 | 完整 `free+response` 动作吸收 | ✓ CLOSED | joint 选中；冻结 staged 协议拒绝 |
 | **MS3** | A/B 真实数据适配 | ✓ **AUDITED FAIL / ASYMMETRIC** | B 3/3 PASS；A 0/3 non-collapse FAIL；不重跑、不访问 test |
 | **MS3-D** | A/B 响应不对称诊断 | ✓ **AUDITED** | 模型 A attenuation 未获现场热链路支持；B 阀位持久性更强；单侧 plant 归因不足 |
-| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ✓ **AUDITED / GATE-A CONDITIONAL PASS** | 双输入秩支持；局部短时程条件支持；末温侧归因 FAIL；Gate-B 仅本地设计 |
+| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ▶ **GATE-B LOCAL VERIFIED** | 等待本地提交/显式授权后只跑一次 Gate B；当前 Linux 无任务 |
 | MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-R 冻结前不启动；不恢复旧 E 匹配 |
 
 ## D3 收口
@@ -68,7 +68,7 @@ B 动态平均绝对响应为 `0.04289–0.04851°C`，3/3 seeds 的 logged-vs-b
 
 MS3-D 的独立事件/日块复算误差为 0。主层为 A=41、B=42 个事件，各 19 日、17 个可配对日。B-A 的阀位响应差在 H300/H600 为 `+2.947 [+0.544,+5.486]` 与 `+2.627 [+1.655,+4.107] %/°C-SP`；局部温降、阀位归一化温降和 H600 末温主对比均跨 0。严格 600 s 且阀位稳定仅 A=1/B=3，主层另一回路安静仅 A=2/B=1，故不能升级成单侧 plant gain 或等价性结论。权威审计见 [MS3-D Supervisor Audit](docs/PHASE35_MS3D_SUPERVISOR_AUDIT_2026-08-11.md)。
 
-MS3-R 采用三个批次级大门，避免逐小实验审批：Gate A 一次执行点位/时序/placebo/输入秩，Gate B 一次执行分支归因/串级闭合/不变性/IV，Gate C 才执行真实模型筛查与正式比较。当前只实现 Gate A；`Tin-Tout` 是局部 plant-response 主证据，末温是延迟下游验证。分支只称“历史状态/未测扰动残差分支”和“受约束阀位响应分支”，不得凭 head 名称升级为燃烧或喷水物理模型。完整冻结设计见 [MS3-R 设计](docs/plans/2026-08-11-phase35-ms3r-response-identification-design.md)。
+MS3-R 采用三个批次级大门，避免逐小实验审批：Gate A 一次执行点位/时序/placebo/输入秩；Gate B 只做最后一轮点位闭合，不训练世界模型；Gate C 才执行真实模型筛查与正式比较。Gate B 主门固定为 UTC 日配对的 60/180 s `Tin-Tout` 正确路径减错侧路径、正滞后减 `|lead|`；2×2 MIMO、common/differential、不变性和 SP-IV feasibility 同批输出，后四者不能自动升级因果结论。完整设计见 [Gate B 设计](docs/plans/2026-08-11-phase35-ms3r-gateb-point-closure-design.md)。
 
 ### 已执行的冻结 12-run 矩阵
 
@@ -95,7 +95,7 @@ MS3-R 采用三个批次级大门，避免逐小实验审批：Gate A 一次执�
 
 | 本地 / Codex | Linux 远端 |
 |---|---|
-| 设计 MS3-R 分段/MIMO response-identification；冻结信息流、selector 和消融 | 当前无授权任务；不得重跑 MS3、访问 test 或启动 MS4 |
+| Gate B 设计、代码、合成测试、回传审计；只有本地可改阈值/状态/结论 | 当前无授权任务；未来只按冻结命令单次执行并回传，不改代码/阈值/结论 |
 | 只有本地可改 TODO、注册表、阈值、结论和 Supervisor 文档 | 等本地冻结新矩阵/命令后才能恢复执行角色 |
 
 ## MS3 执行清单
@@ -113,7 +113,8 @@ MS3-R 采用三个批次级大门，避免逐小实验审批：Gate A 一次执�
 | 9 | 冻结 MS3-R response-identification、分支语义与三大门协议 | 本地 | ✓ |
 | 10 | 实现并测试 Gate A 点位、placebo、residual excitation、结构信息流与输入秩框架 | 本地 | ✓；190 tests PASS |
 | 11 | Gate A 批量 Linux 执行与一次性本地审计 | Linux/本地 | ✓ 条件通过；8/8产物闭合，rank复算误差≤1.55e-15 |
-| 12 | Gate B 分支归因、配对placebo、串级与不变性设计/代码 | 本地 | ▶ 当前唯一任务；未授权Linux |
+| 12 | Gate B 配对路径、MIMO、不变性与IV设计/代码 | 本地 | ✓ local_verified；4项专项、194项全回归通过 |
+| 13 | Gate B 单次 validation 执行与 cache-free replay 审计 | Linux/本地 | ◻ 未授权；缺件只补传，不重跑 |
 
 Linux 历史运行说明保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，当前不构成重复运行授权。
 

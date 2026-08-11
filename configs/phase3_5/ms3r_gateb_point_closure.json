@@ -1,0 +1,113 @@
+{
+  "protocol_version": "phase3.5-ms3r-gateb-v1",
+  "evidence_scope": "validation_only_observational_paired_path_closure_and_iv_feasibility_not_causal",
+  "parent_gate_a": {
+    "config_path": "configs/phase3_5/ms3r_gate1_point_identifiability.json",
+    "config_sha256": "f1a551263b58acb585997bf0ac11d116fc56153141754f8484853f3458b7233e",
+    "audit_path": "results/phase3_5/ms3r_gate1_point_identifiability/supervisor_artifact_audit_validation.json",
+    "audit_sha256": "da4f8ad0f90a081aab07e1ea33ebe5007d546524024bd4cb5d305552f7066fa4",
+    "required_label": "GATE_A_CONDITIONAL_PASS"
+  },
+  "data_contract": {
+    "split": "validation",
+    "test_allowed": false,
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "step_seconds": 10,
+    "cross_pairing": {
+      "A": "A_SP_and_valve_to_right_B_thermal_train",
+      "B": "B_SP_and_valve_to_left_A_thermal_train"
+    }
+  },
+  "point_contract": {
+    "conditioning_columns": [
+      "机组负荷",
+      "主蒸汽压力",
+      "主给水流量",
+      "未校正总煤量",
+      "主蒸汽流量",
+      "二级减温器入口温度",
+      "二级减温器出口温度",
+      "末级过热器出口汽温",
+      "二级减温调节阀设定",
+      "二级减温调节门阀位"
+    ],
+    "primary_outcome": "二级减温器入口温度_minus_二级减温器出口温度",
+    "upstream_tin_is_placebo_only": true,
+    "terminal_outcome_is_diagnostic_only": true,
+    "primary_horizons_steps": [6, 18],
+    "diagnostic_horizons_steps": [30, 60]
+  },
+  "analysis": {
+    "history_lags_steps": [1, 2, 3, 6, 12, 18],
+    "rolling_folds": 4,
+    "minimum_training_days": 3,
+    "minimum_evaluation_days": 1,
+    "minimum_rows_per_fold": 256,
+    "minimum_day_rows": 30,
+    "minimum_direction_day_rows": 15,
+    "ridge_alpha": 1.0,
+    "daily_mimo_ridge_alpha": 1e-6,
+    "variance_epsilon": 1e-8,
+    "iv_minimum_abs_day_denominator": 1e-6,
+    "operating_ranges": {
+      "机组负荷": [250.0, 700.0],
+      "主蒸汽压力": [10.0, 35.0],
+      "二级减温器入口温度": [400.0, 700.0],
+      "二级减温器出口温度": [400.0, 700.0],
+      "末级过热器出口汽温": [400.0, 700.0],
+      "二级减温调节阀设定": [400.0, 700.0],
+      "二级减温调节门阀位": [-2.0, 102.0]
+    }
+  },
+  "statistics": {
+    "independent_unit": "UTC_day",
+    "primary_family": "two_action_sides_within_each_of_two_prespecified_contrast_families",
+    "familywise_alpha": 0.05,
+    "simultaneous_interval_confidence": 0.975,
+    "bootstrap_samples": 5000,
+    "bootstrap_seed": 20260811,
+    "minimum_utc_days": 8,
+    "gate_rule": "both_side_simultaneous_CI_lower_bounds_above_zero_for_specificity_and_timing",
+    "no_separate_ci_comparison": true
+  },
+  "iv_contract": {
+    "instrument": "current_delta_sp_residualized_on_past_only",
+    "endogenous_action": "current_delta_valve_residualized_on_same_past_only",
+    "status": "feasibility_diagnostic_only",
+    "forbidden_claim": "valid_exogenous_instrument_or_do_valve_identification",
+    "required_diagnostics": [
+      "first_stage_partial_r2",
+      "daily_first_stage",
+      "other_valve_coaction",
+      "lead_placebo",
+      "wrong_side_response"
+    ]
+  },
+  "execution_contract": {
+    "batch_id": "ms3r_gate_b_v1",
+    "require_clean_committed_worktree": true,
+    "linux_may_change_config": false,
+    "linux_may_write_supervisor_decision": false,
+    "automatic_scientific_pass": false,
+    "maximum_attempts": 1,
+    "hard_wall_clock_seconds": 7200,
+    "cpu_threads_max": 8,
+    "gpu_required": false,
+    "automatic_retry_allowed": false,
+    "resource_capture_command": "/usr/bin/time -v",
+    "partial_result_policy": "stop_and_return_stdout_stderr_and_partial_directory",
+    "required_artifacts": [
+      "run_manifest.json",
+      "paired_contrasts_validation.json",
+      "mimo_response_validation.json",
+      "invariance_validation.json",
+      "iv_feasibility_validation.json",
+      "replay_arrays_validation.npz",
+      "summary_validation.json",
+      "stdout.log",
+      "stderr.log",
+      "resource_usage.txt",
+      "artifact_ledger.json"
+    ]
+  }
+}

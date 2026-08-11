@@ -701,3 +701,41 @@ python experiments/phase3_5/audit_ms3d_asymmetry_diagnosis.py
 ```
 
 运行前工作树必须干净，cache source/matrix/reference SHA 必须与 config 一致。权威结论是 `MODEL_A_RESPONSE_ATTENUATION_EXCEEDS_FIELD_EVIDENCE / SIDE_ATTRIBUTION_INCONCLUSIVE`：B 阀位持久性更强，但局部温降和末温不支持把 checkpoint 的 4.63 倍侧差解释成已验证 plant gain。注册表状态为 `audited`、`linux_authorized_gate=null`；不得在 Linux 重跑或据此启动 MS4。
+
+## 19. MS3-R Gate B 点位闭合（本地已验证，当前无 Linux 授权）
+
+Gate B 是正式模型消融前最后一轮点位批，不训练模型、不访问 test。主门只使用 UTC 日为独立单位的 H60/H180 `Tin-Tout` 逐日配对差；H300/H600、末温、工况分层和 SP-IV 都是诊断。Linux 只负责在本地把注册表显式迁移到 `ready_for_linux` 且 `linux_authorized_gate=ms3_r` 后执行以下冻结批；当前状态不构成运行授权。
+
+授权后必须使用已有 MS3 v1.1 A/B cache，且工作树干净、HEAD 等于授权提交。完整批只有一次 analysis attempt，不补 seed、不调阈值、不写 Supervisor 判决：
+
+```bash
+export PH35_MS3_CACHE_A=/data/thermal-world-model/phase3_5/ms3_cross_A.npz
+export PH35_MS3_CACHE_B=/data/thermal-world-model/phase3_5/ms3_cross_B.npz
+export PH35_GATEB_OUT=results/phase3_5/ms3r_gateb_point_closure
+export OMP_NUM_THREADS=8
+export MKL_NUM_THREADS=8
+
+git pull --ff-only origin main
+python experiments/phase3_5/experiment_status.py --check --json
+git status --short
+git rev-parse HEAD
+python -m pytest tests/phase35/test_ms3r_gateb.py tests/phase35/test_ms3r_gateb_cli.py -q
+python -m compileall -q src/phase35/ms3r_gateb.py \
+  experiments/phase3_5/ms3r_gateb_point_closure.py \
+  experiments/phase3_5/audit_ms3r_gateb_point_closure.py
+
+mkdir -p "$PH35_GATEB_OUT"
+timeout --signal=TERM 7200s /usr/bin/time -v -o "$PH35_GATEB_OUT/resource_usage.txt" \
+  python experiments/phase3_5/ms3r_gateb_point_closure.py \
+    --cache-a "$PH35_MS3_CACHE_A" \
+    --cache-b "$PH35_MS3_CACHE_B" \
+    --output-dir "$PH35_GATEB_OUT" \
+    > "$PH35_GATEB_OUT/stdout.log" \
+    2> "$PH35_GATEB_OUT/stderr.log"
+test $? -eq 0 || exit $?
+
+python experiments/phase3_5/ms3r_gateb_point_closure.py \
+  --output-dir "$PH35_GATEB_OUT" --finalize-only
+```
+
+必须完整提交配置列出的 11 项产物，尤其是 `replay_arrays_validation.npz`、`resource_usage.txt` 和 ledger。若 Git 因大文件规则漏掉 NPZ，只补传该文件；不得重做整批。Linux 不运行 replay、不解释科学结果、不修改 `configs/`、`src/`、`experiments/`、`tests/`、`docs/`、TODO 或注册表。本地收到完整批后只做一次 cache-free replay 和 Supervisor 审计，再决定是否进入正式模型消融。
