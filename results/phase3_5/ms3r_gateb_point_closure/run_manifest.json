@@ -1,0 +1,29 @@
+{
+  "protocol_version": "phase3.5-ms3r-gateb-v1",
+  "batch_id": "ms3r_gate_b_v1",
+  "execution_git_sha": "32ede073e505900757ecd68b10ad9bed3d3149c0",
+  "config_path": "configs/phase3_5/ms3r_gateb_point_closure.json",
+  "config_sha256": "072c445415212f832fba71c03f42ac37fb8bc749398fcd86864841309f35e4b2",
+  "gate_a_config_path": "configs/phase3_5/ms3r_gate1_point_identifiability.json",
+  "gate_a_config_sha256": "f1a551263b58acb585997bf0ac11d116fc56153141754f8484853f3458b7233e",
+  "gate_a_audit_path": "results/phase3_5/ms3r_gate1_point_identifiability/supervisor_artifact_audit_validation.json",
+  "gate_a_audit_sha256": "da4f8ad0f90a081aab07e1ea33ebe5007d546524024bd4cb5d305552f7066fa4",
+  "gate_a_required_label": "GATE_A_CONDITIONAL_PASS",
+  "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+  "cache_paths": {
+    "A": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/ms3_cross_A.npz",
+    "B": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/ms3_cross_B.npz"
+  },
+  "cache_sha256": {
+    "A": "a75cde934e1d459c629959a6921a80d31ec1bf998468525ef82a4ffaaa3f29b8",
+    "B": "7005d027b97cad9e26c2f8f36ed8ffb77aa83a68ed83d6da786f0369abe0b8fa"
+  },
+  "split": "validation",
+  "python_version": "3.11.15",
+  "numpy_version": "2.3.5",
+  "test_accessed": false,
+  "training_executed": false,
+  "automatic_scientific_pass": null,
+  "maximum_attempts": 1,
+  "resource_capture_command": "/usr/bin/time -v"
+}

@@ -1,0 +1,1153 @@
+{
+  "protocol_version": "phase3.5-ms3r-gateb-v1",
+  "evidence_scope": "validation_only_observational_paired_path_closure_and_iv_feasibility_not_causal",
+  "analysis_support": {
+    "candidate_anchor_count": 115190,
+    "crossfit_evaluated_count": 103408,
+    "rolling_fold_count": 4,
+    "independent_utc_day_count": 24
+  },
+  "paired_contrasts": {
+    "primary_horizons_steps": [
+      6,
+      18
+    ],
+    "independent_unit": "UTC_day",
+    "specificity_family": {
+      "A": {
+        "utc_day_count": 24,
+        "day_median": 0.5148909279675178,
+        "simultaneous_interval": [
+          0.4265711601254808,
+          0.6453303030564795
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": true
+      },
+      "B": {
+        "utc_day_count": 24,
+        "day_median": 0.39502801431680246,
+        "simultaneous_interval": [
+          0.30333818718567107,
+          0.45206654098159565
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": true
+      }
+    },
+    "timing_family": {
+      "A": {
+        "utc_day_count": 24,
+        "day_median": 0.5949933199472119,
+        "simultaneous_interval": [
+          0.5477886993411902,
+          0.7215768854325557
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": true
+      },
+      "B": {
+        "utc_day_count": 24,
+        "day_median": 0.4589949778156192,
+        "simultaneous_interval": [
+          0.4019788046178425,
+          0.5111045920655288
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": true
+      }
+    },
+    "automatic_scientific_pass": null,
+    "interpretation_boundary": "Direct paired UTC-day contrasts; Supervisor, not code, decides closure."
+  },
+  "mimo_response": {
+    "orientation": "positive_means_opening_increases_Tin_minus_Tout",
+    "horizons": {
+      "H6": {
+        "horizon_seconds": 60,
+        "future": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              0.550783348933578,
+              0.10758326263866455
+            ],
+            [
+              0.06771717477951669,
+              0.41828191127381736
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              0.5491788081990462,
+              0.03597741863386785
+            ],
+            [
+              0.08340960042700918,
+              0.39378044724875827
+            ]
+          ]
+        },
+        "lead": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              -0.0006155604777513324,
+              -0.0020181451392924173
+            ],
+            [
+              -0.0012129584970821583,
+              0.0012067903243606092
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              -0.002496030361042367,
+              -0.003162106290992317
+            ],
+            [
+              -0.002437490074304436,
+              0.0004764077343365358
+            ]
+          ]
+        },
+        "primary": true
+      },
+      "H18": {
+        "horizon_seconds": 180,
+        "future": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              0.7720660477985803,
+              0.1343453725051686
+            ],
+            [
+              0.06863455761788055,
+              0.4869039370992262
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              0.7211181229114937,
+              0.0904283078347711
+            ],
+            [
+              0.1524184218651655,
+              0.5363194003986598
+            ]
+          ]
+        },
+        "lead": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              -0.0006139600947521271,
+              -0.004305466506707383
+            ],
+            [
+              -0.0007840992237852805,
+              -0.0015541460081766293
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              -0.001715802272372206,
+              -0.0004732837801264241
+            ],
+            [
+              -0.0011276258941510867,
+              0.0008387835657612144
+            ]
+          ]
+        },
+        "primary": true
+      },
+      "H30": {
+        "horizon_seconds": 300,
+        "future": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              0.42804621696129125,
+              -0.001192503467283698
+            ],
+            [
+              0.05635423566964049,
+              0.30794614492512196
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              0.3439377511176349,
+              0.06545216249427523
+            ],
+            [
+              -0.028013503998081966,
+              0.37090263087138675
+            ]
+          ]
+        },
+        "lead": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              0.1231032703443175,
+              -0.019056543646297046
+            ],
+            [
+              0.04663826735698478,
+              0.02830897179679442
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              0.07469157975891036,
+              0.08657540668330665
+            ],
+            [
+              0.06274701689712373,
+              0.10938755469195828
+            ]
+          ]
+        },
+        "primary": false
+      },
+      "H60": {
+        "horizon_seconds": 600,
+        "future": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              0.0016321361340181475,
+              -0.01573414134074002
+            ],
+            [
+              -0.029811515103887624,
+              0.09748311283803056
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              0.028021095514877113,
+              -0.0679680715314396
+            ],
+            [
+              0.02608086771108309,
+              0.0950859006228385
+            ]
+          ]
+        },
+        "lead": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              0.19984021368505822,
+              0.09742489565398141
+            ],
+            [
+              -0.0364436482102315,
+              0.03247485212942933
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              0.13339358822145803,
+              0.08275681972873965
+            ],
+            [
+              0.11449186643812818,
+              0.11166620300196062
+            ]
+          ]
+        },
+        "primary": false
+      }
+    },
+    "diagnostic_point_maps": {
+      "upstream_tin_placebo": {
+        "orientation": "raw",
+        "horizons": {
+          "H6": {
+            "horizon_seconds": 60,
+            "future": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  0.10272355885076342,
+                  0.0688745190779887
+                ],
+                [
+                  0.03389929977878136,
+                  0.05988254920718085
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  0.1422360600173965,
+                  -0.00304213074613777
+                ],
+                [
+                  0.026035222873696307,
+                  0.029013163105155483
+                ]
+              ]
+            },
+            "lead": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  -0.0004636444430899402,
+                  -0.00013586977299787374
+                ],
+                [
+                  -0.0006228599718465669,
+                  0.000316038684092878
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  -0.00046173307897405156,
+                  -0.0008963819888402446
+                ],
+                [
+                  -5.391268708656051e-05,
+                  0.00023936911364305118
+                ]
+              ]
+            },
+            "automatic_gate_component": null
+          },
+          "H18": {
+            "horizon_seconds": 180,
+            "future": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  0.05094547906444406,
+                  -0.014055339786341495
+                ],
+                [
+                  0.018249873340659185,
+                  0.04370445493458343
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  0.02240581395357814,
+                  0.031544917991914015
+                ],
+                [
+                  -0.039323935363283435,
+                  0.08149190864012684
+                ]
+              ]
+            },
+            "lead": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  -0.00010742986547658477,
+                  0.0008367797410626951
+                ],
+                [
+                  0.0004807122268866181,
+                  0.0008071429858451066
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  0.002516317819346284,
+                  -0.0005249931628721479
+                ],
+                [
+                  -0.0009500944965708589,
+                  -0.00154965545239601
+                ]
+              ]
+            },
+            "automatic_gate_component": null
+          },
+          "H30": {
+            "horizon_seconds": 300,
+            "future": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  -0.0579808759018933,
+                  -0.07425174955467403
+                ],
+                [
+                  0.00842487883409941,
+                  0.019326020345172463
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  -0.043029835523690455,
+                  0.03992208560103531
+                ],
+                [
+                  -0.0817891578396853,
+                  0.07261473056420284
+                ]
+              ]
+            },
+            "lead": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  -0.01634188063426248,
+                  0.013574106935690803
+                ],
+                [
+                  0.034998540291640644,
+                  0.021185729203869293
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  0.004713462607189283,
+                  -0.0188526977093254
+                ],
+                [
+                  -0.023193607864891403,
+                  -0.0334417112059617
+                ]
+              ]
+            },
+            "automatic_gate_component": null
+          },
+          "H60": {
+            "horizon_seconds": 600,
+            "future": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  0.06291864800306854,
+                  -0.02311771442076383
+                ],
+                [
+                  -0.04210146993917886,
+                  0.03979890041208475
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  0.0025446577823971285,
+                  -0.0007084722245506861
+                ],
+                [
+                  -0.021394801214266228,
+                  0.09106712584685007
+                ]
+              ]
+            },
+            "lead": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  0.025538704169255622,
+                  0.012346309733332807
+                ],
+                [
+                  0.02429649607070671,
+                  0.0211850730601146
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  0.01577974457372689,
+                  -0.06378889517262992
+                ],
+                [
+                  0.02966280268942388,
+                  -0.012023494179042705
+                ]
+              ]
+            },
+            "automatic_gate_component": null
+          }
+        }
+      },
+      "terminal_temperature": {
+        "orientation": "sign_flipped_so_cooling_is_positive",
+        "horizons": {
+          "H6": {
+            "horizon_seconds": 60,
+            "future": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  -0.050882627555421174,
+                  -0.044195827179195464
+                ],
+                [
+                  -0.027839165397869747,
+                  -0.008115146792947307
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  -0.06486387213442255,
+                  -0.010675089986886738
+                ],
+                [
+                  -0.027108587009404154,
+                  0.010005729255085898
+                ]
+              ]
+            },
+            "lead": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  0.0007154161007530759,
+                  0.0004594625194126872
+                ],
+                [
+                  -0.0016979546279728927,
+                  0.0017654312136227755
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  0.0006873307928975851,
+                  -0.0011842649483294289
+                ],
+                [
+                  0.00029552049166803356,
+                  0.0019590745225724
+                ]
+              ]
+            },
+            "automatic_gate_component": null
+          },
+          "H18": {
+            "horizon_seconds": 180,
+            "future": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  -0.005182601114668572,
+                  0.09706689532636015
+                ],
+                [
+                  0.015426251884780775,
+                  -0.011731882881454377
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  0.026031505696517195,
+                  -0.018258808269328533
+                ],
+                [
+                  0.026790449878566505,
+                  -0.09316879609785458
+                ]
+              ]
+            },
+            "lead": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  0.00010449387849811593,
+                  -0.0009358794486608213
+                ],
+                [
+                  0.00019804225295250676,
+                  9.183844114152564e-05
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  -0.002184041709026528,
+                  0.0007431248306156525
+                ],
+                [
+                  0.000114936102890844,
+                  0.0014349904528624018
+                ]
+              ]
+            },
+            "automatic_gate_component": null
+          },
+          "H30": {
+            "horizon_seconds": 300,
+            "future": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  0.0532892464125755,
+                  0.3351438109760613
+                ],
+                [
+                  0.19858501021013392,
+                  0.00248783070683351
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  0.33021586808149705,
+                  -0.010006101484188505
+                ],
+                [
+                  0.13727154349194529,
+                  -0.23387386431518808
+                ]
+              ]
+            },
+            "lead": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  0.013981377113845015,
+                  -0.02881438321492724
+                ],
+                [
+                  -0.006421174650567656,
+                  -0.0176710377254586
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  -0.01307692730492445,
+                  0.029191646895111306
+                ],
+                [
+                  -0.0030350210119726353,
+                  0.033354497877162846
+                ]
+              ]
+            },
+            "automatic_gate_component": null
+          },
+          "H60": {
+            "horizon_seconds": 600,
+            "future": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  0.026065230871361166,
+                  0.3555892881382477
+                ],
+                [
+                  0.24463844656956302,
+                  0.025176741001866267
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  0.3744473616188292,
+                  -0.02377240494178655
+                ],
+                [
+                  0.043994928761982376,
+                  -0.2336290590403272
+                ]
+              ]
+            },
+            "lead": {
+              "utc_day_count": 24,
+              "day_median_matrix": [
+                [
+                  -0.060458116407722105,
+                  -0.16054062948732592
+                ],
+                [
+                  -0.014492046535824756,
+                  0.015021452589045223
+                ]
+              ],
+              "common_differential_day_median_matrix": [
+                [
+                  -0.09999332296776203,
+                  0.06982468127603911
+                ],
+                [
+                  -0.12421171970903574,
+                  0.08562868901108633
+                ]
+              ]
+            },
+            "automatic_gate_component": null
+          }
+        }
+      }
+    }
+  },
+  "invariance": {
+    "status": "diagnostic_only",
+    "load_tertiles": {
+      "available": true,
+      "tertile_cuts": [
+        355.5233764648437,
+        440.2909952799479
+      ],
+      "groups": {
+        "low": {
+          "utc_day_count": 8,
+          "day_median_matrix": [
+            [
+              0.5985095458883418,
+              0.10924138948616677
+            ],
+            [
+              0.0850220036118303,
+              0.437463331060464
+            ]
+          ]
+        },
+        "middle": {
+          "utc_day_count": 8,
+          "day_median_matrix": [
+            [
+              0.6672849031676243,
+              0.12445407164199145
+            ],
+            [
+              0.023963056287785212,
+              0.4465799250379826
+            ]
+          ]
+        },
+        "high": {
+          "utc_day_count": 8,
+          "day_median_matrix": [
+            [
+              0.6387569495968368,
+              0.13473464426183157
+            ],
+            [
+              0.045323340237260513,
+              0.4960954608956014
+            ]
+          ]
+        }
+      }
+    },
+    "baseline_valve_tertiles": {
+      "available": true,
+      "tertile_cuts": [
+        25.951271692911785,
+        31.036406040191647
+      ],
+      "groups": {
+        "low": {
+          "utc_day_count": 8,
+          "day_median_matrix": [
+            [
+              0.5851687202674405,
+              0.10759566941014884
+            ],
+            [
+              0.08261543536360319,
+              0.40071318073155704
+            ]
+          ]
+        },
+        "middle": {
+          "utc_day_count": 8,
+          "day_median_matrix": [
+            [
+              0.6474793796407123,
+              0.11675841327660076
+            ],
+            [
+              0.09394683466332625,
+              0.4960954608956014
+            ]
+          ]
+        },
+        "high": {
+          "utc_day_count": 8,
+          "day_median_matrix": [
+            [
+              0.7113989542827559,
+              0.131061383897977
+            ],
+            [
+              0.011088735746234056,
+              0.45077188878898633
+            ]
+          ]
+        }
+      }
+    },
+    "coal_per_load_tertiles": {
+      "available": true,
+      "tertile_cuts": [
+        0.6255760146208449,
+        0.6480537818817769
+      ],
+      "groups": {
+        "low": {
+          "utc_day_count": 8,
+          "day_median_matrix": [
+            [
+              0.5740663059031058,
+              0.12903305813681604
+            ],
+            [
+              0.011088735746234056,
+              0.46875518179544107
+            ]
+          ]
+        },
+        "middle": {
+          "utc_day_count": 8,
+          "day_median_matrix": [
+            [
+              0.6725362014140288,
+              0.15267599807337046
+            ],
+            [
+              0.06938259332731786,
+              0.4465799250379826
+            ]
+          ]
+        },
+        "high": {
+          "utc_day_count": 8,
+          "day_median_matrix": [
+            [
+              0.6470387481842317,
+              0.10924138948616677
+            ],
+            [
+              0.0850220036118303,
+              0.45943541878773353
+            ]
+          ]
+        }
+      }
+    },
+    "rolling_fold_day_medians": {
+      "0": {
+        "utc_day_count": 6,
+        "day_median_matrix": [
+          [
+            0.40680149234513907,
+            0.15187258137308055
+          ],
+          [
+            -0.002930823560372598,
+            0.44525116477847276
+          ]
+        ],
+        "common_differential_day_median_matrix": [
+          [
+            0.5369993141180858,
+            -0.11392153404224956
+          ],
+          [
+            0.07972082028919289,
+            0.31080438432524893
+          ]
+        ]
+      },
+      "1": {
+        "utc_day_count": 6,
+        "day_median_matrix": [
+          [
+            0.6387569495968368,
+            0.10924138948616677
+          ],
+          [
+            0.03180885046574143,
+            0.4960954608956014
+          ]
+        ],
+        "common_differential_day_median_matrix": [
+          [
+            0.6552467292713635,
+            0.06820041905953793
+          ],
+          [
+            0.08559716065720946,
+            0.5072050545914136
+          ]
+        ]
+      },
+      "2": {
+        "utc_day_count": 6,
+        "day_median_matrix": [
+          [
+            0.6665293642968281,
+            0.10206581097579427
+          ],
+          [
+            0.12253271377061589,
+            0.44723301375125457
+          ]
+        ],
+        "common_differential_day_median_matrix": [
+          [
+            0.6724732050558144,
+            0.1643356622187796
+          ],
+          [
+            0.11320838331546992,
+            0.453284292568924
+          ]
+        ]
+      },
+      "3": {
+        "utc_day_count": 6,
+        "day_median_matrix": [
+          [
+            0.6492185626532617,
+            0.13830787679956918
+          ],
+          [
+            0.0799768147053474,
+            0.43950454835800423
+          ]
+        ],
+        "common_differential_day_median_matrix": [
+          [
+            0.6241715909083778,
+            0.061137508433294754
+          ],
+          [
+            0.08534301817777795,
+            0.5340666420745084
+          ]
+        ]
+      }
+    },
+    "action_innovation_direction": {
+      "A": {
+        "opening": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              0.9723192303019415,
+              0.15372070585141898
+            ],
+            [
+              0.04507751890733015,
+              0.4006895479416037
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              0.7362563396839114,
+              0.17646826092586393
+            ],
+            [
+              0.29585159640607905,
+              0.7214843037467304
+            ]
+          ]
+        },
+        "closing": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              0.5895650666746072,
+              0.04201265102422724
+            ],
+            [
+              0.0994617848738171,
+              0.4648028729930027
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              0.598972063232764,
+              -0.043926355133070985
+            ],
+            [
+              -0.016761493310205655,
+              0.4109404377984529
+            ]
+          ]
+        }
+      },
+      "B": {
+        "opening": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              0.6404988489880123,
+              0.12168098980835909
+            ],
+            [
+              0.08433871207017239,
+              0.5550842349399492
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              0.695644818148796,
+              0.14695534511376893
+            ],
+            [
+              0.06501580592943004,
+              0.4957717661969664
+            ]
+          ]
+        },
+        "closing": {
+          "utc_day_count": 24,
+          "day_median_matrix": [
+            [
+              0.5894755163278949,
+              0.12345694150086295
+            ],
+            [
+              0.059906843505862215,
+              0.43782383898276434
+            ]
+          ],
+          "common_differential_day_median_matrix": [
+            [
+              0.6030386570478656,
+              -0.03683090706949252
+            ],
+            [
+              0.15017305543532627,
+              0.5003125242130908
+            ]
+          ]
+        }
+      }
+    },
+    "boundary": "Strata diagnose heterogeneity; they do not select a favorable support region."
+  },
+  "iv_feasibility": {
+    "status": "feasibility_diagnostic_only",
+    "sides": {
+      "A": {
+        "sample_count": 103408,
+        "first_stage_correlation": -0.11885082452508088,
+        "first_stage_partial_r2": 0.014125518490291566,
+        "other_valve_coaction_correlation": -0.21697722340678172,
+        "daily_first_stage": {
+          "utc_day_count": 24,
+          "day_median": -0.4503466648475739,
+          "simultaneous_interval": [
+            -0.60817756968002,
+            -0.1728209818427177
+          ],
+          "interval_confidence": 0.975,
+          "supervisor_gate_component": null
+        },
+        "daily_2sls_correct": {
+          "utc_day_count": 24,
+          "day_median": 1.345133018336632,
+          "simultaneous_interval": [
+            -0.34637714059585006,
+            3.8022634918445823
+          ],
+          "interval_confidence": 0.975,
+          "supervisor_gate_component": null
+        },
+        "daily_2sls_wrong_side": {
+          "utc_day_count": 24,
+          "day_median": 0.18873686141606394,
+          "simultaneous_interval": [
+            -1.5343499288865288,
+            3.1989502519655346
+          ],
+          "interval_confidence": 0.975,
+          "supervisor_gate_component": null
+        },
+        "daily_2sls_lead": {
+          "utc_day_count": 24,
+          "day_median": -0.03612005955786785,
+          "simultaneous_interval": [
+            -0.11276977944046167,
+            0.0643399213541015
+          ],
+          "interval_confidence": 0.975,
+          "supervisor_gate_component": null
+        },
+        "boundary": "First-stage and Wald-ratio diagnostics do not verify exclusion or SP exogeneity."
+      },
+      "B": {
+        "sample_count": 103408,
+        "first_stage_correlation": -0.06297202536674389,
+        "first_stage_partial_r2": 0.003965475978789835,
+        "other_valve_coaction_correlation": -0.08978728857307974,
+        "daily_first_stage": {
+          "utc_day_count": 24,
+          "day_median": -0.8142082044015334,
+          "simultaneous_interval": [
+            -1.3784512280353454,
+            -0.2792789754830405
+          ],
+          "interval_confidence": 0.975,
+          "supervisor_gate_component": null
+        },
+        "daily_2sls_correct": {
+          "utc_day_count": 24,
+          "day_median": 1.0553226543657828,
+          "simultaneous_interval": [
+            0.6246947265382345,
+            2.248259894846818
+          ],
+          "interval_confidence": 0.975,
+          "supervisor_gate_component": null
+        },
+        "daily_2sls_wrong_side": {
+          "utc_day_count": 24,
+          "day_median": 1.3050836890451638,
+          "simultaneous_interval": [
+            -0.01799869305143806,
+            2.752333506346499
+          ],
+          "interval_confidence": 0.975,
+          "supervisor_gate_component": null
+        },
+        "daily_2sls_lead": {
+          "utc_day_count": 24,
+          "day_median": 0.0017379182932580985,
+          "simultaneous_interval": [
+            -0.03032233163462423,
+            0.0354231532750537
+          ],
+          "interval_confidence": 0.975,
+          "supervisor_gate_component": null
+        },
+        "boundary": "First-stage and Wald-ratio diagnostics do not verify exclusion or SP exogeneity."
+      }
+    },
+    "automatic_iv_validity": null
+  },
+  "automatic_scientific_pass": null,
+  "test_accessed": false,
+  "training_executed": false,
+  "claim_boundary": "Validation-only closed-loop conditional response diagnostics; no open-loop plant, valid-IV, do(valve), independent-test, model-selection, Gate-C, or MS4 claim.",
+  "manifest": {
+    "protocol_version": "phase3.5-ms3r-gateb-v1",
+    "batch_id": "ms3r_gate_b_v1",
+    "execution_git_sha": "32ede073e505900757ecd68b10ad9bed3d3149c0",
+    "config_path": "configs/phase3_5/ms3r_gateb_point_closure.json",
+    "config_sha256": "072c445415212f832fba71c03f42ac37fb8bc749398fcd86864841309f35e4b2",
+    "gate_a_config_path": "configs/phase3_5/ms3r_gate1_point_identifiability.json",
+    "gate_a_config_sha256": "f1a551263b58acb585997bf0ac11d116fc56153141754f8484853f3458b7233e",
+    "gate_a_audit_path": "results/phase3_5/ms3r_gate1_point_identifiability/supervisor_artifact_audit_validation.json",
+    "gate_a_audit_sha256": "da4f8ad0f90a081aab07e1ea33ebe5007d546524024bd4cb5d305552f7066fa4",
+    "gate_a_required_label": "GATE_A_CONDITIONAL_PASS",
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "cache_paths": {
+      "A": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/ms3_cross_A.npz",
+      "B": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/ms3_cross_B.npz"
+    },
+    "cache_sha256": {
+      "A": "a75cde934e1d459c629959a6921a80d31ec1bf998468525ef82a4ffaaa3f29b8",
+      "B": "7005d027b97cad9e26c2f8f36ed8ffb77aa83a68ed83d6da786f0369abe0b8fa"
+    },
+    "split": "validation",
+    "python_version": "3.11.15",
+    "numpy_version": "2.3.5",
+    "test_accessed": false,
+    "training_executed": false,
+    "automatic_scientific_pass": null,
+    "maximum_attempts": 1,
+    "resource_capture_command": "/usr/bin/time -v"
+  }
+}

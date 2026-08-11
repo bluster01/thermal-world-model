@@ -1,0 +1,100 @@
+{
+  "status": "feasibility_diagnostic_only",
+  "sides": {
+    "A": {
+      "sample_count": 103408,
+      "first_stage_correlation": -0.11885082452508088,
+      "first_stage_partial_r2": 0.014125518490291566,
+      "other_valve_coaction_correlation": -0.21697722340678172,
+      "daily_first_stage": {
+        "utc_day_count": 24,
+        "day_median": -0.4503466648475739,
+        "simultaneous_interval": [
+          -0.60817756968002,
+          -0.1728209818427177
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": null
+      },
+      "daily_2sls_correct": {
+        "utc_day_count": 24,
+        "day_median": 1.345133018336632,
+        "simultaneous_interval": [
+          -0.34637714059585006,
+          3.8022634918445823
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": null
+      },
+      "daily_2sls_wrong_side": {
+        "utc_day_count": 24,
+        "day_median": 0.18873686141606394,
+        "simultaneous_interval": [
+          -1.5343499288865288,
+          3.1989502519655346
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": null
+      },
+      "daily_2sls_lead": {
+        "utc_day_count": 24,
+        "day_median": -0.03612005955786785,
+        "simultaneous_interval": [
+          -0.11276977944046167,
+          0.0643399213541015
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": null
+      },
+      "boundary": "First-stage and Wald-ratio diagnostics do not verify exclusion or SP exogeneity."
+    },
+    "B": {
+      "sample_count": 103408,
+      "first_stage_correlation": -0.06297202536674389,
+      "first_stage_partial_r2": 0.003965475978789835,
+      "other_valve_coaction_correlation": -0.08978728857307974,
+      "daily_first_stage": {
+        "utc_day_count": 24,
+        "day_median": -0.8142082044015334,
+        "simultaneous_interval": [
+          -1.3784512280353454,
+          -0.2792789754830405
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": null
+      },
+      "daily_2sls_correct": {
+        "utc_day_count": 24,
+        "day_median": 1.0553226543657828,
+        "simultaneous_interval": [
+          0.6246947265382345,
+          2.248259894846818
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": null
+      },
+      "daily_2sls_wrong_side": {
+        "utc_day_count": 24,
+        "day_median": 1.3050836890451638,
+        "simultaneous_interval": [
+          -0.01799869305143806,
+          2.752333506346499
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": null
+      },
+      "daily_2sls_lead": {
+        "utc_day_count": 24,
+        "day_median": 0.0017379182932580985,
+        "simultaneous_interval": [
+          -0.03032233163462423,
+          0.0354231532750537
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": null
+      },
+      "boundary": "First-stage and Wald-ratio diagnostics do not verify exclusion or SP exogeneity."
+    }
+  },
+  "automatic_iv_validity": null
+}

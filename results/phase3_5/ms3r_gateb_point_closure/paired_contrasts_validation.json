@@ -1,0 +1,53 @@
+{
+  "primary_horizons_steps": [
+    6,
+    18
+  ],
+  "independent_unit": "UTC_day",
+  "specificity_family": {
+    "A": {
+      "utc_day_count": 24,
+      "day_median": 0.5148909279675178,
+      "simultaneous_interval": [
+        0.4265711601254808,
+        0.6453303030564795
+      ],
+      "interval_confidence": 0.975,
+      "supervisor_gate_component": true
+    },
+    "B": {
+      "utc_day_count": 24,
+      "day_median": 0.39502801431680246,
+      "simultaneous_interval": [
+        0.30333818718567107,
+        0.45206654098159565
+      ],
+      "interval_confidence": 0.975,
+      "supervisor_gate_component": true
+    }
+  },
+  "timing_family": {
+    "A": {
+      "utc_day_count": 24,
+      "day_median": 0.5949933199472119,
+      "simultaneous_interval": [
+        0.5477886993411902,
+        0.7215768854325557
+      ],
+      "interval_confidence": 0.975,
+      "supervisor_gate_component": true
+    },
+    "B": {
+      "utc_day_count": 24,
+      "day_median": 0.4589949778156192,
+      "simultaneous_interval": [
+        0.4019788046178425,
+        0.5111045920655288
+      ],
+      "interval_confidence": 0.975,
+      "supervisor_gate_component": true
+    }
+  },
+  "automatic_scientific_pass": null,
+  "interpretation_boundary": "Direct paired UTC-day contrasts; Supervisor, not code, decides closure."
+}
