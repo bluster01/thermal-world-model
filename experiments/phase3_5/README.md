@@ -2,7 +2,7 @@
 
 本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
-> 当前状态：`ms3_r=audited`、`linux_authorized_gate=null`。`ms3r_gate_a_v1` 已完成并由本地审计为条件通过；下述命令只保留已执行合同，不得再次运行。Gate B/C、旧 42-run/E 系列均未授权。
+> 当前状态：`ms3_r=ready_for_linux`、`linux_authorized_gate=ms3_r`。唯一授权任务是第 19 节 `ms3r_gate_b_v1` 的一次 validation 批。Gate A 已完成，不得重跑；Gate C/MS4、旧 42-run/E 系列均未授权。
 
 ## MS3-R Gate A：点位与可辨识性批次
 
@@ -702,9 +702,9 @@ python experiments/phase3_5/audit_ms3d_asymmetry_diagnosis.py
 
 运行前工作树必须干净，cache source/matrix/reference SHA 必须与 config 一致。权威结论是 `MODEL_A_RESPONSE_ATTENUATION_EXCEEDS_FIELD_EVIDENCE / SIDE_ATTRIBUTION_INCONCLUSIVE`：B 阀位持久性更强，但局部温降和末温不支持把 checkpoint 的 4.63 倍侧差解释成已验证 plant gain。注册表状态为 `audited`、`linux_authorized_gate=null`；不得在 Linux 重跑或据此启动 MS4。
 
-## 19. MS3-R Gate B 点位闭合（本地已验证，当前无 Linux 授权）
+## 19. MS3-R Gate B 点位闭合（已授权一次 Linux validation）
 
-Gate B 是正式模型消融前最后一轮点位批，不训练模型、不访问 test。主门只使用 UTC 日为独立单位的 H60/H180 `Tin-Tout` 逐日配对差；H300/H600、末温、工况分层和 SP-IV 都是诊断。Linux 只负责在本地把注册表显式迁移到 `ready_for_linux` 且 `linux_authorized_gate=ms3_r` 后执行以下冻结批；当前状态不构成运行授权。
+Gate B 是正式模型消融前最后一轮点位批，不训练模型、不访问 test。主门只使用 UTC 日为独立单位的 H60/H180 `Tin-Tout` 逐日配对差；H300/H600、末温、工况分层和 SP-IV 都是诊断。注册表现已满足 `active_gate=ms3_r`、`active_status=ready_for_linux`、`linux_authorized_gate=ms3_r`，因此以下冻结批获得一次执行授权。
 
 授权后必须使用已有 MS3 v1.1 A/B cache，且工作树干净、HEAD 等于授权提交。完整批只有一次 analysis attempt，不补 seed、不调阈值、不写 Supervisor 判决：
 

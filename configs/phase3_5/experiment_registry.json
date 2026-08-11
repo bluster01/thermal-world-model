@@ -2,7 +2,7 @@
   "schema_version": "phase3.5-experiment-registry-v1",
   "updated_at": "2026-08-11",
   "active_gate": "ms3_r",
-  "linux_authorized_gate": null,
+  "linux_authorized_gate": "ms3_r",
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -546,7 +546,7 @@
     },
     "ms3_r": {
       "title": "真实点位响应辨识与模型扩充",
-      "status": "local_verified",
+      "status": "ready_for_linux",
       "owner": "local_design_code_linux_batch_run_local_audit",
       "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
       "scripts": {
@@ -619,7 +619,7 @@
           "required": true
         }
       },
-      "decision": "GATE_A AUDITED / GATE_B LOCAL_VERIFIED：Gate B 已冻结逐日配对路径特异性、短时程timing、2x2 MIMO、工况不变性与SP-IV可行性；尚无Linux授权",
+      "decision": "GATE_A AUDITED / GATE_B READY_FOR_LINUX：只授权一次冻结的validation点位闭合批；不训练模型、不访问test、不启动Gate C/MS4",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
