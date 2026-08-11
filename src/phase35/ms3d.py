@@ -479,7 +479,7 @@ def diagnosis_label(
     if consistently_b_larger:
         label = "FIELD_A_WEAK_SUPPORTED"
     elif model_ratio >= minimum_ratio and empirical_not_demonstrably_b_larger:
-        label = "MODEL_A_RESPONSE_ABSORPTION_COMPATIBLE"
+        label = "MODEL_A_RESPONSE_ATTENUATION_EXCEEDS_FIELD_EVIDENCE"
     else:
         label = "INCONCLUSIVE_ASYMMETRY_DIAGNOSIS"
     return {
@@ -491,7 +491,7 @@ def diagnosis_label(
             empirical_not_demonstrably_b_larger
         ),
         "interpretation_boundary": (
-            "Compatibility diagnosis only; intervals containing zero do not establish "
-            "equivalence or identify a neural absorption mechanism."
+            "Attenuation diagnosis only; intervals containing zero do not establish "
+            "equivalence or identify free-head absorption or another mechanism."
         ),
     }

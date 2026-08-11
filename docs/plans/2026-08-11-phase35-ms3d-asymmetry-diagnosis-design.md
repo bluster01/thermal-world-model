@@ -65,10 +65,10 @@ The MS3 checkpoint diagnostic contributes the constant raw-valve `+5%` H600 resp
 The supervisor label is conservative:
 
 - `FIELD_A_WEAK_SUPPORTED` only if paired-day evidence shows consistently weaker A response through the physical chain;
-- `MODEL_A_RESPONSE_ABSORPTION_COMPATIBLE` when the checkpoint asymmetry is large but the empirical local/terminal A response is not demonstrably weaker;
+- `MODEL_A_RESPONSE_ATTENUATION_EXCEEDS_FIELD_EVIDENCE` when the checkpoint asymmetry is large but the empirical local/terminal A response is not demonstrably weaker;
 - otherwise `INCONCLUSIVE_ASYMMETRY_DIAGNOSIS`.
 
-The second label is a diagnosis for a new response-identification protocol, not proof of a neural-network mechanism.
+The second label is a diagnosis for a new response-identification protocol. It does not identify whether attenuation came from free-head absorption, the opening map, scheduled gain, dynamics, observational confounding or their interaction.
 
 ## 6. Artifacts and stop rules
 

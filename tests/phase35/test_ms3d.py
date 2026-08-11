@@ -142,7 +142,7 @@ def test_diagnosis_label_does_not_call_zero_crossing_intervals_equivalence():
     paired = {key: {"ci95": [-0.1, 0.2]} for key in keys}
     checkpoint = {"B_to_A_abs_h600_effect_ratio_median": 4.0}
     result = diagnosis_label(paired, checkpoint, 3.0)
-    assert result["label"] == "MODEL_A_RESPONSE_ABSORPTION_COMPATIBLE"
+    assert result["label"] == "MODEL_A_RESPONSE_ATTENUATION_EXCEEDS_FIELD_EVIDENCE"
     assert "do not establish equivalence" in result["interpretation_boundary"]
 
 
