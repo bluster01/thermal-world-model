@@ -1,0 +1,61 @@
+{
+  "protocol_version": "phase3.5-ms3r-gateb-v1",
+  "maximum_daily_matrix_error": 8.881784197001252e-16,
+  "maximum_paired_contrast_error": 4.440892098500626e-16,
+  "paired_contrasts_recomputed": {
+    "primary_horizons_steps": [
+      6,
+      18
+    ],
+    "independent_unit": "UTC_day",
+    "specificity_family": {
+      "A": {
+        "utc_day_count": 24,
+        "day_median": 0.5148909279675177,
+        "simultaneous_interval": [
+          0.4265711601254808,
+          0.6453303030564796
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": true
+      },
+      "B": {
+        "utc_day_count": 24,
+        "day_median": 0.39502801431680246,
+        "simultaneous_interval": [
+          0.30333818718567096,
+          0.4520665409815957
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": true
+      }
+    },
+    "timing_family": {
+      "A": {
+        "utc_day_count": 24,
+        "day_median": 0.5949933199472119,
+        "simultaneous_interval": [
+          0.5477886993411902,
+          0.7215768854325558
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": true
+      },
+      "B": {
+        "utc_day_count": 24,
+        "day_median": 0.45899497781561927,
+        "simultaneous_interval": [
+          0.4019788046178425,
+          0.5111045920655288
+        ],
+        "interval_confidence": 0.975,
+        "supervisor_gate_component": true
+      }
+    },
+    "automatic_scientific_pass": null,
+    "interpretation_boundary": "Direct paired UTC-day contrasts; Supervisor, not code, decides closure."
+  },
+  "cache_accessed": false,
+  "training_executed": false,
+  "scientific_decision": null
+}

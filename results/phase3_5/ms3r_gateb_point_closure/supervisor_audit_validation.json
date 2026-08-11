@@ -1,0 +1,167 @@
+{
+  "protocol_version": "phase3.5-ms3r-gateb-v1",
+  "audited_result_commit": "0b6d948",
+  "executed_code_commit": "32ede073e505900757ecd68b10ad9bed3d3149c0",
+  "authorization_commit": "ef1489faa5c2a5452d04ce2d71efc146a084b16a",
+  "execution_provenance": {
+    "authorization_race": true,
+    "executed_before_registry_authorization_commit_was_pulled": true,
+    "user_authorization_note_present": true,
+    "scientific_code_and_config_diff_between_execution_and_authorization_commits": 0,
+    "disposition": "ACCEPT_WITH_PROCESS_ADVISORY",
+    "boundary": "The executed commit contained the frozen, locally verified Gate-B code and config. The later authorization commit changed only registry, TODO, README, and status-test expectations."
+  },
+  "artifact_integrity": {
+    "required_artifact_count": 11,
+    "required_artifacts_present": 11,
+    "ledger_entry_count_excluding_ledger": 10,
+    "scientific_json_and_npz_hashes_exact": true,
+    "git_blob_hashes_exact_for_stdout_and_resource_usage": true,
+    "windows_worktree_text_hashes_exact": false,
+    "windows_text_hash_boundary": "stdout.log and resource_usage.txt are CRLF in the Windows worktree; their committed LF blobs exactly match the Linux ledger. This is checkout normalization, not post-run mutation.",
+    "replay_arrays_sha256": "842a00ee8f89312709f51552508c1a77e46e8c9fde2fd1546a995a8ce15464e9",
+    "config_sha256_exact": true,
+    "gate_a_parent_pins_exact": true,
+    "cache_sha256_equal_to_gate_a": true,
+    "test_accessed": false,
+    "training_executed": false,
+    "automatic_scientific_pass": null
+  },
+  "execution_contract": {
+    "exit_code": 0,
+    "reported_wall_clock_seconds": 5,
+    "time_v_elapsed_seconds": 4.51,
+    "maximum_resident_set_kib": 1378940,
+    "maximum_resident_set_gib": 1.3150596618652344,
+    "single_attempt": true,
+    "stderr_empty": true,
+    "resource_capture_present": true,
+    "environment_advisory": "environment.txt was generated with another interpreter (Python 3.13.9), whereas the timed runner manifest records Python 3.11.15 and NumPy 2.3.5. The run manifest and /usr/bin/time command identify the actual runner, but the auxiliary environment file is not a complete execution-environment record."
+  },
+  "analysis_support": {
+    "candidate_anchor_count": 115190,
+    "crossfit_evaluated_count": 103408,
+    "rolling_fold_count": 4,
+    "independent_utc_day_count": 24,
+    "evaluation_time_start": "2026-03-21T00:00:00",
+    "evaluation_time_end": "2026-04-13T12:06:00",
+    "daily_row_count_minimum": 539,
+    "daily_row_count_median": 4757.0,
+    "daily_row_count_maximum": 8212,
+    "daily_input_gram_condition_number_minimum": 1.194296980668317,
+    "daily_input_gram_condition_number_median": 1.5423067052302115,
+    "daily_input_gram_condition_number_maximum": 6.920353895626439,
+    "independent_unit": "UTC_day",
+    "generality_boundary": "All 24 days come from one consecutive validation interval on one unit; they are not independent plant replications."
+  },
+  "cache_free_replay": {
+    "maximum_daily_matrix_error": 8.881784197001252e-16,
+    "maximum_paired_contrast_error": 4.440892098500626e-16,
+    "reported_bootstrap_intervals_exact": true,
+    "cache_accessed": false,
+    "training_executed": false
+  },
+  "frozen_primary_gate": {
+    "label": "PASS",
+    "specificity_family": {
+      "A": {
+        "utc_day_count": 24,
+        "positive_day_count": 22,
+        "day_median": 0.5148909279675178,
+        "simultaneous_interval_97_5": [0.4265711601254808, 0.6453303030564795]
+      },
+      "B": {
+        "utc_day_count": 24,
+        "positive_day_count": 24,
+        "day_median": 0.39502801431680246,
+        "simultaneous_interval_97_5": [0.30333818718567107, 0.45206654098159565]
+      }
+    },
+    "timing_family": {
+      "A": {
+        "utc_day_count": 24,
+        "positive_day_count": 22,
+        "day_median": 0.5949933199472119,
+        "simultaneous_interval_97_5": [0.5477886993411902, 0.7215768854325557]
+      },
+      "B": {
+        "utc_day_count": 24,
+        "positive_day_count": 24,
+        "day_median": 0.4589949778156192,
+        "simultaneous_interval_97_5": [0.4019788046178425, 0.5111045920655288]
+      }
+    },
+    "multiplicity": "Two prespecified action-side contrasts within each specificity/timing family use simultaneous 97.5% bootstrap intervals for familywise alpha 0.05.",
+    "boundary": "This is a median UTC-day gate. A had two negative days in both families, so PASS does not mean every date was invariant."
+  },
+  "serial_day_sensitivity": {
+    "status": "NONBLOCKING_ROBUSTNESS_PASS",
+    "two_day_circular_block_lower_bounds": {
+      "specificity_A": 0.40828064124048846,
+      "specificity_B": 0.30333818718567107,
+      "timing_A": 0.5369482443796638,
+      "timing_B": 0.40979990589204074
+    },
+    "three_day_circular_block_lower_bounds": {
+      "specificity_A": 0.3951666281518589,
+      "specificity_B": 0.30775169287108917,
+      "timing_A": 0.5232406257408865,
+      "timing_B": 0.4115875320675809
+    },
+    "leave_one_day_out_medians_all_positive": true,
+    "boundary": "This audit sensitivity was not part of the frozen primary gate and does not create new confirmatory claims."
+  },
+  "short_horizon_mimo": {
+    "label": "CONDITIONAL_LOCAL_MIMO_SUPPORTED",
+    "H60_day_median_matrix": [[0.550783348933578, 0.10758326263866455], [0.06771717477951669, 0.41828191127381736]],
+    "H180_day_median_matrix": [[0.7720660477985803, 0.1343453725051686], [0.06863455761788055, 0.4869039370992262]],
+    "H60_lead_day_median_matrix": [[-0.0006155604777513324, -0.0020181451392924173], [-0.0012129584970821583, 0.0012067903243606092]],
+    "H180_lead_day_median_matrix": [[-0.0006139600947521271, -0.004305466506707383], [-0.0007840992237852805, -0.0015541460081766293]],
+    "boundary": "Rows are residualized A/B valve innovations and columns are A/B local Tin-minus-Tout changes. These are closed-loop conditional coefficients, not open-loop spray-flow gains."
+  },
+  "invariance_diagnostics": {
+    "load_tertiles_keep_positive_diagonals": true,
+    "baseline_valve_tertiles_keep_positive_diagonals": true,
+    "coal_per_load_tertiles_keep_positive_diagonals": true,
+    "rolling_folds_keep_positive_diagonals": true,
+    "A_diagonal_fold_median_range": [0.40680149234513907, 0.6665293642968281],
+    "B_diagonal_fold_median_range": [0.43950454835800423, 0.4960954608956014],
+    "opening_closing_asymmetry_is_descriptive": true,
+    "boundary": "Every stratum is data-derived and contains only 6-8 UTC days; no paired interval was frozen for differences between strata or directions."
+  },
+  "placebo_and_downstream": {
+    "label": "UPSTREAM_PLACEBO_NONZERO_AND_TERMINAL_SIDE_SPECIFICITY_FAIL",
+    "upstream_tin_H60_diagonal": [0.10272355885076342, 0.05988254920718085],
+    "upstream_tin_H180_diagonal": [0.05094547906444406, 0.04370445493458343],
+    "terminal_H600_correct_diagonal": [0.026065230871361166, 0.025176741001866267],
+    "terminal_H600_wrong_side": [0.3555892881382477, 0.24463844656956302],
+    "long_horizon_local_boundary": "At H600 the A local future diagonal is approximately zero while its lead diagonal is 0.19984; H300/H600 remain diagnostic-only.",
+    "interpretation": "The short local path is stronger and better timed than these placebos, but unmeasured closed-loop disturbance remains. Terminal side-specific hard constraints are not supported."
+  },
+  "iv_assessment": {
+    "label": "SP_IV_NOT_SUPPORTED_AS_CAUSAL_ROUTE",
+    "A_first_stage_partial_r2": 0.014125518490291566,
+    "B_first_stage_partial_r2": 0.003965475978789835,
+    "A_other_valve_coaction_correlation": -0.21697722340678172,
+    "B_other_valve_coaction_correlation": -0.08978728857307974,
+    "A_correct_2sls_interval_97_5": [-0.34637714059585006, 3.8022634918445823],
+    "B_correct_2sls_interval_97_5": [0.6246947265382345, 2.248259894846818],
+    "B_wrong_side_2sls_day_median": 1.3050836890451638,
+    "B_correct_2sls_day_median": 1.0553226543657828,
+    "boundary": "Nonzero first-stage medians do not establish a strong or exogenous instrument. Weak partial R2, co-action, and wrong-side response prevent an IV causal upgrade."
+  },
+  "supervisor_decision": {
+    "label": "GATE_B_FROZEN_PRIMARY_PASS",
+    "components": [
+      "SHORT_HORIZON_CONDITIONAL_LOCAL_MIMO_SUPPORTED",
+      "PAIRED_PATH_SPECIFICITY_PASS",
+      "PAIRED_SHORT_HORIZON_TIMING_PASS",
+      "SP_IV_NOT_SUPPORTED_AS_CAUSAL_ROUTE",
+      "UPSTREAM_PLACEBO_NONZERO",
+      "TERMINAL_SIDE_SPECIFICITY_FAIL"
+    ],
+    "next_authorization": "LOCAL_GATE_C_MODEL_DESIGN_ONLY",
+    "linux_authorized_gate": null,
+    "claim_boundary": "Gate B supports a disturbance-conditioned, measured-boundary short-horizon conditional MIMO response block. It does not identify an open-loop plant, measured spray-flow physics, arbitrary do(valve), terminal side-specific causality, or a valid SP instrument."
+  }
+}

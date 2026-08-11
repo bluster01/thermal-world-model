@@ -2,7 +2,7 @@
   "schema_version": "phase3.5-experiment-registry-v1",
   "updated_at": "2026-08-11",
   "active_gate": "ms3_r",
-  "linux_authorized_gate": "ms3_r",
+  "linux_authorized_gate": null,
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -546,7 +546,7 @@
     },
     "ms3_r": {
       "title": "真实点位响应辨识与模型扩充",
-      "status": "ready_for_linux",
+      "status": "audited",
       "owner": "local_design_code_linux_batch_run_local_audit",
       "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
       "scripts": {
@@ -617,16 +617,35 @@
         "gateb_implementation_plan": {
           "path": "docs/plans/2026-08-11-phase35-ms3r-gateb-point-closure-implementation.md",
           "required": true
+        },
+        "gateb_validation_summary": {
+          "path": "results/phase3_5/ms3r_gateb_point_closure/summary_validation.json",
+          "required": true
+        },
+        "gateb_supervisor_replay": {
+          "path": "results/phase3_5/ms3r_gateb_point_closure/supervisor_replay_validation.json",
+          "required": true
+        },
+        "gateb_supervisor_audit_json": {
+          "path": "results/phase3_5/ms3r_gateb_point_closure/supervisor_audit_validation.json",
+          "required": true
+        },
+        "gateb_supervisor_audit": {
+          "path": "docs/PHASE35_MS3R_GATEB_SUPERVISOR_AUDIT_2026-08-11.md",
+          "required": true
         }
       },
-      "decision": "GATE_A AUDITED / GATE_B READY_FOR_LINUX：只授权一次冻结的validation点位闭合批；不训练模型、不访问test、不启动Gate C/MS4",
+      "decision": "AUDITED / GATE_B_FROZEN_PRIMARY_PASS / SHORT_HORIZON_CONDITIONAL_LOCAL_MIMO_SUPPORTED / SP_IV_NOT_SUPPORTED_AS_CAUSAL_ROUTE / UPSTREAM_PLACEBO_NONZERO / TERMINAL_SIDE_SPECIFICITY_FAIL；仅放行本地Gate-C模型设计",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
         "Linux 按批执行并回传机器产物；本地负责唯一 supervisor 判决",
         "Gate-B必须加入逐日配对correct-minus-placebo主对比；不得用分开的CI推断路径差异",
         "Gate-B主门仅60/180s局部Tin-Tout；300/600s、末温、不变性与IV只作诊断",
-        "远端必须单次执行、用/usr/bin/time -v记录peak RSS并完整回传replay NPZ；缺件只补传不重跑"
+        "Gate-B cache-free重放误差≤8.88e-16；四个冻结配对主门均PASS，但A各有2/24反向日",
+        "SP-IV partial R2仅A=0.0141/B=0.0040且错侧不干净，不允许因果升级",
+        "Linux执行存在授权提交未及时拉取的竞态；科学代码/配置差异为0，接受并记录流程advisory，不重跑",
+        "当前Linux授权已关闭；Gate C只允许本地设计，不访问test或启动MS4"
       ]
     },
     "ms4": {
