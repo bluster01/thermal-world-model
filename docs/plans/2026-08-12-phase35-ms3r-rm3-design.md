@@ -89,6 +89,10 @@ terminal 允许 action-invariant direct residual bypass：
 
 分别报告 oracle-action、forecast-action、valve/Tin/local/terminal MAE、correct/wrong/lead placebo、gain 跨 fold 稳定性与计算预算。不得用 composite score 掩盖 terminal 或 local 的一致退化。
 
+实现审计说明：RM3 中的 `M7-style` 与 `M9-style` 指在统一 paired 数据合同上重建对应的高容量归纳偏置，不复用旧单侧 40 列 checkpoint，也不声称参数级复现。M7 dense action injection 不满足 prefix causality，只保留为预测基线；M9 adapter 改为逐时刻 causal action attention。六候选的输出监督域不同，禁止使用一个 composite score 横跨 `terminal_only`、`valve_and_terminal` 与 `full_multitask` 三类输出作冠军排名。
+
+冻结真实矩阵 envelope 为：6 prediction candidates × 2 folds × 3 seeds=`36`，A1 scheduled/common-only 两个 response calibration candidates × 2 folds × 3 seeds=`12`，合计 `48` runs。该数字只是封闭预算与产物设计，当前 `linux_authorized=false`。
+
 ## 6. 阶段边界
 
 本地本轮只实现：冻结合同、OOF residualization、正交矩/R-loss、synthetic recovery/rank/placebo 测试、矩阵 dry-run 和 joint-latent interface 的结构测试。没有真实长训练授权。代码与 micro smoke 完成并经 Supervisor 检查后，才可另行冻结 Hermes 批次。

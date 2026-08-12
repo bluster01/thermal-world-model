@@ -670,6 +670,16 @@
           "status": "active",
           "required": true
         },
+        "rm3_prediction": {
+          "path": "src/phase35/multistep/rm3_prediction.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3_smoke": {
+          "path": "src/phase35/multistep/rm3_smoke.py",
+          "status": "active",
+          "required": true
+        },
         "rm3_local_runner": {
           "path": "experiments/phase3_5/ms3r_rm3.py",
           "status": "active",
@@ -834,7 +844,7 @@
           "required": true
         }
       },
-      "decision": "RM3 FRAMEWORK LOCAL_VERIFIED：RM2条件动作路径复现但gain未识别；已冻结OOF正交响应矩与统一H60公平预测设计，并完成合成恢复/rank/placebo和joint-latent interface测试；下一步实现真实统一数据适配与micro smoke，Linux/test/MS4继续冻结",
+      "decision": "RM3 ADAPTERS LOCAL_VERIFIED：OOF正交响应、joint-latent interface及统一paired H60的M7/M9/GateC/hybrid六候选forward/backward均通过；真实envelope为48 runs，但长训runner/selector/artifact contract未实现，Linux/test/MS4继续冻结",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -871,7 +881,11 @@
         "RM3将response identification与world-model prediction分开，不用旧Phase1/3 test数字横向排名",
         "最终候选方向为高容量M7/M9预测backbone + joint latent physical interfaces + OOF正交校准response",
         "RM3合成混杂真值最大恢复误差0.00438；置乱矩阵范数仅为恢复矩阵约3.7%，不产生现场数据结论",
-        "RM3 local_verified仅指合同、正交矩、负控制和joint-latent结构；真实H60统一适配与Hermes矩阵尚未实现/授权"
+        "RM3 local_verified仅指合同、正交矩、负控制和joint-latent结构；真实H60统一适配与Hermes矩阵尚未实现/授权",
+        "旧M7/M9依赖单侧40列和模块级数据全局，RM3只重建其归纳偏置，不复用旧checkpoint或声称参数级复现",
+        "M7-style dense action injection不满足prefix causality，仅作预测基线；M9-style适配为逐时刻causal action attention",
+        "六候选统一paired H60 forward/backward micro-cache通过；logged future valve只有P0 oracle可读",
+        "48-run envelope=36 prediction+12 orthogonal calibration；runner/selector/artifact contract本地闭合前不得授权Hermes"
       ]
     },
     "ms4": {

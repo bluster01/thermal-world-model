@@ -21,13 +21,24 @@
     {"candidate_id": "R2_a1_common_only", "response_family": "a1phys_three_pole", "coordinate_mode": "common_only"}
   ],
   "prediction_candidates": [
-    {"candidate_id": "P0_m7_oracle_valve", "future_action_access": "logged_future_valve", "role": "oracle_upper_bound"},
-    {"candidate_id": "P1_m7_predicted_valve", "future_action_access": "future_sp_to_predicted_valve", "role": "deployable_direct_baseline"},
-    {"candidate_id": "P2_m9_future_sp", "future_action_access": "future_sp", "role": "deployable_cross_attention_baseline"},
-    {"candidate_id": "P3_gatec_paired_free", "future_action_access": "future_sp", "role": "small_model_negative_control"},
-    {"candidate_id": "P4_gatec_a1_scheduled", "future_action_access": "future_sp", "role": "rm2_reference"},
-    {"candidate_id": "P5_hybrid_joint_latent", "future_action_access": "future_sp", "role": "high_capacity_backbone_with_orthogonal_response"}
+    {"candidate_id": "P0_m7_oracle_valve", "future_action_access": "logged_future_valve", "role": "oracle_upper_bound", "output_scope": "terminal_only", "prefix_causal_action_path": false},
+    {"candidate_id": "P1_m7_predicted_valve", "future_action_access": "future_sp_to_predicted_valve", "role": "deployable_direct_baseline", "output_scope": "valve_and_terminal", "prefix_causal_action_path": false},
+    {"candidate_id": "P2_m9_future_sp", "future_action_access": "future_sp", "role": "deployable_cross_attention_baseline", "output_scope": "terminal_only", "prefix_causal_action_path": true},
+    {"candidate_id": "P3_gatec_paired_free", "future_action_access": "future_sp", "role": "small_model_negative_control", "output_scope": "full_multitask", "prefix_causal_action_path": true},
+    {"candidate_id": "P4_gatec_a1_scheduled", "future_action_access": "future_sp", "role": "rm2_reference", "output_scope": "full_multitask", "prefix_causal_action_path": true},
+    {"candidate_id": "P5_hybrid_joint_latent", "future_action_access": "future_sp", "role": "high_capacity_backbone_with_orthogonal_response", "output_scope": "full_multitask", "prefix_causal_action_path": true}
   ],
+  "real_matrix_envelope": {
+    "status": "frozen_but_not_authorized",
+    "folds": ["F0", "F1"],
+    "seeds": [0, 1, 2],
+    "prediction_run_count": 36,
+    "orthogonal_calibration_run_count": 12,
+    "total_run_count": 48,
+    "optimizer_updates_cap": 4000,
+    "selector_and_reporting_anchors_disjoint": true,
+    "no_composite_ranking_across_output_scopes": true
+  },
   "statistics": {
     "ridge_alpha": 0.001,
     "epsilon": 1e-10,

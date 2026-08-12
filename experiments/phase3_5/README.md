@@ -13,6 +13,8 @@ python experiments/phase3_5/ms3r_rm3.py --synthetic-smoke
 
 RM3 将 response identification 与 prediction architecture 分开：前者使用 rolling OOF nuisance residualization/R-loss，后者才在统一 H60、split 和输入权限下比较 M7、M9、Gate C 与 hybrid joint-latent。raw future valve 只允许一个明确标记的 oracle upper bound，不能进入部署排名或 response auxiliary。
 
+当前六候选统一 adapter 与 micro-cache forward/backward 已完成。真实 envelope 为 36 个 prediction runs + 12 个 orthogonal calibration runs=`48`；它只冻结预算，不是执行授权。M7-style dense action injection 标记为 non-prefix-causal prediction baseline；M9-style 使用逐时刻 causal action attention。三类输出域不得用单一 composite score 横向选冠军。
+
 ## Gate C RM2：Hermes 54-run 并行批（已完成，仅供追溯）
 
 以下是已完成批次的冻结命令，不构成再次执行授权。原执行时状态必须同时为 `active_gate=ms3_r`、`active_status=ready_for_linux`、`linux_authorized_gate=ms3_r`；当前注册表已经关闭授权，不得回退状态或重跑：

@@ -27,6 +27,8 @@ def test_rm3_matrix_closes_identification_and_fair_prediction_tables() -> None:
     validate_rm3_matrix(matrix)
     assert len(rm3_identification_specs(matrix)) == 3
     assert len(rm3_prediction_specs(matrix)) == 6
+    assert matrix["real_matrix_envelope"]["total_run_count"] == 48
+    assert matrix["real_matrix_envelope"]["no_composite_ranking_across_output_scopes"] is True
     assert matrix["execution_contract"]["linux_authorized"] is False
     assert matrix["execution_contract"]["test_authorized"] is False
 

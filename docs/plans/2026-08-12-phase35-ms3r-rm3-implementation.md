@@ -71,3 +71,16 @@
 1. Run focused RM3 tests, all `tests/phase35`, compileall, JSON validation, status check and `git diff --check`.
 2. Mark RM3 as local implementation/local verification only; keep `linux_authorized_gate=null`.
 3. Do not push a Linux authorization until the user approves a separately frozen real-data matrix.
+
+### Task 7: Unify H60 prediction adapters and freeze the real envelope
+
+**Files:**
+- Create: `src/phase35/multistep/rm3_prediction.py`
+- Create: `src/phase35/multistep/rm3_smoke.py`
+- Test: `tests/phase35/multistep/test_rm3_prediction.py`
+- Test: `tests/phase35/multistep/test_rm3_smoke.py`
+
+1. Rebuild M7-style dense action injection and M9-style prefix-causal action attention on the paired 15-feature H60 contract; do not import old data globals or checkpoints.
+2. Put all six candidates behind one fail-closed adapter; logged future valve may enter only P0 oracle.
+3. Run finite forward/backward micro-cache smoke for every candidate.
+4. Freeze the 48-run envelope but leave real/Linux execution false until a long-training runner and result contract are locally verified.

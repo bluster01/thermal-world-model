@@ -45,6 +45,15 @@ def dry_run_payload(matrix: dict[str, Any]) -> dict[str, Any]:
         "identification_candidates": [spec.candidate_id for spec in rm3_identification_specs(matrix)],
         "prediction_candidates": [spec.candidate_id for spec in rm3_prediction_specs(matrix)],
         "prediction_candidate_count": len(rm3_prediction_specs(matrix)),
+        "prediction_run_count": matrix["real_matrix_envelope"]["prediction_run_count"],
+        "orthogonal_calibration_run_count": matrix["real_matrix_envelope"][
+            "orthogonal_calibration_run_count"
+        ],
+        "total_real_run_envelope": matrix["real_matrix_envelope"]["total_run_count"],
+        "real_matrix_status": matrix["real_matrix_envelope"]["status"],
+        "no_composite_ranking_across_output_scopes": matrix["real_matrix_envelope"][
+            "no_composite_ranking_across_output_scopes"
+        ],
         "primary_response_horizons_steps": matrix["data_contract"]["primary_response_horizons_steps"],
         "raw_future_valve_auxiliary_allowed": matrix["data_contract"]["raw_future_valve_auxiliary_allowed"],
         "local_synthetic_smoke_authorized": execution["local_synthetic_smoke_authorized"],

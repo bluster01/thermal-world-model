@@ -22,6 +22,11 @@ def test_rm3_dry_run_separates_identification_and_prediction() -> None:
         "R2_a1_common_only",
     ]
     assert payload["prediction_candidate_count"] == 6
+    assert payload["prediction_run_count"] == 36
+    assert payload["orthogonal_calibration_run_count"] == 12
+    assert payload["total_real_run_envelope"] == 48
+    assert payload["real_matrix_status"] == "frozen_but_not_authorized"
+    assert payload["no_composite_ranking_across_output_scopes"] is True
     assert payload["primary_response_horizons_steps"] == [6, 18]
     assert payload["raw_future_valve_auxiliary_allowed"] is False
     assert payload["local_real_training_authorized"] is False
