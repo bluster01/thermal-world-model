@@ -84,3 +84,19 @@
 2. Put all six candidates behind one fail-closed adapter; logged future valve may enter only P0 oracle.
 3. Run finite forward/backward micro-cache smoke for every candidate.
 4. Freeze the 48-run envelope but leave real/Linux execution false until a long-training runner and result contract are locally verified.
+
+### Task 8: Implement the frozen long-training and return contract
+
+**Files:**
+- Create: `src/phase35/multistep/rm3_training.py`
+- Create: `src/phase35/multistep/rm3_reporting.py`
+- Create: `experiments/phase3_5/ms3r_rm3_train.py`
+- Test: `tests/phase35/multistep/test_rm3_training.py`
+- Test: `tests/phase35/multistep/test_rm3_reporting.py`
+
+1. Expand exactly 36 prediction runs as six candidates × two rolling folds × three seeds.
+2. Expand exactly 12 orthogonal calibration units as two folds × three seeds × H60/H180; each calibration unit reports R0/R1/R2 together and is not three separately billed trainings.
+3. Fit normalization and loss scales on train only; split validation deterministically into disjoint selector and reporting anchors; prohibit test access and overwrite/retry drift.
+4. Select checkpoints only within the declared output scope. Report common terminal metrics across all candidates, but never create a composite leaderboard across output scopes.
+5. Write replayable per-run artifacts, hashes and root execution status. Hermes executes the frozen command and returns artifacts; it does not change candidates, thresholds, states or scientific decisions.
+6. Keep the science matrix permanently non-self-authorizing. After local verification, a separate commit may authorize only through `ms3_r.status=ready_for_linux` and `linux_authorized_gate=ms3_r`; it must not modify scientific code or matrix fields.

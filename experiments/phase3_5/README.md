@@ -814,3 +814,13 @@ python experiments/phase3_5/ms3r_gateb_point_closure.py \
 ```
 
 必须完整提交配置列出的 11 项产物，尤其是 `replay_arrays_validation.npz`、`resource_usage.txt` 和 ledger。若 Git 因大文件规则漏掉 NPZ，只补传该文件；不得重做整批。Linux 不运行 replay、不解释科学结果、不修改 `configs/`、`src/`、`experiments/`、`tests/`、`docs/`、TODO 或注册表。本地收到完整批后只做一次 cache-free replay 和 Supervisor 审计，再决定是否进入正式模型消融。
+
+## 20. MS3-R RM3 48-unit 执行包（本地已验证，尚未授权）
+
+RM3 已闭合为 36 个 prediction runs 与 12 个 orthogonal calibration units。每个 calibration unit 在同一 fold/seed/horizon 内同时报告 R0/R1/R2，不是三个独立训练；H60/H180 使用完整前缀响应轨迹，不只取单个端点。科学矩阵永久保持 `linux_authorized=false`，它不能自我授权；独立注册表当前仍为 `linux_authorized_gate=null`，所以下列 dry-run 可执行，但 `--execute` 必须失败。这不是 Hermes 运行授权。
+
+```bash
+python experiments/phase3_5/ms3r_rm3_train.py --dry-run
+```
+
+未来独立授权提交只允许把注册表改为 `ms3_r.status=ready_for_linux`、`linux_authorized_gate=ms3_r`，不得改变科学矩阵、候选、fold、seed、预算、selector/reporting anchors、指标或代码。Hermes 的边界固定为：拉取指定提交、检查 clean worktree、执行冻结 48 units、回传全部目录与 root ledger；不得调参、自动重试残缺 run、访问 test、产生科学 PASS、修改 TODO/文档/配置或启动 MS4。

@@ -140,6 +140,53 @@ def orthogonal_r_loss(
     return F.huber_loss(predicted_outcome_residual, outcome_residual, delta=float(delta))
 
 
+def orthogonal_trajectory_moments(
+    action_residual: np.ndarray,
+    outcome_residual: np.ndarray,
+    *,
+    ridge_alpha: float,
+    epsilon: float,
+    maximum_condition_number: float,
+    minimum_differential_to_common_energy: float,
+    common_only: bool = False,
+) -> tuple[RM3MomentAudit, ...]:
+    """Estimate every prefix response point; never collapse H60/H180 to one endpoint."""
+    action = np.asarray(action_residual, dtype=float)
+    outcome = np.asarray(outcome_residual, dtype=float)
+    if action.ndim != 3 or outcome.ndim != 3 or action.shape != outcome.shape:
+        raise Phase35ProtocolError("RM3 trajectory moments require aligned n×h×2 arrays")
+    audits = []
+    for step in range(action.shape[1]):
+        a = action[:, step]
+        y = outcome[:, step]
+        if common_only:
+            common_action = a.mean(axis=1, keepdims=True)
+            common_outcome = y.mean(axis=1, keepdims=True)
+            gram = float(np.mean(common_action**2))
+            gain = float(np.mean(common_action * common_outcome) / max(gram + ridge_alpha, epsilon))
+            matrix = np.full((2, 2), gain / 2.0)
+            audits.append(
+                RM3MomentAudit(
+                    matrix=matrix,
+                    action_gram=np.full((2, 2), gram),
+                    condition_number=float("inf"),
+                    common_energy=gram,
+                    differential_energy=0.0,
+                    differential_to_common_energy_ratio=0.0,
+                    independent_channels_supported=False,
+                )
+            )
+        else:
+            audits.append(
+                orthogonal_mimo_moment(
+                    a, y, ridge_alpha=ridge_alpha, epsilon=epsilon,
+                    maximum_condition_number=maximum_condition_number,
+                    minimum_differential_to_common_energy=minimum_differential_to_common_energy,
+                )
+            )
+    return tuple(audits)
+
+
 def generate_rm3_confounded_synthetic(
     *, seed: int, n_rows: int, collinear_actions: bool = False
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:

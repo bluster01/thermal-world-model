@@ -7,7 +7,9 @@ from pathlib import Path
 import pytest
 
 from src.phase35.multistep.rm3_contracts import (
+    rm3_calibration_specs,
     rm3_identification_specs,
+    rm3_prediction_run_specs,
     rm3_prediction_specs,
     validate_rm3_matrix,
 )
@@ -31,6 +33,19 @@ def test_rm3_matrix_closes_identification_and_fair_prediction_tables() -> None:
     assert matrix["real_matrix_envelope"]["no_composite_ranking_across_output_scopes"] is True
     assert matrix["execution_contract"]["linux_authorized"] is False
     assert matrix["execution_contract"]["test_authorized"] is False
+    prediction_runs = rm3_prediction_run_specs(matrix)
+    calibrations = rm3_calibration_specs(matrix)
+    assert len(prediction_runs) == len({run.run_id for run in prediction_runs}) == 36
+    assert len(calibrations) == 12
+    assert all(
+        item.candidate_ids == (
+            "R0_linear_mimo",
+            "R1_a1_scheduled",
+            "R2_a1_common_only",
+        )
+        for item in calibrations
+    )
+    assert {item.response_horizon_steps for item in calibrations} == {6, 18}
 
 
 @pytest.mark.parametrize(

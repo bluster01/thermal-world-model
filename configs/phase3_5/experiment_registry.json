@@ -680,6 +680,26 @@
           "status": "active",
           "required": true
         },
+        "rm3_training": {
+          "path": "src/phase35/multistep/rm3_training.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3_calibration": {
+          "path": "src/phase35/multistep/rm3_calibration.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3_reporting": {
+          "path": "src/phase35/multistep/rm3_reporting.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3_train_runner": {
+          "path": "experiments/phase3_5/ms3r_rm3_train.py",
+          "status": "active",
+          "required": true
+        },
         "rm3_local_runner": {
           "path": "experiments/phase3_5/ms3r_rm3.py",
           "status": "active",
@@ -844,7 +864,7 @@
           "required": true
         }
       },
-      "decision": "RM3 ADAPTERS LOCAL_VERIFIED：OOF正交响应、joint-latent interface及统一paired H60的M7/M9/GateC/hybrid六候选forward/backward均通过；真实envelope为48 runs，但长训runner/selector/artifact contract未实现，Linux/test/MS4继续冻结",
+      "decision": "RM3 RUNNER LOCAL_VERIFIED：36 prediction+12 orthogonal calibration执行包、分输出域selector/reporting、逐文件ledger和六候选reduced-cache长训均通过；等待独立Hermes授权提交，Linux/test/MS4继续冻结",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -885,7 +905,11 @@
         "旧M7/M9依赖单侧40列和模块级数据全局，RM3只重建其归纳偏置，不复用旧checkpoint或声称参数级复现",
         "M7-style dense action injection不满足prefix causality，仅作预测基线；M9-style适配为逐时刻causal action attention",
         "六候选统一paired H60 forward/backward micro-cache通过；logged future valve只有P0 oracle可读",
-        "48-run envelope=36 prediction+12 orthogonal calibration；runner/selector/artifact contract本地闭合前不得授权Hermes"
+        "48-run envelope=36 prediction+12 orthogonal calibration；每个calibration unit同时报告R0/R1/R2",
+        "H60/H180正交校准保留完整prefix trajectory，不以单端点假装辨识三极点",
+        "R1当前仅作固定60/180/600s非负三极点trajectory projection，context scheduling仍未识别",
+        "selector按output_scope计算；所有候选共享terminal MAE描述，但禁止跨scope composite冠军",
+        "runner/selector/artifact contract及六候选reduced-cache训练已本地闭合；仍需独立授权提交才可运行Hermes"
       ]
     },
     "ms4": {

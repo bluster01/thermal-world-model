@@ -9,9 +9,23 @@ from src.phase35.multistep.rm3_orthogonal import (
     oof_nuisance_residuals,
     orthogonal_mimo_moment,
     orthogonal_r_loss,
+    orthogonal_trajectory_moments,
     synthetic_expanding_splits,
     validate_expanding_splits,
 )
+
+
+def test_trajectory_moments_keep_every_prefix_step() -> None:
+    rng = np.random.default_rng(53)
+    action = rng.normal(size=(200, 6, 2))
+    truth = np.stack([np.eye(2) * (step + 1) / 10 for step in range(6)])
+    outcome = np.einsum("nhi,hij->nhj", action, truth)
+    audits = orthogonal_trajectory_moments(
+        action, outcome, ridge_alpha=1e-8, epsilon=1e-10,
+        maximum_condition_number=1e4, minimum_differential_to_common_energy=0.01,
+    )
+    assert len(audits) == 6
+    assert np.allclose(np.stack([item.matrix for item in audits]), truth, atol=1e-6)
 from src.phase35.schema import Phase35ProtocolError
 
 
