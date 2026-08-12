@@ -1,0 +1,64 @@
+{
+  "protocol_version": "phase3.5-ms3r-rm3-v1",
+  "run_id": "P4_gatec_a1_scheduled_F0_s0",
+  "run_spec": {
+    "run_id": "P4_gatec_a1_scheduled_F0_s0",
+    "candidate_id": "P4_gatec_a1_scheduled",
+    "future_action_access": "future_sp",
+    "role": "rm2_reference",
+    "output_scope": "full_multitask",
+    "prefix_causal_action_path": true,
+    "fold_id": "F0",
+    "seed": 0,
+    "train_fraction": [
+      0.0,
+      0.6
+    ],
+    "validation_fraction": [
+      0.6,
+      0.7
+    ]
+  },
+  "provenance": {
+    "execution_git_sha": "e7094b8b226f2fc7717c80a29c825d8edb633cb0",
+    "matrix_sha256": "3868601511cea171a51ee80180ef48febe0592fe9b336a2777a35d0a76aba096",
+    "parent_rm2_audit": {
+      "path": "results/phase3_5/ms3r_gatec_rm2/supervisor_audit_validation.json",
+      "sha256": "6a6df2796c9de4ab3c8a7528bc195ea1ec94534219fe0739554027e4216cd5e7",
+      "hash_mode": "utf8_text_normalized_lf",
+      "required_label": "RM2_COMPLETE_CONDITIONAL_ACTION_PATH_REPRODUCED_OPERATOR_GAIN_NOT_IDENTIFIED"
+    },
+    "cache_sha256": {
+      "A": "a75cde934e1d459c629959a6921a80d31ec1bf998468525ef82a4ffaaa3f29b8",
+      "B": "7005d027b97cad9e26c2f8f36ed8ffb77aa83a68ed83d6da786f0369abe0b8fa"
+    },
+    "code_sha256": {
+      "src/phase35/multistep/rm3_contracts.py": "28dd160cd7c222c95f109ac97f2b1e113d5889264607145a4bcefab983a92966",
+      "src/phase35/multistep/rm3_prediction.py": "23bf0c95c1a6ce91bb871c4037a4a7acd745bbad1685d00baf21fe14219efa9e",
+      "src/phase35/multistep/rm3_joint_model.py": "ec55a1dd5d4ed960bf82cec8d3990b789a94a2431057931a5f3c60c1a7b922d0",
+      "src/phase35/multistep/rm3_orthogonal.py": "5ec5b608ed967696bdaa161fcb17bb384ac6fca8d73d0cf638fd2e94c69aa427",
+      "src/phase35/multistep/rm3_training.py": "29074423180794156b7d843d22e4f4c0fe9afa52695c5d2c32436518eacf8019",
+      "src/phase35/multistep/rm3_calibration.py": "d076edb23f228982360e8bb4bbdfae5c6ae1e2c12b80df1926370a27ff0699a2",
+      "src/phase35/multistep/rm3_reporting.py": "cd6243f9a6df772428b235e9ca80832c19453fd1fcded13feb0328438e131e3c",
+      "experiments/phase3_5/ms3r_rm3_train.py": "f6f601900a86886a917b83bd2c6272d6ae89cab7f31cc44c302aa93be2854c1a"
+    },
+    "python_version": "3.11.15",
+    "numpy_version": "2.3.5",
+    "torch_version": "2.11.0+cu130",
+    "cuda_available": true,
+    "test_accessed": false,
+    "device": "cuda:0"
+  },
+  "train_anchor_pool_count": 695780,
+  "stats_anchor_count": 16384,
+  "selector_anchor_count": 2048,
+  "reporting_anchor_count": 4096,
+  "selector_anchor_sha256": "b0cbb70d3ac5f076577fdd2fa2072aaaa3cd3b779f2bc96cd604d7f8d0aaf72c",
+  "reporting_anchor_sha256": "a91af55ae4a4a0aaad48d0f8185c39b2daae34a2f9e8e85594185dc913e51a12",
+  "selector_reporting_disjoint": true,
+  "checkpoint_selector": "validation_full_multitask_normalized_loss",
+  "checkpoint_sha256": "17910e661579700fcd9a6fac607d849e4d5cc85ca0b6eb020844c7bb4d772f79",
+  "test_accessed": false,
+  "automatic_scientific_pass": null,
+  "elapsed_seconds": 441.28770138300024
+}

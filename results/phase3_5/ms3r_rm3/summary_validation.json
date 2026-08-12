@@ -1,0 +1,394 @@
+{
+  "prediction_run_count": 36,
+  "all_runs_complete": true,
+  "common_descriptive_metric": "terminal_mae_c",
+  "candidate_summary": [
+    {
+      "candidate_id": "P0_m7_oracle_valve",
+      "output_scope": "terminal_only",
+      "run_count": 6,
+      "terminal_mae_c_mean": 0.6614894347058402,
+      "terminal_mae_c_std_across_runs": 0.0076871052681179875
+    },
+    {
+      "candidate_id": "P1_m7_predicted_valve",
+      "output_scope": "valve_and_terminal",
+      "run_count": 6,
+      "terminal_mae_c_mean": 0.9482156236966451,
+      "terminal_mae_c_std_across_runs": 0.025876927194605315
+    },
+    {
+      "candidate_id": "P2_m9_future_sp",
+      "output_scope": "terminal_only",
+      "run_count": 6,
+      "terminal_mae_c_mean": 1.4452894313467872,
+      "terminal_mae_c_std_across_runs": 0.035326512549511926
+    },
+    {
+      "candidate_id": "P3_gatec_paired_free",
+      "output_scope": "full_multitask",
+      "run_count": 6,
+      "terminal_mae_c_mean": 1.0583955791261461,
+      "terminal_mae_c_std_across_runs": 0.03662896637671519
+    },
+    {
+      "candidate_id": "P4_gatec_a1_scheduled",
+      "output_scope": "full_multitask",
+      "run_count": 6,
+      "terminal_mae_c_mean": 1.0578335283531082,
+      "terminal_mae_c_std_across_runs": 0.03725721998469237
+    },
+    {
+      "candidate_id": "P5_hybrid_joint_latent",
+      "output_scope": "full_multitask",
+      "run_count": 6,
+      "terminal_mae_c_mean": 0.9727245287762748,
+      "terminal_mae_c_std_across_runs": 0.04306615588831349
+    }
+  ],
+  "scope_qualified_leaderboards": {
+    "terminal_only": [
+      {
+        "candidate_id": "P0_m7_oracle_valve",
+        "output_scope": "terminal_only",
+        "run_count": 6,
+        "terminal_mae_c_mean": 0.6614894347058402,
+        "terminal_mae_c_std_across_runs": 0.0076871052681179875
+      },
+      {
+        "candidate_id": "P2_m9_future_sp",
+        "output_scope": "terminal_only",
+        "run_count": 6,
+        "terminal_mae_c_mean": 1.4452894313467872,
+        "terminal_mae_c_std_across_runs": 0.035326512549511926
+      }
+    ],
+    "valve_and_terminal": [
+      {
+        "candidate_id": "P1_m7_predicted_valve",
+        "output_scope": "valve_and_terminal",
+        "run_count": 6,
+        "terminal_mae_c_mean": 0.9482156236966451,
+        "terminal_mae_c_std_across_runs": 0.025876927194605315
+      }
+    ],
+    "full_multitask": [
+      {
+        "candidate_id": "P5_hybrid_joint_latent",
+        "output_scope": "full_multitask",
+        "run_count": 6,
+        "terminal_mae_c_mean": 0.9727245287762748,
+        "terminal_mae_c_std_across_runs": 0.04306615588831349
+      },
+      {
+        "candidate_id": "P4_gatec_a1_scheduled",
+        "output_scope": "full_multitask",
+        "run_count": 6,
+        "terminal_mae_c_mean": 1.0578335283531082,
+        "terminal_mae_c_std_across_runs": 0.03725721998469237
+      },
+      {
+        "candidate_id": "P3_gatec_paired_free",
+        "output_scope": "full_multitask",
+        "run_count": 6,
+        "terminal_mae_c_mean": 1.0583955791261461,
+        "terminal_mae_c_std_across_runs": 0.03662896637671519
+      }
+    ]
+  },
+  "cross_output_scope_composite_ranking": null,
+  "test_accessed": false,
+  "automatic_scientific_pass": null,
+  "records": [
+    {
+      "run_id": "P0_m7_oracle_valve_F0_s0",
+      "candidate_id": "P0_m7_oracle_valve",
+      "output_scope": "terminal_only",
+      "fold_id": "F0",
+      "seed": 0,
+      "terminal_mae_c": 0.6483610848585765
+    },
+    {
+      "run_id": "P0_m7_oracle_valve_F0_s1",
+      "candidate_id": "P0_m7_oracle_valve",
+      "output_scope": "terminal_only",
+      "fold_id": "F0",
+      "seed": 1,
+      "terminal_mae_c": 0.6724264880021413
+    },
+    {
+      "run_id": "P0_m7_oracle_valve_F0_s2",
+      "candidate_id": "P0_m7_oracle_valve",
+      "output_scope": "terminal_only",
+      "fold_id": "F0",
+      "seed": 2,
+      "terminal_mae_c": 0.6623966087897618
+    },
+    {
+      "run_id": "P0_m7_oracle_valve_F1_s0",
+      "candidate_id": "P0_m7_oracle_valve",
+      "output_scope": "terminal_only",
+      "fold_id": "F1",
+      "seed": 0,
+      "terminal_mae_c": 0.6619105060895284
+    },
+    {
+      "run_id": "P0_m7_oracle_valve_F1_s1",
+      "candidate_id": "P0_m7_oracle_valve",
+      "output_scope": "terminal_only",
+      "fold_id": "F1",
+      "seed": 1,
+      "terminal_mae_c": 0.6608932107686997
+    },
+    {
+      "run_id": "P0_m7_oracle_valve_F1_s2",
+      "candidate_id": "P0_m7_oracle_valve",
+      "output_scope": "terminal_only",
+      "fold_id": "F1",
+      "seed": 2,
+      "terminal_mae_c": 0.6629487097263336
+    },
+    {
+      "run_id": "P1_m7_predicted_valve_F0_s0",
+      "candidate_id": "P1_m7_predicted_valve",
+      "output_scope": "valve_and_terminal",
+      "fold_id": "F0",
+      "seed": 0,
+      "terminal_mae_c": 0.9309259394804636
+    },
+    {
+      "run_id": "P1_m7_predicted_valve_F0_s1",
+      "candidate_id": "P1_m7_predicted_valve",
+      "output_scope": "valve_and_terminal",
+      "fold_id": "F0",
+      "seed": 1,
+      "terminal_mae_c": 0.9254232833782832
+    },
+    {
+      "run_id": "P1_m7_predicted_valve_F0_s2",
+      "candidate_id": "P1_m7_predicted_valve",
+      "output_scope": "valve_and_terminal",
+      "fold_id": "F0",
+      "seed": 2,
+      "terminal_mae_c": 0.9194121539592743
+    },
+    {
+      "run_id": "P1_m7_predicted_valve_F1_s0",
+      "candidate_id": "P1_m7_predicted_valve",
+      "output_scope": "valve_and_terminal",
+      "fold_id": "F1",
+      "seed": 0,
+      "terminal_mae_c": 0.9783593207597733
+    },
+    {
+      "run_id": "P1_m7_predicted_valve_F1_s1",
+      "candidate_id": "P1_m7_predicted_valve",
+      "output_scope": "valve_and_terminal",
+      "fold_id": "F1",
+      "seed": 1,
+      "terminal_mae_c": 0.9721090813477834
+    },
+    {
+      "run_id": "P1_m7_predicted_valve_F1_s2",
+      "candidate_id": "P1_m7_predicted_valve",
+      "output_scope": "valve_and_terminal",
+      "fold_id": "F1",
+      "seed": 2,
+      "terminal_mae_c": 0.9630639632542928
+    },
+    {
+      "run_id": "P2_m9_future_sp_F0_s0",
+      "candidate_id": "P2_m9_future_sp",
+      "output_scope": "terminal_only",
+      "fold_id": "F0",
+      "seed": 0,
+      "terminal_mae_c": 1.4234653850396475
+    },
+    {
+      "run_id": "P2_m9_future_sp_F0_s1",
+      "candidate_id": "P2_m9_future_sp",
+      "output_scope": "terminal_only",
+      "fold_id": "F0",
+      "seed": 1,
+      "terminal_mae_c": 1.4224422911802928
+    },
+    {
+      "run_id": "P2_m9_future_sp_F0_s2",
+      "candidate_id": "P2_m9_future_sp",
+      "output_scope": "terminal_only",
+      "fold_id": "F0",
+      "seed": 2,
+      "terminal_mae_c": 1.3968217055002847
+    },
+    {
+      "run_id": "P2_m9_future_sp_F1_s0",
+      "candidate_id": "P2_m9_future_sp",
+      "output_scope": "terminal_only",
+      "fold_id": "F1",
+      "seed": 0,
+      "terminal_mae_c": 1.477015886704127
+    },
+    {
+      "run_id": "P2_m9_future_sp_F1_s1",
+      "candidate_id": "P2_m9_future_sp",
+      "output_scope": "terminal_only",
+      "fold_id": "F1",
+      "seed": 1,
+      "terminal_mae_c": 1.4757739841938018
+    },
+    {
+      "run_id": "P2_m9_future_sp_F1_s2",
+      "candidate_id": "P2_m9_future_sp",
+      "output_scope": "terminal_only",
+      "fold_id": "F1",
+      "seed": 2,
+      "terminal_mae_c": 1.4762173354625703
+    },
+    {
+      "run_id": "P3_gatec_paired_free_F0_s0",
+      "candidate_id": "P3_gatec_paired_free",
+      "output_scope": "full_multitask",
+      "fold_id": "F0",
+      "seed": 0,
+      "terminal_mae_c": 1.0415968070427577
+    },
+    {
+      "run_id": "P3_gatec_paired_free_F0_s1",
+      "candidate_id": "P3_gatec_paired_free",
+      "output_scope": "full_multitask",
+      "fold_id": "F0",
+      "seed": 1,
+      "terminal_mae_c": 1.0222957581281662
+    },
+    {
+      "run_id": "P3_gatec_paired_free_F0_s2",
+      "candidate_id": "P3_gatec_paired_free",
+      "output_scope": "full_multitask",
+      "fold_id": "F0",
+      "seed": 2,
+      "terminal_mae_c": 1.0148155728975932
+    },
+    {
+      "run_id": "P3_gatec_paired_free_F1_s0",
+      "candidate_id": "P3_gatec_paired_free",
+      "output_scope": "full_multitask",
+      "fold_id": "F1",
+      "seed": 0,
+      "terminal_mae_c": 1.0858878990014393
+    },
+    {
+      "run_id": "P3_gatec_paired_free_F1_s1",
+      "candidate_id": "P3_gatec_paired_free",
+      "output_scope": "full_multitask",
+      "fold_id": "F1",
+      "seed": 1,
+      "terminal_mae_c": 1.0995374818642933
+    },
+    {
+      "run_id": "P3_gatec_paired_free_F1_s2",
+      "candidate_id": "P3_gatec_paired_free",
+      "output_scope": "full_multitask",
+      "fold_id": "F1",
+      "seed": 2,
+      "terminal_mae_c": 1.0862399558226268
+    },
+    {
+      "run_id": "P4_gatec_a1_scheduled_F0_s0",
+      "candidate_id": "P4_gatec_a1_scheduled",
+      "output_scope": "full_multitask",
+      "fold_id": "F0",
+      "seed": 0,
+      "terminal_mae_c": 1.0293130159378052
+    },
+    {
+      "run_id": "P4_gatec_a1_scheduled_F0_s1",
+      "candidate_id": "P4_gatec_a1_scheduled",
+      "output_scope": "full_multitask",
+      "fold_id": "F0",
+      "seed": 1,
+      "terminal_mae_c": 1.0146369735399883
+    },
+    {
+      "run_id": "P4_gatec_a1_scheduled_F0_s2",
+      "candidate_id": "P4_gatec_a1_scheduled",
+      "output_scope": "full_multitask",
+      "fold_id": "F0",
+      "seed": 2,
+      "terminal_mae_c": 1.0299107700586319
+    },
+    {
+      "run_id": "P4_gatec_a1_scheduled_F1_s0",
+      "candidate_id": "P4_gatec_a1_scheduled",
+      "output_scope": "full_multitask",
+      "fold_id": "F1",
+      "seed": 0,
+      "terminal_mae_c": 1.0803356170654297
+    },
+    {
+      "run_id": "P4_gatec_a1_scheduled_F1_s1",
+      "candidate_id": "P4_gatec_a1_scheduled",
+      "output_scope": "full_multitask",
+      "fold_id": "F1",
+      "seed": 1,
+      "terminal_mae_c": 1.096419447660446
+    },
+    {
+      "run_id": "P4_gatec_a1_scheduled_F1_s2",
+      "candidate_id": "P4_gatec_a1_scheduled",
+      "output_scope": "full_multitask",
+      "fold_id": "F1",
+      "seed": 2,
+      "terminal_mae_c": 1.0963853458563486
+    },
+    {
+      "run_id": "P5_hybrid_joint_latent_F0_s0",
+      "candidate_id": "P5_hybrid_joint_latent",
+      "output_scope": "full_multitask",
+      "fold_id": "F0",
+      "seed": 0,
+      "terminal_mae_c": 0.9568994760513305
+    },
+    {
+      "run_id": "P5_hybrid_joint_latent_F0_s1",
+      "candidate_id": "P5_hybrid_joint_latent",
+      "output_scope": "full_multitask",
+      "fold_id": "F0",
+      "seed": 1,
+      "terminal_mae_c": 0.9267973532279332
+    },
+    {
+      "run_id": "P5_hybrid_joint_latent_F0_s2",
+      "candidate_id": "P5_hybrid_joint_latent",
+      "output_scope": "full_multitask",
+      "fold_id": "F0",
+      "seed": 2,
+      "terminal_mae_c": 0.9269005159536997
+    },
+    {
+      "run_id": "P5_hybrid_joint_latent_F1_s0",
+      "candidate_id": "P5_hybrid_joint_latent",
+      "output_scope": "full_multitask",
+      "fold_id": "F1",
+      "seed": 0,
+      "terminal_mae_c": 1.0067865977684656
+    },
+    {
+      "run_id": "P5_hybrid_joint_latent_F1_s1",
+      "candidate_id": "P5_hybrid_joint_latent",
+      "output_scope": "full_multitask",
+      "fold_id": "F1",
+      "seed": 1,
+      "terminal_mae_c": 0.987669923901558
+    },
+    {
+      "run_id": "P5_hybrid_joint_latent_F1_s2",
+      "candidate_id": "P5_hybrid_joint_latent",
+      "output_scope": "full_multitask",
+      "fold_id": "F1",
+      "seed": 2,
+      "terminal_mae_c": 1.0312933057546616
+    }
+  ],
+  "calibration_unit_count": 12,
+  "scientific_decision": null
+}

@@ -1,0 +1,8 @@
+authorization_note:
+  Preflight had 1 failing test: test_rm3_train_cli.py::test_execute_refuses_current_unauthorized_registry.
+  Root cause: test asserts execute_matrix must raise when registry is unauthorized, but the
+  current registry (commit e7094b8 "reauthorize RM3 after parent pin fix") sets
+  linux_authorized_gate=ms3_r / ms3_r.status=ready_for_linux. The authorization action itself
+  invalidated the test's premise (status-coupled assertion, not a code/contract defect).
+  User (cwoc) explicitly instructed to proceed on 2026-08-12. Batch executed as authorized by
+  e7094b8. No config/matrix/threshold/code was modified by the executor.

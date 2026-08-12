@@ -1,0 +1,292 @@
+{
+  "protocol_version": "phase3.5-ms3r-rm3-v1",
+  "calibration_id": "orthogonal_F0_s2_h6",
+  "spec": {
+    "calibration_id": "orthogonal_F0_s2_h6",
+    "fold_id": "F0",
+    "seed": 2,
+    "response_horizon_steps": 6,
+    "candidate_ids": [
+      "R0_linear_mimo",
+      "R1_a1_scheduled",
+      "R2_a1_common_only"
+    ],
+    "train_fraction": [
+      0.0,
+      0.6
+    ],
+    "validation_fraction": [
+      0.6,
+      0.7
+    ]
+  },
+  "provenance": {
+    "execution_git_sha": "e7094b8b226f2fc7717c80a29c825d8edb633cb0",
+    "matrix_sha256": "3868601511cea171a51ee80180ef48febe0592fe9b336a2777a35d0a76aba096",
+    "parent_rm2_audit": {
+      "path": "results/phase3_5/ms3r_gatec_rm2/supervisor_audit_validation.json",
+      "sha256": "6a6df2796c9de4ab3c8a7528bc195ea1ec94534219fe0739554027e4216cd5e7",
+      "hash_mode": "utf8_text_normalized_lf",
+      "required_label": "RM2_COMPLETE_CONDITIONAL_ACTION_PATH_REPRODUCED_OPERATOR_GAIN_NOT_IDENTIFIED"
+    },
+    "cache_sha256": {
+      "A": "a75cde934e1d459c629959a6921a80d31ec1bf998468525ef82a4ffaaa3f29b8",
+      "B": "7005d027b97cad9e26c2f8f36ed8ffb77aa83a68ed83d6da786f0369abe0b8fa"
+    },
+    "code_sha256": {
+      "src/phase35/multistep/rm3_contracts.py": "28dd160cd7c222c95f109ac97f2b1e113d5889264607145a4bcefab983a92966",
+      "src/phase35/multistep/rm3_prediction.py": "23bf0c95c1a6ce91bb871c4037a4a7acd745bbad1685d00baf21fe14219efa9e",
+      "src/phase35/multistep/rm3_joint_model.py": "ec55a1dd5d4ed960bf82cec8d3990b789a94a2431057931a5f3c60c1a7b922d0",
+      "src/phase35/multistep/rm3_orthogonal.py": "5ec5b608ed967696bdaa161fcb17bb384ac6fca8d73d0cf638fd2e94c69aa427",
+      "src/phase35/multistep/rm3_training.py": "29074423180794156b7d843d22e4f4c0fe9afa52695c5d2c32436518eacf8019",
+      "src/phase35/multistep/rm3_calibration.py": "d076edb23f228982360e8bb4bbdfae5c6ae1e2c12b80df1926370a27ff0699a2",
+      "src/phase35/multistep/rm3_reporting.py": "cd6243f9a6df772428b235e9ca80832c19453fd1fcded13feb0328438e131e3c",
+      "experiments/phase3_5/ms3r_rm3_train.py": "f6f601900a86886a917b83bd2c6272d6ae89cab7f31cc44c302aa93be2854c1a"
+    },
+    "python_version": "3.11.15",
+    "numpy_version": "2.3.5",
+    "torch_version": "2.11.0+cu130",
+    "cuda_available": true,
+    "test_accessed": false,
+    "device": "cuda:0"
+  },
+  "results": {
+    "R0_linear_mimo": {
+      "trajectory_matrix": [
+        [
+          [
+            -0.04108404650499207,
+            0.06257394918959819
+          ],
+          [
+            0.04924268764328295,
+            0.023130335117569647
+          ]
+        ],
+        [
+          [
+            0.051430376792781646,
+            0.06798590323517177
+          ],
+          [
+            0.0612270065216969,
+            0.08058286107083115
+          ]
+        ],
+        [
+          [
+            0.17481614854934413,
+            0.09560720270661435
+          ],
+          [
+            0.08659402243009719,
+            0.1715579611274197
+          ]
+        ],
+        [
+          [
+            0.29432746286730793,
+            0.10101962379366332
+          ],
+          [
+            0.10281324379453388,
+            0.20700016789077916
+          ]
+        ],
+        [
+          [
+            0.3430592208789212,
+            0.09655126286763029
+          ],
+          [
+            0.1366247511679686,
+            0.24833461217830516
+          ]
+        ],
+        [
+          [
+            0.3907923742974899,
+            0.0931130228361753
+          ],
+          [
+            0.1503541297950804,
+            0.2684934512969421
+          ]
+        ]
+      ],
+      "independent_channels_supported_all_steps": true
+    },
+    "R1_a1_scheduled": {
+      "fixed_tau_seconds": [
+        60.0,
+        180.0,
+        600.0
+      ],
+      "nonnegative_coefficients": [
+        [
+          [
+            0.0,
+            2.59049608659629
+          ],
+          [
+            2.5797772442901197,
+            0.0
+          ]
+        ],
+        [
+          [
+            198.2510247430762,
+            0.0
+          ],
+          [
+            0.0,
+            76.98031970505082
+          ]
+        ],
+        [
+          [
+            0.0,
+            32.337705839286315
+          ],
+          [
+            46.119941818743534,
+            0.0
+          ]
+        ]
+      ],
+      "trajectory_matrix": [
+        [
+          [
+            10.713590666893829,
+            0.9321837551594703
+          ],
+          [
+            1.158338540805281,
+            4.160057360587938
+          ]
+        ],
+        [
+          [
+            20.848213204233172,
+            1.7944806295087916
+          ],
+          [
+            2.2432776128119034,
+            8.095303012031376
+          ]
+        ],
+        [
+          [
+            30.435155357225234,
+            2.5964093103186614
+          ],
+          [
+            3.2643593548929024,
+            11.81788589848847
+          ]
+        ],
+        [
+          [
+            39.50401406470951,
+            3.3460471956870523
+          ],
+          [
+            4.229689541837991,
+            15.339298428722842
+          ]
+        ],
+        [
+          [
+            48.08278683123181,
+            4.050251328141833
+          ],
+          [
+            5.146157620953498,
+            18.670411955624974
+          ]
+        ],
+        [
+          [
+            56.19795816132308,
+            4.714845416362553
+          ],
+          [
+            6.019622976816827,
+            21.82151033840146
+          ]
+        ]
+      ],
+      "projection_rmse": 20.201933521622696,
+      "context_scheduling_identified": false,
+      "note": "aggregate three-pole projection; scheduling requires downstream joint R-loss"
+    },
+    "R2_a1_common_only": {
+      "trajectory_matrix": [
+        [
+          [
+            0.023875207621362998,
+            0.023875207621362998
+          ],
+          [
+            0.023875207621362998,
+            0.023875207621362998
+          ]
+        ],
+        [
+          [
+            0.0658326234183674,
+            0.0658326234183674
+          ],
+          [
+            0.0658326234183674,
+            0.0658326234183674
+          ]
+        ],
+        [
+          [
+            0.13191468261794065,
+            0.13191468261794065
+          ],
+          [
+            0.13191468261794065,
+            0.13191468261794065
+          ]
+        ],
+        [
+          [
+            0.1750470123183358,
+            0.1750470123183358
+          ],
+          [
+            0.1750470123183358,
+            0.1750470123183358
+          ]
+        ],
+        [
+          [
+            0.2051754983052772,
+            0.2051754983052772
+          ],
+          [
+            0.2051754983052772,
+            0.2051754983052772
+          ]
+        ],
+        [
+          [
+            0.2243674666553352,
+            0.2243674666553352
+          ],
+          [
+            0.2243674666553352,
+            0.2243674666553352
+          ]
+        ]
+      ],
+      "independent_channels_supported": false
+    }
+  },
+  "full_prefix_trajectory": true,
+  "test_accessed": false,
+  "automatic_scientific_pass": null
+}
