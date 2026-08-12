@@ -1,6 +1,6 @@
 # Thermal World Model TODO
 
-> 更新：2026-08-12。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。Gate C RM2 已冻结为 9候选×3 seeds×2 expanding folds=`54 runs`，由 Hermes 在完整 train/validation 上按设备池并行执行；本地只负责设计、micro-cache smoke、代码审计和结果 replay。test、自动科学 PASS 和 MS4 仍禁止。旧 E1–E5 已废弃，Phase 4 暂停。
+> 更新：2026-08-12。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。Gate C RM2 的 54 runs 已完整回传并通过本地 Supervisor replay：条件动作路径稳定复现，但 operator gain 不可唯一识别，禁止产生路线冠军。Linux 授权已关闭；下一步仅设计 RM3 的 out-of-fold 正交响应矩校准。test、自动科学 PASS 和 MS4 仍禁止。旧 E1–E5 已废弃，Phase 4 暂停。
 
 ## 当前主线
 
@@ -31,7 +31,7 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | MS5 | 完整 `free+response` 动作吸收 | ✓ CLOSED | joint 选中；冻结 staged 协议拒绝 |
 | **MS3** | A/B 真实数据适配 | ✓ **AUDITED FAIL / ASYMMETRIC** | B 3/3 PASS；A 0/3 non-collapse FAIL；不重跑、不访问 test |
 | **MS3-D** | A/B 响应不对称诊断 | ✓ **AUDITED** | 模型 A attenuation 未获现场热链路支持；B 阀位持久性更强；单侧 plant 归因不足 |
-| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ▶ **GATE-C RM2 READY FOR LINUX** | Hermes并行执行54 runs；完整回传后本地统一审计 |
+| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ◉ **RM2 AUDITED / RM3 DESIGN** | 条件动作路径复现；operator gain未识别，设计OOF正交校准 |
 | MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-R 冻结前不启动；不恢复旧 E 匹配 |
 
 ## D3 收口
@@ -124,7 +124,9 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 18 | baseline-anchored + response-only action auxiliary RM0-B | 本地 | ✓ baseline有效；terminal无增益，response分解不唯一，禁止路线排名 |
 | 19 | 固定 A1phys 的真实 RM1-A attribution | 本地 | ✓ 容量塌缩未观察；local supervision 必须保留；不设冠军 |
 | 20 | RM2 日块响应与 rolling-fold 稳健性设计/代码 | 本地 | ✓ 54-run矩阵、九候选micro-smoke；真实cache 1-update smoke闭合 |
-| 21 | RM2 完整train/validation并行训练与机器汇总 | Hermes | ▶ **AUTHORIZED**；等待54-run回传，本地不代跑 |
+| 21 | RM2 完整train/validation并行训练与机器汇总 | Hermes | ✓ 54/54完成，无failure，test未访问 |
+| 22 | RM2 checkpoint/archive/trajectory cache-free Supervisor审计 | 本地 | ✓ 220项ledger闭合；条件动作路径复现，operator gain未识别 |
+| 23 | RM3 OOF nuisance residualization与正交响应矩校准设计 | 本地 | ▶ 仅设计/代码；Linux、test、MS4未授权 |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)；当前均不构成运行授权。
 

@@ -2,11 +2,11 @@
 
 本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
-> 当前状态：`ms3_r=ready_for_linux`、`linux_authorized_gate=ms3_r`。唯一授权批次是 Gate C RM2：9候选×3 seeds×2 expanding folds=`54 runs`，由 Hermes 在完整 train/validation anchors 上按CUDA设备池并行执行。test、自动科学PASS、MS4和旧42-run/E系列均未授权。
+> 当前状态：`ms3_r=audited`、`linux_authorized_gate=null`。Gate C RM2 已完成 54/54 并由本地审计；条件动作路径复现，但 operator gain 未识别。当前没有 Linux 批次，test、自动科学PASS、MS4和旧42-run/E系列均未授权。
 
-## Gate C RM2：Hermes 54-run 并行批（当前唯一授权）
+## Gate C RM2：Hermes 54-run 并行批（已完成，仅供追溯）
 
-Webhook 拉取本冻结提交后，只有状态检查同时返回 `active_gate=ms3_r`、`active_status=ready_for_linux`、`linux_authorized_gate=ms3_r` 才能执行。设备池由现场按实际 GPU 数设置；这不改变科学矩阵：
+以下是已完成批次的冻结命令，不构成再次执行授权。原执行时状态必须同时为 `active_gate=ms3_r`、`active_status=ready_for_linux`、`linux_authorized_gate=ms3_r`；当前注册表已经关闭授权，不得回退状态或重跑：
 
 ```bash
 export PH35_MS3_CACHE_A=/data/thermal-world-model/phase3_5/ms3_cross_A.npz

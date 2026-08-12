@@ -5,6 +5,8 @@
 
 > 当前项目口径以 [`TODO.md`](../TODO.md)、[`SUPERVISOR_REVIEW_2026-08-07.md`](../docs/SUPERVISOR_REVIEW_2026-08-07.md) 和 [`PROJECT_STATUS.md`](../docs/PROJECT_STATUS.md) 为准。这里记录结果位置，不表示历史数字是独立测试结果或仍支持当时结论。
 
+> Gate C RM2 已完成 54/54 train/validation runs 并通过本地 Supervisor replay。结论为 `CONDITIONAL_ACTION_PATH_REPRODUCED / OPERATOR_GAIN_NOT_IDENTIFIED`：不产生 operator 冠军、不访问 test、不放行 MS4。权威产物见 [`phase3_5/ms3r_gatec_rm2/supervisor_audit_validation.json`](phase3_5/ms3r_gatec_rm2/supervisor_audit_validation.json) 与 [`PHASE35_MS3R_GATEC_RM2_SUPERVISOR_AUDIT_2026-08-12.md`](../docs/PHASE35_MS3R_GATEC_RM2_SUPERVISOR_AUDIT_2026-08-12.md)。
+
 ## Phase 1 — 世界模型 (文档: docs/phase1_report.md, phase1_conclusions_audit.md)
 
 | 目录/文件 | 内容 |
