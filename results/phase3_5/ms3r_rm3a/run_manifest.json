@@ -1,0 +1,61 @@
+{
+  "execution_git_sha": "b68fe955db9b24c5a1bb04ce1cb52ef6b9d41e10",
+  "matrix_sha256": "e646c6da6dda925a169418158d261dfbc44fa435cb447b817735f707b9e44fb8",
+  "cache_sha256": {
+    "A": "a75cde934e1d459c629959a6921a80d31ec1bf998468525ef82a4ffaaa3f29b8",
+    "B": "7005d027b97cad9e26c2f8f36ed8ffb77aa83a68ed83d6da786f0369abe0b8fa"
+  },
+  "code_sha256": {
+    "src/phase35/multistep/rm3_prediction.py": "1aaf91ef6a3be268c5df1c79850a1c185519daf60fa3b42d1b7342bba1fdd9f2",
+    "src/phase35/multistep/rm3_training.py": "e2431b6181528d71999db99ee894b2dc93088a2ab4880026b720db9f8ad26d0a",
+    "src/phase35/multistep/rm3a_contracts.py": "859bceed39b388b8ebce45e04c9d1ad2b21cf7aa816983dc127785feb016e9b7",
+    "src/phase35/multistep/rm3a_training.py": "97e898188b921ac19dc8275f1631f4c86b2d8ed6e4fc96391569e7e913588192",
+    "src/phase35/multistep/rm3a_reporting.py": "789e6c907964e7bf6cd3edabc032ba0ce877d76021b11a056c649b648ff652a3",
+    "experiments/phase3_5/ms3r_rm3a_train.py": "f51ab3ce04c46c0db2e975e98d7a888917913cd85ea0a2243cf105f078629df6"
+  },
+  "parent_rm3_audit": {
+    "path": "docs/PHASE35_MS3R_RM3_FINAL_AUDIT_2026-08-12.md",
+    "sha256": "5094517d1e40a8916a5f938d029a91191a319167d0450596e9fa6a1b31756b40",
+    "hash_mode": "utf8_text_normalized_lf"
+  },
+  "test_accessed": false,
+  "devices": [
+    "cuda:0"
+  ],
+  "new_run_ids": [
+    "A0_p3_large_F0_s0",
+    "A0_p3_large_F0_s1",
+    "A0_p3_large_F0_s2",
+    "A0_p3_large_F1_s0",
+    "A0_p3_large_F1_s1",
+    "A0_p3_large_F1_s2",
+    "A1_p4_large_F0_s0",
+    "A1_p4_large_F0_s1",
+    "A1_p4_large_F0_s2",
+    "A1_p4_large_F1_s0",
+    "A1_p4_large_F1_s1",
+    "A1_p4_large_F1_s2",
+    "A2_p5_small_F0_s0",
+    "A2_p5_small_F0_s1",
+    "A2_p5_small_F0_s2",
+    "A2_p5_small_F1_s0",
+    "A2_p5_small_F1_s1",
+    "A2_p5_small_F1_s2",
+    "A3_p5_local35_F0_s0",
+    "A3_p5_local35_F0_s1",
+    "A3_p5_local35_F0_s2",
+    "A3_p5_local35_F1_s0",
+    "A3_p5_local35_F1_s1",
+    "A3_p5_local35_F1_s2",
+    "A4_p5_local50_F0_s0",
+    "A4_p5_local50_F0_s1",
+    "A4_p5_local50_F0_s2",
+    "A4_p5_local50_F1_s0",
+    "A4_p5_local50_F1_s1",
+    "A4_p5_local50_F1_s2"
+  ],
+  "reused_reference_runs": 18,
+  "maximum_attempts_per_run": 1,
+  "hermes_role": "execute_30_frozen_new_runs_and_return_all_checkpoints",
+  "automatic_scientific_pass": null
+}

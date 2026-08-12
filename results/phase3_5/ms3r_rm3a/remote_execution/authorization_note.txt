@@ -1,0 +1,9 @@
+authorization_note:
+  Preflight had 1 failing test: test_rm3a_cli.py::test_rm3a_execute_refuses_current_unauthorized_registry.
+  Same status-coupled pattern as RM3 batch (2026-08-12): the test asserts execute_matrix must
+  raise when the registry is unauthorized, but commit b68fe95 ("authorize RM3-A Hermes validation
+  batch") sets linux_authorized_gate=ms3_r / ms3_r.status=ready_for_linux. The authorization action
+  invalidates the test's premise; it is not a code/contract defect. User (cwoc) previously
+  instructed to proceed on this pattern (2026-08-12, RM3 batch) and confirmed continuing strict
+  execution of the Codex pipeline. Batch executed as authorized by b68fe95. No config/matrix/
+  threshold/code was modified by the executor.
