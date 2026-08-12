@@ -546,7 +546,7 @@
     },
     "ms3_r": {
       "title": "真实点位响应辨识与模型扩充",
-      "status": "audited",
+      "status": "local_verified",
       "owner": "local_design_code_linux_batch_run_local_audit",
       "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
       "scripts": {
@@ -652,6 +652,26 @@
         },
         "gatec_rm2_summarizer": {
           "path": "experiments/phase3_5/summarize_ms3r_gatec_rm2.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3_contracts": {
+          "path": "src/phase35/multistep/rm3_contracts.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3_orthogonal": {
+          "path": "src/phase35/multistep/rm3_orthogonal.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3_joint_model": {
+          "path": "src/phase35/multistep/rm3_joint_model.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3_local_runner": {
+          "path": "experiments/phase3_5/ms3r_rm3.py",
           "status": "active",
           "required": true
         }
@@ -800,9 +820,21 @@
         "gatec_rm2_supervisor_audit": {
           "path": "docs/PHASE35_MS3R_GATEC_RM2_SUPERVISOR_AUDIT_2026-08-12.md",
           "required": true
+        },
+        "rm3_matrix": {
+          "path": "configs/phase3_5/ms3r_rm3_matrix.json",
+          "required": true
+        },
+        "rm3_design": {
+          "path": "docs/plans/2026-08-12-phase35-ms3r-rm3-design.md",
+          "required": true
+        },
+        "rm3_implementation_plan": {
+          "path": "docs/plans/2026-08-12-phase35-ms3r-rm3-implementation.md",
+          "required": true
         }
       },
-      "decision": "GATE_C RM2 AUDITED：54/54闭合；条件动作路径跨seed/fold/day复现，但operator响应幅值不可唯一识别；保留A1 scheduled工程参考与common-only部分辨识基线，关闭Linux授权，test和MS4继续冻结，下一步仅设计RM3 OOF正交响应矩校准",
+      "decision": "RM3 FRAMEWORK LOCAL_VERIFIED：RM2条件动作路径复现但gain未识别；已冻结OOF正交响应矩与统一H60公平预测设计，并完成合成恢复/rank/placebo和joint-latent interface测试；下一步实现真实统一数据适配与micro smoke，Linux/test/MS4继续冻结",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -835,7 +867,11 @@
         "RM2逐run ledger 216项、root ledger 4项及54-member checkpoint archive本地逐字节闭合；54/54结构门通过",
         "A1 scheduled相对paired-free改善局部预测但不改善末温；common-only几乎不退化，去掉downstream latent则6/6末温退化",
         "A1/Koopman/PI-ODE/DeepONet预测近似但logged response幅值相差约3.4倍，operator gain不可识别且禁止路线冠军",
-        "RM3须先以OOF nuisance residualization/R-loss校准响应矩；未冻结新矩阵前Linux、test和MS4均未授权"
+        "RM3须先以OOF nuisance residualization/R-loss校准响应矩；未冻结新矩阵前Linux、test和MS4均未授权",
+        "RM3将response identification与world-model prediction分开，不用旧Phase1/3 test数字横向排名",
+        "最终候选方向为高容量M7/M9预测backbone + joint latent physical interfaces + OOF正交校准response",
+        "RM3合成混杂真值最大恢复误差0.00438；置乱矩阵范数仅为恢复矩阵约3.7%，不产生现场数据结论",
+        "RM3 local_verified仅指合同、正交矩、负控制和joint-latent结构；真实H60统一适配与Hermes矩阵尚未实现/授权"
       ]
     },
     "ms4": {

@@ -1,6 +1,6 @@
 # Thermal World Model TODO
 
-> 更新：2026-08-12。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。Gate C RM2 的 54 runs 已完整回传并通过本地 Supervisor replay：条件动作路径稳定复现，但 operator gain 不可唯一识别，禁止产生路线冠军。Linux 授权已关闭；下一步仅设计 RM3 的 out-of-fold 正交响应矩校准。test、自动科学 PASS 和 MS4 仍禁止。旧 E1–E5 已废弃，Phase 4 暂停。
+> 更新：2026-08-12。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。Gate C RM2 的 54 runs 已审计为“条件动作路径复现、operator gain未识别”。RM3 已完成本地合同、OOF正交响应矩、合成负控制与joint-latent physical-interface框架；真实训练矩阵尚未冻结，Linux授权仍关闭。test、自动科学 PASS 和 MS4 仍禁止。旧 E1–E5 已废弃，Phase 4 暂停。
 
 ## 当前主线
 
@@ -31,7 +31,7 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | MS5 | 完整 `free+response` 动作吸收 | ✓ CLOSED | joint 选中；冻结 staged 协议拒绝 |
 | **MS3** | A/B 真实数据适配 | ✓ **AUDITED FAIL / ASYMMETRIC** | B 3/3 PASS；A 0/3 non-collapse FAIL；不重跑、不访问 test |
 | **MS3-D** | A/B 响应不对称诊断 | ✓ **AUDITED** | 模型 A attenuation 未获现场热链路支持；B 阀位持久性更强；单侧 plant 归因不足 |
-| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ◉ **RM2 AUDITED / RM3 DESIGN** | 条件动作路径复现；operator gain未识别，设计OOF正交校准 |
+| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ◉ **RM3 FRAMEWORK LOCAL VERIFIED** | 下一步接入统一H60数据/输入权限；未授权真实长训 |
 | MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-R 冻结前不启动；不恢复旧 E 匹配 |
 
 ## D3 收口
@@ -126,7 +126,9 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 20 | RM2 日块响应与 rolling-fold 稳健性设计/代码 | 本地 | ✓ 54-run矩阵、九候选micro-smoke；真实cache 1-update smoke闭合 |
 | 21 | RM2 完整train/validation并行训练与机器汇总 | Hermes | ✓ 54/54完成，无failure，test未访问 |
 | 22 | RM2 checkpoint/archive/trajectory cache-free Supervisor审计 | 本地 | ✓ 220项ledger闭合；条件动作路径复现，operator gain未识别 |
-| 23 | RM3 OOF nuisance residualization与正交响应矩校准设计 | 本地 | ▶ 仅设计/代码；Linux、test、MS4未授权 |
+| 23 | RM3 OOF nuisance residualization与正交响应矩校准设计 | 本地 | ✓ 合同/正交矩/R-loss/负控制通过 |
+| 24 | RM3 joint-latent physical interfaces与公平预测表 | 本地 | ✓ 结构框架通过；M7/M9/GateC统一适配待实现 |
+| 25 | RM3真实H60统一数据适配、micro smoke与冻结矩阵 | 本地 | ▶ 下一步；未授权Hermes |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)；当前均不构成运行授权。
 

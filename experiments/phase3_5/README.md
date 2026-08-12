@@ -4,6 +4,15 @@
 
 > 当前状态：`ms3_r=audited`、`linux_authorized_gate=null`。Gate C RM2 已完成 54/54 并由本地审计；条件动作路径复现，但 operator gain 未识别。当前没有 Linux 批次，test、自动科学PASS、MS4和旧42-run/E系列均未授权。
 
+RM3 本地框架入口如下。它只执行合同 dry-run 或合成真值 smoke，没有真实训练参数，也不构成 Hermes 授权：
+
+```bash
+python experiments/phase3_5/ms3r_rm3.py --dry-run
+python experiments/phase3_5/ms3r_rm3.py --synthetic-smoke
+```
+
+RM3 将 response identification 与 prediction architecture 分开：前者使用 rolling OOF nuisance residualization/R-loss，后者才在统一 H60、split 和输入权限下比较 M7、M9、Gate C 与 hybrid joint-latent。raw future valve 只允许一个明确标记的 oracle upper bound，不能进入部署排名或 response auxiliary。
+
 ## Gate C RM2：Hermes 54-run 并行批（已完成，仅供追溯）
 
 以下是已完成批次的冻结命令，不构成再次执行授权。原执行时状态必须同时为 `active_gate=ms3_r`、`active_status=ready_for_linux`、`linux_authorized_gate=ms3_r`；当前注册表已经关闭授权，不得回退状态或重跑：

@@ -1,0 +1,56 @@
+{
+  "protocol_version": "phase3.5-ms3r-rm3-v1",
+  "scope": "orthogonal_local_response_and_fair_prediction_validation_not_causal",
+  "parent_rm2_audit": {
+    "path": "results/phase3_5/ms3r_gatec_rm2/supervisor_audit_validation.json",
+    "required_label": "RM2_COMPLETE_CONDITIONAL_ACTION_PATH_REPRODUCED_OPERATOR_GAIN_NOT_IDENTIFIED"
+  },
+  "data_contract": {
+    "test_allowed": false,
+    "horizon_steps": 60,
+    "step_seconds": 10,
+    "primary_response_horizons_steps": [6, 18],
+    "independent_unit": "UTC_day",
+    "nuisance_mode": "expanding_rolling_oof",
+    "nuisance_predictors": "past_history_sp_tin_operating_context_only",
+    "raw_future_valve_auxiliary_allowed": false
+  },
+  "identification_candidates": [
+    {"candidate_id": "R0_linear_mimo", "response_family": "linear_mimo", "coordinate_mode": "full_mimo"},
+    {"candidate_id": "R1_a1_scheduled", "response_family": "a1phys_three_pole", "coordinate_mode": "full_mimo"},
+    {"candidate_id": "R2_a1_common_only", "response_family": "a1phys_three_pole", "coordinate_mode": "common_only"}
+  ],
+  "prediction_candidates": [
+    {"candidate_id": "P0_m7_oracle_valve", "future_action_access": "logged_future_valve", "role": "oracle_upper_bound"},
+    {"candidate_id": "P1_m7_predicted_valve", "future_action_access": "future_sp_to_predicted_valve", "role": "deployable_direct_baseline"},
+    {"candidate_id": "P2_m9_future_sp", "future_action_access": "future_sp", "role": "deployable_cross_attention_baseline"},
+    {"candidate_id": "P3_gatec_paired_free", "future_action_access": "future_sp", "role": "small_model_negative_control"},
+    {"candidate_id": "P4_gatec_a1_scheduled", "future_action_access": "future_sp", "role": "rm2_reference"},
+    {"candidate_id": "P5_hybrid_joint_latent", "future_action_access": "future_sp", "role": "high_capacity_backbone_with_orthogonal_response"}
+  ],
+  "statistics": {
+    "ridge_alpha": 0.001,
+    "epsilon": 1e-10,
+    "maximum_input_condition_number": 10000.0,
+    "minimum_differential_to_common_energy": 0.05,
+    "minimum_utc_days": 8,
+    "bootstrap_samples": 20000,
+    "bootstrap_seed": 35120
+  },
+  "execution_contract": {
+    "local_synthetic_smoke_authorized": true,
+    "local_real_training_authorized": false,
+    "linux_authorized": false,
+    "test_authorized": false,
+    "ms4_authorized": false,
+    "automatic_scientific_pass": false
+  },
+  "claim_contract": {
+    "open_loop_plant_identification": false,
+    "arbitrary_do_valve": false,
+    "measured_spray_flow_physics": false,
+    "operator_champion": false,
+    "phase1_phase3_historical_test_comparison_is_fair": false,
+    "closed_loop_release": false
+  }
+}
