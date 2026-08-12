@@ -83,6 +83,7 @@ def validate_rm3_matrix(matrix: Mapping[str, Any]) -> None:
         not isinstance(parent.get("path"), str)
         or not isinstance(parent.get("sha256"), str)
         or len(parent["sha256"]) != 64
+        or parent.get("hash_mode") != "utf8_text_normalized_lf"
         or parent.get("required_label")
         != "RM2_COMPLETE_CONDITIONAL_ACTION_PATH_REPRODUCED_OPERATOR_GAIN_NOT_IDENTIFIED"
     ):

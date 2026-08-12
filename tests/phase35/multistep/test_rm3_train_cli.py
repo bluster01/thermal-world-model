@@ -7,7 +7,12 @@ import sys
 
 import pytest
 
-from experiments.phase3_5.ms3r_rm3_train import _verify_complete, dry_run_payload, execute_matrix
+from experiments.phase3_5.ms3r_rm3_train import (
+    _verify_complete,
+    _verify_parent,
+    dry_run_payload,
+    execute_matrix,
+)
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -48,3 +53,19 @@ def test_train_cli_dry_run() -> None:
         cwd=ROOT, check=True, capture_output=True, text=True,
     )
     assert json.loads(completed.stdout)["total_run_count"] == 48
+
+
+def test_parent_audit_pin_is_cross_platform_newline_stable(tmp_path: Path, monkeypatch) -> None:
+    import experiments.phase3_5.ms3r_rm3_train as runner
+
+    matrix = json.loads(MATRIX.read_text(encoding="utf-8"))
+    relative = Path("parent.json")
+    payload = {"supervisor_decision": {"label": matrix["parent_rm2_audit"]["required_label"]}}
+    lf = json.dumps(payload, indent=2) + "\n"
+    (tmp_path / relative).write_bytes(lf.replace("\n", "\r\n").encode("utf-8"))
+    matrix["parent_rm2_audit"].update({
+        "path": relative.as_posix(),
+        "sha256": __import__("hashlib").sha256(lf.encode("utf-8")).hexdigest(),
+    })
+    monkeypatch.setattr(runner, "ROOT", tmp_path)
+    assert _verify_parent(matrix)["hash_mode"] == "utf8_text_normalized_lf"

@@ -83,7 +83,9 @@ def _verify_registry() -> None:
 def _verify_parent(matrix: dict[str, Any]) -> dict[str, str]:
     parent = matrix["parent_rm2_audit"]
     path = ROOT / parent["path"]
-    if file_sha256(path) != parent["sha256"]:
+    normalized = path.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
+    digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+    if parent.get("hash_mode") != "utf8_text_normalized_lf" or digest != parent["sha256"]:
         raise RuntimeError("RM3 parent RM2 audit hash changed")
     payload = _read_json(path)
     if payload.get("supervisor_decision", {}).get("label") != parent["required_label"]:
