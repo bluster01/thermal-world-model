@@ -705,6 +705,26 @@
           "status": "active",
           "required": true
         },
+        "rm3a_contracts": {
+          "path": "src/phase35/multistep/rm3a_contracts.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3a_training": {
+          "path": "src/phase35/multistep/rm3a_training.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3a_reporting": {
+          "path": "src/phase35/multistep/rm3a_reporting.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3a_runner": {
+          "path": "experiments/phase3_5/ms3r_rm3a_train.py",
+          "status": "active",
+          "required": true
+        },
         "rm3_local_runner": {
           "path": "experiments/phase3_5/ms3r_rm3.py",
           "status": "active",
@@ -879,9 +899,17 @@
         "rm3_final_audit": {
           "path": "docs/PHASE35_MS3R_RM3_FINAL_AUDIT_2026-08-12.md",
           "required": true
+        },
+        "rm3a_matrix": {
+          "path": "configs/phase3_5/ms3r_rm3a_matrix.json",
+          "required": true
+        },
+        "rm3a_design": {
+          "path": "docs/plans/2026-08-12-phase35-ms3r-rm3a-design.md",
+          "required": true
         }
       },
-      "decision": "RM3 AUDITED：48/48 complete、168项ledger及36 checkpoint结构严格闭合；P5末温方向保留但需容量匹配和local trade-off消融；A1 aggregate NNLS shape可行但唯一gain/context scheduling未识别；test/MS4继续冻结",
+      "decision": "RM3 AUDITED / RM3-A LOCAL_VERIFIED：冻结5个针对性配置、30个新runs，双向容量匹配P3/P4/P5并扫描两档local-terminal Pareto；复用18个已审计锚点，不重跑旧RM3，Linux/test/MS4未授权",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -934,6 +962,9 @@
         ,"R0 12/12 rank门通过但H180对角gain跨fold明显漂移；仅称时变条件响应轨迹，不称唯一plant gain"
         ,"补传36 checkpoint与ledger/manifest/best selector逐项匹配，六类模型strict load通过，RM3 artifact contract最终闭合"
         ,"P3/P4/P5均跑满4000 updates；P5参数状态约122k而P3/P4约87k，下一步必须容量匹配，不得直接称冠军"
+        ,"RM3-A使用P3/P4 d77约121k对齐P5-64，并用P5 d52约84k对齐P3/P4-64，完成双向容量辨析"
+        ,"RM3-A只新增A0-A4共30 runs，旧P3/P4/P5的18 runs从最终审计结果复用，禁止重跑"
+        ,"RM3-A A3/A4只改变full-multitask component weights；terminal/local以Pareto表报告，不设单一综合冠军"
       ]
     },
     "ms4": {

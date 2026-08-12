@@ -828,3 +828,13 @@ python experiments/phase3_5/ms3r_rm3_train.py --dry-run
 ### RM3 回传后的 checkpoint 补件边界
 
 48/48 units 已完成，当前注册表为 `results_returned` 且 Linux gate 已关闭。首次回传遗漏了逐 run ledger 要求的36个 `checkpoint_best_validation.pt`。Hermes 只允许从原始 `results/phase3_5/ms3r_rm3/prediction/*/` 目录读取现有 `.pt` 并打包补传；不得调用训练或校准入口，不得 resume/regenerate checkpoint，不得修改 manifest/ledger/summary，不得访问 test。归档后必须逐项核对 archive member 的 SHA256 等于原 `artifact_ledger.json`；若单一归档超过 GitHub 限制，可按候选分成6个归档，但不得改文件字节。
+
+## 21. RM3-A 容量匹配与 local/terminal Pareto（本地已验证，未授权）
+
+RM3-A 复用已审计的 P3/P4/P5 共18个 reference runs，只新增 A0–A4 五个配置×F0/F1×3 seeds=`30` runs。A0/A1把P3/P4扩到约121k状态元素，A2把P5缩到约84k；A3/A4只改变P5的full-multitask loss weights。矩阵禁止单一composite champion。
+
+```bash
+python experiments/phase3_5/ms3r_rm3a_train.py --dry-run
+```
+
+当前注册表未授权，所以 `--execute` 必须失败。未来授权后，Hermes只运行30个新run，不得重跑旧RM3的18个reference。每run必须原样提交manifest、checkpoint、metrics、episodes NPZ和ledger；`.gitignore`已显式允许RM3-A checkpoint/NPZ。既有目录一律拒绝，不resume、不自动重试；不访问test，不启动MS4，不作科学判决。

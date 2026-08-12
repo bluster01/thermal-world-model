@@ -1,6 +1,6 @@
 # Thermal World Model TODO
 
-> 更新：2026-08-12。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。RM3 48/48 units、168项ledger、36 checkpoint strict load和terminal MAE重放已最终审计闭合。P5 joint-latent末温方向保留，但容量与架构耦合且local MAE退化；下一步仅做容量匹配与local/terminal权衡消融。Hermes授权关闭；test、自动科学 PASS 和 MS4 仍禁止。旧 E1–E5 已废弃，Phase 4 暂停。
+> 更新：2026-08-12。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。RM3 已最终审计；RM3-A 双向容量匹配与local/terminal Pareto执行包已本地验证，冻结5个新配置×2 folds×3 seeds=30 runs，并复用旧18个锚点。Hermes尚未授权；test、自动科学 PASS 和 MS4 仍禁止。旧 E1–E5 已废弃，Phase 4 暂停。
 
 ## 当前主线
 
@@ -31,7 +31,7 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | MS5 | 完整 `free+response` 动作吸收 | ✓ CLOSED | joint 选中；冻结 staged 协议拒绝 |
 | **MS3** | A/B 真实数据适配 | ✓ **AUDITED FAIL / ASYMMETRIC** | B 3/3 PASS；A 0/3 non-collapse FAIL；不重跑、不访问 test |
 | **MS3-D** | A/B 响应不对称诊断 | ✓ **AUDITED** | 模型 A attenuation 未获现场热链路支持；B 阀位持久性更强；单侧 plant 归因不足 |
-| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ✓ **RM3 AUDITED** | P5方向保留；下一步RM3-A容量匹配/权衡消融，test/MS4 HOLD |
+| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ◉ **RM3 AUDITED / RM3-A LOCAL VERIFIED** | 30-run新矩阵已闭合；未授权Hermes，test/MS4 HOLD |
 | MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-R 冻结前不启动；不恢复旧 E 匹配 |
 
 ## D3 收口
@@ -132,7 +132,9 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 26 | RM3长训runner、selector/reporting与artifact ledger | 本地 | ✓ 36预测+12校准；六候选reduced-cache长训通过 |
 | 27 | RM3独立Hermes授权提交与48-unit train/validation执行 | 本地授权 / Hermes执行 | ✓ 48/48 complete，exit 0，test未访问 |
 | 28 | RM3 cache-free replay、NNLS修复与checkpoint补传 | 本地审计 / Hermes补传 | ✓ 168项ledger、36 checkpoint strict load闭合 |
-| 29 | RM3-A P3/P4/P5容量匹配与local/terminal权衡消融设计 | 本地 | ▶ 下一步；不开放test/MS4 |
+| 29 | RM3-A P3/P4/P5容量匹配与local/terminal权衡消融设计 | 本地 | ✓ 双向容量匹配+两档Pareto，30新runs |
+| 30 | RM3-A runner/reporting/完整产物合同与本地smoke | 本地 | ✓ 五候选one-update和dry-run通过；未授权Hermes |
+| 31 | RM3-A独立授权与30-run validation执行 | 本地授权 / Hermes执行 | ▶ 等待授权；旧18 runs禁止重跑 |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)；当前均不构成运行授权。
 

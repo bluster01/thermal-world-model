@@ -306,7 +306,7 @@ def build_rm3_prediction_model(
                 window=config.window,
                 horizon=config.horizon,
                 n_features=config.n_features,
-                d_model=min(config.d_model, 64),
+                d_model=config.d_model,
                 latent_dim=config.latent_dim,
                 local_state_dim=6,
                 response_route="a1phys_three_pole" if response else "none",

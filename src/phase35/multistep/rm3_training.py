@@ -146,21 +146,31 @@ def rm3_scope_loss(
     *,
     output_scope: str,
     target_scales: Mapping[str, float],
+    component_weights: Mapping[str, float] | None = None,
 ) -> torch.Tensor:
     if output_scope not in TARGET_KEYS_BY_SCOPE:
         raise Phase35ProtocolError("RM3 output scope is invalid")
+    keys = TARGET_KEYS_BY_SCOPE[output_scope]
+    if component_weights is None:
+        weights = {key: 1.0 / len(keys) for key in keys}
+    else:
+        if set(component_weights) != set(keys):
+            raise Phase35ProtocolError("RM3 component loss weights do not match output scope")
+        weights = {key: float(component_weights[key]) for key in keys}
+        if any(value < 0 for value in weights.values()) or abs(sum(weights.values()) - 1.0) > 1e-12:
+            raise Phase35ProtocolError("RM3 component loss weights must be nonnegative and sum to one")
     components = []
-    for key in TARGET_KEYS_BY_SCOPE[output_scope]:
+    for key in keys:
         prediction_key = PREDICTION_KEYS[key]
         if prediction_key not in output:
             raise Phase35ProtocolError(f"RM3 {output_scope} output lacks {prediction_key}")
         components.append(
-            F.smooth_l1_loss(
+            weights[key] * F.smooth_l1_loss(
                 output[prediction_key] / float(target_scales[key]),
                 targets[key] / float(target_scales[key]),
             )
         )
-    return torch.stack(components).mean()
+    return torch.stack(components).sum()
 
 
 def _split_validation_anchors(
@@ -184,6 +194,7 @@ def _evaluate_selector(
     target_scales: Mapping[str, float],
     output_scope: str,
     device: torch.device,
+    component_loss_weights: Mapping[str, float] | None = None,
 ) -> float:
     total = 0.0
     model.eval()
@@ -196,7 +207,8 @@ def _evaluate_selector(
             output, targets = _forward(model, batch, device)
             total += float(
                 rm3_scope_loss(
-                    output, targets, output_scope=output_scope, target_scales=target_scales
+                    output, targets, output_scope=output_scope, target_scales=target_scales,
+                    component_weights=component_loss_weights,
                 ).cpu()
             ) * len(batch.anchors)
     model.train()
@@ -214,6 +226,7 @@ def _report(
     target_scales: Mapping[str, float],
     output_scope: str,
     device: torch.device,
+    component_loss_weights: Mapping[str, float] | None = None,
 ) -> tuple[dict[str, Any], dict[str, np.ndarray]]:
     sums = {key: 0.0 for key in TARGET_KEYS_BY_SCOPE[output_scope]}
     terminal_sum = 0.0
@@ -247,6 +260,7 @@ def _report(
         "scope_selector_score": _evaluate_selector(
             model, caches, anchors, window=window, horizon=horizon, batch_size=batch_size,
             target_scales=target_scales, output_scope=output_scope, device=device,
+            component_loss_weights=component_loss_weights,
         ),
         "output_scope": output_scope,
         "finite": True,
@@ -272,6 +286,10 @@ def run_rm3_prediction_training(
     device: str,
     output_dir: Path,
     provenance: Mapping[str, Any],
+    model_candidate_id: str | None = None,
+    model_d_model: int | None = None,
+    model_latent_dim: int | None = None,
+    component_loss_weights: Mapping[str, float] | None = None,
 ) -> dict[str, Any]:
     """Run one immutable train/validation prediction job; never touches test."""
     if output_dir.exists() and any(output_dir.iterdir()):
@@ -306,10 +324,13 @@ def run_rm3_prediction_training(
         caches, stats_anchors, window=window, horizon=horizon, validate_pair=False
     )
     center, scale, target_scales = fit_rm3_train_statistics(stats_batch)
+    architecture_id = model_candidate_id or spec.candidate_id
     config = RM3PredictionConfig(
-        candidate_id=spec.candidate_id, window=window, horizon=horizon,
-        n_features=stats_batch.history.shape[-1], d_model=int(matrix["model"]["d_model"]),
-        latent_dim=int(matrix["model"]["latent_dim"]), dropout=float(matrix["model"]["dropout"]),
+        candidate_id=architecture_id, window=window, horizon=horizon,
+        n_features=stats_batch.history.shape[-1],
+        d_model=int(model_d_model or matrix["model"]["d_model"]),
+        latent_dim=int(model_latent_dim or matrix["model"]["latent_dim"]),
+        dropout=float(matrix["model"]["dropout"]),
     )
     model = RM3FairPredictionAdapter(config, stats_batch.history_feature_names).to(torch_device)
     model.set_history_normalization(torch.from_numpy(center).to(torch_device), torch.from_numpy(scale).to(torch_device))
@@ -329,7 +350,10 @@ def run_rm3_prediction_training(
         batch = extract_gatec_batch(caches, chosen, window=window, horizon=horizon, validate_pair=False)
         optimizer.zero_grad(set_to_none=True)
         output, targets = _forward(model, batch, torch_device)
-        loss = rm3_scope_loss(output, targets, output_scope=spec.output_scope, target_scales=target_scales)
+        loss = rm3_scope_loss(
+            output, targets, output_scope=spec.output_scope, target_scales=target_scales,
+            component_weights=component_loss_weights,
+        )
         if not torch.isfinite(loss):
             raise Phase35ProtocolError("RM3 training loss became non-finite")
         loss.backward()
@@ -342,6 +366,7 @@ def run_rm3_prediction_training(
             model, caches, selector_anchors, window=window, horizon=horizon,
             batch_size=int(training["evaluation_batch_size"]), target_scales=target_scales,
             output_scope=spec.output_scope, device=torch_device,
+            component_loss_weights=component_loss_weights,
         )
         selector_history.append({"update": update, "scope_selector_score": score})
         if score < best_score - float(training["minimum_score_improvement"]):
@@ -359,6 +384,7 @@ def run_rm3_prediction_training(
         model, caches, reporting_anchors, window=window, horizon=horizon,
         batch_size=int(training["evaluation_batch_size"]), target_scales=target_scales,
         output_scope=spec.output_scope, device=torch_device,
+        component_loss_weights=component_loss_weights,
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     checkpoint = output_dir / "checkpoint_best_validation.pt"
@@ -382,12 +408,20 @@ def run_rm3_prediction_training(
     manifest = {
         "protocol_version": matrix["protocol_version"], "run_id": spec.run_id,
         "run_spec": asdict(spec), "provenance": dict(provenance),
+        "architecture_candidate_id": architecture_id,
+        "component_loss_weights": (
+            None if component_loss_weights is None else dict(component_loss_weights)
+        ),
         "train_anchor_pool_count": len(train_pool), "stats_anchor_count": len(stats_anchors),
         "selector_anchor_count": len(selector_anchors), "reporting_anchor_count": len(reporting_anchors),
         "selector_anchor_sha256": hashlib.sha256(np.asarray(selector_anchors, dtype="<i8").tobytes()).hexdigest(),
         "reporting_anchor_sha256": hashlib.sha256(np.asarray(reporting_anchors, dtype="<i8").tobytes()).hexdigest(),
         "selector_reporting_disjoint": bool(not np.intersect1d(selector_anchors, reporting_anchors).size),
-        "checkpoint_selector": f"validation_{spec.output_scope}_normalized_loss",
+        "checkpoint_selector": (
+            f"validation_{spec.output_scope}_normalized_loss"
+            if component_loss_weights is None
+            else f"validation_{spec.output_scope}_declared_component_weighted_loss"
+        ),
         "checkpoint_sha256": _sha256(checkpoint), "test_accessed": False,
         "automatic_scientific_pass": None, "elapsed_seconds": time.perf_counter() - started,
     }

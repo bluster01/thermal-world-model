@@ -1,0 +1,87 @@
+{
+  "protocol_version": "phase3.5-ms3r-rm3a-v1",
+  "scope": "capacity_matched_joint_latent_and_local_terminal_pareto_validation_only",
+  "parent_rm3_audit": {
+    "path": "docs/PHASE35_MS3R_RM3_FINAL_AUDIT_2026-08-12.md",
+    "sha256": "5094517d1e40a8916a5f938d029a91191a319167d0450596e9fa6a1b31756b40",
+    "hash_mode": "utf8_text_normalized_lf"
+  },
+  "data_contract": {
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "test_allowed": false,
+    "window_steps": 96,
+    "horizon_steps": 60,
+    "step_seconds": 10,
+    "max_age_s": 180.0,
+    "folds": [
+      {"fold_id": "F0", "train_fraction": [0.0, 0.6], "validation_fraction": [0.6, 0.7]},
+      {"fold_id": "F1", "train_fraction": [0.0, 0.7], "validation_fraction": [0.7, 0.8]}
+    ]
+  },
+  "reference_candidates": [
+    {"candidate_id": "P3_gatec_paired_free", "source": "results/phase3_5/ms3r_rm3", "state_elements": 87258},
+    {"candidate_id": "P4_gatec_a1_scheduled", "source": "results/phase3_5/ms3r_rm3", "state_elements": 87407},
+    {"candidate_id": "P5_hybrid_joint_latent", "source": "results/phase3_5/ms3r_rm3", "state_elements": 122301}
+  ],
+  "new_candidates": [
+    {"candidate_id": "A0_p3_large", "base_candidate_id": "P3_gatec_paired_free", "d_model": 77, "latent_dim": 32, "state_elements_expected": 120928, "loss_profile": "balanced"},
+    {"candidate_id": "A1_p4_large", "base_candidate_id": "P4_gatec_a1_scheduled", "d_model": 77, "latent_dim": 32, "state_elements_expected": 121103, "loss_profile": "balanced"},
+    {"candidate_id": "A2_p5_small", "base_candidate_id": "P5_hybrid_joint_latent", "d_model": 52, "latent_dim": 32, "state_elements_expected": 83649, "loss_profile": "balanced"},
+    {"candidate_id": "A3_p5_local35", "base_candidate_id": "P5_hybrid_joint_latent", "d_model": 64, "latent_dim": 32, "state_elements_expected": 122301, "loss_profile": "local35_terminal35"},
+    {"candidate_id": "A4_p5_local50", "base_candidate_id": "P5_hybrid_joint_latent", "d_model": 64, "latent_dim": 32, "state_elements_expected": 122301, "loss_profile": "local50_terminal30"}
+  ],
+  "loss_profiles": {
+    "balanced": {"valve": 0.25, "tin": 0.25, "local": 0.25, "terminal": 0.25},
+    "local35_terminal35": {"valve": 0.15, "tin": 0.15, "local": 0.35, "terminal": 0.35},
+    "local50_terminal30": {"valve": 0.10, "tin": 0.10, "local": 0.50, "terminal": 0.30}
+  },
+  "training": {
+    "seeds": [0, 1, 2],
+    "new_run_count": 30,
+    "optimizer_updates_cap": 4000,
+    "minimum_updates": 1000,
+    "evaluation_interval_updates": 100,
+    "early_stopping_patience_evaluations": 8,
+    "batch_size": 128,
+    "stats_anchor_count": 16384,
+    "selector_anchor_count": 2048,
+    "reporting_anchor_count": 4096,
+    "evaluation_batch_size": 128,
+    "learning_rate": 0.001,
+    "weight_decay": 0.00001,
+    "gradient_clip": 1.0,
+    "minimum_score_improvement": 0.0001
+  },
+  "decision_contract": {
+    "no_single_composite_champion": true,
+    "capacity_match_relative_tolerance": 0.04,
+    "primary_contrasts": [
+      "A0_p3_large_vs_P5_hybrid_joint_latent",
+      "A1_p4_large_vs_P5_hybrid_joint_latent",
+      "A2_p5_small_vs_P3_gatec_paired_free",
+      "A2_p5_small_vs_P4_gatec_a1_scheduled"
+    ],
+    "pareto_candidates": ["P5_hybrid_joint_latent", "A3_p5_local35", "A4_p5_local50"],
+    "report_metrics": ["terminal_mae_c", "local_mae_c", "scope_selector_score"],
+    "automatic_scientific_pass": false
+  },
+  "execution_contract": {
+    "linux_authorized": false,
+    "test_authorized": false,
+    "ms4_authorized": false,
+    "maximum_attempts_per_run": 1,
+    "required_run_artifacts": [
+      "manifest.json",
+      "checkpoint_best_validation.pt",
+      "metrics_validation.json",
+      "episodes_validation.npz",
+      "artifact_ledger.json"
+    ],
+    "required_root_artifacts": [
+      "run_manifest.json",
+      "matrix_execution_status.json",
+      "summary_validation.json",
+      "artifact_ledger.json"
+    ]
+  }
+}
