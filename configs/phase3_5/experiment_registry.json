@@ -546,7 +546,7 @@
     },
     "ms3_r": {
       "title": "真实点位响应辨识与模型扩充",
-      "status": "results_returned",
+      "status": "audited",
       "owner": "local_design_code_linux_batch_run_local_audit",
       "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
       "scripts": {
@@ -875,9 +875,13 @@
         "rm3_provisional_audit": {
           "path": "docs/PHASE35_MS3R_RM3_PROVISIONAL_AUDIT_2026-08-12.md",
           "required": true
+        },
+        "rm3_final_audit": {
+          "path": "docs/PHASE35_MS3R_RM3_FINAL_AUDIT_2026-08-12.md",
+          "required": true
         }
       },
-      "decision": "RM3 RESULTS_RETURNED / PROVISIONAL：48/48 complete且132个可用ledger项与36个terminal MAE重放闭合；36个checkpoint缺失，final audit等待原字节补传；R1 posthoc clipping已修正为NNLS，禁止重训/test/MS4",
+      "decision": "RM3 AUDITED：48/48 complete、168项ledger及36 checkpoint结构严格闭合；P5末温方向保留但需容量匹配和local trade-off消融；A1 aggregate NNLS shape可行但唯一gain/context scheduling未识别；test/MS4继续冻结",
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -928,6 +932,8 @@
         ,"返回的R1 least-squares后截负系数不是NNLS，短时投影RMSE被人为放大；本地已改为三基函数active-set NNLS"
         ,"P5相对P3/P4末温MAE在6/6配对改善约0.085°C，但local MAE更差；仅支持terminal预测方向，不支持局部物理冠军"
         ,"R0 12/12 rank门通过但H180对角gain跨fold明显漂移；仅称时变条件响应轨迹，不称唯一plant gain"
+        ,"补传36 checkpoint与ledger/manifest/best selector逐项匹配，六类模型strict load通过，RM3 artifact contract最终闭合"
+        ,"P3/P4/P5均跑满4000 updates；P5参数状态约122k而P3/P4约87k，下一步必须容量匹配，不得直接称冠军"
       ]
     },
     "ms4": {

@@ -12,12 +12,14 @@ import sys
 from typing import Any
 
 import numpy as np
+import torch
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.phase35.multistep.rm3_calibration import a1_nonnegative_projection
+from src.phase35.multistep.rm3_prediction import RM3FairPredictionAdapter, RM3PredictionConfig
 
 
 DEFAULT_RESULTS = ROOT / "results/phase3_5/ms3r_rm3"
@@ -61,9 +63,47 @@ def replay(results_root: Path) -> dict[str, Any]:
 
     replay_error = 0.0
     run_metrics: dict[tuple[str, str, int], dict[str, Any]] = {}
+    checkpoint_structures_verified = 0
+    training_budget: dict[str, list[dict[str, int]]] = {}
     for run_dir in sorted((results_root / "prediction").iterdir()):
         metrics = _read(run_dir / "metrics_validation.json")
-        spec = _read(run_dir / "manifest.json")["run_spec"]
+        manifest = _read(run_dir / "manifest.json")
+        spec = manifest["run_spec"]
+        checkpoint = torch.load(
+            run_dir / "checkpoint_best_validation.pt", map_location="cpu", weights_only=False
+        )
+        checkpoint_spec = json.loads(json.dumps(checkpoint["run_spec"], sort_keys=True))
+        if (
+            checkpoint["protocol_version"] != manifest["protocol_version"]
+            or checkpoint_spec != spec
+            or checkpoint["best_update"] != metrics["best_update"]
+            or checkpoint["best_selector_score"] != metrics["best_selector_score"]
+        ):
+            integrity_errors.append(f"checkpoint_metadata:{run_dir.name}")
+        else:
+            config = RM3PredictionConfig(**checkpoint["model_config"])
+            model = RM3FairPredictionAdapter(config, checkpoint["feature_names"])
+            model.load_state_dict(checkpoint["model_state_dict"], strict=True)
+            if not (
+                np.array_equal(
+                    model.model.history_center.detach().numpy(), checkpoint["history_center"]
+                )
+                and np.array_equal(
+                    model.model.history_scale.detach().numpy(), checkpoint["history_scale"]
+                )
+            ):
+                integrity_errors.append(f"checkpoint_normalization:{run_dir.name}")
+            else:
+                checkpoint_structures_verified += 1
+        training_budget.setdefault(spec["candidate_id"], []).append(
+            {
+                "optimizer_updates_completed": int(metrics["optimizer_updates_completed"]),
+                "best_update": int(metrics["best_update"]),
+                "state_element_count": int(
+                    sum(value.numel() for value in checkpoint["model_state_dict"].values())
+                ),
+            }
+        )
         with np.load(run_dir / "episodes_validation.npz", allow_pickle=False) as arrays:
             terminal_mae = float(
                 np.mean(
@@ -155,6 +195,7 @@ def replay(results_root: Path) -> dict[str, Any]:
             "missing_checkpoint_count": len(missing_checkpoints),
             "missing_checkpoints": missing_checkpoints,
             "checkpoint_audit_complete": not missing_checkpoints,
+            "checkpoint_structures_verified": checkpoint_structures_verified,
         },
         "metric_replay": {
             "prediction_run_count": len(run_metrics),
@@ -171,6 +212,7 @@ def replay(results_root: Path) -> dict[str, Any]:
                 "P5_hybrid_joint_latent", "P4_gatec_a1_scheduled"
             ),
         },
+        "training_budget": training_budget,
         "response_calibration": {
             "independent_channel_rank_supported_unit_count": independent_count,
             "unit_count": len(calibration),
@@ -179,7 +221,11 @@ def replay(results_root: Path) -> dict[str, Any]:
             "returned_r1_projection_invalid_due_to_posthoc_coefficient_clipping": True,
             "context_scheduling_identified": False,
         },
-        "supervisor_status": "PROVISIONAL_ARTIFACT_INCOMPLETE_CHECKPOINT_SUPPLEMENT_REQUIRED",
+        "supervisor_status": (
+            "ARTIFACT_COMPLETE_READY_FOR_FINAL_SUPERVISOR_DECISION"
+            if not missing_checkpoints and not integrity_errors
+            else "PROVISIONAL_ARTIFACT_INCOMPLETE_CHECKPOINT_SUPPLEMENT_REQUIRED"
+        ),
         "claims": {
             "prediction_champion": False,
             "unique_plant_gain": False,
