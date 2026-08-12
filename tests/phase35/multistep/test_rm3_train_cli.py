@@ -33,7 +33,13 @@ def test_rm3_train_dry_run_closes_36_plus_12_without_authorizing_linux() -> None
     assert payload["automatic_scientific_pass"] is None
 
 
-def test_execute_refuses_current_unauthorized_registry(tmp_path: Path) -> None:
+def test_execute_refuses_unauthorized_registry(tmp_path: Path, monkeypatch) -> None:
+    import experiments.phase3_5.ms3r_rm3_train as runner
+
+    def refuse() -> None:
+        raise RuntimeError("RM3 Hermes requires active and linux_authorized gate ms3_r")
+
+    monkeypatch.setattr(runner, "_verify_registry", refuse)
     with pytest.raises(RuntimeError, match="active and linux_authorized gate"):
         execute_matrix(
             matrix_path=MATRIX, cache_paths={"A": tmp_path / "a", "B": tmp_path / "b"},

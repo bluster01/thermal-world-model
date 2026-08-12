@@ -824,3 +824,7 @@ python experiments/phase3_5/ms3r_rm3_train.py --dry-run
 ```
 
 未来独立授权提交只允许把注册表改为 `ms3_r.status=ready_for_linux`、`linux_authorized_gate=ms3_r`，不得改变科学矩阵、候选、fold、seed、预算、selector/reporting anchors、指标或代码。Hermes 的边界固定为：拉取指定提交、检查 clean worktree、执行冻结 48 units、回传全部目录与 root ledger；不得调参、自动重试残缺 run、访问 test、产生科学 PASS、修改 TODO/文档/配置或启动 MS4。
+
+### RM3 回传后的 checkpoint 补件边界
+
+48/48 units 已完成，当前注册表为 `results_returned` 且 Linux gate 已关闭。首次回传遗漏了逐 run ledger 要求的36个 `checkpoint_best_validation.pt`。Hermes 只允许从原始 `results/phase3_5/ms3r_rm3/prediction/*/` 目录读取现有 `.pt` 并打包补传；不得调用训练或校准入口，不得 resume/regenerate checkpoint，不得修改 manifest/ledger/summary，不得访问 test。归档后必须逐项核对 archive member 的 SHA256 等于原 `artifact_ledger.json`；若单一归档超过 GitHub 限制，可按候选分成6个归档，但不得改文件字节。

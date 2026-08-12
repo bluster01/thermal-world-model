@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from itertools import combinations
 from typing import Any, Mapping
 
 import numpy as np
@@ -95,7 +96,26 @@ def _trajectory_targets(batch: Any) -> tuple[np.ndarray, np.ndarray]:
     return action, outcome
 
 
-def _a1_projection(matrices: np.ndarray, *, step_seconds: float) -> dict[str, Any]:
+def _nonnegative_least_squares(design: np.ndarray, target: np.ndarray) -> np.ndarray:
+    """Exact active-set enumeration for the frozen three-column A1 basis."""
+    if design.ndim != 2 or design.shape[1] != 3 or target.shape != (len(design),):
+        raise Phase35ProtocolError("RM3 A1 NNLS requires an h×3 basis and h-vector target")
+    best = np.zeros(3, dtype=float)
+    best_error = float(np.dot(target, target))
+    for size in range(1, 4):
+        for active in combinations(range(3), size):
+            coefficients = np.linalg.lstsq(design[:, active], target, rcond=None)[0]
+            if np.any(coefficients < -1e-12):
+                continue
+            candidate = np.zeros(3, dtype=float)
+            candidate[list(active)] = np.maximum(coefficients, 0.0)
+            error = float(np.sum((design @ candidate - target) ** 2))
+            if error < best_error:
+                best, best_error = candidate, error
+    return best
+
+
+def a1_nonnegative_projection(matrices: np.ndarray, *, step_seconds: float) -> dict[str, Any]:
     horizon = len(matrices)
     time = (np.arange(horizon) + 1) * step_seconds
     taus = np.asarray((60.0, 180.0, 600.0))
@@ -104,8 +124,9 @@ def _a1_projection(matrices: np.ndarray, *, step_seconds: float) -> dict[str, An
     fitted = np.empty_like(matrices)
     for i in range(2):
         for j in range(2):
-            raw = np.linalg.lstsq(basis, matrices[:, i, j], rcond=None)[0]
-            coefficients[:, i, j] = np.maximum(raw, 0.0)
+            coefficients[:, i, j] = _nonnegative_least_squares(
+                basis, matrices[:, i, j]
+            )
             fitted[:, i, j] = basis @ coefficients[:, i, j]
     return {
         "fixed_tau_seconds": taus.tolist(),
@@ -113,6 +134,7 @@ def _a1_projection(matrices: np.ndarray, *, step_seconds: float) -> dict[str, An
         "trajectory_matrix": fitted.tolist(),
         "projection_rmse": float(np.sqrt(np.mean((fitted - matrices) ** 2))),
         "context_scheduling_identified": False,
+        "solver": "exact_active_set_nnls_three_basis_columns",
         "note": "aggregate three-pole projection; scheduling requires downstream joint R-loss",
     }
 
@@ -181,7 +203,9 @@ def run_rm3_calibration(
             "trajectory_matrix": full_matrices.tolist(),
             "independent_channels_supported_all_steps": bool(all(item.independent_channels_supported for item in full)),
         },
-        "R1_a1_scheduled": _a1_projection(full_matrices, step_seconds=float(data["step_seconds"])),
+        "R1_a1_scheduled": a1_nonnegative_projection(
+            full_matrices, step_seconds=float(data["step_seconds"])
+        ),
         "R2_a1_common_only": {
             "trajectory_matrix": common_matrices.tolist(),
             "independent_channels_supported": False,
