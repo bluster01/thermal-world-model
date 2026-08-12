@@ -1,0 +1,80 @@
+{
+  "protocol_version": "phase3.5-ms3r-gatec-rm2-v1",
+  "run_spec": {
+    "run_id": "A0_paired_free_F0_s0",
+    "group": "A",
+    "candidate_id": "A0_paired_free",
+    "response_route": "none",
+    "residual_capacity": "base",
+    "response_scheduling": "none",
+    "response_coordinate_mode": "full_mimo",
+    "downstream_mode": "latent_mimo",
+    "seed": 0,
+    "fold_id": "F0",
+    "train_fraction": [
+      0.0,
+      0.6
+    ],
+    "validation_fraction": [
+      0.6,
+      0.7
+    ]
+  },
+  "provenance": {
+    "execution_git_sha": "c179482a18d244b54567f35cd858a4c110d022d3",
+    "matrix_path": "configs/phase3_5/ms3r_gatec_rm2_matrix.json",
+    "matrix_sha256": "ffe93064518d41dd8ffc9c81e01c272237ff68440e49b24d5f6c0853f48f2d43",
+    "parent_rm1a_audit": {
+      "path": "results/phase3_5/ms3r_gatec_local_real_rm1a/supervisor_audit_validation.json",
+      "sha256": "fdde0cec2bb4a5ec8363cc9ef4913400547f6cda4553060f13563fa98e4d53cf",
+      "required_label": "RM1A_ATTRIBUTION_COMPLETE_CAPACITY_COLLAPSE_NOT_OBSERVED_LOCAL_SUPERVISION_REQUIRED"
+    },
+    "cache_sha256": {
+      "A": "a75cde934e1d459c629959a6921a80d31ec1bf998468525ef82a4ffaaa3f29b8",
+      "B": "7005d027b97cad9e26c2f8f36ed8ffb77aa83a68ed83d6da786f0369abe0b8fa"
+    },
+    "code_sha256": {
+      "src/phase35/multistep/gatec_contracts.py": "65129b2fcff56d81d921ab57d3f9e57bfdf936fd3f4cb38589968edf62bfabf4",
+      "src/phase35/multistep/gatec_data.py": "12c182b6b5aa6d280bd1317a934c72caf104910def80ba5e7545e6b24d51853c",
+      "src/phase35/multistep/gatec_model.py": "ab59e8ee1e9e927e03478586701a79ec4f2d1782ffef481063584e759fd49455",
+      "src/phase35/multistep/gatec_training.py": "a9e1153553bc292f8a5802017dc16183a60b93487c1a00e91c5752b761085004",
+      "src/phase35/multistep/gatec_rm2_contracts.py": "726184900f7f0dba73b8c7c94b113655a3f8f1347fda554b2d4054510ad0b89c",
+      "src/phase35/multistep/gatec_rm2_training.py": "f13cdc3283065c6c19654508cd6ea57bca1d285f449d818caf1a616d4e790eaf",
+      "experiments/phase3_5/ms3r_gatec_rm2.py": "c0c51e2dff10b7534ff3e50019571cf9eb8f1a9472fb752c5b6e3c57f938eaea",
+      "experiments/phase3_5/summarize_ms3r_gatec_rm2.py": "ae37fb7f60cac7c67a94a8c2937ff029c56cb4a1a9c6d274898f118955e31f66"
+    },
+    "python_version": "3.11.15",
+    "numpy_version": "2.3.5",
+    "torch_version": "2.11.0+cu130",
+    "cuda_available": true,
+    "test_accessed": false,
+    "device": "cuda:0"
+  },
+  "train_bounds": [
+    0,
+    715397
+  ],
+  "validation_bounds": [
+    715397,
+    834630
+  ],
+  "train_anchor_pool_count": 695780,
+  "stats_anchor_count": 16384,
+  "selector_anchor_count": 2048,
+  "final_anchor_count": 4096,
+  "stats_anchor_sha256": "7728b0563255d526b3673e8aa544ea68d97f162aff13d62c6519018b32e63b71",
+  "selector_anchor_sha256": "6df173e34eafc88046ddf4cda77a15a7107409bb9cb539182d15af721652591c",
+  "final_anchor_sha256": "c9e89b2dad82f3b0771c1071fd4d610929cb990e97ece95a97b806c10c945f05",
+  "selector_reporting_disjoint": true,
+  "normalization_source": "fold_train_stats_anchors_only",
+  "target_scale_source": "fold_train_stats_anchors_only",
+  "boundary_mode": "forecast_boundary",
+  "logged_future_valve_role": "response_auxiliary_and_validation_diagnostic_only",
+  "checkpoint_sha256": "bc672e83f1d1763172e7b96740c370aee12284713871c9e937c3244a3c66e73e",
+  "episodes_sha256": "4198ea2e801942effcbb108abd68d268f4d2fdf7f9ad7e9a8499ef0fbc79169a",
+  "elapsed_seconds": 390.1301822019741,
+  "peak_cuda_bytes": 83755008,
+  "test_accessed": false,
+  "attempt": 1,
+  "automatic_scientific_pass": null
+}

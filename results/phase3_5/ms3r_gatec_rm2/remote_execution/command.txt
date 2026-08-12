@@ -1,0 +1,1 @@
+timeout --signal=TERM --kill-after=120s 172800s /usr/bin/time -v -o /tmp/ms3r_gatec_rm2/resource_usage.txt python experiments/phase3_5/ms3r_gatec_rm2.py --execute-matrix --cache-a .../ms3_cross_A.npz --cache-b .../ms3_cross_B.npz --devices cuda:0 --groups A,B,C --output-root results/phase3_5/ms3r_gatec_rm2
