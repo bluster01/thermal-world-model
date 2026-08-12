@@ -2,7 +2,7 @@
   "schema_version": "phase3.5-experiment-registry-v1",
   "updated_at": "2026-08-12",
   "active_gate": "ms3_r",
-  "linux_authorized_gate": "ms3_r",
+  "linux_authorized_gate": null,
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -546,7 +546,7 @@
     },
     "ms3_r": {
       "title": "真实点位响应辨识与模型扩充",
-      "status": "ready_for_linux",
+      "status": "local_verified",
       "owner": "local_design_code_linux_batch_run_local_audit",
       "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
       "scripts": {
