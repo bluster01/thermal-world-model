@@ -1,8 +1,8 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
-  "updated_at": "2026-08-13",
+  "updated_at": "2026-08-14",
   "active_gate": "ms3_r",
-  "linux_authorized_gate": null,
+  "linux_authorized_gate": "ms3_r",
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -546,7 +546,7 @@
     },
     "ms3_r": {
       "title": "真实点位响应辨识与模型扩充",
-      "status": "local_verified",
+      "status": "ready_for_linux",
       "owner": "local_design_code_linux_batch_run_local_audit",
       "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
       "scripts": {
@@ -976,8 +976,8 @@
         }
       },
       "decision": {
-        "summary": "RM3/RM3-A RESULTS_RETURNED；独立审计意见降为待证伪命题。RM3-AV 已实现并本地验证：AV0 零训练回放，AV1 为32候选×2 folds×seed0=64 units，AV2本地逐项审计；当前 Linux/test/RM3-B/MS4 均未授权",
-        "authorized_batch": null,
+        "summary": "RM3/RM3-A RESULTS_RETURNED；RM3-AV 已实现、本地验证并授权 Hermes 执行 RM3-AV0+AV1：AV0 零训练回放，AV1 为32候选×2 folds×seed0=64 units；test、AV2科学判决、RM3-B和MS4均未授权",
+        "authorized_batch": "RM3-AV0+AV1",
         "rm3av_training_unit_count": 64,
         "automatic_scientific_pass": null
       },
@@ -1037,7 +1037,7 @@
         ,"RM3-A只新增A0-A4共30 runs，旧P3/P4/P5的18 runs从最终审计结果复用，禁止重跑"
         ,"RM3-A A3/A4只改变full-multitask component weights；terminal/local以Pareto表报告，不设单一综合冠军"
         ,"独立审计不直接否决P5或RM3-B；先用RM3-AV成对实验验证free/bypass/response/valve/MIMO/timing/init/convergence等命题"
-        ,"RM3-AV matrix/runner/AV0/诊断与32候选逐一一更新全链路已本地闭合；linux_authorized_gate=null，Hermes仍不得提前执行"
+        ,"RM3-AV matrix/runner/AV0/诊断与32候选逐一一更新全链路已本地闭合；Hermes现仅获RM3-AV0+AV1一次执行授权，不得访问test、代写AV2判决或启动RM3-B/MS4"
       ]
     },
     "ms4": {
