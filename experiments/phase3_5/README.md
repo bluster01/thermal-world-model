@@ -2,7 +2,7 @@
 
 本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
-> 当前状态：`ms3_r=audited`、`linux_authorized_gate=null`。Gate C RM2 已完成 54/54 并由本地审计；条件动作路径复现，但 operator gain 未识别。当前没有 Linux 批次，test、自动科学PASS、MS4和旧42-run/E系列均未授权。
+> 当前状态：`ms3_r=local_verified`、`linux_authorized_gate=null`。RM3 与 RM3-A 已执行；RM3-AV 独立审计验证批次已实现并本地验证，但尚未获得 Linux 授权。test、RM3-B、自动科学PASS、MS4和旧42-run/E系列均未授权。
 
 RM3 本地框架入口如下。它只执行合同 dry-run 或合成真值 smoke，没有真实训练参数，也不构成 Hermes 授权：
 
@@ -829,7 +829,7 @@ python experiments/phase3_5/ms3r_rm3_train.py --dry-run
 
 48/48 units 已完成，当前注册表为 `results_returned` 且 Linux gate 已关闭。首次回传遗漏了逐 run ledger 要求的36个 `checkpoint_best_validation.pt`。Hermes 只允许从原始 `results/phase3_5/ms3r_rm3/prediction/*/` 目录读取现有 `.pt` 并打包补传；不得调用训练或校准入口，不得 resume/regenerate checkpoint，不得修改 manifest/ledger/summary，不得访问 test。归档后必须逐项核对 archive member 的 SHA256 等于原 `artifact_ledger.json`；若单一归档超过 GitHub 限制，可按候选分成6个归档，但不得改文件字节。
 
-## 21. RM3-A 容量匹配与 local/terminal Pareto（本地已验证，未授权）
+## 21. RM3-A 容量匹配与 local/terminal Pareto（已完成，仅供追溯）
 
 RM3-A 复用已审计的 P3/P4/P5 共18个 reference runs，只新增 A0–A4 五个配置×F0/F1×3 seeds=`30` runs。A0/A1把P3/P4扩到约121k状态元素，A2把P5缩到约84k；A3/A4只改变P5的full-multitask loss weights。矩阵禁止单一composite champion。
 
@@ -837,4 +837,44 @@ RM3-A 复用已审计的 P3/P4/P5 共18个 reference runs，只新增 A0–A4 �
 python experiments/phase3_5/ms3r_rm3a_train.py --dry-run
 ```
 
-当前注册表未授权，所以 `--execute` 必须失败。未来授权后，Hermes只运行30个新run，不得重跑旧RM3的18个reference。每run必须原样提交manifest、checkpoint、metrics、episodes NPZ和ledger；`.gitignore`已显式允许RM3-A checkpoint/NPZ。既有目录一律拒绝，不resume、不自动重试；不访问test，不启动MS4，不作科学判决。
+RM3-A 的 30/30 新 runs 已完成并回传；本节命令不再构成重复执行授权。Hermes 不得重跑旧 RM3 的 18 个 reference 或 RM3-A；每 run 的 manifest、checkpoint、metrics、episodes NPZ 和 ledger 只作历史审计输入。
+
+## 22. RM3-AV 独立审计验证（本地已验证，未授权）
+
+RM3-B 前强制先做 RM3-AV。设计包含 AV0 零训练回放，以及 AV1 的 32 candidates × F0/F1 × seed 0 = 64 training units；完整候选、指标、四态判决和 Linux 边界见 [RM3-AV 设计](../../docs/plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md)。
+
+冻结矩阵与 runner 已实现，C00–C31 全候选均通过本地一更新全链路 smoke；当前注册表仍为 `linux_authorized_gate=null`，所以下列命令只允许预检，执行命令必须失败：
+
+```bash
+python experiments/phase3_5/ms3r_rm3av_train.py --dry-run
+python experiments/phase3_5/audit_ms3r_rm3av0.py
+```
+
+AV0 无 cache 时闭合 RM2 的 54 个归档 checkpoint/ledger 和 RM3/RM3-A 的 66 个 checkpoint/ledger，并回放既有 validation 指标；传入 A/B cache 才执行 P3/P4/P5 及 RM3-A 的 11 模式函数干预。AV1 只有在后续独立授权提交将 `ms3_r.status` 切为 `ready_for_linux`、`linux_authorized_gate=ms3_r`，并写入 `decision.authorized_batch=RM3-AV0+AV1` 后才可执行。Hermes 只能拉取授权 commit、在 clean worktree 上运行一次冻结的 64 units，失败单元写 `failure.json` 后不得重试；不得改 matrix/code/config/docs、调参、缩模型、访问 test、选择冠军、写四态科学判决或启动 RM3-B/MS4。
+
+授权提交到达后，Hermes 只执行下面这一组命令。必须先运行 AV1，因为它会 fail-closed 检查 clean worktree；AV1 完整或失败产物落盘后再运行 AV0。`PH35_RM3AV_DEVICES` 由远端按实际 GPU 列表设置，例如 `cuda:0,cuda:1`；除设备分配外不得改参数：
+
+```bash
+python experiments/phase3_5/experiment_status.py --check --json
+git status --short
+python experiments/phase3_5/ms3r_rm3av_train.py --dry-run
+python experiments/phase3_5/ms3r_rm3av_train.py \
+  --cache-a "$PH35_MS3_CACHE_A" \
+  --cache-b "$PH35_MS3_CACHE_B" \
+  --devices "${PH35_RM3AV_DEVICES:-cuda:0}" \
+  --output-root results/phase3_5/ms3r_rm3av \
+  --execute
+python experiments/phase3_5/audit_ms3r_rm3av0.py \
+  --cache-a "$PH35_MS3_CACHE_A" \
+  --cache-b "$PH35_MS3_CACHE_B" \
+  --device "${PH35_RM3AV_AUDIT_DEVICE:-cpu}" \
+  --output results/phase3_5/ms3r_rm3av0/supervisor_replay_validation.json
+```
+
+Hermes 只回传 `results/phase3_5/ms3r_rm3av/`、`results/phase3_5/ms3r_rm3av0/` 与完整 stdout/stderr/环境信息；`audit_ms3r_rm3av.py` 是本地 Supervisor 的 AV2 入口，远端不得代跑或据此写科学结论。AV1 任一 unit 失败时仍继续完成其他 units 并原样回传 `failure.json`；不得删除输出目录、`--skip-existing`、恢复或发起第二次 attempt。
+
+64 units 完整回传后，以下 AV2 命令只由本地 Supervisor 执行；它逐目录验 ledger、生成 fold-paired contrasts、初始化公平性表和 Q01–Q33 证据索引，但不会自动填写科学判决：
+
+```bash
+python experiments/phase3_5/audit_ms3r_rm3av.py
+```

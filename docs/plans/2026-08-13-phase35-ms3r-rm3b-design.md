@@ -11,6 +11,18 @@
 - Data Boundary: A/B 现场 historian；喷水流量不作真值；实际阀位仅是有效喷水作用代理
 - Claim Boundary: 可识别性（模型内部自由度唯一性）不等于观测因果效应；不建立 `do(valve)`
 
+## 0. 强制前置：RM3-AV 独立审计验证批次
+
+独立架构审计提出的实现回归、自由头位置、terminal bypass、阀位过平滑、闭环反馈、初始化混淆、三极点不可辨识、双侧池化、更新上限和 OOF 未接训练图等问题，当前都视为**待证伪命题**，不直接作为否决 RM3-B 的结论。
+
+RM3-B 的任何实现、矩阵冻结或 Linux 授权之前，必须先完成 [RM3-AV 独立审计验证批次](2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md)：
+
+- `RM3-AV0`：RM2/RM3/RM3-A 冻结产物与 checkpoint 的零训练回放；
+- `RM3-AV1`：32 candidates × 2 rolling folds × seed 0 = 64 training units；
+- `RM3-AV2`：对审计命题逐项给出 `SUPPORTED / REFUTED / MIXED / NOT_TESTABLE`，并重选 RM3-B baseline、监督方式、阀位策略、动作子空间和动态基底。
+
+本文 §3–§12 均为 RM3-B 的**候选设计空间**，不是已放行实施方案。KCI、nonstationarity、Jacobian sparsity、noise independence 和 condition number 在 RM3-AV 前后一律先作诊断，不能单独证明真实闭环分解唯一、动作外生或 plant causal identification。
+
 ## 1. 要回答的问题
 
 RM2/RM3/RM3-A 已给出三个硬事实：
@@ -132,10 +144,10 @@ RM2/RM3/RM3-A 已给出三个硬事实：
 
 | 批次 | 内容 | 训练量 |
 |---|---|---|
-| RM3-B0 | 结构合同：shape/finite/prefix/constant-action/noise-ratio/Jacobian/rollout 稳定性 + E1/E2/E3/E6 在 RM3/RM3-A 冻结产物上回放（校验门本身） | 零 |
-| RM3-B1 | E4/E5/E7/E8 在冻结产物上补齐基线；E2 从诊断级升判决级的阈值数据 | 零 |
-| RM3-B2 | A 系列 one-update smoke + 单 seed 单 fold 筛查（建议首批 A1+A4+A3，见 §12） | 微 |
-| RM3-B3 | 正式 validation 比较：≤N 候选 × 3 seeds × 2 folds，4000-update 上限、fold/seed/输入权限与 RM3 相同；具体矩阵 B2 后冻结 | 全量 |
+| RM3-B0 | 消费 RM3-AV2 四态判决，冻结仍有经验动机的 E/A 模块与 baseline | 零 |
+| RM3-B1 | surviving modules 的 one-update smoke、结构合同和 fail-closed runner | 微 |
+| RM3-B2 | 仅在 AV2 要求组合交互时做最小组合筛查；否则跳过 | 待定 |
+| RM3-B3 | 正式 validation 比较：候选数、seed 数和预算由 AV2 后另行冻结；不得沿用本草案数字自动执行 | 全量 |
 
 ## 6. 理论警告：闭环反馈违反独立噪声假设
 
@@ -145,7 +157,7 @@ RM2/RM3/RM3-A 已给出三个硬事实：
 2. A3 瞬时耦合层（同采样步互馈显式）；
 3. A1 动作噪声与状态噪声的相关项（σ 协方差而非对角）。
 
-三者缺一，A1/A2 的识别主张不得升级。E2（KCI）即为 IN 是否成立的检测器：E2 不通过时，本批次结论降级为 `OBSERVATIONAL_CONSISTENCY`，不称可识别。
+三者缺一，A1/A2 的识别主张不得升级。E2（KCI）仅是依赖性诊断之一，既不能单独验证 IN，也不能证明 free/response 分解唯一；它必须与 RM3-AV 的容量、placebo、动作敏感性和闭环 policy residual 证据联合解释。
 
 ## 7. 放行门（RM3-B3 判决）
 
@@ -166,13 +178,13 @@ RM2/RM3/RM3-A 已给出三个硬事实：
 ## 9. 被拒绝的备选
 
 - 继续仅平滑调度：动态范围窄（exp(0.25·tanh(·))），且 R0 已显示时变响应——A6 显式化优于继续隐式；
-- 纯容量扩充：RM3-A 已证 terminal 优势是架构性的（A0/A1 扩容仍差 0.079–0.080，A2 缩容仍优），容量杠杆已耗尽；
+- 纯 `d_model` 扩充不能解释 RM3-A 结果，但自由头位置、bypass 和 action-shielded 容量仍未定性；由 RM3-AV C03–C09 验证后再决定是否拒绝容量/头部路线；
 - 把幅值分歧当超参扫描：look-elsewhere 风险，与 fail-closed 纪律冲突；
 - 在 synthetic known-truth 上验证识别理论：MS3 已证明 synthetic PASS 不迁移真实数据，识别性门必须在真实 A/B 数据上回放。
 
 ## 10. 与现行纪律的关系
 
-- RM3/RM3-A 结果、fold/seed/输入权限、4000-update 上限不可变（RM3 final audit 第 5 点）；
+- RM3/RM3-A 的历史结果与输入权限不可变；RM3-AV 只新增明确标注的 8000-update 收敛对照，不重写旧结果；RM3-B 的预算等待 AV2 冻结；
 - 本文不改 TODO、注册表、Supervisor 文档（本地职责）；
 - Linux 执行仍须 `active_gate` 与 `linux_authorized_gate` 同时满足，本地冻结矩阵后才授权；
 - 任一预检红项必须停止回传，不得自行豁免。

@@ -1,6 +1,6 @@
 # Phase 3.5-MS 上下文恢复快照
 
-> 更新：2026-08-11。新会话先读本文，再运行状态检查器。机器状态以 `configs/phase3_5/experiment_registry.json` 为准；本文解释为什么。
+> 更新：2026-08-13。新会话先读本文，再运行状态检查器。机器状态以 `configs/phase3_5/experiment_registry.json` 为准；本文解释为什么。
 
 ## 1. 恢复命令
 
@@ -36,6 +36,8 @@ python experiments/phase3_5/experiment_status.py --check --json
 | MS5 | CLOSED | joint component recovery validation 通过；冻结 staged 协议拒绝 |
 | MS3 | AUDITED FAIL | B 3/3 PASS；A 0/3 response non-collapse FAIL；不重跑、不访问 test |
 | MS3-D | AUDITED | B 阀位持久性更强；checkpoint A attenuation 未获现场热链路支持；单侧归因不足 |
+| RM3/RM3-A | RESULTS RETURNED / INDEPENDENTLY AUDITED | P5 terminal 较好但来源未归因；OOF 校准未进入 P5 训练图；不直接宣布架构方向 |
+| RM3-AV | IMPLEMENTED / LOCAL VERIFIED / UNAUTHORIZED | RM3-B 强制前置；AV0 零训练，AV1 为 32 candidates×2 folds×seed0=64 units |
 | MS4 | HOLD | 新 MS3-R response-identification 协议前不启动；不恢复旧 E 匹配 |
 
 ## 4. Linux 最新同步与本地审计
@@ -81,7 +83,7 @@ Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。�
 
 ## 5. 当前下一步
 
-MS3-D 已审计，Linux 授权仍为空。当前只在本地冻结 MS3-R：用测得的实际阀位、局部 `Tin-Tout` 温降和末温把 response chain 分段监督，并比较 MIMO/SISO、shared-physics+side-scale/独立侧、方向 opening map 与 response-aware selector。它是新协议，不是 MS3 retry；在设计、代码和本地 smoke 通过前不训练、不生成 Linux 矩阵。正式 MS4、test、模型选择和论文均保持 HOLD。
+RM3/RM3-A 已回传并经独立架构审计，Linux 授权仍为空。当前 [RM3-AV](plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md) 已完成本地实现与逐候选 smoke：AV0 闭合 RM2 的 54 个归档 checkpoint/ledger 与 RM3/RM3-A 的 66 个 checkpoint/ledger（合计 120），并支持 bypass/response/oracle/placebo 回放；AV1 的 32 个单因素候选、2 folds、seed 0 共 64 units 已冻结，所有候选共享 H120 可用性锚点但共同预测/选择目标仍为 H60，selector/reporting 按不重叠 UTC 日块隔离，C00–C31 均完成一更新训练、选择、诊断、checkpoint 与 ledger 测试；C31 只形成 10→20 min 两窗口递推证据，30/60 min 强制 `NOT_TESTABLE`。AV2 fail-closed 收口器已经实现，仍须等待真实训练结果后逐条给审计命题四态判决。它不是直接接受审计结论，也不是 RM3-B；正式 RM3-B、MS4、test、模型选择和论文均保持 HOLD。
 
 ## 6. 上下文读取优先级
 

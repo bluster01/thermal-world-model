@@ -84,8 +84,13 @@ class CausalValveDecoder(nn.Module):
         nn.init.zeros_(self.delta[-1].bias)
 
     def forward(
-        self, context: torch.Tensor, future_sp: torch.Tensor, baseline_valve: torch.Tensor
+        self,
+        context: torch.Tensor,
+        future_sp: torch.Tensor,
+        baseline_valve: torch.Tensor,
+        baseline_temperature: torch.Tensor | None = None,
     ) -> torch.Tensor:
+        del baseline_temperature
         state = context
         valve = baseline_valve
         outputs = []
@@ -259,13 +264,25 @@ class HybridJointLatentPredictor(nn.Module):
         baseline_tin: torch.Tensor,
         baseline_local: torch.Tensor,
         baseline_terminal: torch.Tensor,
+        initial_local_state: torch.Tensor | None = None,
+        initial_latent_state: torch.Tensor | None = None,
     ) -> dict[str, torch.Tensor | str | bool]:
         normalized = (history - self.history_center) / self.history_scale
         _, flat = self.backbone(normalized)
         context = torch.tanh(self.context_projection(flat))
-        valve = self.valve_policy(context, future_sp, baseline_valve)
+        valve = self.valve_policy(
+            context,
+            future_sp,
+            baseline_valve,
+            baseline_temperature=baseline_terminal,
+        )
         tin = baseline_tin[:, None] + self.tin_head(context).reshape(-1, self.config.horizon, 2)
-        response = self.local_response(context, valve, baseline_valve)
+        response = self.local_response(
+            context,
+            valve,
+            baseline_valve,
+            initial_state=initial_local_state,
+        )
         output = self.joint(
             context,
             tin,
@@ -274,12 +291,14 @@ class HybridJointLatentPredictor(nn.Module):
             baseline_tin=baseline_tin,
             baseline_local=baseline_local,
             baseline_terminal=baseline_terminal,
+            initial_state=initial_latent_state,
         )
         return {
             **output,
             "valve_prediction": valve,
             "tin_prediction": tin,
             "local_stable_poles": response["stable_poles"],
+            "local_state": response["state"],
             "action_used": valve,
             "action_access": "future_sp_to_predicted_valve",
             "deployable": True,

@@ -82,8 +82,14 @@ class ZeroLocalResponse(nn.Module):
         self.route = "none"
 
     def forward(
-        self, context: torch.Tensor, future_valve: torch.Tensor, baseline_valve: torch.Tensor
+        self,
+        context: torch.Tensor,
+        future_valve: torch.Tensor,
+        baseline_valve: torch.Tensor,
+        *,
+        initial_state: torch.Tensor | None = None,
     ) -> dict[str, torch.Tensor]:
+        del initial_state
         shape = (*future_valve.shape[:2], 2)
         state_shape = (*future_valve.shape[:2], self.state_dim)
         return {
@@ -203,7 +209,12 @@ class A1PhysThreePoleResponse(StableMIMOResponseBase):
         self.pole_weights = nn.Parameter(torch.zeros(2, self.bases))
 
     def forward(
-        self, context: torch.Tensor, future_valve: torch.Tensor, baseline_valve: torch.Tensor
+        self,
+        context: torch.Tensor,
+        future_valve: torch.Tensor,
+        baseline_valve: torch.Tensor,
+        *,
+        initial_state: torch.Tensor | None = None,
     ) -> dict[str, Any]:
         batch, horizon, _ = future_valve.shape
         equilibrium = self._equilibrium_modes(context, future_valve, baseline_valve)
@@ -211,7 +222,15 @@ class A1PhysThreePoleResponse(StableMIMOResponseBase):
             self.tau_max_seconds - self.tau_min_seconds
         ) * torch.sigmoid(self.tau_logits)
         decay = torch.exp(-self.dt_seconds / tau)
-        state = future_valve.new_zeros((batch, 2, self.bases))
+        if initial_state is None:
+            state = future_valve.new_zeros((batch, 2, self.bases))
+        else:
+            if initial_state.shape == (batch, self.state_dim):
+                state = initial_state.reshape(batch, 2, self.bases)
+            elif initial_state.shape == (batch, 2, self.bases):
+                state = initial_state
+            else:
+                raise Phase35ProtocolError("Gate C local continuation state shape mismatch")
         states: list[torch.Tensor] = []
         effects: list[torch.Tensor] = []
         weights = F.softmax(self.pole_weights, dim=1)

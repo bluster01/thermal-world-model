@@ -69,6 +69,7 @@ class JointLatentPhysicalInterfaces(nn.Module):
         baseline_tin: torch.Tensor,
         baseline_local: torch.Tensor,
         baseline_terminal: torch.Tensor,
+        initial_state: torch.Tensor | None = None,
     ) -> dict[str, torch.Tensor]:
         expected = (self.config.horizon, 2)
         if boundary_tin.shape[1:] != expected or explicit_local_effect.shape[1:] != expected:
@@ -81,7 +82,12 @@ class JointLatentPhysicalInterfaces(nn.Module):
             for value in (history_context, boundary_tin, explicit_local_effect, *baselines)
         ):
             raise Phase35ProtocolError("RM3 joint-latent inputs must be finite")
-        state = torch.tanh(self.initial(history_context))
+        if initial_state is None:
+            state = torch.tanh(self.initial(history_context))
+        else:
+            if initial_state.shape != (len(history_context), self.config.latent_dim):
+                raise Phase35ProtocolError("RM3 joint continuation state shape mismatch")
+            state = initial_state
         decay = 0.5 + 0.49 * torch.sigmoid(self.decay_logits)
         outputs: list[torch.Tensor] = []
         states: list[torch.Tensor] = []

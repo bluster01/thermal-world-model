@@ -1,8 +1,8 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
-  "updated_at": "2026-08-12",
+  "updated_at": "2026-08-13",
   "active_gate": "ms3_r",
-  "linux_authorized_gate": "ms3_r",
+  "linux_authorized_gate": null,
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -546,7 +546,7 @@
     },
     "ms3_r": {
       "title": "真实点位响应辨识与模型扩充",
-      "status": "ready_for_linux",
+      "status": "local_verified",
       "owner": "local_design_code_linux_batch_run_local_audit",
       "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
       "scripts": {
@@ -729,6 +729,56 @@
           "path": "experiments/phase3_5/ms3r_rm3.py",
           "status": "active",
           "required": true
+        },
+        "rm3av_contracts": {
+          "path": "src/phase35/multistep/rm3av_contracts.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3av_model": {
+          "path": "src/phase35/multistep/rm3av_model.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3av_training": {
+          "path": "src/phase35/multistep/rm3av_training.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3av_diagnostics": {
+          "path": "src/phase35/multistep/rm3av_diagnostics.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3av_execution": {
+          "path": "src/phase35/multistep/rm3av_execution.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3av_replay": {
+          "path": "src/phase35/multistep/rm3av_replay.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3av_runner": {
+          "path": "experiments/phase3_5/ms3r_rm3av_train.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3av0_replay": {
+          "path": "experiments/phase3_5/audit_ms3r_rm3av0.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3av_supervisor_audit_core": {
+          "path": "src/phase35/multistep/rm3av_audit.py",
+          "status": "active",
+          "required": true
+        },
+        "rm3av_supervisor_audit": {
+          "path": "experiments/phase3_5/audit_ms3r_rm3av.py",
+          "status": "active",
+          "required": true
         }
       },
       "artifacts": {
@@ -907,9 +957,30 @@
         "rm3a_design": {
           "path": "docs/plans/2026-08-12-phase35-ms3r-rm3a-design.md",
           "required": true
+        },
+        "rm3av_design": {
+          "path": "docs/plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md",
+          "required": true
+        },
+        "rm3av_implementation_plan": {
+          "path": "docs/plans/2026-08-13-phase35-ms3r-rm3av-implementation.md",
+          "required": true
+        },
+        "rm3av_matrix": {
+          "path": "configs/phase3_5/ms3r_rm3av_matrix.json",
+          "required": true
+        },
+        "rm3b_draft": {
+          "path": "docs/plans/2026-08-13-phase35-ms3r-rm3b-design.md",
+          "required": true
         }
       },
-      "decision": "RM3 AUDITED / RM3-A LOCAL_VERIFIED：冻结5个针对性配置、30个新runs，双向容量匹配P3/P4/P5并扫描两档local-terminal Pareto；复用18个已审计锚点，不重跑旧RM3，Linux/test/MS4未授权",
+      "decision": {
+        "summary": "RM3/RM3-A RESULTS_RETURNED；独立审计意见降为待证伪命题。RM3-AV 已实现并本地验证：AV0 零训练回放，AV1 为32候选×2 folds×seed0=64 units，AV2本地逐项审计；当前 Linux/test/RM3-B/MS4 均未授权",
+        "authorized_batch": null,
+        "rm3av_training_unit_count": 64,
+        "automatic_scientific_pass": null
+      },
       "advisories": [
         "free/physics 仅称残差分支/受约束阀位响应分支；head 名称不保证物理语义",
         "Gate A 不训练正式模型、不访问 test、不自动判定双侧 MIMO 或因果响应",
@@ -965,6 +1036,8 @@
         ,"RM3-A使用P3/P4 d77约121k对齐P5-64，并用P5 d52约84k对齐P3/P4-64，完成双向容量辨析"
         ,"RM3-A只新增A0-A4共30 runs，旧P3/P4/P5的18 runs从最终审计结果复用，禁止重跑"
         ,"RM3-A A3/A4只改变full-multitask component weights；terminal/local以Pareto表报告，不设单一综合冠军"
+        ,"独立审计不直接否决P5或RM3-B；先用RM3-AV成对实验验证free/bypass/response/valve/MIMO/timing/init/convergence等命题"
+        ,"RM3-AV matrix/runner/AV0/诊断与32候选逐一一更新全链路已本地闭合；linux_authorized_gate=null，Hermes仍不得提前执行"
       ]
     },
     "ms4": {

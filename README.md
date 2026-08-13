@@ -2,7 +2,7 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-11）**：Phase 4 暂停，Phase 3.5-MS 尚未进入论文收口。MS3-D 已完成 validation-only SP held-step 诊断：B 的实际阀位在 H300/H600 更持久，但 A/B 局部减温温降和末端温度没有复现 checkpoint 的 `4.63` 倍侧差。该差异已写入 learned opening map、scheduled gain 和 dynamics，却未获当前现场链路支持；不能据此声称 A/B 物理等价或已经证明 free-head absorption。MS3 保持 FAIL，test 与正式 MS4 继续冻结；下一步仅在本地冻结 MS3-R 分段/MIMO response-identification 架构。Linux 当前无授权，旧 E1–E5 仍废弃。
+> **当前判断（2026-08-13）**：Phase 4 暂停，Phase 3.5-MS 尚未进入论文收口。RM3/RM3-A 已完成 validation 执行，但 P5 terminal 优势、free/bypass 归因、显式响应是否被真正使用、阀位策略过平滑、MIMO 支持域、动态形状、收敛与递推状态闭合尚未由合法成对实验定性。RM3-B 前新增 RM3-AV：先对冻结产物做零训练回放，再执行 32 candidates × 2 rolling folds × seed 0 的 64-unit 机制宽筛。独立审计意见均是待证伪假设，不直接淘汰模型；Linux 当前无授权，test、RM3-B 和正式 MS4 继续冻结。
 
 ## 当前入口
 
@@ -10,6 +10,7 @@
 - [上下文恢复快照](docs/PHASE35_CONTEXT_SNAPSHOT.md)
 - [机器实验注册表](configs/phase3_5/experiment_registry.json)
 - [Phase 3.5 主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)
+- [RM3-AV 独立审计验证设计](docs/plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md)
 - [历史 E1–E5 实验设计](docs/PHASE3_5_EXPERIMENT_DESIGN.md)
 - [Linux 执行手册](experiments/phase3_5/README.md)
 - [项目状态与证据边界](docs/PROJECT_STATUS.md)

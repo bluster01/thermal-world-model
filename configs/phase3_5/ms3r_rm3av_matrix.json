@@ -1,0 +1,107 @@
+{
+  "protocol_version": "phase3.5-ms3r-rm3av-v1",
+  "scope": "independent_audit_hypothesis_validation_not_model_selection_not_causal",
+  "parent_independent_audit": {
+    "path": "docs/PHASE35_RM3_INDEPENDENT_ARCHITECTURE_AUDIT_2026-08-13.md",
+    "sha256": "99f1e82cde24a21648eabed1cfbd7764fdd701ff8010c0131d218bca54b384c3",
+    "hash_mode": "utf8_text_normalized_lf"
+  },
+  "parent_design": {
+    "path": "docs/plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md",
+    "sha256": "c9a2be732191d04c77eb4fd7b9349102264795cebe3f493348e8941bef3f924e",
+    "hash_mode": "utf8_text_normalized_lf"
+  },
+  "parent_rm3_matrix": {
+    "path": "configs/phase3_5/ms3r_rm3_matrix.json",
+    "sha256": "3868601511cea171a51ee80180ef48febe0592fe9b336a2777a35d0a76aba096",
+    "hash_mode": "utf8_text_normalized_lf"
+  },
+  "data_contract": {
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "test_allowed": false,
+    "pretest_end_fraction": 0.8,
+    "window_steps": 96,
+    "horizon_steps": 60,
+    "step_seconds": 10,
+    "max_age_s": 180.0,
+    "independent_unit": "UTC_day",
+    "folds": [
+      {"fold_id": "F0", "train_fraction": [0.0, 0.6], "validation_fraction": [0.6, 0.7]},
+      {"fold_id": "F1", "train_fraction": [0.0, 0.7], "validation_fraction": [0.7, 0.8]}
+    ]
+  },
+  "candidates": [
+    {"candidate_id":"C00","group":"anchor","base_candidate_id":"P3_gatec_paired_free","intervention_axis":"legacy_anchor","intervention":{"legacy_anchor":"p3_current"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C01","group":"anchor","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"legacy_anchor","intervention":{"legacy_anchor":"p4_current"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C02","group":"anchor","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"legacy_anchor","intervention":{"legacy_anchor":"p5_current"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C03","group":"head","base_candidate_id":"P3_gatec_paired_free","intervention_axis":"terminal_bypass","intervention":{"terminal_bypass":"add_action_invariant"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C04","group":"head","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"terminal_bypass","intervention":{"terminal_bypass":"off"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C05","group":"head","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"terminal_path","intervention":{"terminal_path":"bypass_only"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C06","group":"head","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"response_mode","intervention":{"response_mode":"off_train_and_inference"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C07","group":"head","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"residual_capacity","intervention":{"residual_capacity":"small"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C08","group":"head","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"residual_capacity","intervention":{"residual_capacity":"large"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C09","group":"head","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"action_shield","intervention":{"action_shield":"train_oof_projection"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C10","group":"supervision","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"response_supervision","intervention":{"response_supervision":"logged_action_auxiliary"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C11","group":"supervision","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"response_supervision","intervention":{"response_supervision":"integrated_oof_r_loss"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C12","group":"supervision","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"response_supervision","intervention":{"response_supervision":"integrated_oof_r_loss"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C13","group":"supervision","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"response_supervision","intervention":{"response_supervision":"logged_action_auxiliary"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C14","group":"valve","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"valve_loss","intervention":{"valve_loss":"delta_and_multiscale_roughness"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C15","group":"valve","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"valve_decoder","intervention":{"valve_decoder":"structured_pi"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C16","group":"valve","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"valve_decoder","intervention":{"valve_decoder":"structured_pi_plus_gru_residual"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C17","group":"mimo","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"response_coordinate","intervention":{"response_coordinate":"common_only"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C18","group":"mimo","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"response_coordinate","intervention":{"response_coordinate":"diagonal_only"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C19","group":"timing","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"response_shape","intervention":{"response_shape":"one_pole"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C20","group":"timing","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"response_shape","intervention":{"response_shape":"two_pole"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C21","group":"timing","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"response_shape","intervention":{"response_shape":"power_basis"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C22","group":"timing","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"response_shape","intervention":{"response_shape":"linear_ramp"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C23","group":"timing","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"response_timing","intervention":{"response_timing":"three_pole_bounded_dead_time"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C24","group":"timing","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"response_sign","intervention":{"response_sign":"unconstrained_diagnostic"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C25","group":"init","base_candidate_id":"P3_gatec_paired_free","intervention_axis":"initialization","intervention":{"initialization":"module_scoped"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C26","group":"init","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"initialization","intervention":{"initialization":"module_scoped"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C27","group":"init","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"initialization","intervention":{"initialization":"module_scoped"},"optimizer_updates_cap":4000},
+    {"candidate_id":"C28","group":"optim","base_candidate_id":"P3_gatec_paired_free","intervention_axis":"optimizer_updates","intervention":{"optimizer_updates":8000},"optimizer_updates_cap":8000},
+    {"candidate_id":"C29","group":"optim","base_candidate_id":"P4_gatec_a1_scheduled","intervention_axis":"optimizer_updates","intervention":{"optimizer_updates":8000},"optimizer_updates_cap":8000},
+    {"candidate_id":"C30","group":"optim","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"optimizer_updates","intervention":{"optimizer_updates":8000},"optimizer_updates_cap":8000},
+    {"candidate_id":"C31","group":"rollout","base_candidate_id":"P5_hybrid_joint_latent","intervention_axis":"rollout_loss","intervention":{"rollout_loss":"two_window_declared_context"},"optimizer_updates_cap":4000}
+  ],
+  "matrix_envelope": {
+    "status": "design_frozen_implementation_not_authorized",
+    "folds": ["F0", "F1"],
+    "seeds": [0],
+    "candidate_count": 32,
+    "training_unit_count": 64,
+    "zero_training_replay_included": true,
+    "no_composite_champion": true
+  },
+  "model": {"d_model":64,"latent_dim":32,"dropout":0.1},
+  "training": {
+    "batch_size":128,"default_optimizer_updates_cap":4000,
+    "evaluation_interval_updates":100,
+    "stats_anchor_count":16384,"selector_anchor_count":2048,"reporting_anchor_count":4096,"diagnostic_anchor_count":512,
+    "evaluation_batch_size":128,"learning_rate":0.001,"weight_decay":0.00001,
+    "gradient_clip":1.0,"minimum_score_improvement":0.0001,
+    "component_loss_weights":{"valve":0.25,"tin":0.25,"local":0.25,"terminal":0.25},
+    "logged_action_auxiliary_weight":0.10,"oof_r_loss_weight":0.10,"delta_valve_weight":0.05,
+    "roughness_weight":0.05,"rollout_weight":0.10
+  },
+  "diagnostic_contract": {
+    "required_modes":["normal","bypass_off","bypass_only","response_off","predicted_valve","logged_valve","logged_valve_oracle_tin","oracle_local","shuffled","wrong_side","lead"],
+    "response_horizons_steps":[6,18,60],
+    "finite_difference_valve_points":[-2.0,-1.0,-0.5,0.5,1.0,2.0],
+    "side_reporting":["pooled","A","B","common","differential"],
+    "audit_verdicts":["SUPPORTED","REFUTED","MIXED","NOT_TESTABLE"],
+    "automatic_verdict":false
+  },
+  "execution_contract": {
+    "local_micro_smoke_authorized":true,"local_full_training_authorized":false,"linux_authorized":false,
+    "test_authorized":false,"ms4_authorized":false,"rm3b_authorized":false,
+    "automatic_scientific_pass":false,"maximum_attempts_per_run":1,
+    "required_run_artifacts":["manifest.json","checkpoint_best_validation.pt","metrics_validation.json","episodes_validation.npz","diagnostics_validation.json","artifact_ledger.json"],
+    "required_root_artifacts":["run_manifest.json","matrix_execution_status.json","summary_validation.json","artifact_ledger.json"]
+  },
+  "claim_contract": {
+    "model_champion":false,"causal_identification":false,"arbitrary_do_valve":false,
+    "independent_side_gain":false,"true_response_order":false,"state_closed_simulator":false,
+    "closed_loop_release":false
+  }
+}
