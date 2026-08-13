@@ -110,9 +110,10 @@ def audit_rm2_reference_artifacts(rm2_root: Path) -> dict[str, Any]:
                 observed = _sha(path)
             elif name == "checkpoint_best_validation.pt":
                 observed = archive_digests.get(f"{directory.name}/{name}")
-                checkpoint_count += int(observed is not None)
             else:
                 observed = None
+            if name == "checkpoint_best_validation.pt" and observed is not None:
+                checkpoint_count += 1
             if observed != digest:
                 run_errors.append(f"{directory.name}/{name}")
     return {
