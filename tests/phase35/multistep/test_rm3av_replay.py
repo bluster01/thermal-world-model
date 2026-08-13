@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
+import tarfile
 
 import torch
 
@@ -19,6 +22,47 @@ ROOT = Path(__file__).resolve().parents[3]
 RM3 = ROOT / "results/phase3_5/ms3r_rm3/prediction"
 RM3A = ROOT / "results/phase3_5/ms3r_rm3a"
 RM2 = ROOT / "results/phase3_5/ms3r_gatec_rm2"
+
+
+def _sha256(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
+
+
+def test_rm2_reference_audit_counts_local_and_archive_checkpoints(
+    tmp_path: Path,
+) -> None:
+    local_payload = b"local-checkpoint"
+    archived_payload = b"archived-checkpoint"
+    local_run = tmp_path / "local_run"
+    archived_run = tmp_path / "archived_run"
+    local_run.mkdir()
+    archived_run.mkdir()
+    (local_run / "checkpoint_best_validation.pt").write_bytes(local_payload)
+    (local_run / "artifact_ledger.json").write_text(
+        json.dumps({"checkpoint_best_validation.pt": _sha256(local_payload)}),
+        encoding="utf-8",
+    )
+    (archived_run / "artifact_ledger.json").write_text(
+        json.dumps({"checkpoint_best_validation.pt": _sha256(archived_payload)}),
+        encoding="utf-8",
+    )
+    archive_path = tmp_path / "checkpoints_validation.tar"
+    archived_file = tmp_path / "checkpoint_best_validation.pt"
+    archived_file.write_bytes(archived_payload)
+    with tarfile.open(archive_path, "w") as archive:
+        archive.add(
+            archived_file,
+            arcname="archived_run/checkpoint_best_validation.pt",
+        )
+    (tmp_path / "artifact_ledger.json").write_text("{}", encoding="utf-8")
+
+    payload = audit_rm2_reference_artifacts(tmp_path)
+
+    assert payload["run_count"] == 2
+    assert payload["checkpoint_count"] == 2
+    assert payload["checkpoint_archive_member_count"] == 1
+    assert payload["root_hash_error_count"] == 0
+    assert payload["run_hash_error_count"] == 0
 
 
 def test_rm2_reference_audit_closes_all_54_archived_checkpoints() -> None:
