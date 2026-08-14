@@ -58,16 +58,28 @@ def _verify_registry() -> None:
     registry = _read(REGISTRY)
     if registry.get("active_gate") != "ms3_r" or registry.get("linux_authorized_gate") != "ms3_r":
         raise RuntimeError("RM3-A requires active and linux_authorized gate ms3_r")
-    if registry["experiments"]["ms3_r"].get("status") != "ready_for_linux":
+    experiment = registry["experiments"]["ms3_r"]
+    if experiment.get("status") != "ready_for_linux":
         raise RuntimeError("RM3-A requires ms3_r.status=ready_for_linux")
+    decision = experiment.get("decision", {})
+    if not isinstance(decision, dict) or decision.get("authorized_batch") != "RM3-A":
+        raise RuntimeError("RM3-A requires decision.authorized_batch=RM3-A")
 
 
 def _dirty_paths(output: Path) -> list[str]:
     raw = subprocess.run(
         ["git", "status", "--porcelain"], cwd=ROOT, check=True, capture_output=True, text=True
     ).stdout
-    allowed = str(output.resolve().relative_to(ROOT)).replace("\\", "/").rstrip("/") + "/"
-    return [line for line in raw.splitlines() if line.strip() and not line[3:].replace("\\", "/").startswith(allowed)]
+    try:
+        allowed = str(output.resolve().relative_to(ROOT)).replace("\\", "/").rstrip("/") + "/"
+    except ValueError:
+        allowed = None
+    return [
+        line for line in raw.splitlines()
+        if line.strip() and (
+            allowed is None or not line[3:].replace("\\", "/").startswith(allowed)
+        )
+    ]
 
 
 def dry_run_payload(matrix: dict[str, Any]) -> dict[str, Any]:

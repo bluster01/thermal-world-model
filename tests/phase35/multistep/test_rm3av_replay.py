@@ -8,6 +8,7 @@ import tarfile
 import torch
 
 from src.phase35.multistep.rm3av_replay import (
+    _replay_validation_bounds,
     audit_reference_artifacts,
     audit_rm2_reference_artifacts,
     build_av0_replay,
@@ -26,6 +27,16 @@ RM2 = ROOT / "results/phase3_5/ms3r_gatec_rm2"
 
 def _sha256(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
+
+
+def test_replay_validation_bounds_clamp_fractional_rounding_before_test() -> None:
+    n_rows = 1_192_329
+    test_start = 953_862
+    assert int(n_rows * 0.8) == test_start + 1
+    assert _replay_validation_bounds(n_rows, (0.7, 0.8), test_start) == (
+        int(n_rows * 0.7),
+        test_start,
+    )
 
 
 def test_rm2_reference_audit_counts_local_and_archive_checkpoints(

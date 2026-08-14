@@ -1,6 +1,6 @@
 # Phase 3.5 MS3-R RM3-B 响应可识别性诊断门与机制噪声架构设计
 
-> 状态：DRAFT FOR REVIEW，待本地/Codex 独立审计；Linux 未授权；validation-only；不访问 test、不启动 MS4；RM3/RM3-A 已审计结果不可变。
+> 状态：POST-RM3-AV DRAFT / REWRITE REQUIRED；Linux 未授权；validation-only；不访问 test、不启动 MS4。RM3-AV 已完成，权威输入见 `PHASE35_MS3R_RM3AV_SUPERVISOR_AUDIT_2026-08-14.md`；本文旧候选空间不得直接转成训练矩阵。
 
 ## Material Passport
 
@@ -13,7 +13,7 @@
 
 ## 0. 强制前置：RM3-AV 独立审计验证批次
 
-独立架构审计提出的实现回归、自由头位置、terminal bypass、阀位过平滑、闭环反馈、初始化混淆、三极点不可辨识、双侧池化、更新上限和 OOF 未接训练图等问题，当前都视为**待证伪命题**，不直接作为否决 RM3-B 的结论。
+RM3-AV 已将独立审计问题转成合法成对实验并完成四态判决：30项 SUPPORTED、3项 MIXED。P5 terminal 优势主要由 bypass 主导；action shield 可增强响应但损害预测；阀位过平滑、4000-update不足、shape不可分和recursive失败均成立。详见 [RM3-AV Supervisor Audit](../PHASE35_MS3R_RM3AV_SUPERVISOR_AUDIT_2026-08-14.md)。
 
 RM3-B 的任何实现、矩阵冻结或 Linux 授权之前，必须先完成 [RM3-AV 独立审计验证批次](2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md)：
 

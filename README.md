@@ -2,7 +2,7 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-13）**：Phase 4 暂停，Phase 3.5-MS 尚未进入论文收口。RM3/RM3-A 已完成 validation 执行，但 P5 terminal 优势、free/bypass 归因、显式响应是否被真正使用、阀位策略过平滑、MIMO 支持域、动态形状、收敛与递推状态闭合尚未由合法成对实验定性。RM3-B 前新增 RM3-AV：先对冻结产物做零训练回放，再执行 32 candidates × 2 rolling folds × seed 0 的 64-unit 机制宽筛。独立审计意见均是待证伪假设，不直接淘汰模型；Linux 当前无授权，test、RM3-B 和正式 MS4 继续冻结。
+> **当前判断（2026-08-14）**：Phase 4 暂停，Phase 3.5-MS 尚未进入论文收口。RM3-AV 的 AV0/AV1/AV2 已完成并审计：64/64 validation units 与 120 个历史 checkpoint/ledger 闭合，Q01–Q33 为 `SUPPORTED=30 / MIXED=3`，没有模型冠军。P5 terminal 优势被确认主要依赖 action-invariant bypass；action shield 可增强显式响应但牺牲自然预测；阀位仍过平滑，动态阶次、任意 `do(valve)` 与状态闭合均未识别。Linux 授权已关闭；下一步只允许按审计清单重写 RM3-B 设计，不授权训练、test 或 MS4。
 
 ## 当前入口
 

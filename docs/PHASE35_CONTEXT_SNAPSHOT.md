@@ -1,6 +1,6 @@
 # Phase 3.5-MS 上下文恢复快照
 
-> 更新：2026-08-13。新会话先读本文，再运行状态检查器。机器状态以 `configs/phase3_5/experiment_registry.json` 为准；本文解释为什么。
+> 更新：2026-08-14。新会话先读本文，再运行状态检查器。机器状态以 `configs/phase3_5/experiment_registry.json` 为准；本文解释为什么。
 
 ## 1. 恢复命令
 
@@ -37,7 +37,7 @@ python experiments/phase3_5/experiment_status.py --check --json
 | MS3 | AUDITED FAIL | B 3/3 PASS；A 0/3 response non-collapse FAIL；不重跑、不访问 test |
 | MS3-D | AUDITED | B 阀位持久性更强；checkpoint A attenuation 未获现场热链路支持；单侧归因不足 |
 | RM3/RM3-A | RESULTS RETURNED / INDEPENDENTLY AUDITED | P5 terminal 较好但来源未归因；OOF 校准未进入 P5 训练图；不直接宣布架构方向 |
-| RM3-AV | IMPLEMENTED / LOCAL VERIFIED / UNAUTHORIZED | RM3-B 强制前置；AV0 零训练，AV1 为 32 candidates×2 folds×seed0=64 units |
+| RM3-AV | AUDITED / AUTHORIZATION CLOSED | AV1 64/64、AV0 120 checkpoint闭合；30 SUPPORTED/3 MIXED；无冠军 |
 | MS4 | HOLD | 新 MS3-R response-identification 协议前不启动；不恢复旧 E 匹配 |
 
 ## 4. Linux 最新同步与本地审计
@@ -83,7 +83,7 @@ Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。�
 
 ## 5. 当前下一步
 
-RM3/RM3-A 已回传并经独立架构审计，Linux 授权仍为空。当前 [RM3-AV](plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md) 已完成本地实现与逐候选 smoke：AV0 闭合 RM2 的 54 个归档 checkpoint/ledger 与 RM3/RM3-A 的 66 个 checkpoint/ledger（合计 120），并支持 bypass/response/oracle/placebo 回放；AV1 的 32 个单因素候选、2 folds、seed 0 共 64 units 已冻结，所有候选共享 H120 可用性锚点但共同预测/选择目标仍为 H60，selector/reporting 按不重叠 UTC 日块隔离，C00–C31 均完成一更新训练、选择、诊断、checkpoint 与 ledger 测试；C31 只形成 10→20 min 两窗口递推证据，30/60 min 强制 `NOT_TESTABLE`。AV2 fail-closed 收口器已经实现，仍须等待真实训练结果后逐条给审计命题四态判决。它不是直接接受审计结论，也不是 RM3-B；正式 RM3-B、MS4、test、模型选择和论文均保持 HOLD。
+RM3-AV 已由 Linux 回传并完成本地 AV2 审计：64/64 training units 与 120 个历史 checkpoint/ledger 闭合，test 未访问，初始化 56/56 对照一致。Q01–Q33 为30 SUPPORTED/3 MIXED；P5 terminal 优势主要依赖 bypass，action shield 能增强显式响应但牺牲自然预测，阀位仍过平滑，full MIMO/三极点/迟延没有额外证据，C31 recursive second window 低于 persistence。权威结论见 [`PHASE35_MS3R_RM3AV_SUPERVISOR_AUDIT_2026-08-14.md`](PHASE35_MS3R_RM3AV_SUPERVISOR_AUDIT_2026-08-14.md)。Linux 授权已关闭；下一步只重写 RM3-B paired composition 设计，正式训练、MS4、test、模型选择和论文均保持 HOLD。
 
 ## 6. 上下文读取优先级
 

@@ -1,0 +1,121 @@
+{
+  "schema_version": "phase3.5-ms3r-rm3av2-supervisor-decision-v1",
+  "decision": "AUDITED / ARCHITECTURE_ATTRIBUTION_CONFIRMED_WITH_MIXED_SUPERVISION_TIMING_CONTEXT / NO_MODEL_CHAMPION / RM3B_DESIGN_ALLOWED_NOT_AUTHORIZED",
+  "parent_evidence": {
+    "path": "results/phase3_5/ms3r_rm3av2/supervisor_evidence_validation.json",
+    "sha256": "cbaafc522dda58d6e3713a6af178e86891bc9ced09c6d149a64ad9004db161a6"
+  },
+  "parent_av0": {
+    "path": "results/phase3_5/ms3r_rm3av0/supervisor_replay_validation.json",
+    "sha256": "59ecb13b501230fa2c487454927330f7120f2f13e932bd0e4693ae90460ed308"
+  },
+  "artifact_integrity_pass": true,
+  "training_unit_count": 64,
+  "candidate_count": 32,
+  "folds": ["F0", "F1"],
+  "seed_count": 1,
+  "test_accessed": false,
+  "model_champion": null,
+  "automatic_scientific_pass": null,
+  "verdict_counts": {
+    "SUPPORTED": 30,
+    "REFUTED": 0,
+    "MIXED": 3,
+    "NOT_TESTABLE": 0
+  },
+  "manual_audit_verdicts": {
+    "Q01": "MIXED",
+    "Q02": "SUPPORTED",
+    "Q03": "SUPPORTED",
+    "Q04": "SUPPORTED",
+    "Q05": "SUPPORTED",
+    "Q06": "SUPPORTED",
+    "Q07": "SUPPORTED",
+    "Q08": "SUPPORTED",
+    "Q09": "SUPPORTED",
+    "Q10": "SUPPORTED",
+    "Q11": "SUPPORTED",
+    "Q12": "SUPPORTED",
+    "Q13": "SUPPORTED",
+    "Q14": "SUPPORTED",
+    "Q15": "MIXED",
+    "Q16": "SUPPORTED",
+    "Q17": "SUPPORTED",
+    "Q18": "SUPPORTED",
+    "Q19": "MIXED",
+    "Q20": "SUPPORTED",
+    "Q21": "SUPPORTED",
+    "Q22": "SUPPORTED",
+    "Q23": "SUPPORTED",
+    "Q24": "SUPPORTED",
+    "Q25": "SUPPORTED",
+    "Q26": "SUPPORTED",
+    "Q27": "SUPPORTED",
+    "Q28": "SUPPORTED",
+    "Q29": "SUPPORTED",
+    "Q30": "SUPPORTED",
+    "Q31": "SUPPORTED",
+    "Q32": "SUPPORTED",
+    "Q33": "SUPPORTED"
+  },
+  "mixed_findings": {
+    "Q01": "Logged-action auxiliary and integrated OOF R-loss both enlarge the explicit response, but neither establishes that removal of the old structure penalty was the primary collapse cause or makes the terminal response path dominant.",
+    "Q15": "Early signed effects and the best action alignment move across folds; lead behavior and closed-loop conditioning do not isolate timing, feedback confounding, and genuine fast response.",
+    "Q19": "Context/activity regressions are descriptive and fold-disjoint, but they do not uniquely explain the observed side/fold gain exchange."
+  },
+  "principal_findings": {
+    "terminal_bypass": "P5 no-bypass worsens terminal MAE by 0.2027 C on average, while bypass-only preserves terminal MAE within +0.0048 C; the P5 terminal advantage is therefore bypass-dominated, not a verified end-to-end physical chain.",
+    "explicit_response": "Training response-off changes P5 terminal MAE by only +0.0060 C at 4000 updates; at 8000 updates the response path becomes more material but remains secondary to bypass.",
+    "action_shield": "Action shielding raises H60 response magnitude by 0.1074 C and restores wrong-side/lead sensitivity in both folds, while worsening terminal MAE by 0.0152 C and local MAE by 0.0621 C.",
+    "valve_decoder": "Predicted mean |delta valve| remains about 0.05-0.09 point versus 0.31-0.32 observed. Structured PI alone collapses dynamics and is rejected; PI+GRU and delta/roughness remain engineering candidates with prediction trade-offs.",
+    "mimo": "Residualized valve innovations have effective rank 2 with differential energy fractions 0.238 and 0.368, but diagonal/common/full response coordinates have nearly identical forecast MAE. Independent excitation is numerically present; full cross-gain superiority is not supported.",
+    "response_shape": "Blocked OOS shape RMSE differs by less than about 0.001 C across linear, power, one/two/three-pole and bounded-dead-time families, with wins dispersed; no physical order or dead time is identified.",
+    "optimization": "All three 8000-update anchors improve terminal MAE by 0.0346-0.0414 C over their 4000-update counterparts; the old 4000-update comparison mixed architecture with optimization budget.",
+    "rollout": "C31 recursive second-window terminal/local/valve/Tin skill versus persistence is -0.034/-0.303/-0.326/-0.150 in F0; 30-60 minute simulation remains unavailable and the model is not state closed."
+  },
+  "rm3b_input_manifest": {
+    "status": "DESIGN_INPUT_ONLY_NOT_TRAINING_AUTHORIZATION",
+    "prediction_anchors": [
+      "C28_P3_module_scoped_8000",
+      "C29_P4_module_scoped_8000",
+      "C30_P5_module_scoped_8000"
+    ],
+    "mandatory_contracts": [
+      "module_scoped_initialization",
+      "at_least_8000_update_cap_with_convergence_reporting",
+      "common_four_task_checkpoint_selector",
+      "terminal_local_tin_valve_separate_reporting",
+      "response_off_wrong_side_lead_and_shuffled_diagnostics",
+      "A_B_and_common_differential_reporting",
+      "validation_only_no_test",
+      "no_composite_champion"
+    ],
+    "eligible_component_candidates": [
+      "action_shielded_history_residual",
+      "integrated_oof_r_loss_as_response_calibration_candidate",
+      "delta_valve_and_multiscale_roughness_loss",
+      "structured_pi_plus_gru_residual_decoder",
+      "diagonal_explicit_response_in_field_aligned_coordinates",
+      "one_pole_primary_with_linear_ramp_sensitivity_control",
+      "capacity_controlled_action_invariant_terminal_bypass"
+    ],
+    "excluded_as_primary_claims": [
+      "structured_pi_decoder_without_residual",
+      "three_pole_or_dead_time_as_identified_physical_order",
+      "full_mimo_cross_gain_superiority",
+      "sign_constraint_as_data_evidence",
+      "arbitrary_do_valve_identification",
+      "state_closed_30_to_60_minute_simulation"
+    ],
+    "composition_rule": "Do not stack every eligible component. Freeze paired compositions against C28/C29/C30 and require same-direction evidence in both folds before multi-seed confirmation.",
+    "rm3b_authorized": false
+  },
+  "claim_boundary": {
+    "observed_policy_prediction": true,
+    "disturbance_conditioned_response_diagnostic": true,
+    "causal_plant_identification": false,
+    "arbitrary_do_valve": false,
+    "state_closed_simulator": false,
+    "paper_claim_ready": false
+  }
+}

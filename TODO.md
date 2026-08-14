@@ -1,6 +1,6 @@
 # Thermal World Model TODO
 
-> 更新：2026-08-13。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。RM3 已最终审计，RM3-A 的 30/30 runs 已由 Hermes 执行并回传；独立架构审计提出的意见尚未通过成对实验定性。当前新增 RM3-AV 作为 RM3-B 强制前置：先零训练回放，再做 32 candidates × 2 folds × seed 0 = 64-unit 宽筛。Hermes 尚未获得 RM3-AV 授权；test、RM3-B 训练、自动科学 PASS 和 MS4 均禁止。旧 E1–E5 已废弃，Phase 4 暂停。
+> 更新：2026-08-14。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。RM3-AV0/AV1/AV2 已执行并由本地完成完整性与 Q01–Q33 四态审计：64/64 validation units、RM2 54 与 RM3/RM3-A 66 个历史 checkpoint 全部闭合，结论为 `SUPPORTED=30 / MIXED=3 / NO MODEL CHAMPION`。Linux 授权已关闭；当前唯一任务是依据审计输入清单重写 RM3-B 组合设计，训练、test、自动科学 PASS 和 MS4 均禁止。旧 E1–E5 已废弃，Phase 4 暂停。
 
 ## 当前主线
 
@@ -31,7 +31,7 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | MS5 | 完整 `free+response` 动作吸收 | ✓ CLOSED | joint 选中；冻结 staged 协议拒绝 |
 | **MS3** | A/B 真实数据适配 | ✓ **AUDITED FAIL / ASYMMETRIC** | B 3/3 PASS；A 0/3 non-collapse FAIL；不重跑、不访问 test |
 | **MS3-D** | A/B 响应不对称诊断 | ✓ **AUDITED** | 模型 A attenuation 未获现场热链路支持；B 阀位持久性更强；单侧 plant 归因不足 |
-| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ◉ **RM3/RM3-A RESULTS RETURNED / RM3-AV LOCAL VERIFIED** | 等独立授权执行审计验证；RM3-B/test/MS4 HOLD |
+| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ◉ **RM3-AV AUDITED / NO CHAMPION** | 重写 RM3-B 成对组合设计；训练/test/MS4 HOLD |
 | MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-R 冻结前不启动；不恢复旧 E 匹配 |
 
 ## D3 收口
@@ -55,7 +55,7 @@ JOINT_SELECTED / STAGED_PROTOCOL_REJECTED
 
 权威审计见 [MS5 Supervisor Audit](docs/PHASE35_MS5_SUPERVISOR_AUDIT_2026-08-11.md)。
 
-## MS3/MS3-D 结果与当前唯一任务：RM3-AV 独立审计验证
+## MS3/MS3-D 结果与当前唯一任务：RM3-B 审计约束设计
 
 Linux 12/12 runs 已由本地从 12 个 checkpoint、8,192-anchor episode 与 UTC-day bootstrap 独立重放。archive/trajectory/结构门闭合，test 未访问。冻结结论为：
 
@@ -70,7 +70,7 @@ MS3-D 的独立事件/日块复算误差为 0。主层为 A=41、B=42 个事件�
 
 MS3-R 采用三个批次级大门，避免逐小实验审批：Gate A 一次执行点位/时序/placebo/输入秩；Gate B 只做最后一轮点位闭合，不训练世界模型；Gate C 才执行真实模型筛查与正式比较。Gate B 主门固定为 UTC 日配对的 60/180 s `Tin-Tout` 正确路径减错侧路径、正滞后减 `|lead|`；2×2 MIMO、common/differential、不变性和 SP-IV feasibility 同批输出，后四者不能自动升级因果结论。完整设计见 [Gate B 设计](docs/plans/2026-08-11-phase35-ms3r-gateb-point-closure-design.md)。
 
-RM3-A 返回后，独立审计指出的问题不直接作为否决结论。项目在 RM3-B 前新增 [RM3-AV 独立审计验证批次](docs/plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md)：AV0 对旧产物恢复 RM2 诊断、做 frozen-checkpoint 旁路/响应/oracle/placebo 回放并修复 provenance；AV1 用 32 个单因素候选、2 folds、seed 0 的 64 units 验证自由头、旁路、响应监督、阀位反馈、MIMO 子空间、时延/形状、初始化、收敛和递推闭合；AV2 逐条输出四态审计判决。该批只做机制宽筛，不设冠军、不建立 `do(valve)`。
+RM3-AV 已完成。AV2 判决为 `SUPPORTED=30 / MIXED=3`：P5 terminal 优势主要由 bypass 贡献；action shield 可放大响应并改善侧别/时序 placebo，但损害 terminal/local MAE；4000 updates 不足；full MIMO 与三极点/迟延没有额外证据；C31 第二窗口递推低于 persistence。权威结论见 [RM3-AV Supervisor Audit](docs/PHASE35_MS3R_RM3AV_SUPERVISOR_AUDIT_2026-08-14.md)。下一步只允许把 C28/C29/C30 三类 anchor 与审计保留模块写成 paired RM3-B 设计，不得一次性堆叠或直接授权 Linux。
 
 Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0.5149/0.3950`，simultaneous 97.5% 下界为 `0.4266/0.3033`；A/B timing 为 `0.5950/0.4590`，下界为 `0.5478/0.4020`。但 A 两个 family 各有 2/24 反向日；SP-IV partial R² 仅 `0.0141/0.0040`，末温 H600 错侧路径远大于正确对角。结论只升级到短时局部条件 MIMO，详见 [Gate B Supervisor Audit](docs/PHASE35_MS3R_GATEB_SUPERVISOR_AUDIT_2026-08-11.md)。
 
@@ -139,9 +139,10 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 31 | RM3-A独立授权与30-run validation执行 | 本地授权 / Hermes执行 | ✓ 30/30 complete；旧18 runs未重跑 |
 | 32 | RM3/RM3-A独立架构审计与审计意见实验化 | 本地 | ✓ RM3-AV设计冻结；审计意见均降为待证伪命题 |
 | 33 | RM3-AV0恢复诊断、冻结推理消融与数据/反馈审计代码 | 本地 | ✓ RM2 54 + RM3/RM3-A 66 = 120 checkpoint/ledger闭合；11模式函数干预、rank/state/assumption ledger通过 |
-| 34 | RM3-AV1 32候选×2 folds×seed0宽筛代码、矩阵与dry-run | 本地 | ✓ 64 units闭合；C00-C31逐候选一更新与完整产物smoke通过；尚未授权Hermes |
-| 35 | RM3-AV0/AV1单次批量执行与原始产物回传 | Hermes | ◻ 未授权；不得改矩阵/重试/访问test |
-| 36 | RM3-AV2 cache-free replay与逐项四态审计 | 本地 | ◐ fail-closed收口器已实现；等待64-unit真实结果后填写四态判决，完成前RM3-B HOLD |
+| 34 | RM3-AV1 32候选×2 folds×seed0宽筛代码、矩阵与dry-run | 本地 | ✓ 64 units闭合；C00-C31逐候选一更新与完整产物smoke通过 |
+| 35 | RM3-AV0/AV1单次批量执行与原始产物回传 | Hermes | ✓ AV1 64/64；AV0 120 checkpoint闭合；test未访问 |
+| 36 | RM3-AV2 cache-free replay与逐项四态审计 | 本地 | ✓ 30 SUPPORTED / 3 MIXED；无冠军；授权关闭 |
+| 37 | 按 AV2 输入清单重写 RM3-B paired composition 设计 | 本地 | ◐ 只设计不训练；C28/C29/C30 为角色锚点 |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)；当前均不构成运行授权。
 

@@ -1,10 +1,10 @@
 # 项目状态
 
-> 更新：2026-08-13。本文是项目现状的权威入口；历史文档保留当时结论，不自动代表当前判断。
+> 更新：2026-08-14。本文是项目现状的权威入口；历史文档保留当时结论，不自动代表当前判断。
 
 ## 一句话状态
 
-项目已完成 RM3 与 RM3-A 的 validation 执行，但独立架构审计提出的 response supervision、free/bypass 归因、阀位反馈、初始化、形状、MIMO 支持域、收敛、状态闭合和实现漂移尚未由成对实验定性。项目**尚未完成真实模型定性，也未进入论文收口**；当前在 RM3-B 前先实施 RM3-AV：零训练回放 + 32 candidates × 2 rolling folds × seed 0 的 64-unit 宽筛。RM3-B、正式 MS4、test 和 Linux 执行授权继续 HOLD。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
+项目已完成 RM3-AV 的零训练回放、64-unit 机制宽筛与本地 Supervisor 审计。P5 terminal 优势主要由 action-invariant bypass 贡献；显式 response 尚非主要末温通路；action shield、阀位动态损失与 PI+GRU 保留为有代价的工程候选；full MIMO、三极点/迟延、任意 `do(valve)` 和状态闭合均未获支持。项目**尚未完成真实模型定性，也未进入论文收口**；当前只允许依据 AV2 输入清单重写 RM3-B 成对组合设计。正式训练、MS4、test 和 Linux 执行授权继续 HOLD。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
 
 ## Phase 3.5 当前状态
 
@@ -23,7 +23,7 @@
 | MS3 真实适配 | audited asymmetric fail | B 3/3 PASS；A 0/3 non-collapse FAIL；checkpoint/episode 重放通过；test 禁止 |
 | MS3-D 不对称诊断 | audited | B 阀位持久性更强；模型 A response attenuation 未获现场热链路支持；归因仍受双回路联动限制 |
 | RM3/RM3-A | validation results returned / independently audited | P5 terminal 较好但来源未归因；OOF 校准未接入 P5 训练；独立审计意见均作为待验证假设 |
-| RM3-AV | implemented / local verified / unauthorized | RM2 54 + RM3/RM3-A 66 = 120 个历史 checkpoint/ledger 闭合；AV1 64-unit 合同与 C00-C31 一更新全链路通过；AV2 fail-closed收口器已实现；等待独立 Linux 授权，不设冠军 |
+| RM3-AV | audited / authorization closed | AV1 64/64、AV0 120 checkpoint闭合；Q01–Q33 为30 SUPPORTED/3 MIXED；P5 bypass主导、阀位过平滑、shape不可分、recursive失败；无冠军 |
 
 Phase 3.5 的目标不是证明质量/能量守恒，而是建立分层物理一致性：阀门动作可辨认、经验温度响应可复核、模型反事实响应能复现该曲线、SP 未执行时模型不制造阀门效应。完整协议见 [`PHASE3_5_EXPERIMENT_DESIGN.md`](PHASE3_5_EXPERIMENT_DESIGN.md)。
 
@@ -152,6 +152,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-下一判决点是 RM3-AV。独立审计的结论不直接用作模型淘汰；先对冻结产物恢复 persistence/effect/placebo/分侧诊断并做 bypass/response/oracle 推理消融，再执行 32 个单因素候选、2 folds、seed 0 的宽筛。AV2 只判每条审计命题为 `SUPPORTED / REFUTED / MIXED / NOT_TESTABLE`，据此选择 RM3-B baseline、response supervision、controller decoder、MIMO 子空间、动态基底和递推边界；当前不访问 test、不启动 MS4。
+下一判决点是 RM3-B 设计评审。AV2 已冻结 C28/C29/C30 为三类角色 anchor，并只保留 action shield、OOF R-loss、动态阀位损失、PI+GRU residual、diagonal response、one-pole/linear sensitivity 与 action-invariant bypass 进入成对设计；不得全量堆叠。当前不授权训练、不访问 test、不启动 MS4。
 
 完整顺序为 MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 保持暂停。

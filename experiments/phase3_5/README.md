@@ -2,7 +2,7 @@
 
 本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
-> 当前状态：`ms3_r=local_verified`、`linux_authorized_gate=null`。RM3 与 RM3-A 已执行；RM3-AV 独立审计验证批次已实现并本地验证，但尚未获得 Linux 授权。test、RM3-B、自动科学PASS、MS4和旧42-run/E系列均未授权。
+> 当前状态：`ms3_r=audited`、`linux_authorized_gate=null`。RM3-AV0/AV1 已执行，AV2 已由本地审计关闭；30项审计问题获支持、3项为混合，无模型冠军。test、RM3-B训练、自动科学PASS、MS4和旧42-run/E系列均未授权。
 
 RM3 本地框架入口如下。它只执行合同 dry-run 或合成真值 smoke，没有真实训练参数，也不构成 Hermes 授权：
 
@@ -839,11 +839,11 @@ python experiments/phase3_5/ms3r_rm3a_train.py --dry-run
 
 RM3-A 的 30/30 新 runs 已完成并回传；本节命令不再构成重复执行授权。Hermes 不得重跑旧 RM3 的 18 个 reference 或 RM3-A；每 run 的 manifest、checkpoint、metrics、episodes NPZ 和 ledger 只作历史审计输入。
 
-## 22. RM3-AV 独立审计验证（本地已验证，未授权）
+## 22. RM3-AV 独立审计验证（已完成归档，无重复授权）
 
 RM3-B 前强制先做 RM3-AV。设计包含 AV0 零训练回放，以及 AV1 的 32 candidates × F0/F1 × seed 0 = 64 training units；完整候选、指标、四态判决和 Linux 边界见 [RM3-AV 设计](../../docs/plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md)。
 
-冻结矩阵与 runner 已实现，C00–C31 全候选均通过本地一更新全链路 smoke；当前注册表仍为 `linux_authorized_gate=null`，所以下列命令只允许预检，执行命令必须失败：
+冻结矩阵与 runner 已执行完成，C00–C31 为64/64 complete，AV0/AV2均闭合。当前注册表已回到 `linux_authorized_gate=null`，所以下列命令只保留历史追溯，执行命令必须失败：
 
 ```bash
 python experiments/phase3_5/ms3r_rm3av_train.py --dry-run

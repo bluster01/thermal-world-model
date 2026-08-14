@@ -30,6 +30,17 @@ ANCHOR_BY_LEGACY = {
 }
 
 
+def _replay_validation_bounds(
+    n_rows: int, fraction: tuple[float, float], test_start: int
+) -> tuple[int, int]:
+    """Keep legacy fractional validation bounds strictly outside the test split."""
+
+    return (
+        int(n_rows * fraction[0]),
+        min(int(n_rows * fraction[1]), int(test_start)),
+    )
+
+
 def _sha(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -595,10 +606,7 @@ def build_av0_replay(
             fraction = tuple(float(value) for value in spec["validation_fraction"])
             n_rows = len(caches["A"].timestamps_ns)
             test_start = int(caches["A"].split_bounds()["test"][0])
-            bounds = (
-                int(n_rows * fraction[0]),
-                min(int(n_rows * fraction[1]), test_start),
-            )
+            bounds = _replay_validation_bounds(n_rows, fraction, test_start)
             anchors = paired_valid_anchors(
                 caches,
                 "validation",
