@@ -2,7 +2,7 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-14）**：Phase 4 暂停，Phase 3.5-MS 尚未进入论文收口。RM3-AV 的 AV0/AV1/AV2 已完成并审计：64/64 validation units 与 120 个历史 checkpoint/ledger 闭合，Q01–Q33 为 `SUPPORTED=30 / MIXED=3`，没有模型冠军。P5 terminal 优势被确认主要依赖 action-invariant bypass；action shield 可增强显式响应但牺牲自然预测；阀位仍过平滑，动态阶次、任意 `do(valve)` 与状态闭合均未识别。Linux 授权已关闭；下一步只允许按审计清单重写 RM3-B 设计，不授权训练、test 或 MS4。
+> **当前判断（2026-08-14）**：Phase 4 暂停，Phase 3.5-MS 尚未进入论文收口。RM3-AV 已审计为 `30 SUPPORTED / 3 MIXED / NO CHAMPION`。RM3-B1 已按 AV2 重写为 11 candidates、8 个单模块配对、F0/F1、seed 0、统一 8000 updates，共 22 个 validation units；本地 11 候选一更新和 400 项全回归通过。当前只授权 Linux 一次执行冻结 RM3-B1 并回传原始产物；test、自动科学 PASS、RM3-B2、MS4 与论文结论仍禁止。
 
 ## 当前入口
 
@@ -11,6 +11,7 @@
 - [机器实验注册表](configs/phase3_5/experiment_registry.json)
 - [Phase 3.5 主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)
 - [RM3-AV 独立审计验证设计](docs/plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md)
+- [RM3-B 成对组合筛查设计](docs/plans/2026-08-13-phase35-ms3r-rm3b-design.md)
 - [历史 E1–E5 实验设计](docs/PHASE3_5_EXPERIMENT_DESIGN.md)
 - [Linux 执行手册](experiments/phase3_5/README.md)
 - [项目状态与证据边界](docs/PROJECT_STATUS.md)

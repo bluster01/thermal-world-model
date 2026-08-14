@@ -38,6 +38,7 @@ python experiments/phase3_5/experiment_status.py --check --json
 | MS3-D | AUDITED | B 阀位持久性更强；checkpoint A attenuation 未获现场热链路支持；单侧归因不足 |
 | RM3/RM3-A | RESULTS RETURNED / INDEPENDENTLY AUDITED | P5 terminal 较好但来源未归因；OOF 校准未进入 P5 训练图；不直接宣布架构方向 |
 | RM3-AV | AUDITED / AUTHORIZATION CLOSED | AV1 64/64、AV0 120 checkpoint闭合；30 SUPPORTED/3 MIXED；无冠军 |
+| RM3-B1 | READY FOR LINUX | 11 candidates×F0/F1×seed0=22 units；统一8000 updates；本地400项回归通过 |
 | MS4 | HOLD | 新 MS3-R response-identification 协议前不启动；不恢复旧 E 匹配 |
 
 ## 4. Linux 最新同步与本地审计
@@ -83,7 +84,7 @@ Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。�
 
 ## 5. 当前下一步
 
-RM3-AV 已由 Linux 回传并完成本地 AV2 审计：64/64 training units 与 120 个历史 checkpoint/ledger 闭合，test 未访问，初始化 56/56 对照一致。Q01–Q33 为30 SUPPORTED/3 MIXED；P5 terminal 优势主要依赖 bypass，action shield 能增强显式响应但牺牲自然预测，阀位仍过平滑，full MIMO/三极点/迟延没有额外证据，C31 recursive second window 低于 persistence。权威结论见 [`PHASE35_MS3R_RM3AV_SUPERVISOR_AUDIT_2026-08-14.md`](PHASE35_MS3R_RM3AV_SUPERVISOR_AUDIT_2026-08-14.md)。Linux 授权已关闭；下一步只重写 RM3-B paired composition 设计，正式训练、MS4、test、模型选择和论文均保持 HOLD。
+RM3-AV 已由 Linux 回传并完成本地 AV2 审计：64/64 training units 与 120 个历史 checkpoint/ledger 闭合，test 未访问，初始化 56/56 对照一致。基于该结论，RM3-B1 已冻结为三个角色锚点和八个单模块配对，不堆叠所有候选；22 个单元统一 8000 updates。合同、runner、11 候选一更新、完整产物 schema、compileall、dry-run 与 400 项全回归已闭合。当前 registry 只授权 `RM3-B1` 一次执行；Linux 只回传机器产物，不写 verdict、不生成 B2、不访问 test。MS4、模型选择和论文均保持 HOLD。
 
 ## 6. 上下文读取优先级
 

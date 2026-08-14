@@ -19,7 +19,7 @@ from ..data import Phase35Cache, deterministic_anchor_subset
 from ..schema import Phase35ProtocolError
 from .gatec_data import extract_gatec_batch, paired_valid_anchors
 from .rm3_training import fit_rm3_train_statistics
-from .rm3av_contracts import RM3AVRunSpec
+from .rm3av_contracts import RM3AV_CANDIDATE_IDS, RM3AVRunSpec
 from .rm3av_diagnostics import (
     build_assumption_ledger,
     build_manual_verdict_template,
@@ -947,6 +947,7 @@ def run_rm3av_training(
     device: str,
     output_dir: Path,
     provenance: Mapping[str, Any],
+    template_candidate_id: str | None = None,
 ) -> dict[str, Any]:
     if output_dir.exists() and any(output_dir.iterdir()):
         raise FileExistsError(f"RM3-AV refuses existing non-empty run directory: {output_dir}")
@@ -954,6 +955,9 @@ def run_rm3av_training(
     torch_device = torch.device(device)
     if torch_device.type == "cuda" and not torch.cuda.is_available():
         raise Phase35ProtocolError("RM3-AV requested unavailable CUDA")
+    runtime_candidate_id = template_candidate_id or spec.candidate_id
+    if runtime_candidate_id not in RM3AV_CANDIDATE_IDS:
+        raise Phase35ProtocolError("RM3-AV runtime template candidate is invalid")
     data, training = matrix["data_contract"], matrix["training"]
     window, horizon = int(data["window_steps"]), int(data["horizon_steps"])
     n_rows = len(caches["A"].timestamps_ns)
@@ -965,11 +969,11 @@ def run_rm3av_training(
         raise Phase35ProtocolError("RM3-AV fold touches test or breaks chronology")
     train_pool = _candidate_pool(
         caches, "train", bounds=train_bounds, window=window, horizon=horizon,
-        max_age_s=float(data["max_age_s"]), candidate_id=spec.candidate_id,
+        max_age_s=float(data["max_age_s"]), candidate_id=runtime_candidate_id,
     )
     validation_pool = _candidate_pool(
         caches, "validation", bounds=validation_bounds, window=window, horizon=horizon,
-        max_age_s=float(data["max_age_s"]), candidate_id=spec.candidate_id,
+        max_age_s=float(data["max_age_s"]), candidate_id=runtime_candidate_id,
     )
     stats_anchors = deterministic_anchor_subset(
         train_pool, int(training["stats_anchor_count"]), 36400 + int(spec.fold_id[1:])
@@ -984,7 +988,7 @@ def run_rm3av_training(
     stats_batch = extract_gatec_batch(caches, stats_anchors, window=window, horizon=horizon, validate_pair=False)
     center, scale, target_scales = fit_rm3_train_statistics(stats_batch)
     config = RM3AVModelConfig(
-        candidate_id=spec.candidate_id,
+        candidate_id=runtime_candidate_id,
         window=window,
         horizon=horizon,
         n_features=stats_batch.history.shape[-1],
@@ -1000,7 +1004,7 @@ def run_rm3av_training(
     nuisance_metadata: dict[str, Any] = {"fitted_on": None}
     r_model: OOFRModelSet | None = None
     train_groups = _groups(caches, stats_anchors)
-    if spec.candidate_id == "C09":
+    if runtime_candidate_id == "C09":
         projection: OOFActionProjection = fit_oof_action_projection(
             stats_batch.history,
             stats_batch.logged_future_valve - stats_batch.history[:, -1, model.valve_indices][:, None],
@@ -1014,7 +1018,7 @@ def run_rm3av_training(
             "group_unit": "UTC_day",
             "fold_count": len(projection.fold_records),
         }
-    if spec.candidate_id in {"C11", "C12"}:
+    if runtime_candidate_id in {"C11", "C12"}:
         r_model, r_residuals = fit_oof_r_model(
             stats_batch.history,
             stats_batch.logged_future_valve - stats_batch.history[:, -1, model.valve_indices][:, None],
@@ -1057,11 +1061,11 @@ def run_rm3av_training(
         batch = extract_gatec_batch(caches, chosen, window=window, horizon=horizon, validate_pair=False)
         second = (
             extract_gatec_batch(caches, chosen + horizon, window=window, horizon=horizon, validate_pair=False)
-            if spec.candidate_id == "C31" else None
+            if runtime_candidate_id == "C31" else None
         )
         optimizer.zero_grad(set_to_none=True)
         _, _, losses = _forward_loss(
-            model, batch, torch_device, candidate_id=spec.candidate_id,
+            model, batch, torch_device, candidate_id=runtime_candidate_id,
             target_scales=target_scales, r_model=r_model, groups=_groups(caches, chosen),
             rollout_weight=float(training["rollout_weight"]), second_batch=second,
         )
@@ -1090,7 +1094,7 @@ def run_rm3av_training(
                 ),
                 "logged_future_valve_role": (
                     "training_auxiliary_only"
-                    if spec.candidate_id in {"C10", "C11", "C12", "C13"}
+                    if runtime_candidate_id in {"C10", "C11", "C12", "C13"}
                     else "not_provided"
                 ),
                 "forecast_path_reads_logged_future_valve": False,
@@ -1117,7 +1121,7 @@ def run_rm3av_training(
             continue
         score = _evaluate(
             model, caches, selector_anchors, window=window, horizon=horizon,
-            batch_size=int(training["evaluation_batch_size"]), candidate_id=spec.candidate_id,
+            batch_size=int(training["evaluation_batch_size"]), candidate_id=runtime_candidate_id,
             target_scales=target_scales, r_model=r_model,
             rollout_weight=float(training["rollout_weight"]), device=torch_device,
         )
@@ -1132,9 +1136,11 @@ def run_rm3av_training(
         model, caches, reporting_anchors,
         diagnostic_count=int(training["diagnostic_anchor_count"]),
         window=window, horizon=horizon, batch_size=int(training["evaluation_batch_size"]),
-        candidate_id=spec.candidate_id, target_scales=target_scales,
+        candidate_id=runtime_candidate_id, target_scales=target_scales,
         r_model=r_model, rollout_weight=float(training["rollout_weight"]), device=torch_device,
     )
+    diagnostics["experiment_candidate_id"] = spec.candidate_id
+    diagnostics["template_candidate_id"] = runtime_candidate_id
     diagnostics["convergence"] = convergence_diagnostics(
         loss_curve, best_update=best_update, update_cap=update_cap
     )
@@ -1164,6 +1170,7 @@ def run_rm3av_training(
     metrics_payload = {
         "run_id": spec.run_id,
         "candidate_id": spec.candidate_id,
+        "template_candidate_id": runtime_candidate_id,
         "metrics": metrics,
         "selector_history": selector_history,
         "loss_curve": loss_curve,

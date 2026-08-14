@@ -2,7 +2,7 @@
 
 本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
-> 当前状态：`ms3_r=audited`、`linux_authorized_gate=null`。RM3-AV0/AV1 已执行，AV2 已由本地审计关闭；30项审计问题获支持、3项为混合，无模型冠军。test、RM3-B训练、自动科学PASS、MS4和旧42-run/E系列均未授权。
+> 当前状态：`ms3_r=ready_for_linux`、`linux_authorized_gate=ms3_r`、`authorized_batch=RM3-B1`。只授权一次执行冻结的 22-unit validation 矩阵；test、自动科学PASS、RM3-B2、MS4和旧42-run/E系列均未授权。
 
 RM3 本地框架入口如下。它只执行合同 dry-run 或合成真值 smoke，没有真实训练参数，也不构成 Hermes 授权：
 
@@ -843,7 +843,7 @@ RM3-A 的 30/30 新 runs 已完成并回传；本节命令不再构成重复执�
 
 RM3-B 前强制先做 RM3-AV。设计包含 AV0 零训练回放，以及 AV1 的 32 candidates × F0/F1 × seed 0 = 64 training units；完整候选、指标、四态判决和 Linux 边界见 [RM3-AV 设计](../../docs/plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md)。
 
-冻结矩阵与 runner 已执行完成，C00–C31 为64/64 complete，AV0/AV2均闭合。当前注册表已回到 `linux_authorized_gate=null`，所以下列命令只保留历史追溯，执行命令必须失败：
+冻结矩阵与 runner 已执行完成，C00–C31 为64/64 complete，AV0/AV2均闭合。当前授权批次是 `RM3-B1` 而不是 `RM3-AV0+AV1`，所以下列命令只保留历史追溯，AV 执行命令必须因 batch mismatch 失败：
 
 ```bash
 python experiments/phase3_5/ms3r_rm3av_train.py --dry-run
@@ -878,3 +878,23 @@ Hermes 只回传 `results/phase3_5/ms3r_rm3av/`、`results/phase3_5/ms3r_rm3av0/
 ```bash
 python experiments/phase3_5/audit_ms3r_rm3av.py
 ```
+
+## 23. RM3-B1 成对组合筛查（当前唯一 Linux 授权）
+
+RM3-B1 固定 B00–B10、F0/F1、seed 0、统一 8000 updates，共 22 units。B00/B01/B02 分别是 C28/C29/C30 的角色锚点；B03–B10 每个只改变 action shield、OOF R-loss、阀位动态 loss、PI+GRU、diagonal response、one-pole、linear-ramp sensitivity 或 action-invariant bypass 中的一项。完整设计见 [RM3-B 设计](../../docs/plans/2026-08-13-phase35-ms3r-rm3b-design.md)。
+
+Hermes 拉取授权 commit 后只运行：
+
+```bash
+python experiments/phase3_5/experiment_status.py --check --json
+git status --short
+python experiments/phase3_5/ms3r_rm3b_train.py --dry-run
+python experiments/phase3_5/ms3r_rm3b_train.py \
+  --cache-a "$PH35_MS3_CACHE_A" \
+  --cache-b "$PH35_MS3_CACHE_B" \
+  --devices "${PH35_RM3B_DEVICES:-cuda:0}" \
+  --output-root results/phase3_5/ms3r_rm3b \
+  --execute
+```
+
+执行边界：clean worktree、输出目录必须为空、每 unit 最多一次 attempt。Hermes 不得改 matrix/code/config/docs、调参、缩模型、补跑失败单元、访问 test、填写 paired verdict、选择冠军、生成 RM3-B2 或启动 MS4。任一预检红项停止；训练中单元失败时保留 `failure.json` 和已有原始产物并结束该设备分区，整批原样回传。本地 Supervisor 才负责 checkpoint/ledger 回放与八个 pair 的最终判决。

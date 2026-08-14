@@ -4,7 +4,7 @@
 
 ## 一句话状态
 
-项目已完成 RM3-AV 的零训练回放、64-unit 机制宽筛与本地 Supervisor 审计。P5 terminal 优势主要由 action-invariant bypass 贡献；显式 response 尚非主要末温通路；action shield、阀位动态损失与 PI+GRU 保留为有代价的工程候选；full MIMO、三极点/迟延、任意 `do(valve)` 和状态闭合均未获支持。项目**尚未完成真实模型定性，也未进入论文收口**；当前只允许依据 AV2 输入清单重写 RM3-B 成对组合设计。正式训练、MS4、test 和 Linux 执行授权继续 HOLD。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
+项目已完成 RM3-AV 审计，并据此冻结 RM3-B1：C28/C29/C30 三个角色锚点、八个单模块配对、F0/F1、seed 0、统一 8000 updates，共 22 个 validation units。本地 11 候选一更新、完整产物 smoke、compileall、dry-run 与 400 项回归均通过。项目**尚未完成真实模型定性，也未进入论文收口**；当前仅授权 Linux 一次执行 RM3-B1 并回传原始产物。RM3-B2、MS4、test、模型冠军和论文声明继续 HOLD。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
 
 ## Phase 3.5 当前状态
 
@@ -24,6 +24,7 @@
 | MS3-D 不对称诊断 | audited | B 阀位持久性更强；模型 A response attenuation 未获现场热链路支持；归因仍受双回路联动限制 |
 | RM3/RM3-A | validation results returned / independently audited | P5 terminal 较好但来源未归因；OOF 校准未接入 P5 训练；独立审计意见均作为待验证假设 |
 | RM3-AV | audited / authorization closed | AV1 64/64、AV0 120 checkpoint闭合；Q01–Q33 为30 SUPPORTED/3 MIXED；P5 bypass主导、阀位过平滑、shape不可分、recursive失败；无冠军 |
+| RM3-B1 | ready_for_linux | 11 candidates、8 paired questions、22 units；本地400项回归通过；只授权一次validation执行 |
 
 Phase 3.5 的目标不是证明质量/能量守恒，而是建立分层物理一致性：阀门动作可辨认、经验温度响应可复核、模型反事实响应能复现该曲线、SP 未执行时模型不制造阀门效应。完整协议见 [`PHASE3_5_EXPERIMENT_DESIGN.md`](PHASE3_5_EXPERIMENT_DESIGN.md)。
 
@@ -152,6 +153,6 @@ MS1 的准确结论是“synthetic 同型可解性 PASS”，不是模型冠军�
 
 ## 下一判决点
 
-下一判决点是 RM3-B 设计评审。AV2 已冻结 C28/C29/C30 为三类角色 anchor，并只保留 action shield、OOF R-loss、动态阀位损失、PI+GRU residual、diagonal response、one-pole/linear sensitivity 与 action-invariant bypass 进入成对设计；不得全量堆叠。当前不授权训练、不访问 test、不启动 MS4。
+下一判决点是 RM3-B1 本地 paired audit。AV2 保留的 action shield、OOF R-loss、动态阀位损失、PI+GRU residual、diagonal response、one-pole/linear sensitivity 与 action-invariant bypass 已分别对齐角色 anchor；不得全量堆叠。Linux 不得代写 verdict、补跑失败单元或生成 B2；test 与 MS4 继续禁止。
 
 完整顺序为 MS2-D1/D2/D3 → MS5 → MS3 → MS4 → 模型选择/论文。活队列见根目录 [`TODO.md`](../TODO.md)；Phase 4 保持暂停。

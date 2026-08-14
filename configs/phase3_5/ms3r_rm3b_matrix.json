@@ -1,0 +1,94 @@
+{
+  "protocol_version": "phase3.5-ms3r-rm3b1-v1",
+  "scope": "paired_composition_screen_validation_only_not_model_selection_not_causal",
+  "parent_supervisor_decision": {
+    "path": "results/phase3_5/ms3r_rm3av2/supervisor_decision_validation.json",
+    "sha256": "49fbc0cd7bbeb913c7f927aae4796b740559bb988361919d1a6814dee529c6ee",
+    "hash_mode": "utf8_text_normalized_lf"
+  },
+  "parent_design": {
+    "path": "docs/plans/2026-08-13-phase35-ms3r-rm3b-design.md",
+    "sha256": "de83faa5c922ec509ca25fd1f89506852d23c1fe42984764f08c1f8d4a9c0133",
+    "hash_mode": "utf8_text_normalized_lf"
+  },
+  "parent_rm3av_matrix": {
+    "path": "configs/phase3_5/ms3r_rm3av_matrix.json",
+    "sha256": "3f9e6f741cf1ea54d34886c0c7247646b43d117b07cb6919adbe66c7396f29da",
+    "hash_mode": "utf8_text_normalized_lf"
+  },
+  "data_contract": {
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "test_allowed": false,
+    "pretest_end_fraction": 0.8,
+    "window_steps": 96,
+    "horizon_steps": 60,
+    "step_seconds": 10,
+    "max_age_s": 180.0,
+    "independent_unit": "UTC_day",
+    "folds": [
+      {"fold_id": "F0", "train_fraction": [0.0, 0.6], "validation_fraction": [0.6, 0.7]},
+      {"fold_id": "F1", "train_fraction": [0.0, 0.7], "validation_fraction": [0.7, 0.8]}
+    ]
+  },
+  "candidates": [
+    {"candidate_id":"B00","role":"prediction_anchor","template_candidate_id":"C28","pair_anchor_id":null,"intervention_axis":"anchor","intervention_value":"p3_8000"},
+    {"candidate_id":"B01","role":"response_anchor","template_candidate_id":"C29","pair_anchor_id":null,"intervention_axis":"anchor","intervention_value":"p4_8000"},
+    {"candidate_id":"B02","role":"joint_bypass_anchor","template_candidate_id":"C30","pair_anchor_id":null,"intervention_axis":"anchor","intervention_value":"p5_8000"},
+    {"candidate_id":"B03","role":"response_calibration","template_candidate_id":"C09","pair_anchor_id":"B01","intervention_axis":"action_shield","intervention_value":"train_oof_projection"},
+    {"candidate_id":"B04","role":"response_calibration","template_candidate_id":"C11","pair_anchor_id":"B01","intervention_axis":"response_supervision","intervention_value":"integrated_oof_r_loss"},
+    {"candidate_id":"B05","role":"valve_policy","template_candidate_id":"C14","pair_anchor_id":"B02","intervention_axis":"valve_loss","intervention_value":"delta_and_multiscale_roughness"},
+    {"candidate_id":"B06","role":"valve_policy","template_candidate_id":"C16","pair_anchor_id":"B02","intervention_axis":"valve_decoder","intervention_value":"structured_pi_plus_gru_residual"},
+    {"candidate_id":"B07","role":"response_coordinate","template_candidate_id":"C18","pair_anchor_id":"B01","intervention_axis":"response_coordinate","intervention_value":"diagonal_only"},
+    {"candidate_id":"B08","role":"response_shape","template_candidate_id":"C19","pair_anchor_id":"B01","intervention_axis":"response_shape","intervention_value":"one_pole"},
+    {"candidate_id":"B09","role":"response_shape_control","template_candidate_id":"C22","pair_anchor_id":"B01","intervention_axis":"response_shape","intervention_value":"linear_ramp"},
+    {"candidate_id":"B10","role":"terminal_correction","template_candidate_id":"C03","pair_anchor_id":"B00","intervention_axis":"terminal_bypass","intervention_value":"add_action_invariant"}
+  ],
+  "pair_contract": {
+    "pairs": [
+      ["B03","B01"], ["B04","B01"], ["B05","B02"], ["B06","B02"],
+      ["B07","B01"], ["B08","B01"], ["B09","B01"], ["B10","B00"]
+    ],
+    "same_direction_required_in_both_folds": true,
+    "shared_module_initialization_hash_required": true,
+    "automatic_pair_verdict": false,
+    "allowed_verdicts": ["SUPPORTED","MIXED","REJECTED","NOT_TESTABLE"]
+  },
+  "matrix_envelope": {
+    "status": "b1_local_verified_external_registry_authorization_required",
+    "folds": ["F0", "F1"],
+    "seeds": [0],
+    "candidate_count": 11,
+    "training_unit_count": 22,
+    "optimizer_updates_cap": 8000,
+    "no_composite_champion": true,
+    "b2_generated_from_results": false
+  },
+  "model": {"d_model":64,"latent_dim":32,"dropout":0.1},
+  "training": {
+    "batch_size":128,"optimizer_updates_cap":8000,"evaluation_interval_updates":100,
+    "stats_anchor_count":16384,"selector_anchor_count":2048,"reporting_anchor_count":4096,"diagnostic_anchor_count":512,
+    "evaluation_batch_size":128,"learning_rate":0.001,"weight_decay":0.00001,
+    "gradient_clip":1.0,"minimum_score_improvement":0.0001,
+    "component_loss_weights":{"valve":0.25,"tin":0.25,"local":0.25,"terminal":0.25},
+    "logged_action_auxiliary_weight":0.10,"oof_r_loss_weight":0.10,"delta_valve_weight":0.05,
+    "roughness_weight":0.05,"rollout_weight":0.10
+  },
+  "diagnostic_contract": {
+    "required_modes":["normal","bypass_off","bypass_only","response_off","predicted_valve","logged_valve","logged_valve_oracle_tin","oracle_local","shuffled","wrong_side","lead"],
+    "response_horizons_steps":[6,18,60],
+    "side_reporting":["pooled","A","B","common","differential"],
+    "automatic_verdict":false
+  },
+  "execution_contract": {
+    "local_micro_smoke_authorized":true,"local_full_training_authorized":false,"linux_authorized":false,
+    "test_authorized":false,"ms4_authorized":false,"rm3b2_authorized":false,
+    "automatic_scientific_pass":false,"maximum_attempts_per_run":1,
+    "required_run_artifacts":["manifest.json","checkpoint_best_validation.pt","metrics_validation.json","episodes_validation.npz","diagnostics_validation.json","artifact_ledger.json"],
+    "required_root_artifacts":["run_manifest.json","matrix_execution_status.json","summary_validation.json","artifact_ledger.json"]
+  },
+  "claim_contract": {
+    "model_champion":false,"causal_identification":false,"arbitrary_do_valve":false,
+    "independent_side_gain":false,"true_response_order":false,"state_closed_simulator":false,
+    "closed_loop_release":false,"paper_claim_ready":false
+  }
+}

@@ -1,6 +1,6 @@
 # Thermal World Model TODO
 
-> 更新：2026-08-14。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。RM3-AV0/AV1/AV2 已执行并由本地完成完整性与 Q01–Q33 四态审计：64/64 validation units、RM2 54 与 RM3/RM3-A 66 个历史 checkpoint 全部闭合，结论为 `SUPPORTED=30 / MIXED=3 / NO MODEL CHAMPION`。Linux 授权已关闭；当前唯一任务是依据审计输入清单重写 RM3-B 组合设计，训练、test、自动科学 PASS 和 MS4 均禁止。旧 E1–E5 已废弃，Phase 4 暂停。
+> 更新：2026-08-14。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。RM3-AV 已审计关闭；RM3-B1 已重写并本地闭合为 `11 candidates × 2 folds × seed 0 = 22 units`，11 候选一更新与 400 项全回归通过。当前精确授权 Linux/Hermes 一次执行 `RM3-B1` 并回传原始 validation 产物；不得访问 test、填写成对科学判决、生成 B2 或启动 MS4。旧 E1–E5 已废弃，Phase 4 暂停。
 
 ## 当前主线
 
@@ -31,7 +31,7 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | MS5 | 完整 `free+response` 动作吸收 | ✓ CLOSED | joint 选中；冻结 staged 协议拒绝 |
 | **MS3** | A/B 真实数据适配 | ✓ **AUDITED FAIL / ASYMMETRIC** | B 3/3 PASS；A 0/3 non-collapse FAIL；不重跑、不访问 test |
 | **MS3-D** | A/B 响应不对称诊断 | ✓ **AUDITED** | 模型 A attenuation 未获现场热链路支持；B 阀位持久性更强；单侧 plant 归因不足 |
-| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ◉ **RM3-AV AUDITED / NO CHAMPION** | 重写 RM3-B 成对组合设计；训练/test/MS4 HOLD |
+| **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ◉ **RM3-B1 READY FOR LINUX** | Hermes 一次执行冻结 22 units；本地随后做 paired audit |
 | MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-R 冻结前不启动；不恢复旧 E 匹配 |
 
 ## D3 收口
@@ -70,7 +70,7 @@ MS3-D 的独立事件/日块复算误差为 0。主层为 A=41、B=42 个事件�
 
 MS3-R 采用三个批次级大门，避免逐小实验审批：Gate A 一次执行点位/时序/placebo/输入秩；Gate B 只做最后一轮点位闭合，不训练世界模型；Gate C 才执行真实模型筛查与正式比较。Gate B 主门固定为 UTC 日配对的 60/180 s `Tin-Tout` 正确路径减错侧路径、正滞后减 `|lead|`；2×2 MIMO、common/differential、不变性和 SP-IV feasibility 同批输出，后四者不能自动升级因果结论。完整设计见 [Gate B 设计](docs/plans/2026-08-11-phase35-ms3r-gateb-point-closure-design.md)。
 
-RM3-AV 已完成。AV2 判决为 `SUPPORTED=30 / MIXED=3`：P5 terminal 优势主要由 bypass 贡献；action shield 可放大响应并改善侧别/时序 placebo，但损害 terminal/local MAE；4000 updates 不足；full MIMO 与三极点/迟延没有额外证据；C31 第二窗口递推低于 persistence。权威结论见 [RM3-AV Supervisor Audit](docs/PHASE35_MS3R_RM3AV_SUPERVISOR_AUDIT_2026-08-14.md)。下一步只允许把 C28/C29/C30 三类 anchor 与审计保留模块写成 paired RM3-B 设计，不得一次性堆叠或直接授权 Linux。
+RM3-AV 已完成。AV2 判决为 `SUPPORTED=30 / MIXED=3`：P5 terminal 优势主要由 bypass 贡献；action shield 可放大响应并改善侧别/时序 placebo，但损害 terminal/local MAE；4000 updates 不足；full MIMO 与三极点/迟延没有额外证据；C31 第二窗口递推低于 persistence。RM3-B1 因此只保留 C28/C29/C30 三个角色锚点与八个单模块配对，禁止全量堆叠。矩阵固定 22 units、统一 8000 updates；只有两个 folds 同方向且合同门通过的模块才可在本地审计后进入 B2。
 
 Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0.5149/0.3950`，simultaneous 97.5% 下界为 `0.4266/0.3033`；A/B timing 为 `0.5950/0.4590`，下界为 `0.5478/0.4020`。但 A 两个 family 各有 2/24 反向日；SP-IV partial R² 仅 `0.0141/0.0040`，末温 H600 错侧路径远大于正确对角。结论只升级到短时局部条件 MIMO，详见 [Gate B Supervisor Audit](docs/PHASE35_MS3R_GATEB_SUPERVISOR_AUDIT_2026-08-11.md)。
 
@@ -142,9 +142,11 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 34 | RM3-AV1 32候选×2 folds×seed0宽筛代码、矩阵与dry-run | 本地 | ✓ 64 units闭合；C00-C31逐候选一更新与完整产物smoke通过 |
 | 35 | RM3-AV0/AV1单次批量执行与原始产物回传 | Hermes | ✓ AV1 64/64；AV0 120 checkpoint闭合；test未访问 |
 | 36 | RM3-AV2 cache-free replay与逐项四态审计 | 本地 | ✓ 30 SUPPORTED / 3 MIXED；无冠军；授权关闭 |
-| 37 | 按 AV2 输入清单重写 RM3-B paired composition 设计 | 本地 | ◐ 只设计不训练；C28/C29/C30 为角色锚点 |
+| 37 | 按 AV2 输入清单重写 RM3-B paired composition 设计与 B1 runner | 本地 | ✓ 11候选、8配对、22 units；一更新与400项回归通过 |
+| 38 | RM3-B1 单次 validation 执行与原始产物回传 | Hermes | ◐ 已精确授权；不得重试、调参、判结论或生成B2 |
+| 39 | RM3-B1 checkpoint/ledger/paired verdict 本地审计 | 本地 | ◻ 等待 Linux 回传 |
 
-Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)；当前均不构成运行授权。
+Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)；只有其中 RM3-B1 冻结命令与当前 registry 授权匹配。
 
 ## 不可提前声称
 

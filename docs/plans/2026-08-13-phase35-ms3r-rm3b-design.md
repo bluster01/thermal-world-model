@@ -1,210 +1,114 @@
-# Phase 3.5 MS3-R RM3-B 响应可识别性诊断门与机制噪声架构设计
+# Phase 3.5 MS3-R RM3-B 成对组合筛查设计
 
-> 状态：POST-RM3-AV DRAFT / REWRITE REQUIRED；Linux 未授权；validation-only；不访问 test、不启动 MS4。RM3-AV 已完成，权威输入见 `PHASE35_MS3R_RM3AV_SUPERVISOR_AUDIT_2026-08-14.md`；本文旧候选空间不得直接转成训练矩阵。
+> 状态：B0 DESIGN FROZEN / B1 LOCAL VERIFIED / Linux 一次执行已授权 / validation-only。唯一科学输入是 RM3-AV2 Supervisor 判决；本文不恢复旧 E 系列，也不把因果表征论文的定理直接外推到现场闭环数据。
 
-## Material Passport
+## 1. 目标与边界
 
-- Material Type: active experiment-purpose specification
-- Scope: Phase 3.5-MS3-R 后续批次（RM3-B）的评测门升级与架构增改设计；不改写 RM3/RM3-A 审计结论
-- Verification Status: DRAFT（本文不包含对自身的审计判决；开放决策点见 §12）
-- Paper Basis: `papers/causal_representation/` 七篇因果表征论文 + 三份精读笔记（`notes_*.md`）
-- Data Boundary: A/B 现场 historian；喷水流量不作真值；实际阀位仅是有效喷水作用代理
-- Claim Boundary: 可识别性（模型内部自由度唯一性）不等于观测因果效应；不建立 `do(valve)`
+RM3-B 不再回答“再加哪一个听起来更物理的模块”，而回答三个可证伪问题：
 
-## 0. 强制前置：RM3-AV 独立审计验证批次
+1. 在 8000 optimizer updates、公平四任务 selector 和 module-scoped 初始化下，RM3-AV 保留模块能否在两个 rolling folds 给出同方向改善；
+2. 改善来自 terminal bypass、valve policy、显式 response，还是三者之间的补偿；
+3. 哪些模块可以进入后续 multi-seed 组合确认，哪些应停止。
 
-RM3-AV 已将独立审计问题转成合法成对实验并完成四态判决：30项 SUPPORTED、3项 MIXED。P5 terminal 优势主要由 bypass 主导；action shield 可增强响应但损害预测；阀位过平滑、4000-update不足、shape不可分和recursive失败均成立。详见 [RM3-AV Supervisor Audit](../PHASE35_MS3R_RM3AV_SUPERVISOR_AUDIT_2026-08-14.md)。
+允许声明：observed-policy prediction、disturbance-conditioned response diagnostic、validation 内的成对架构归因。
 
-RM3-B 的任何实现、矩阵冻结或 Linux 授权之前，必须先完成 [RM3-AV 独立审计验证批次](2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md)：
+禁止声明：`do(valve)`、独立双侧 plant gain、真实喷水流量、已识别物理阶次、30–60 min state-closed simulator、模型冠军或论文结论。
 
-- `RM3-AV0`：RM2/RM3/RM3-A 冻结产物与 checkpoint 的零训练回放；
-- `RM3-AV1`：32 candidates × 2 rolling folds × seed 0 = 64 training units；
-- `RM3-AV2`：对审计命题逐项给出 `SUPPORTED / REFUTED / MIXED / NOT_TESTABLE`，并重选 RM3-B baseline、监督方式、阀位策略、动作子空间和动态基底。
+## 2. 架构决策（ADR-RM3B-01）
 
-本文 §3–§12 均为 RM3-B 的**候选设计空间**，不是已放行实施方案。KCI、nonstationarity、Jacobian sparsity、noise independence 和 condition number 在 RM3-AV 前后一律先作诊断，不能单独证明真实闭环分解唯一、动作外生或 plant causal identification。
+### 背景
 
-## 1. 要回答的问题
+RM3-AV 已确认：P5 的 terminal 优势主要由 action-invariant bypass 贡献；action shield 和 OOF R-loss 能放大显式响应但尚未闭合 placebo；阀位预测过平滑；full MIMO 与三极点/纯迟延没有额外证据；4000 updates 混入了收敛偏差。
 
-RM2/RM3/RM3-A 已给出三个硬事实：
+### 决定
 
-1. **RM2**：四个响应算子族 logged response 幅值为 `0.319/1.088/0.435/0.493°C`（Koopman 相对 A1 放大 3.41×），local MAE 却无差异（`1.688–1.705°C`）→ `OPERATOR_GAIN_NOT_IDENTIFIED`。residual head 与 response operator 互相补偿，加性分解在观测数据下多解。
-2. **RM3 R0**：滚动 fold 间端点方向不稳定（A→A `0.569→0.337`，B→B `0.309→0.456`）→ 数据支持时变、扰动条件的响应轨迹，不支持单一不变双侧增益。
-3. **RM3**：P0 oracle 阀位 `0.661` vs P1 预测阀位 `0.948` → SP→阀位策略误差贡献约 0.29°C terminal，是当前最大单一误差源；A 侧动态响应 `0.0066–0.0085°C`（B 侧 `0.0429–0.0485°C`，5–7×），且 A 侧激励剂量比仅 1.05。
+RM3-B1 采用“角色锚点 + 单模块成对干预”，不堆叠全部模块：
 
-当前分解的正确性由结构先验保证（零初始化、加性、前缀因果），没有可证伪的统计裁判。RM3-B 要回答：**能否把"响应分解"从多解结构升级为可识别结构，并使识别性本身成为预注册门**。依据是论文包的统一原则：用条件独立、充分变异性、不变性约束替换不可检验的先验。
+- `C28`：高容量直接预测角色锚点；
+- `C29`：显式响应角色锚点；
+- `C30`：joint-latent + action-invariant bypass 角色锚点；
+- 每个新候选只改变一个预声明模块，并与其角色锚点成对；
+- 全部候选固定 H60、2 rolling folds、seed 0、8000 updates；
+- 只有两个 folds 都同方向且合同门通过的模块，才可进入 B2 multi-seed 组合确认。
 
-## 2. 论文基础（文件与结论）
+### 后果
 
-| 论文 | 关键结论（章节/定理） | 本文使用处 |
+这一设计牺牲一次性搜索组合最优的速度，换取归因可解释性。B1 不产生冠军；B2 组合数由 B1 结果决定，不能提前写入 runner。
+
+## 3. B1 冻结候选表
+
+| ID | 角色/干预 | RM3-AV 实现模板 | 成对基线 | 唯一改变 |
+|---|---|---|---|---|
+| B00 | P3 prediction anchor | C28 | — | 8000-update anchor |
+| B01 | P4 response anchor | C29 | — | 8000-update anchor |
+| B02 | P5 joint+bypass anchor | C30 | — | 8000-update anchor |
+| B03 | action-shielded history residual | C09 | B01 | OOF action projection shield |
+| B04 | integrated OOF R-loss | C11 | B01 | response calibration loss |
+| B05 | valve delta + multiscale roughness | C14 | B02 | valve dynamics loss |
+| B06 | structured PI + GRU residual | C16 | B02 | valve decoder |
+| B07 | field-aligned diagonal response | C18 | B01 | response coordinates |
+| B08 | one-pole response basis | C19 | B01 | response shape |
+| B09 | linear-ramp sensitivity control | C22 | B01 | shape negative/sensitivity control |
+| B10 | capacity-controlled action-invariant bypass | C03 | B00 | history-only terminal bypass |
+
+矩阵为 `11 candidates × 2 folds × 1 seed = 22 training units`。B03–B10 继承模板的结构实现，但 optimizer cap 统一提升到 8000；模板编号只表示已审计代码路径，不继承 RM3-AV 的 4000-update 数字。
+
+## 4. 公平合同
+
+所有 22 个单元必须同时满足：
+
+- 数据：真实 A/B paired cache，window=96、H60、10 s；F0=train 0–0.6/validation 0.6–0.7，F1=train 0–0.7/validation 0.7–0.8；test `[0.8,1.0)` 禁止；
+- selector/reporting 按 UTC 日隔离，checkpoint 仅由共同四任务 loss 选择；
+- 四任务权重相同，terminal/local/Tin/valve 分开报告；
+- seed 只表示优化初始化，UTC 日/连续时间块才是统计单位；
+- 每个成对比较必须校验共享模块初始化 hash，不能以不同初始化冒充模块效应；
+- 每个 run 必须报告 normal、response-off、wrong-side、lead、shuffled、logged-valve 等既有诊断；
+- 不计算综合排名，不填写自动科学 PASS，不访问 test。
+
+## 5. 成对判决
+
+B1 只做模块资格判决，不做模型选择。每一对逐 fold 给出 `SUPPORTED / MIXED / REJECTED / NOT_TESTABLE`：
+
+| Pair | 主要问题 | 必报证据 |
 |---|---|---|
-| `LEAP_ICLR2022.pdf` | Thm1 非参数可识别需 2n+1 工况充分变异性；Thm2 广义 Laplacian(α<2)+满秩 B_τ；噪声 Total Correlation 惩罚 | E2/E4、A1/A2 |
-| `Nonstationary_StateSpace_ICML2019.pdf` | Thm1 线性+高斯+非平稳即可识别时变因果系数（不需非高斯/faithfulness）；根因统计量 S(t,t+p) | E3、A6 |
-| `TDRL_NeurIPS2023.pdf` | Thm1 ARHMM 由 ≥4 连续观测识别工况；Thm2 交叉导数向量线性无关→分量级识别 | A5、E4 |
-| `CaRiNG_ICML2024.pdf` | Thm1 非可逆观测下 z_t=m(x_{t:t-μ}) 分量级识别；Corollary A1 非平稳助识别 | A8、§6 |
-| `CD_NOD_JMLR2020.pdf` | Thm1 C 入条件集的骨架恢复；Thm2 Alg.2 不变性/Alg.3 独立变化定向；Alg.4 KNV 驱动力 | E2/E3、A6 |
-| `CtrlNS_NeurIPS2024.pdf` | Thm1 机制稀疏性+变异性→域识别；Thm2 域识别后分量级识别；跨域图不变时假设失效 | A5（风险见 §5） |
-| `IDOL_ICLR2025.pdf` | Thm1/Thm2 稀疏潜过程→图同构；Thm3 时滞父集互异→瞬时边定向；L_S=‖J_d‖+‖J_e‖ 稀疏 | A2/A3 |
+| B03−B01 | shield 是否减少 free 对动作策略的代理，同时保住预测 | terminal/local 非劣、H60 response、wrong/lead/shuffled sensitivity |
+| B04−B01 | OOF R-loss 是否让 response 真正进入 terminal | response-off terminal delta、OOF first-stage/残差诊断、placebo |
+| B05−B02 | 动态 loss 是否修复阀位过平滑 | valve MAE、mean `|Δv|`、roughness、terminal/local |
+| B06−B02 | PI+GRU 是否改善策略层而不伤害末温 | valve MAE/dynamics、terminal/local、PI residual contribution |
+| B07−B01 | 数据是否只支持更简单的对角通道 | terminal/local 非劣、common/differential response、wrong-side |
+| B08−B01 | one-pole 是否是足够的工程基底 | shape RMSE、terminal/local、跨 fold 稳定性 |
+| B09−B01 | shape 结论是否对线性基敏感 | 与 B08 并列报告；不得据此声称阶次 |
+| B10−B00 | bypass 是否只改善自然工况预测 | terminal 改善、response-off/bypass-off、动作不变性 |
 
-精读笔记：`papers/causal_representation/notes_LEAP_NonstatSSM_TDRL.md`、`notes_CaRiNG_CDNOD.md`、`notes_CtrlNS_IDOL.md`。
+“同方向”必须由各 pair 的角色指标定义，而不是只看一个 MAE：预测不劣但 response/placebo 不闭合时判 MIXED；两个 fold 方向相反时判 MIXED；任一合同失败直接 REJECTED。
 
-## 3. 评测侧调整（E 系列）
+## 6. B2 与 B3
 
-以下 E1–E4 为**识别性门**，E5–E8 为**归因与报告层**。E1–E3、E6 可先在 RM3/RM3-A 既有冻结产物上回放（零新训练），用于校验门本身。
+- B2 只有在 B1 审计后才生成。最多从三个机制族各保留一个模块：response calibration、valve policy、terminal correction；只做预声明的最小交互，不进行全组合搜索。
+- B3 才对 B2 surviving compositions 做多 seed 确认。seed 数、候选数和预算届时另行冻结。
+- B1/B2/B3 均保持 validation-only；test 与 MS4 继续 HOLD。
 
-### E1 响应幅值分歧门（RM2 现象 → 正式门）
+## 7. 识别性诊断如何放置
 
-- 依据：RM2 `OPERATOR_GAIN_NOT_IDENTIFIED` 审计事实。
-- 做法：同一数据、同一 fold/seed、同一 residual 初始化下，各候选的 logged response 幅值分歧超预注册阈值（建议 >2×，见 §12）→ 该单元判 `IDENTIFICATION_FAILED`，不再比较 MAE；分歧未超阈值才进入 MAE 对比。
-- 失败含义：分解多解，任何"响应增益已识别"的主张撤回。
-- 实现：`experiments/phase3_5/audit_ms3r_rm3b.py` 新门，汇总进 batch summary。
+KCI、nonstationarity、Jacobian sparsity、机制噪声独立性和 condition number 只作为诊断 ledger：
 
-### E2 响应分量条件独立检验（KCI）
+- 域标签和 measured context 分开；负荷/压力不能自动当外生 environment；
+- 非平稳性不解决闭环动作内生性、阀位代理测量误差或双阀秩亏；
+- lead/wrong-side/placebo 未闭合时，不用 KCI 或稀疏 Jacobian 升级因果声明；
+- 本批不实现 A1 机制噪声、A2 Jacobian prior、A3 瞬时耦合或 A6 时变增益新模型，避免与 AV2 已保留模块混为一个不可归因大改动。
 
-- 依据：CD-NOD Thm1 将 C 入条件集；KCI 检验（Zhang et al., 2012）。
-- 做法：validation 集上非参检验 `response_effect ⟂ residual_local | context`（context=编码器输出的 d 维上下文或工况 bin）。逐 UTC 日算 p 值，报分布与整体判决（α 与带宽启发见 §12）。
-- 失败含义：free/response 分解不唯一；分量 MAE 降级为"组件拟合质量"，不得称分量恢复。
-- 实现：`src/phase35/multistep/rm3b_identifiability.py`；先以诊断级（报告不拦截）运行一个批次，判决级阈值待审计后冻结。
+## 8. Linux 执行边界
 
-### E3 不变性检验（升级 Gate B 的 SP-IV）
+本地负责：冻结矩阵与代码、micro smoke、全量回归、授权 SHA、结果回放与唯一 Supervisor 判决。
 
-- 依据：CD-NOD Alg.2；NonstatSSM 的时变系数可识别性。
-- 做法：(a) 数据侧：`P(valve|SP)` 跨时间块/负荷 bin 的不变性检验——不变则 SP→a 定向成立（Gate B SP-IV partial R² 0.014 的框架升级为定向检验）；(b) 模型侧：fold 对的响应增益差异进 bootstrap CI，超 CI 即正式声明时变响应（R0 的 0.569→0.337 已预示）。
-- 失败含义：不变性不成立→控制链定向存疑或响应必须时变参数化（A6）。
+Linux/Hermes 只负责：在授权提交上执行冻结的 22 units 一次，回传原始六件套、root ledger、stdout/stderr、资源记录和 commit SHA。
 
-### E4 充分变异性资格门（训练前资格）
+Linux 禁止：改候选/阈值/seed/fold/loss、补跑失败单元、访问 test、代写判决、自动生成 B2、启动 RM3-B2/B3/MS4。预检失败时整批不启动；训练单元失败时停止该设备的后续分区，其他已经启动的设备分区允许完成，随后原样回传全部成功产物与 `failure.json`，不得发起第二次 attempt。
 
-- 依据：LEAP Thm1（2n+1 工况）、TDRL Thm2（交叉导数线性无关）。
-- 做法：复用 `RM3MomentAudit.condition_number`（动作 Gram 条件数）+ 新增每侧/每负荷 bin 的剂量多样性指标，预注册最小门槛。不达标的侧/工况**训练前**判 `INSUFFICIENT_EXCITATION`，不训完再报 FAIL。
-- 失败含义：该侧响应先验不可识别；A 侧 0.0066°C 的结果属此类，不得通过调阈值补救。
+## 9. 放行检查点
 
-### E5 oracle 阶梯归因（P0b/P0c）
-
-- 做法：在 P0（oracle 阀位 0.661）基础上补两级——P0b=oracle 阀位+oracle Tin（复用 `boundary_mode="oracle_boundary"`，`gatec_data.py` 已支持）；P0c=P0b+oracle 局部温降（新增 contract：把 true `Tin−Tout` 直接注入 downstream，绕过 local response 与 residual head）。
-- 输出：0.973（P5）→0.661（P0）的 0.31°C 逐层归属（阀位策略 / Tin 边界 / 响应动力学）。
-- 实现：`rm3b_contracts.py` + `RM3FairPredictionAdapter` 扩展。
-
-### E6 NNLS 经验轨迹形状基准
-
-- 做法：R1 审计的 60/180/600s 基精确 NNLS 拟合（轨迹 RMSE 0.024–0.072）定为经验响应参考；各候选 learned IRF 与之比形状距离（幅值自由）。响应评估获得模型外锚点。
-
-### E7 递归 rollout 评测（C2 最低门槛）
-
-- 做法：validation 上 open-loop 递推（喂模型自身输出），报 10/30/60 min 误差增长、漂移、NaN 率；并列报告 teacher-forced / open-loop / closed-loop 三模式。
-- 失败含义：仍称 predictor，不得称仿真器（W3 门）。
-
-### E8 分层工况报告（Simpson 防线）
-
-- 做法：terminal/local MAE 按负荷 bin、SP 升/降方向、阀位活跃度分层报告，检查子组反转。
-
-## 4. 架构侧调整（A 系列）
-
-### A1 机制噪声模块（LEAP/CaRiNG 转移先验的独立噪声条件）
-
-- 做法：response effect 改为 `N(g(a,context), σ_r(context))`，σ_r 按工况学习；residual head 配独立 σ_f。smooth_l1 升级为似然（尺度自适应），两个噪声尺度的比值作为可识别性信号（比值漂移=RM2 的 3.4× 现象）。
-- 改动：`rm3_joint_model.py`（JointLatentPhysicalInterfaces 加噪声参数）、`rm3_training.py`（loss 改似然）。
-- 风险：闭环下 IN 可能被违反（见 §6），需与 A3/A4 联合才有理论意义。
-
-### A2 下三角 Jacobian 转移先验（LEAP/IDOL/TDRL 同一技巧）
-
-- 做法：g_response 逆映射按固定因果序（阀位→局部→末端）参数化，损失加 log|J| 项；结构从"加法习惯"变为体积保持变换先验。
-- 改动：新模块 `rm3b_transition_prior.py`，挂在 JointLatent 转移上。
-- 不变量：constant-action identity、prefix causality、稳定性约束全部保留。
-
-### A3 瞬时耦合层 + Jacobian 稀疏（IDOL）
-
-- 做法：readout 前加瞬时混合 `z_t = tanh(W z_t)`，对瞬时 Jacobian `J_e` 加 L1（IDOL L_S）；按 Thm3 给每个潜分量保留独特时滞父集（喷水只进汽温方程）保证方向可识别。
-- 依据：10s 采样下喷水/蓄热/汽温瞬时互馈客观存在，当前被压进 residual/bypass。
-- 风险：IDOL 假设稀疏潜过程（A3 条件）——热工系统大概率成立但需验证；高维下稀疏约束能力有限。
-
-### A4 PI 结构化阀位策略（CD-NOD 不变性 + 伊敏 PID 解析）
-
-- 做法：GRU 阀位策略替换为 `valve = baseline + Kp(e)(SP−T) + Ki(e)·∫e + 死区/限幅`，Kp/Ki 按功率调度（结构来自 `dcs_bmcs2_output` 伊敏主调解析：纯 PI、Td=0、增益随偏差×功率动态调度）。
-- 动机：P1→P0 的 0.29°C 缺口 + `P(valve|SP)` 不变性成为可验证结构性质。
-- 风险：实际控制器若含前馈/override 逻辑，PI 结构会 misfit；需保留 GRU 作对照。
-
-### A5 离散工况开关（NCTRL/CtrlNS，作用在参数不在图）
-
-- 做法：Gumbel-softmax 选 U 套增益/τ 参数（CtrlNS sparse transition），或 ARHMM 无监督切分工况段（NCTRL）。
-- 风险：CtrlNS 可识别性要求跨域因果图不同——喷水物理跨工况图大概率不变，假设易失效；故域开关只作用参数，且 A5 仅作非平稳增益的显式化，不声称域已识别。
-
-### A6 时变增益 AR（NonstatSSM）
-
-- 做法：diagonal/cross gain 改为小递归状态 `b_t = α·b_{t-1} + β(load,pressure)`，非平稳性显式进生成模型。
-- 依据：R0 已判时变响应；NonstatSSM Thm1 证明该参数化在近线性近高斯对象下可识别。
-
-### A7 快/慢状态分层（IDOL 稀疏结构 + 物理）
-
-- 做法：快层（局部温降，τ 20–1200s）与慢层（金属蓄热，τ 数百秒）分离，各配独特父集；对应 R1 的 60/180/600s 基。
-
-### A8 递推训练（CaRiNG + C2）
-
-- 做法：scheduled-sampling 微调 + 部分 rollout 损失；terminal readout 移入递推路径。非可逆观测（15 特征←高维热状态）按 CaRiNG 的 `z_t=m(x_{t:t-μ})` 处理，编码器继续用 96 步历史补全丢失状态。
-
-## 5. 批次结构
-
-| 批次 | 内容 | 训练量 |
-|---|---|---|
-| RM3-B0 | 消费 RM3-AV2 四态判决，冻结仍有经验动机的 E/A 模块与 baseline | 零 |
-| RM3-B1 | surviving modules 的 one-update smoke、结构合同和 fail-closed runner | 微 |
-| RM3-B2 | 仅在 AV2 要求组合交互时做最小组合筛查；否则跳过 | 待定 |
-| RM3-B3 | 正式 validation 比较：候选数、seed 数和预算由 AV2 后另行冻结；不得沿用本草案数字自动执行 | 全量 |
-
-## 6. 理论警告：闭环反馈违反独立噪声假设
-
-七篇的可识别性都以噪声独立性（IN/时空独立）为前提。PID 闭环下动作噪声是状态噪声的因果下游，IN 默认被违反——直接套 LEAP 式先验而不显式建模 SP→阀位→温度反馈环，识别理论静默失效。应对是结构性联合要求：
-
-1. A4 PI 结构化阀位策略（反馈环显式）；
-2. A3 瞬时耦合层（同采样步互馈显式）；
-3. A1 动作噪声与状态噪声的相关项（σ 协方差而非对角）。
-
-三者缺一，A1/A2 的识别主张不得升级。E2（KCI）仅是依赖性诊断之一，既不能单独验证 IN，也不能证明 free/response 分解唯一；它必须与 RM3-AV 的容量、placebo、动作敏感性和闭环 policy residual 证据联合解释。
-
-## 7. 放行门（RM3-B3 判决）
-
-1. 识别性：E1 幅值分歧 ≤ 冻结阈值；E2 逐日 p 值分布过冻结 α；E3 不变性/时变性判决与架构选择一致；E4 每侧/每工况过资格线；
-2. 架构不变量：constant-action identity、prefix causality、有限稳定 rollout、噪声比稳定、Jacobian 符号结构全部通过；
-3. 预测非劣：terminal/local MAE 相对 P5 在预注册非劣界内；E5 oracle 阶梯完整报告；
-4. E7：10/30/60 min open-loop 误差增长 ≤ 冻结阈值；
-5. 统计单位 UTC 日/连续时间块；seed 只表示优化稳定性；
-6. 失败时不缩阈值、不补 seed/fold、不打开 test、不事后改矩阵。
-
-## 8. 不可提前声称
-
-- 识别性门通过只证明"分解在模型族内唯一到置换+分量可逆变换"，不建立 `do(valve)`、唯一 plant gain、喷水流量标定或 closed-loop readiness；
-- 可识别 ≠ 因果效应：外部锚点仍缺（W2 经验响应之外，W4 反事实继续 BLOCKED）；
-- A5/A6 不声称域/增益"已恢复"，只声称非平稳性被显式参数化且可检验；
-- 论文理论（IN、sufficiency、稀疏潜过程）在闭环数据下可能不成立，E2/E4 正是其检测器。
-
-## 9. 被拒绝的备选
-
-- 继续仅平滑调度：动态范围窄（exp(0.25·tanh(·))），且 R0 已显示时变响应——A6 显式化优于继续隐式；
-- 纯 `d_model` 扩充不能解释 RM3-A 结果，但自由头位置、bypass 和 action-shielded 容量仍未定性；由 RM3-AV C03–C09 验证后再决定是否拒绝容量/头部路线；
-- 把幅值分歧当超参扫描：look-elsewhere 风险，与 fail-closed 纪律冲突；
-- 在 synthetic known-truth 上验证识别理论：MS3 已证明 synthetic PASS 不迁移真实数据，识别性门必须在真实 A/B 数据上回放。
-
-## 10. 与现行纪律的关系
-
-- RM3/RM3-A 的历史结果与输入权限不可变；RM3-AV 只新增明确标注的 8000-update 收敛对照，不重写旧结果；RM3-B 的预算等待 AV2 冻结；
-- 本文不改 TODO、注册表、Supervisor 文档（本地职责）；
-- Linux 执行仍须 `active_gate` 与 `linux_authorized_gate` 同时满足，本地冻结矩阵后才授权；
-- 任一预检红项必须停止回传，不得自行豁免。
-
-## 11. ADR：为什么以"识别性门 + 机制噪声"为 RM3-B 主轴
-
-**状态：Proposed（待审计）。**
-
-**背景：** RM2 已证响应幅值多解（3.4×），RM3-A 只解决容量/权重混淆，不触及分解唯一性；论文包（Supervisor 于 a3b003d 加入）全部指向同一升级路径：条件独立+充分变异性+不变性约束。
-
-**决定：** 先落评测门（E 系列，可在冻结产物上零成本回放并校验），再动架构（A 系列，分 smoke 与正式两阶段）；架构改动优先 A1+A4+A3（识别入口+最大误差源+理论前提），其余按审计意见分批。
-
-**后果：** 评测对象从"预测准"转为"分解可识别"，可能与部分既有指标（local MAE）解耦；代价是新增 KCI/方差/rollout 三套统计设施与噪声参数化，训练目标与审计复杂度上升。仍不改变 validation-only、fail-closed 的根本纪律。
-
-## 12. 开放决策点（供独立审计，本文不作裁定）
-
-1. E1 幅值分歧阈值具体值（建议 >2×；需从 RM2 四算子分布反推合理界）；
-2. E2 KCI 的 α（建议 0.05）、RBF 带宽启发（中位数距离）、判决级 vs 诊断级的分批路径；
-3. E4 最小条件数与剂量多样性门槛的数值（需 A/B 侧数据分布支撑）；
-4. A 系列首批冻结矩阵包含项（建议 A1+A4+A3；A5/A6/A7 是否并入 RM3-B 或延后）；
-5. 批次命名（RM3-B）与"回放既有产物"是否算新 Gate；
-6. P0c 的 oracle-local 注入接口的 contract 边界（是否触碰 RM3 契约）；
-7. A5 在 CtrlNS 假设失效时的降级声明措辞。
+1. B0：本文、AV2 parent hash 与候选角色表冻结；
+2. B1-local：合同、22-unit 展开、模型映射、one-update smoke、产物 schema 和专项回归通过；
+3. B1-authorize：registry 精确授权 `RM3-B1`，且授权 commit 工作区干净；
+4. B1-remote：Linux 一次执行并回传，不作科学结论；
+5. B1-audit：本地复算 hashes、checkpoint、轨迹与 paired verdict；之后才允许设计 B2。
