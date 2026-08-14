@@ -594,7 +594,11 @@ def build_av0_replay(
             spec = manifest["run_spec"]
             fraction = tuple(float(value) for value in spec["validation_fraction"])
             n_rows = len(caches["A"].timestamps_ns)
-            bounds = (int(n_rows * fraction[0]), int(n_rows * fraction[1]))
+            test_start = int(caches["A"].split_bounds()["test"][0])
+            bounds = (
+                int(n_rows * fraction[0]),
+                min(int(n_rows * fraction[1]), test_start),
+            )
             anchors = paired_valid_anchors(
                 caches,
                 "validation",
