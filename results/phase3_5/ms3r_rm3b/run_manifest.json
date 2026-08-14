@@ -1,0 +1,71 @@
+{
+  "execution_git_sha": "d18d7f8b3638f0720d9d5ae4b4e9131643459652",
+  "matrix_sha256": "0799fbf885d024e9c8eebb37902df13b3567a2eb0fae61435bbf8603645fd0c2",
+  "cache_sha256": {
+    "A": "a75cde934e1d459c629959a6921a80d31ec1bf998468525ef82a4ffaaa3f29b8",
+    "B": "7005d027b97cad9e26c2f8f36ed8ffb77aa83a68ed83d6da786f0369abe0b8fa"
+  },
+  "code_sha256": {
+    "src/phase35/data.py": "5b6cf9f985a006122d6b0ace1606b4976dccc865c5f2200a941325d808fa2e52",
+    "src/phase35/schema.py": "73dd46093a76e76f066728adb2a1ce95837ce36a4ad3a38fb8631fa729b0f917",
+    "src/phase35/multistep/gatec_data.py": "12c182b6b5aa6d280bd1317a934c72caf104910def80ba5e7545e6b24d51853c",
+    "src/phase35/multistep/rm3b_contracts.py": "e3ca9a6e34a8f0515e77b3dcd26c659733875da642be7ee204290521ce340b99",
+    "src/phase35/multistep/rm3av_contracts.py": "8f34d9e4ef964799ae900982ff70394ce51b608be1cce0a3d8e1b0f1bfe0538b",
+    "src/phase35/multistep/rm3av_model.py": "26a30d0b803be42df2731a8757b3cead71554d983e29f05f98e40ebad4c3a710",
+    "src/phase35/multistep/rm3av_training.py": "6aaccaebaf2f2a9892023f54df980f8f76c8c52dc2b90769dc7b1533251bdeb6",
+    "src/phase35/multistep/rm3av_diagnostics.py": "fa122550f1f1db140233457c4326a2f9061016bae1b8dd4636ff93961a7dbf4e",
+    "src/phase35/multistep/rm3av_execution.py": "15f63713b9d3a860804978ec57f811d5d77b352b367290a19bf585875d5e9d98",
+    "src/phase35/multistep/rm3_prediction.py": "65cf5006a0705a2516a2a407e3cfb24832ae822517b42e3a391aa6c86e2d1fb3",
+    "src/phase35/multistep/rm3_joint_model.py": "086bc5b10890e3c9c43092f74911ba6a4bf82d06af42a640db3667f65f7eab73",
+    "src/phase35/multistep/rm3_training.py": "e2431b6181528d71999db99ee894b2dc93088a2ab4880026b720db9f8ad26d0a",
+    "src/phase35/multistep/rm3_reporting.py": "cd6243f9a6df772428b235e9ca80832c19453fd1fcded13feb0328438e131e3c",
+    "src/phase35/multistep/gatec_model.py": "c5e15d10d00463d8b3467705a2fbd6c849a6d24a51de65b90fbe268ce7dad20e",
+    "experiments/phase3_5/ms3r_rm3b_train.py": "5dd21b787436e5a847f097a841fcac373263dc0e12f277452a2609bb75029b8d"
+  },
+  "parent_supervisor_decision": {
+    "path": "results/phase3_5/ms3r_rm3av2/supervisor_decision_validation.json",
+    "sha256": "49fbc0cd7bbeb913c7f927aae4796b740559bb988361919d1a6814dee529c6ee",
+    "hash_mode": "utf8_text_normalized_lf"
+  },
+  "parent_design": {
+    "path": "docs/plans/2026-08-13-phase35-ms3r-rm3b-design.md",
+    "sha256": "de83faa5c922ec509ca25fd1f89506852d23c1fe42984764f08c1f8d4a9c0133",
+    "hash_mode": "utf8_text_normalized_lf"
+  },
+  "test_accessed": false,
+  "devices": [
+    "cuda:0"
+  ],
+  "run_ids": [
+    "B00_F0_s0",
+    "B00_F1_s0",
+    "B01_F0_s0",
+    "B01_F1_s0",
+    "B02_F0_s0",
+    "B02_F1_s0",
+    "B03_F0_s0",
+    "B03_F1_s0",
+    "B04_F0_s0",
+    "B04_F1_s0",
+    "B05_F0_s0",
+    "B05_F1_s0",
+    "B06_F0_s0",
+    "B06_F1_s0",
+    "B07_F0_s0",
+    "B07_F1_s0",
+    "B08_F0_s0",
+    "B08_F1_s0",
+    "B09_F0_s0",
+    "B09_F1_s0",
+    "B10_F0_s0",
+    "B10_F1_s0"
+  ],
+  "maximum_attempts_per_run": 1,
+  "hermes_role": "execute_frozen_22_units_once_and_return_raw_artifacts",
+  "hermes_may_edit_code_or_configs": false,
+  "hermes_may_retry_or_tune": false,
+  "hermes_may_access_test": false,
+  "hermes_may_assign_pair_verdicts": false,
+  "hermes_may_generate_rm3b2": false,
+  "automatic_scientific_pass": null
+}

@@ -1,0 +1,14 @@
+RM3-B1 Linux execution record
+Authorization commit: d18d7f8 "phase3.5: authorize RM3-B1 paired screen"
+Registry at exec time: active_gate=ms3_r, status=ready_for_linux,
+linux_authorized_gate=ms3_r, authorized_batch=RM3-B1.
+Preflight: pytest 216/216 pass (incl. rm3b contracts/execution + legacy regressions;
+Codex synced the stale test_rm3a_execute_refuses_current_unauthorized_registry in
+d18d7f8), compileall exit 0, dry-run exit 0 (11 candidates, 22 units, cap 8000,
+8 pairs, matrix_self_authorizing=false, test_authorized=false,
+automatic_scientific_pass=null), git worktree clean.
+Data caches: ms3_cross_A.npz sha256 a75cde93..., ms3_cross_B.npz sha256 7005d027...
+Frozen command executed verbatim (only PH35_RM3B_DEVICES=cuda:0 set by executor).
+Executor role boundary: no matrix/code/config edits, no verdicts, no champion,
+no B2 generation, no test access. Failure units keep failure.json and are
+returned as-is; no retry.
