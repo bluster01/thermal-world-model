@@ -1,0 +1,106 @@
+{
+  "protocol_version": "phase3.5-ms3r-rm3av-v1",
+  "run_id": "C13_F1_s0",
+  "run_spec": {
+    "run_id": "C13_F1_s0",
+    "candidate_id": "C13",
+    "group": "supervision",
+    "base_candidate_id": "P5_hybrid_joint_latent",
+    "intervention_axis": "response_supervision",
+    "intervention_value": "logged_action_auxiliary",
+    "optimizer_updates_cap": 4000,
+    "fold_id": "F1",
+    "seed": 0,
+    "train_fraction": [
+      0.0,
+      0.7
+    ],
+    "validation_fraction": [
+      0.7,
+      0.8
+    ]
+  },
+  "provenance": {
+    "execution_git_sha": "75a032509ab1dca79a724d4346d39ab828085410",
+    "matrix_sha256": "3f9e6f741cf1ea54d34886c0c7247646b43d117b07cb6919adbe66c7396f29da",
+    "cache_sha256": {
+      "A": "a75cde934e1d459c629959a6921a80d31ec1bf998468525ef82a4ffaaa3f29b8",
+      "B": "7005d027b97cad9e26c2f8f36ed8ffb77aa83a68ed83d6da786f0369abe0b8fa"
+    },
+    "code_sha256": {
+      "src/phase35/data.py": "5b6cf9f985a006122d6b0ace1606b4976dccc865c5f2200a941325d808fa2e52",
+      "src/phase35/schema.py": "73dd46093a76e76f066728adb2a1ce95837ce36a4ad3a38fb8631fa729b0f917",
+      "src/phase35/multistep/gatec_data.py": "12c182b6b5aa6d280bd1317a934c72caf104910def80ba5e7545e6b24d51853c",
+      "src/phase35/multistep/rm3av_contracts.py": "8f34d9e4ef964799ae900982ff70394ce51b608be1cce0a3d8e1b0f1bfe0538b",
+      "src/phase35/multistep/rm3av_model.py": "26a30d0b803be42df2731a8757b3cead71554d983e29f05f98e40ebad4c3a710",
+      "src/phase35/multistep/rm3av_training.py": "6aaccaebaf2f2a9892023f54df980f8f76c8c52dc2b90769dc7b1533251bdeb6",
+      "src/phase35/multistep/rm3av_diagnostics.py": "fa122550f1f1db140233457c4326a2f9061016bae1b8dd4636ff93961a7dbf4e",
+      "src/phase35/multistep/rm3av_execution.py": "4b80c0f4b76298072a3a88a684f58cd8270b335f697402280b1f314e885525fa",
+      "src/phase35/multistep/rm3_prediction.py": "65cf5006a0705a2516a2a407e3cfb24832ae822517b42e3a391aa6c86e2d1fb3",
+      "src/phase35/multistep/rm3_joint_model.py": "086bc5b10890e3c9c43092f74911ba6a4bf82d06af42a640db3667f65f7eab73",
+      "src/phase35/multistep/rm3_training.py": "e2431b6181528d71999db99ee894b2dc93088a2ab4880026b720db9f8ad26d0a",
+      "src/phase35/multistep/rm3_reporting.py": "cd6243f9a6df772428b235e9ca80832c19453fd1fcded13feb0328438e131e3c",
+      "src/phase35/multistep/gatec_model.py": "c5e15d10d00463d8b3467705a2fbd6c849a6d24a51de65b90fbe268ce7dad20e",
+      "experiments/phase3_5/ms3r_rm3av_train.py": "a4612b2215bef8abc090a1909280deec6ebc3b1f5efd55053f7c3b5c513e7cd6"
+    },
+    "parent_independent_audit": {
+      "path": "docs/PHASE35_RM3_INDEPENDENT_ARCHITECTURE_AUDIT_2026-08-13.md",
+      "sha256": "99f1e82cde24a21648eabed1cfbd7764fdd701ff8010c0131d218bca54b384c3",
+      "hash_mode": "utf8_text_normalized_lf"
+    },
+    "parent_design": {
+      "path": "docs/plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md",
+      "sha256": "c9a2be732191d04c77eb4fd7b9349102264795cebe3f493348e8941bef3f924e",
+      "hash_mode": "utf8_text_normalized_lf"
+    },
+    "test_accessed": false,
+    "device": "cuda:0"
+  },
+  "nuisance_metadata": {
+    "fitted_on": null
+  },
+  "initialization_hashes": {
+    "encoder": "108625dbd23f77e9f005dee443594cff93e31f847d143bb4868c3c41c021c408",
+    "valve_policy": "6a2c289ea319c180e2a32b2ce304b4b81d0035e034a2b7a651a3ac333b6e2a2d",
+    "tin": "f1d1c122839fadb2a5c866d2700dc13c6b4aedb1d04511f2b49db7aa763876f7",
+    "free_residual": "not_applicable",
+    "response": "e2b5fb0a4924501183327d7f874ce0073f7fb84d1f9f39fa9a5b87c70fab4cd6",
+    "downstream": "d50eaf12de852401c9e1363be1708627aa992da7094bb0caa087225e5bfe344a",
+    "bypass": "4149dc6a773ac6fb77537423303396c9b08d12ecdc6a75d2fd9e4b6bfabbac83"
+  },
+  "train_anchor_pool_count": 800668,
+  "stats_anchor_count": 16384,
+  "selector_anchor_count": 2048,
+  "reporting_anchor_count": 4096,
+  "diagnostic_anchor_count": 512,
+  "selector_reporting_disjoint": true,
+  "selector_reporting_utc_day_disjoint": true,
+  "selector_utc_days": [
+    20542,
+    20543,
+    20544,
+    20545,
+    20546
+  ],
+  "reporting_utc_days": [
+    20547,
+    20548,
+    20549,
+    20550,
+    20551,
+    20552,
+    20553,
+    20554,
+    20555,
+    20556
+  ],
+  "selector_anchor_sha256": "81c14e0d8286a704b4edfb63666a56de4d2beb8f1fdb05d5729e3787ce496011",
+  "reporting_anchor_sha256": "80e7be865aa8d5c825db348a2269431796254ec2824d092bcd1f7812cc83f1a0",
+  "checkpoint_selector": "validation_full_multitask_common_four_task_loss",
+  "early_stopping_enabled": false,
+  "checkpoint_sha256": "923a43a036a3f52bab34110d443e2772c5287643fa2782f2bd44b2bd3587a0e3",
+  "maximum_attempts_per_run": 1,
+  "test_accessed": false,
+  "automatic_scientific_pass": null,
+  "elapsed_seconds": 536.695189463906
+}

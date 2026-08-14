@@ -1,0 +1,1 @@
+/usr/bin/time -v /home/bluster/anaconda3/envs/Alloftime/bin/python3 experiments/phase3_5/ms3r_rm3av_train.py --cache-a "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/ms3_cross_A.npz" --cache-b "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/ms3_cross_B.npz" --devices cuda:0 --output-root results/phase3_5/ms3r_rm3av --execute

@@ -1,0 +1,44 @@
+RM3-AV0+AV1 Linux execution record
+Authorization commit: 8fecfcd "phase3.5: authorize Hermes RM3-AV0+AV1 batch"
+AV1 executed at HEAD 75a0325 (8fecfcd + executor fix 1); AV0 executed at HEAD 0c90624
+(8fecfcd + executor fixes 1+2; see below). User explicitly instructed both fixes
+("你先把bug push了" / workflow continuation), commit messages mark
+"executor-side fix per user instruction; Supervisor review required".
+
+Preflight (184/187 passed, 3 failed at authorization commit):
+1. FAILED test_rm2_reference_audit_closes_all_54_archived_checkpoints (checkpoint_count=0):
+   audit_rm2_reference_artifacts counted checkpoint_best_validation.pt only in the
+   tar-fallback branch; on Linux the gitignored local .pt files exist (54/54, SHA
+   verified 100% against ledgers before fix), so the path.is_file() branch never
+   incremented checkpoint_count -> build_av0_replay failed closed.
+   FIX: 75a0325 (count in both branches; entry resolved = counted; SHA mismatch
+   still reported in run_hash_errors). Codex then added test coverage on top of the
+   fix (32c2b13 test: cover RM3-AV local checkpoint replay). test_rm3av_replay.py
+   passes 6/6 at 0c90624.
+2. FAILED test_av0_replay_is_zero_training_and_does_not_overstate_p0_to_p2:
+   same root cause as (1).
+3. FAILED test_rm3a_execute_refuses_current_unauthorized_registry:
+   authorization-state coupling (3rd occurrence of the RM3/RM3-A pattern): test
+   asserts execute refuses when registry unauthorized, but authorization set
+   ms3_r.status=ready_for_linux so the premise is stale; additionally the execute
+   path hit _dirty_paths with a tmp_path output outside the repo and raised
+   ValueError (relative_to). Not modified; needs Supervisor test sync.
+
+Execution-time failure (AV0 attempt 1, exit 1):
+4. Phase35ProtocolError "Gate C custom bounds must stay before the test split"
+   in paired_valid_anchors: build_av0_replay computed legacy-run replay bounds as
+   int(n_rows*validation_fraction); the 33 runs with validation_fraction=(0.7,0.8)
+   got hi=953863 while the cache test split starts at 953862 (rounding mismatch,
+   1 row). FIX: 0c90624 (clamp hi to test_start; validation stays before test per
+   data contract). AV0 rerun at 0c90624 exit 0. First-attempt stderr preserved in
+   av0_first_attempt_stderr.log.
+
+AV1 run: 64/64 units complete (six-artifact set per run), 0 failure.json,
+exit 0, wall 9:31:25, peak RSS 3,427,480 KB (~3.3 GB), cuda:0.
+AV0 run: exit 0, wall 2:05, peak RSS 913,156 KB; supervisor_replay_validation.json
+reference_artifacts: rm3 36 + rm3a 30 = 66 checkpoints 0 hash errors; rm2 54/54
+closed, archive 54 members; zero_training=true; test_accessed=false;
+automatic_scientific_pass=null.
+
+Test status at final HEAD 0c90624: 184 passed, 1 failed (item 3, stale
+authorization-state test; documented above). No test files modified.

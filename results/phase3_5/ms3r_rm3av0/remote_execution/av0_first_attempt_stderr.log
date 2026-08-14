@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/bluster/projectA/thermal-world-model/experiments/phase3_5/audit_ms3r_rm3av0.py", line 55, in <module>
+    main()
+  File "/home/bluster/projectA/thermal-world-model/experiments/phase3_5/audit_ms3r_rm3av0.py", line 34, in main
+    payload = build_av0_replay(
+              ^^^^^^^^^^^^^^^^^
+  File "/home/bluster/projectA/thermal-world-model/src/phase35/multistep/rm3av_replay.py", line 598, in build_av0_replay
+    anchors = paired_valid_anchors(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/bluster/projectA/thermal-world-model/src/phase35/multistep/gatec_data.py", line 95, in paired_valid_anchors
+    raise Phase35ProtocolError("Gate C custom bounds must stay before the test split")
+src.phase35.schema.Phase35ProtocolError: Gate C custom bounds must stay before the test split
