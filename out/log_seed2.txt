@@ -6,3 +6,9 @@
   分离器出口温度: mean=381.20 min=325.91 max=418.37
   省煤器出口给水温度: mean=330.08 min=308.94 max=346.26
 [e0 s2] train=5988 val=497 build 0s
+[e0 s2] trained 60ep val_mse=238.458 (613s)
+[e0 s2] {"rmse_main": 12.03576374053955, "maxerr_main": 22.97857666015625, "rmse_all": 11.541059494018555, "band_viol_frac": 0.6355555555555555, "order_viol_any_frac": 1.0, "order_main_lt_sh2out_frac": 0.0, "drift_main_mean_z": 3.957, "drift_main_max_z": 8.083, "drift_all_mean_z": 2.201, "dsw_mean_kgs": 8.3592, "dsw_thresh_kgs": 1.8335, "channel_active": true, "rollout_seconds": 12.1, "single_step_rmse_main_C": 12.856400489807129, "window60_rmse_main_C": 18.892963409423828, "variant": "e0", "seed": 2}
+[v0 s2] {"rmse_main": 6.838115692138672, "maxerr_main": 16.26641845703125, "rmse_all": 11.56339168548584, "band_viol_frac": 0.2772222222222222, "order_viol_any_frac": 0.8561111111111112, "order_main_lt_sh2out_frac": 0.0, "drift_main_mean_z": 2.664, "drift_main_max_z": 5.8, "drift_all_mean_z": 1.432, "variant": "v0", "seed": 2, "val_mse_z": 0.0136, "rollout_seconds": 6.0}
+[v2 s2] {"rmse_main": 3.5924181938171387, "maxerr_main": 9.2025146484375, "rmse_all": 10.456717491149902, "band_viol_frac": 0.018333333333333333, "order_viol_any_frac": 0.17222222222222222, "order_main_lt_sh2out_frac": 0.0, "drift_main_mean_z": 0.621, "drift_main_max_z": 2.735, "drift_all_mean_z": 1.097, "variant": "v2", "seed": 2, "val_mse_z": 0.0759, "rollout_seconds": 5.8}
+[v2o s2] {"rmse_main": 3.649190664291382, "maxerr_main": 9.15020751953125, "rmse_all": 10.342089653015137, "band_viol_frac": 0.03666666666666667, "order_viol_any_frac": 0.18611111111111112, "order_main_lt_sh2out_frac": 0.0, "drift_main_mean_z": 0.651, "drift_main_max_z": 3.012, "drift_all_mean_z": 1.074, "variant": "v2o", "seed": 2, "val_mse_z": 0.0764, "rollout_seconds": 5.0}
+[seed 2] ALL DONE
