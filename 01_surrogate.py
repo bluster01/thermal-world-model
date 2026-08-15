@@ -34,17 +34,27 @@ for i, p in enumerate(P):
         Tph[i, j] = IAPWS97(P=p, h=h).T - 273.15
 print(f"T(p,h) grid {Tph.shape} in {time.time()-t0:.0f}s", flush=True)
 
+# 饱和曲线：仅亚临界（先于 hpT 构建——过热支延拓需要）
+Psub = P[P <= P_CRIT - 1e-6]
+Tsat = np.array([IAPWS97(P=p, x=0).T - 273.15 for p in Psub])
+hsatV = np.array([IAPWS97(P=p, x=1).h for p in Psub])
+
 t0 = time.time()
 hpT = np.empty((len(P), len(Tg)), dtype=np.float64)
 for i, p in enumerate(P):
     for j, T in enumerate(Tg):
         hpT[i, j] = IAPWS97(P=p, T=T + 273.15).h
-print(f"h(p,T) grid {hpT.shape} in {time.time()-t0:.0f}s", flush=True)
+# 过热支平滑延拓：亚临界且 T < Tsat(p)+2 处，从 (Tsat, h_satV) 线性连到 Tsat+2 上方
+# 第一个网格真值点（消除液/汽焓跳变；斜率=区间平均 cp，可捕捉饱和邻域 cp 峰值；
+#   蒸汽侧查询恒在 T ≥ Tsat+0.5，延拓只影响边界邻域）
+for i, p in enumerate(P):
+    if p <= P_CRIT - 1e-6:
+        j_hi = int(np.searchsorted(Tg, Tsat[i] + 2.0))
+        T_hi, h_hi = Tg[j_hi], hpT[i, j_hi]
+        mask = Tg < Tsat[i] + 2.0
+        hpT[i, mask] = hsatV[i] + (h_hi - hsatV[i]) * (Tg[mask] - Tsat[i]) / (T_hi - Tsat[i])
+print(f"h(p,T) grid {hpT.shape} (过热支真值锚点延拓) in {time.time()-t0:.0f}s", flush=True)
 
-# 饱和曲线：仅亚临界
-Psub = P[P <= P_CRIT - 1e-6]
-Tsat = np.array([IAPWS97(P=p, x=0).T - 273.15 for p in Psub])
-hsatV = np.array([IAPWS97(P=p, x=1).h for p in Psub])
 tsat_coef = np.polyfit(Psub, Tsat, 8)
 tsat_fit = np.polyval(tsat_coef, Psub)
 err_tsat = float(np.max(np.abs(tsat_fit - Tsat)))
@@ -85,6 +95,14 @@ ref2 = np.array([IAPWS97(P=float(p), T=float(T + 273.15)).h for p, T in zip(pv, 
 pred2 = bilinear2d(hpT, P, Tg, pv, Tv)
 errs["hpT_sup"] = float(np.max(np.abs(pred2 - ref2)))
 print(f"hpT (过热/超临界): bilinear maxerr = {errs['hpT_sup']:.4f} kJ/kg", flush=True)
+# 边界邻域校验：T ∈ [Tsat+0.5, Tsat+2]（平滑延拓区）vs iapws
+pv_b = rng.uniform(P_LO + 0.5, P_CRIT - 0.5, 200)
+ts_b = np.array([np.polyval(tsat_coef, float(p)) for p in pv_b])
+Tv_b = np.array([t + rng.uniform(0.5, 2.0) for t in ts_b])
+ref_b = np.array([IAPWS97(P=float(p), T=float(T + 273.15)).h for p, T in zip(pv_b, Tv_b)])
+pred_b = bilinear2d(hpT, P, Tg, pv_b, Tv_b)
+errs["hpT_boundary"] = float(np.max(np.abs(pred_b - ref_b)))
+print(f"hpT (饱和边界延拓区): maxerr = {errs['hpT_boundary']:.4f} kJ/kg", flush=True)
 
 np.savez(os.path.join(OUT, "iapws_surrogate.npz"),
          P=P, H=H, Tg=Tg, Tph=Tph, hpT=hpT,
