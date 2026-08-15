@@ -73,4 +73,4 @@ for nm, p_, T_ in [("sh1_in", p0[0].item(), obs[0, 0].item()), ("main", p_out[0]
     print(f"  {nm}: p={p_:.2f} T={T_:.2f} -> h={hh.item():.2f} -> T_roundtrip={tt.item():.2f} (Δ={tt.item()-T_:+.3f})")
 print(f"  hsep: pm={pm[0].item():.2f} Tm_sep={init[0,3].item():.2f} -> h={t02.h_sep_of(pm[0:1], init[0:1,3]).item():.2f}")
 print(f"  h(p0,T_sh1_in)[0]={h[0,0].item():.2f} vs hsep={t02.h_sep_of(pm[0:1], init[0:1,3]).item():.2f}")
-print(f"  喷水 h_sw=CP_W*Tfw[0]={t02.CP_W*init[0,4].item():.2f}")
+print(f"  喷水 h_sw=hliq(Tfw[0]={init[0,4].item():.2f})={t02.hliq_of_T(init[0:1,4]).item():.2f}")
