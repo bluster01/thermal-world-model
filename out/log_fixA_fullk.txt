@@ -1,0 +1,30 @@
+[seed 0] variants=['e0'] n=50000
+  主蒸汽流量: mean=1310.55 min=577.22 max=1920.35
+  减温水总流量: mean=15.50 min=-2.50 max=78.05
+  分离器出口压力: mean=20.53 min=11.44 max=27.56
+  末级过热器出口压力: mean=19.37 min=10.82 max=25.92
+  分离器出口温度: mean=381.20 min=325.91 max=418.37
+  省煤器出口给水温度: mean=330.08 min=308.94 max=346.26
+[e0 s0] train=5988 val=497 build 0s
+[e0 s0] trained 60ep val_mse=83.653 (392s)
+[e0 s0] {"rmse_main": 18.78391456604004, "maxerr_main": 32.9481201171875, "rmse_all": 13.526240348815918, "band_viol_frac": 0.8277777777777777, "order_viol_any_frac": 1.0, "order_main_lt_sh2out_frac": 0.0, "drift_main_mean_z": 7.147, "drift_main_max_z": 12.461, "drift_all_mean_z": 2.982, "dsw_mean_kgs": 6.715, "dsw_thresh_kgs": 1.8335, "channel_active": true, "rollout_seconds": 6.0, "single_step_rmse_main_C": 1.3654617071151733, "window60_rmse_main_C": 8.15236759185791, "variant": "e0", "seed": 0}
+[seed 0] ALL DONE
+[seed 1] variants=['e0'] n=50000
+  主蒸汽流量: mean=1310.55 min=577.22 max=1920.35
+  减温水总流量: mean=15.50 min=-2.50 max=78.05
+  分离器出口压力: mean=20.53 min=11.44 max=27.56
+  末级过热器出口压力: mean=19.37 min=10.82 max=25.92
+  分离器出口温度: mean=381.20 min=325.91 max=418.37
+  省煤器出口给水温度: mean=330.08 min=308.94 max=346.26
+[e0 s1] train=5988 val=497 build 0s
+[e0 s1] trained 60ep val_mse=83.069 (390s)
+[e0 s1] {"rmse_main": 19.002599716186523, "maxerr_main": 33.28118896484375, "rmse_all": 13.63609504699707, "band_viol_frac": 0.8311111111111111, "order_viol_any_frac": 1.0, "order_main_lt_sh2out_frac": 0.0, "drift_main_mean_z": 7.242, "drift_main_max_z": 12.604, "drift_all_mean_z": 3.012, "dsw_mean_kgs": 6.7403, "dsw_thresh_kgs": 1.8335, "channel_active": true, "rollout_seconds": 5.6, "single_step_rmse_main_C": 1.3642922639846802, "window60_rmse_main_C": 8.122081756591797, "variant": "e0", "seed": 1}
+[seed 1] ALL DONE
+[seed 2] variants=['e0'] n=50000
+  主蒸汽流量: mean=1310.55 min=577.22 max=1920.35
+  减温水总流量: mean=15.50 min=-2.50 max=78.05
+  分离器出口压力: mean=20.53 min=11.44 max=27.56
+  末级过热器出口压力: mean=19.37 min=10.82 max=25.92
+  分离器出口温度: mean=381.20 min=325.91 max=418.37
+  省煤器出口给水温度: mean=330.08 min=308.94 max=346.26
+[e0 s2] train=5988 val=497 build 0s

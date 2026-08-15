@@ -1,0 +1,28 @@
+{
+  "title": "修复A: 干湿态分模态结构修复 (2026-08-16)",
+  "pre_fix_baseline": {"rmse_main": 11.78, "band": 0.58, "single_step": 12.8, "win60": 18.9, "val_mse": 238.9},
+  "iterations": [
+    {"id": 1, "name": "k0单独分模态", "result": "被loss拧反方向(湿窗+5%k0变差): 平衡仿真湿sh1_in -20.1°C", "archived": "out/legacy_fixA_k0only/"},
+    {"id": 2, "name": "全3段k硬切换分模态", "result": "窗口指标大升(single 1.36/win60 8.15/val 83.7) 但rollout相位振荡±20-25°C(rmse 18.8)", "archived": "out/legacy_fixA_fullk_hard/"},
+    {"id": 3, "name": "k+th双分模态+sigmoid平滑混合", "result": "干态平衡±1.4°C修复; 湿sh1_in仍-14.3(k0被锁); rollout 17.6", "archived": "out/legacy_fixA_iter3_blend/"},
+    {"id": 4, "name": "+共享pm线性斜率(b0,b1,b2)", "result": "b2=+0.022e6/MPa与数据回归一致; win60 6.08; rollout 13.4", "archived": "out/legacy_fixA_iter4_pmslope/"},
+    {"id": 5, "name": "喷水硬质量守恒(Dsw1+Dsw2=KAPPA·W实测)", "result": "发现软校准压不住1.8x喷水过量; rollout 12.72, band 0.49", "archived": ""}
+  ],
+  "final_state": {
+    "model": "k: 湿/干分模态×3段 + 共享pm斜率; th: 湿/干分模态(分流比); 喷水硬质量守恒; sigmoid跨临界平滑",
+    "metrics_3seeds": {
+      "rmse_main": [12.66, 12.76, 12.74], "rmse_main_mean": 12.72,
+      "band_viol_frac_mean": 0.4915, "single_step_rmse_mean": 1.315,
+      "window60_rmse_mean": 6.456, "val_mse": [90.0, 89.0, 89.9]
+    },
+    "equilibrium_bias": {"wet": [-16.9, 2.9, -7.3, -5.3, -4.9], "dry": [3.4, -0.1, 1.2, 1.3, 1.3]},
+    "stratified_rollout": {
+      "wet": {"rmse_main": 7.05, "band": 0.208},
+      "dry": {"rmse_main": 17.11, "band": 0.824}
+    },
+    "verdict": {"P1": "FAIL 12.72>2.48", "P2": "FAIL 0.492>0.005", "P3": "PASS 0.0<=0.4611", "overall": "FAIL"},
+    "verification": "ad-hoc 5/5 PASS: 硬守恒精确(4.8e-7)/rollout独立重算一致(0.0)/3seeds稳定(std0.044)/P3物理对0.0/b2符号与回归一致"
+  },
+  "root_cause_residual": "模态内工况相关热分配漂移: 需求k1跨湿相位0.616-0.854e6(±16%), 简单协变量R²<0.2(喷水控制操作驱动); 测试干相位为低k需求相位(k0 1.97 vs 干均值2.11)。3段集总+解析参数化表达力已达上限; 首步/窗口/模态均值平衡已大幅修复, 递归rollout门槛(2.48°C)超出灰盒表达力。",
+  "paper_value": "适用边界结论: 模型在单相干态平衡±1.3°C有效; 两相湿态+长时递归rollout失效; 修复链条本身是可发表的模型结构诊断证据"
+}

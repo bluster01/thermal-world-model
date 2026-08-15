@@ -17,7 +17,7 @@ model.load_state_dict(torch.load(os.path.join(t02.OUT, "model_e0_seed0.pt"),
                                  map_location=t02.DEVICE, weights_only=True))
 model.eval()
 print("=== 学得参数 ===")
-for k in ["M0","M1","M2","UA0","UA1","UA2","Cm0","Cm1","Cm2","k0","k1","k2","tauB","th1","th2","dTm0","dTm1","dTm2"]:
+for k in ["M0","M1","M2","UA0","UA1","UA2","Cm0","Cm1","Cm2","k0","k0d","k1","k1d","k2","k2d","b0","b1","b2","tauB","th1","th1d","th2","th2d","dTm0","dTm1","dTm2"]:
     print(f"  {k}: {model.val(k).item():.4g}", end="  ")
 print()
 
@@ -41,7 +41,7 @@ ts = t02.T_of_ph(torch.stack([p0, p1, p_out]), h)
 Tm = ts + model.tri("dTm")[:, None]
 rB = init[:, 1].clone()
 
-k = model.tri("k")[:, None]; UA = model.tri("UA")[:, None]
+k = model.k_of(pm); UA = model.tri("UA")[:, None]
 Cm = model.tri("Cm")[:, None]; M = model.tri("M")[:, None]
 Q_init = UA * (Tm - ts)
 Q_eq = k * rB[None, :] / 3600.0

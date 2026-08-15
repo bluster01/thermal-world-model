@@ -147,17 +147,30 @@ E0_PRIORS = {  # 物理量级先验（660MW 超临界，稳态能量平衡自洽
     "M0": 5000.0, "M1": 5000.0, "M2": 5000.0,      # kg（蒸汽驻留 τ=M/D≈20s；500 先验 τ≈1.4s 导致 M 梯度死锁）
     "UA0": 600.0, "UA1": 600.0, "UA2": 600.0,       # kW/K（Q=UA·ΔT）
     "Cm0": 60000.0, "Cm1": 60000.0, "Cm2": 60000.0,  # kJ/K（τ_metal=Cm/UA≈100s）
-    "k0": 1.2e6, "k1": 1.2e6, "k2": 1.2e6,          # kJ/t（k·rB[t/h]/3600≈1e5 kW）
+    "k0": 1.2e6, "k0d": 1.2e6, "k1": 1.2e6, "k1d": 1.2e6, "k2": 1.2e6, "k2d": 1.2e6,  # kJ/t（k·rB[t/h]/3600≈1e5 kW）
+    # 修复A(2026-08-16): 全3段k分模态——kX=湿态(pm≤P_CRIT), kXd=干态(超临界)。
+    #   数据需求(平衡D·Δh/rB): 湿(k0,k1,k2)=(2.39,0.68,0.55)e6, 干=(2.11,0.75,0.79)e6
+    #   迭代2(硬切换)教训: 模态切换处k跳变→rollout相位振荡±20-25°C(金属τ≈177s追不上);
+    #   且k0(湿)被loss锁死(湿窗+5%变差→共享th扭曲地形)。迭代3: k+th双分模态+sigmoid平滑混合。
+    #   迭代4: 需求k回归R²(线性pm): k0 0.32/k1 0.11/k2 0.84——模态内负荷漂移仍有±10-20%,
+    #   加共享pm斜率 bX(kJ/t per MPa, tanh有符号): k_i(pm) = blend(kX,kXd) + bX·(pm-PM_REF)。
+    #   迭代5: 软校准(λ=5)压不住喷水量错误(湿相位1模型喷水3.9 vs 实测2.17 kg/s, 1.8x)→
+    #   硬质量守恒: Dsw1+Dsw2=KAPPA·W(实测总流量), th只决定喷1/喷2分流比, 校准项恒0已移除
+    "b0": 0.1e6, "b1": 0.1e6, "b2": 0.1e6,              # kJ/t per MPa（tanh 有符号，init raw=0）
     "tauB": 120.0,                                   # s
     "th1": 10.0, "th2": 20.0,                        # kg/s per 0-1 阀位（Step0: 0.70t/h·raw→19.4kg/s）
+    "th1d": 10.0, "th2d": 20.0,                      # 干态喷水增益（迭代3: th也分模态——
+    #   湿态模型喷水1偏弱17°C/干态偏强4°C，共享th扭曲loss地形锁死k0(湿)）
     "dTm0": 1.0, "dTm1": 1.0, "dTm2": 1.0,          # K（对平衡态的初始小修正；旧先验 20K 使初始化远离模型吸引子）
 }
 E0_KEYS = list(E0_PRIORS.keys())
 KAPPA = 1.0 / 3.6          # t/h → kg/s
-LAM_CAL = 5.0              # 旧值 0.1：校准项仅占 loss 0.7%，th 学得 2×真值
+LAM_CAL = 5.0              # 已废弃(迭代5): 喷水硬守恒后校准项恒0; 旧值0.1时校准项仅占loss 0.7%
 # CP_W 已废弃：喷水焓改用 IAPWS 基准液态水焓 h_liq(Tfw)（旧 0°C 零基准偏差 ~60-140 kJ/kg）
 DT_SUB = 2.0               # 子步长 s（10s 步内 5 子步）
 N_SUB = 5
+K_BLEND = 0.3               # MPa：跨临界 k/th 混合带半宽（sigmoid((P_CRIT-pm)/K_BLEND)）
+PM_REF = 20.5               # MPa：k 的 pm 线性斜率中心（数据 pm 范围 11.4-27.6）
 
 
 class E0Model(nn.Module):
@@ -167,17 +180,40 @@ class E0Model(nn.Module):
     def __init__(self):
         super().__init__()
         self.raw = nn.ParameterDict({
-            k: nn.Parameter(torch.tensor(sp_init(1.0), dtype=torch.float32))
+            k: nn.Parameter(torch.tensor(0.0 if k.startswith("b") else sp_init(1.0),
+                                         dtype=torch.float32))
             for k in E0_PRIORS.keys()})
         self._g = {"M": ["M0", "M1", "M2"], "UA": ["UA0", "UA1", "UA2"],
                    "Cm": ["Cm0", "Cm1", "Cm2"], "k": ["k0", "k1", "k2"],
                    "dTm": ["dTm0", "dTm1", "dTm2"]}
 
     def val(self, k):
+        if k.startswith("b"):  # 有符号参数（k 的 pm 斜率）：tanh，raw=0 → 0
+            return E0_PRIORS[k] * torch.tanh(self.raw[k])
         return E0_PRIORS[k] * F.softplus(self.raw[k])
 
     def tri(self, grp):
         return torch.stack([E0_PRIORS[k] * F.softplus(self.raw[k]) for k in self._g[grp]], dim=0)  # (3,)
+
+    def k_of(self, pm):
+        """段加热增益：干湿态平滑混合 + pm 线性斜率（修复A迭代4）：
+        k_i(pm) = a·kX + (1-a)·kXd + bX·(pm-PM_REF)，a=sigmoid((P_CRIT-pm)/K_BLEND)。
+        斜率捕捉模态内负荷相关热分配漂移（需求k2与pm相关R²=0.84）。
+        返回 (3, *pm.shape)。"""
+        a = torch.sigmoid((P_CRIT - pm) / K_BLEND)
+        dpm = pm - PM_REF
+        k0 = a * self.val("k0") + (1.0 - a) * self.val("k0d") + self.val("b0") * dpm
+        k1 = a * self.val("k1") + (1.0 - a) * self.val("k1d") + self.val("b1") * dpm
+        k2 = a * self.val("k2") + (1.0 - a) * self.val("k2d") + self.val("b2") * dpm
+        return torch.stack([k0.expand_as(pm),
+                            k1.expand_as(pm),
+                            k2.expand_as(pm)], dim=0)
+
+    def th_of(self, pm):
+        """喷水增益按干湿态平滑混合（迭代3）。返回 (th1_eff, th2_eff)，shape 同 pm。"""
+        a = torch.sigmoid((P_CRIT - pm) / K_BLEND)
+        return (a * self.val("th1") + (1.0 - a) * self.val("th1d"),
+                a * self.val("th2") + (1.0 - a) * self.val("th2d"))
 
     def integrate(self, exo, h, Tm, rB, steps, return_states=False):
         """exo: (B, steps, 9)=[D,uB,pm,Tm_sep,Tfw,v1,v2,p_out,W]
@@ -188,34 +224,38 @@ class E0Model(nn.Module):
         M = self.tri("M")[:, None]
         UA = self.tri("UA")[:, None]
         Cm = self.tri("Cm")[:, None]
-        k = self.tri("k")[:, None]
         tauB = self.val("tauB")
-        th1 = self.val("th1")
-        th2 = self.val("th2")
         D, uB, pm, Tm_sep, Tfw, v1, v2, p_out, W = [exo[:, :, j] for j in range(9)]
         h_sw = hliq_of_T(Tfw)
         p0 = pm + (p_out - pm) / 3.0
         p1 = pm + 2.0 * (p_out - pm) / 3.0
         hsep = h_sep_of(pm, Tm_sep)
         out_list = []
-        # 初始混合（用初始 h0/h1）
-        Dsw1 = th1 * v1[:, 0]
-        Dsw2 = th2 * v2[:, 0]
+        # 初始混合（用初始 h0/h1）——硬质量守恒：总喷水=实测W，th只决定分流比
+        th1_0, th2_0 = self.th_of(pm[:, 0])
+        s_den0 = th1_0 * v1[:, 0] + th2_0 * v2[:, 0] + 1e-6
+        W0 = W[:, 0].clamp(min=0.0)
+        Dsw1 = KAPPA * W0 * (th1_0 * v1[:, 0]) / s_den0
+        Dsw2 = KAPPA * W0 * (th2_0 * v2[:, 0]) / s_den0
         hm1 = (D[:, 0] * h[0] + Dsw1 * h_sw[:, 0]) / (D[:, 0] + Dsw1 + 1e-6)
         hm2 = (D[:, 0] * h[1] + Dsw2 * h_sw[:, 0]) / (D[:, 0] + Dsw2 + 1e-6)
         for t in range(steps):
+            k_t = self.k_of(pm[:, t])  # (3, B)，干湿态平滑混合 k
+            th1_t, th2_t = self.th_of(pm[:, t])
+            s_den = th1_t * v1[:, t] + th2_t * v2[:, t] + 1e-6
+            Wt = W[:, t].clamp(min=0.0)
             for _ in range(N_SUB):
                 ts = T_of_ph(torch.stack([p0[:, t], p1[:, t], p_out[:, t]]), h)  # (3,B)
                 Q = UA * (Tm - ts)
                 # Tm 半隐式（k·rB 为 kJ/h，/3600 → kJ/s）
-                Tm = (Tm + DT_SUB * (k * rB[None, :] / 3600.0 + UA * ts) / Cm) / (1.0 + DT_SUB * UA / Cm)
+                Tm = (Tm + DT_SUB * (k_t * rB[None, :] / 3600.0 + UA * ts) / Cm) / (1.0 + DT_SUB * UA / Cm)
                 # h 半隐式（D·(hin−h) 项隐式——无条件稳定；Q 项显式，dt=2s 下衰减因子 0.84）
                 hin = torch.stack([hsep[:, t], hm1, hm2])
                 h = (h + DT_SUB * (D[:, t][None, :] * hin + Q) / M) / (1.0 + DT_SUB * D[:, t][None, :] / M)
                 h = _ste_clamp(h, H_LO, H_HI)
-                # 喷水混合
-                Dsw1 = th1 * v1[:, t]
-                Dsw2 = th2 * v2[:, t]
+                # 喷水混合（硬质量守恒：Dsw1+Dsw2=KAPPA·W，th 决定分流比）
+                Dsw1 = KAPPA * Wt * (th1_t * v1[:, t]) / s_den
+                Dsw2 = KAPPA * Wt * (th2_t * v2[:, t]) / s_den
                 hm1 = (D[:, t] * h[0] + Dsw1 * h_sw[:, t]) / (D[:, t] + Dsw1 + 1e-6)
                 hm2 = (D[:, t] * h[1] + Dsw2 * h_sw[:, t]) / (D[:, t] + Dsw2 + 1e-6)
                 # 制粉一阶滞后
@@ -293,8 +333,8 @@ def e0_train(df, seed, fast, tag, max_epochs=60):
         dTm = model.tri("dTm")[:, None]  # (3,1)
         ts = torch.stack([ts0, ts1, ts2])
         rB0 = init_rows[:, 1].clone()
-        # 平衡初始化：Tm = ts + Q/UA = ts + k·rB/(3600·UA)（模型自身吸引子）+ dTm 小修正
-        Tm = ts + model.tri("k")[:, None] * rB0[None, :] / 3600.0 / model.tri("UA")[:, None] + dTm
+        # 平衡初始化：Tm = ts + Q/UA = ts + k·rB/(3600·UA)（模型自身吸引子，k0 按干湿态）+ dTm 小修正
+        Tm = ts + model.k_of(pm) * rB0[None, :] / 3600.0 / model.tri("UA")[:, None] + dTm
         return torch.stack([h0, h1, h2]), Tm, rB0
 
     def fwd(exo, init_rows, obs_T):
@@ -312,9 +352,8 @@ def e0_train(df, seed, fast, tag, max_epochs=60):
             i = perm[b * 256: (b + 1) * 256]
             pred = fwd(Xtr_t[i], Itr_t[i], ItrT_t[i])
             mse = (((pred - Ytr_t[i]) ** 2) * w5).mean()
-            cal = (model.val("th1") * Xtr_t[i][:, :, 5] + model.val("th2") * Xtr_t[i][:, :, 6]
-                   - KAPPA * Xtr_t[i][:, :, 8]) ** 2
-            loss = mse + LAM_CAL * cal.mean()
+            # 迭代5: 喷水硬质量守恒(Dsw1+Dsw2=KAPPA·W)后, 校准项恒为0, 已移除
+            loss = mse
             opt.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 10.0)
@@ -353,8 +392,6 @@ def e0_rollout(model, df, start, n_steps, seed, tag, mu_o, sd_o):
     E_full["二级减温调节门阀位"] = E_full["二级减温调节门阀位"].clip(lower=0) / 100.0
     E = E_full.to_numpy(np.float32)
     T_all = df[OUTPUTS].to_numpy(np.float32)
-    th1 = model.val("th1")
-    th2 = model.val("th2")
     preds = np.empty((n_steps, 5), dtype=np.float32)
     truths = T_all[start: start + n_steps]
     h, Tm, rB, hm1, hm2 = None, None, None, None, None
@@ -375,8 +412,8 @@ def e0_rollout(model, df, start, n_steps, seed, tag, mu_o, sd_o):
                                    torch.tensor(row[7], device=DEVICE)])[:, None]
                 ts = T_of_ph(pst, h)
                 rB = torch.tensor([row[1]], device=DEVICE)
-                Tm = (ts + model.tri("k")[:, None] * rB / 3600.0 / model.tri("UA")[:, None]
-                      + model.tri("dTm")[:, None])
+                Tm = (ts + model.k_of(torch.tensor([row[2]], device=DEVICE)) * rB / 3600.0
+                      / model.tri("UA")[:, None] + model.tri("dTm")[:, None])
             out, h, Tm, rB, hm1, hm2 = model.integrate(exo_t, h, Tm, rB, 1, return_states=True)
             preds[t] = out[0, 0].cpu().numpy()
     main_p, main_t = preds[:, 4], truths[:, 4]
@@ -396,9 +433,8 @@ def e0_rollout(model, df, start, n_steps, seed, tag, mu_o, sd_o):
         "drift_main_max_z": round(float(z_all[:, 4].max()), 3),
         "drift_all_mean_z": round(float(z_all.mean()), 3),
     }
-    # 动作通道活跃判据（设计稿 §2 附加通道判据）
-    Dsw_mean = float(th1.item() * E[start: start + n_steps, 5].mean()
-                     + th2.item() * E[start: start + n_steps, 6].mean())
+    # 动作通道活跃判据（设计稿 §2 附加通道判据）——硬守恒下总喷水=KAPPA·W
+    Dsw_mean = float(KAPPA * np.maximum(E[start: start + n_steps, 8], 0.0).mean())
     r["dsw_mean_kgs"] = round(Dsw_mean, 4)
     r["dsw_thresh_kgs"] = round(0.005 * float(E[start: start + n_steps, 0].mean()), 4)
     r["channel_active"] = bool(Dsw_mean >= r["dsw_thresh_kgs"])
@@ -427,7 +463,7 @@ def e0_windowed_eval(model, df, mu_o, sd_o):
             h = torch.stack([h0, h1, h2])
             ts = T_of_ph(torch.stack([p0, p1, p_out]), h)
             rB = torch.from_numpy(ib[:, 1]).to(DEVICE).clone()
-            Tm = (ts + model.tri("k")[:, None] * rB[None, :] / 3600.0 / model.tri("UA")[:, None]
+            Tm = (ts + model.k_of(pm) * rB[None, :] / 3600.0 / model.tri("UA")[:, None]
                   + model.tri("dTm")[:, None])
             pred = model.integrate(xb, h, Tm, rB, xb.shape[1])
             err = pred - yb

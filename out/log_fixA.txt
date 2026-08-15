@@ -1,0 +1,27 @@
+[seed 0] variants=['e0'] n=50000
+  主蒸汽流量: mean=1310.55 min=577.22 max=1920.35
+  减温水总流量: mean=15.50 min=-2.50 max=78.05
+  分离器出口压力: mean=20.53 min=11.44 max=27.56
+  末级过热器出口压力: mean=19.37 min=10.82 max=25.92
+  分离器出口温度: mean=381.20 min=325.91 max=418.37
+  省煤器出口给水温度: mean=330.08 min=308.94 max=346.26
+[e0 s0] train=5988 val=497 build 0s
+[e0 s0] trained 60ep val_mse=130.408 (381s)
+[e0 s0] {"rmse_main": 12.633394241333008, "maxerr_main": 22.333251953125, "rmse_all": 12.917162895202637, "band_viol_frac": 0.7294444444444445, "order_viol_any_frac": 1.0, "order_main_lt_sh2out_frac": 0.0, "drift_main_mean_z": 4.534, "drift_main_max_z": 8.214, "drift_all_mean_z": 2.562, "dsw_mean_kgs": 6.9152, "dsw_thresh_kgs": 1.8335, "channel_active": true, "rollout_seconds": 5.4, "single_step_rmse_main_C": 2.3438165187835693, "window60_rmse_main_C": 12.837709426879883, "variant": "e0", "seed": 0}
+[seed 0] ALL DONE
+[seed 1] variants=['e0'] n=50000
+  主蒸汽流量: mean=1310.55 min=577.22 max=1920.35
+  减温水总流量: mean=15.50 min=-2.50 max=78.05
+  分离器出口压力: mean=20.53 min=11.44 max=27.56
+  末级过热器出口压力: mean=19.37 min=10.82 max=25.92
+  分离器出口温度: mean=381.20 min=325.91 max=418.37
+  省煤器出口给水温度: mean=330.08 min=308.94 max=346.26
+[e0 s1] train=5988 val=497 build 0s
+[seed 2] variants=['e0'] n=50000
+  主蒸汽流量: mean=1310.55 min=577.22 max=1920.35
+  减温水总流量: mean=15.50 min=-2.50 max=78.05
+  分离器出口压力: mean=20.53 min=11.44 max=27.56
+  末级过热器出口压力: mean=19.37 min=10.82 max=25.92
+  分离器出口温度: mean=381.20 min=325.91 max=418.37
+  省煤器出口给水温度: mean=330.08 min=308.94 max=346.26
+[e0 s2] train=5988 val=497 build 0s
