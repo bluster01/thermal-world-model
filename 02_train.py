@@ -51,6 +51,8 @@ TPH = torch.tensor(S["Tph"], dtype=torch.float32, device=DEVICE)           # (Np
 HPT = torch.tensor(S["hpT"], dtype=torch.float32, device=DEVICE)           # (Np, NT)
 Psub_t = torch.tensor(S["Psub"], dtype=torch.float32, device=DEVICE)       # 亚临界 p 网格
 HSATV_t = torch.tensor(S["hsatV"], dtype=torch.float32, device=DEVICE)
+HLIQ_C = torch.tensor(S["hliq_coef"], dtype=torch.float32, device=DEVICE)   # 降幂, deg5
+T_LIQ_LO, T_LIQ_HI = float(S["t_liq"][0]), float(S["t_liq"][1])
 TSAT_C = torch.tensor(S["tsat_coef"], dtype=torch.float32, device=DEVICE)  # deg 8, in p(亚临界)
 P_CRIT = float(S["p_crit"])
 P_LO, P_HI = float(P_GRID[0]), float(P_GRID[-1])
@@ -112,6 +114,11 @@ def hsatv_of_p(p):
     return h.view_as(p)
 
 
+def hliq_of_T(T):
+    """液态水焓 h_liq(T) kJ/kg（IAPWS 基准，19MPa 代表压力多项式）。喷水焓用。"""
+    return _polyval(HLIQ_C, T.clamp(T_LIQ_LO, T_LIQ_HI))
+
+
 def h_sep_of(pm, Tm):
     """分离器出口焓。超临界（p>p_crit）：直接 h(p,T)（无两相）。
     亚临界两相（Tm<Tsat）：取饱和汽边界（clamp 到 Tsat+0.5°C 微过热）。"""
@@ -130,18 +137,18 @@ def sp_init(target):
 
 
 E0_PRIORS = {  # 物理量级先验（660MW 超临界，稳态能量平衡自洽：Q_typ=1e5kW/段, ΔTm-ts≈167K）
-    "M0": 500.0, "M1": 500.0, "M2": 500.0,          # kg（蒸汽驻留 τ=M/D≈1.4s）
+    "M0": 5000.0, "M1": 5000.0, "M2": 5000.0,      # kg（蒸汽驻留 τ=M/D≈20s；500 先验 τ≈1.4s 导致 M 梯度死锁）
     "UA0": 600.0, "UA1": 600.0, "UA2": 600.0,       # kW/K（Q=UA·ΔT）
     "Cm0": 60000.0, "Cm1": 60000.0, "Cm2": 60000.0,  # kJ/K（τ_metal=Cm/UA≈100s）
     "k0": 1.2e6, "k1": 1.2e6, "k2": 1.2e6,          # kJ/t（k·rB[t/h]/3600≈1e5 kW）
     "tauB": 120.0,                                   # s
     "th1": 10.0, "th2": 20.0,                        # kg/s per 0-1 阀位（Step0: 0.70t/h·raw→19.4kg/s）
-    "dTm0": 20.0, "dTm1": 20.0, "dTm2": 20.0,        # K
+    "dTm0": 1.0, "dTm1": 1.0, "dTm2": 1.0,          # K（对平衡态的初始小修正；旧先验 20K 使初始化远离模型吸引子）
 }
 E0_KEYS = list(E0_PRIORS.keys())
 KAPPA = 1.0 / 3.6          # t/h → kg/s
-LAM_CAL = 0.1
-CP_W = 4.18                # kJ/kg·K，喷水焓
+LAM_CAL = 5.0              # 旧值 0.1：校准项仅占 loss 0.7%，th 学得 2×真值
+# CP_W 已废弃：喷水焓改用 IAPWS 基准液态水焓 h_liq(Tfw)（旧 0°C 零基准偏差 ~60-140 kJ/kg）
 DT_SUB = 2.0               # 子步长 s（10s 步内 5 子步）
 N_SUB = 5
 
@@ -179,7 +186,7 @@ class E0Model(nn.Module):
         th1 = self.val("th1")
         th2 = self.val("th2")
         D, uB, pm, Tm_sep, Tfw, v1, v2, p_out, W = [exo[:, :, j] for j in range(9)]
-        h_sw = CP_W * Tfw
+        h_sw = hliq_of_T(Tfw)
         p0 = pm + (p_out - pm) / 3.0
         p1 = pm + 2.0 * (p_out - pm) / 3.0
         hsep = h_sep_of(pm, Tm_sep)
@@ -277,8 +284,11 @@ def e0_train(df, seed, fast, tag, max_epochs=60):
         ts1 = T_of_ph(p1, h1)
         ts2 = T_of_ph(p_out, h2)
         dTm = model.tri("dTm")[:, None]  # (3,1)
-        Tm = torch.stack([ts0, ts1, ts2]) + dTm
-        return torch.stack([h0, h1, h2]), Tm, init_rows[:, 1].clone()
+        ts = torch.stack([ts0, ts1, ts2])
+        rB0 = init_rows[:, 1].clone()
+        # 平衡初始化：Tm = ts + Q/UA = ts + k·rB/(3600·UA)（模型自身吸引子）+ dTm 小修正
+        Tm = ts + model.tri("k")[:, None] * rB0[None, :] / 3600.0 / model.tri("UA")[:, None] + dTm
+        return torch.stack([h0, h1, h2]), Tm, rB0
 
     def fwd(exo, init_rows, obs_T):
         h, Tm, rB = init_states(init_rows, obs_T)
@@ -357,8 +367,9 @@ def e0_rollout(model, df, start, n_steps, seed, tag, mu_o, sd_o):
                                    torch.tensor(p1, device=DEVICE),
                                    torch.tensor(row[7], device=DEVICE)])[:, None]
                 ts = T_of_ph(pst, h)
-                Tm = ts + model.tri("dTm")[:, None]
                 rB = torch.tensor([row[1]], device=DEVICE)
+                Tm = (ts + model.tri("k")[:, None] * rB / 3600.0 / model.tri("UA")[:, None]
+                      + model.tri("dTm")[:, None])
             out, h, Tm, rB, hm1, hm2 = model.integrate(exo_t, h, Tm, rB, 1, return_states=True)
             preds[t] = out[0, 0].cpu().numpy()
     main_p, main_t = preds[:, 4], truths[:, 4]
@@ -408,8 +419,9 @@ def e0_windowed_eval(model, df, mu_o, sd_o):
             h2 = h_of_pT(p_out, obs[:, 4])
             h = torch.stack([h0, h1, h2])
             ts = T_of_ph(torch.stack([p0, p1, p_out]), h)
-            Tm = ts + model.tri("dTm")[:, None]
             rB = torch.from_numpy(ib[:, 1]).to(DEVICE).clone()
+            Tm = (ts + model.tri("k")[:, None] * rB[None, :] / 3600.0 / model.tri("UA")[:, None]
+                  + model.tri("dTm")[:, None])
             pred = model.integrate(xb, h, Tm, rB, xb.shape[1])
             err = pred - yb
             first_errs.append(err[:, 0, 4].abs().cpu().numpy())

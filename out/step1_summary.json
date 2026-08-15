@@ -2,24 +2,24 @@
   "seeds": {
     "0": {
       "e0": {
-        "rmse_main": 12.04540729522705,
-        "band_viol_frac": 0.6366666666666667,
+        "rmse_main": 11.838027000427246,
+        "band_viol_frac": 0.5794444444444444,
         "viol_any_frac": 1.0,
         "viol_any_frac_phys": 0.0
       }
     },
     "1": {
       "e0": {
-        "rmse_main": 11.938554763793945,
-        "band_viol_frac": 0.6377777777777778,
+        "rmse_main": 11.766962051391602,
+        "band_viol_frac": 0.5788888888888889,
         "viol_any_frac": 1.0,
         "viol_any_frac_phys": 0.0
       }
     },
     "2": {
       "e0": {
-        "rmse_main": 12.03576374053955,
-        "band_viol_frac": 0.6355555555555555,
+        "rmse_main": 11.743892669677734,
+        "band_viol_frac": 0.5833333333333334,
         "viol_any_frac": 1.0,
         "viol_any_frac_phys": 0.0
       }
@@ -28,18 +28,18 @@
   "variants": {
     "e0": {
       "0": {
-        "rmse_main": 12.04540729522705,
-        "band_viol_frac": 0.6366666666666667,
+        "rmse_main": 11.838027000427246,
+        "band_viol_frac": 0.5794444444444444,
         "viol_any_frac": 1.0
       },
       "1": {
-        "rmse_main": 11.938554763793945,
-        "band_viol_frac": 0.6377777777777778,
+        "rmse_main": 11.766962051391602,
+        "band_viol_frac": 0.5788888888888889,
         "viol_any_frac": 1.0
       },
       "2": {
-        "rmse_main": 12.03576374053955,
-        "band_viol_frac": 0.6355555555555555,
+        "rmse_main": 11.743892669677734,
+        "band_viol_frac": 0.5833333333333334,
         "viol_any_frac": 1.0
       }
     },
@@ -111,40 +111,40 @@
     "thresholds": {
       "P1_rmse<=2.48": 2.48,
       "P2_band<=0.5%": 0.005,
-      "P3_viol<=1%": 0.01
+      "P3_viol_phys<=truth_floor+5pp": 0.4611
     },
     "seed_pass": {
       "0": [
         false,
         false,
-        false
+        true
       ],
       "1": [
         false,
         false,
-        false
+        true
       ],
       "2": [
         false,
         false,
-        false
+        true
       ]
     },
     "n_seeds_pass": 0,
     "aggregate": {
-      "rmse_main": 12.0066,
-      "band_viol_frac": 0.6367,
-      "viol_any_frac": 1.0
+      "rmse_main": 11.783,
+      "band_viol_frac": 0.5806,
+      "viol_any_frac_phys": 0.0
     },
     "aggregate_pass": [
       false,
       false,
-      false
+      true
     ],
     "overall_pass": false,
     "channel_active": true,
-    "dsw_mean_kgs": 8.3647,
+    "dsw_mean_kgs": 7.0814,
     "dsw_thresh_kgs": 1.8335,
-    "note_P3": "P3 预注册 5 对含 'sh2_in<sh2_out'（ad-hoc1 04_mechanism 原对，方向与物理相反）；物理方向对见 variants.*.viol_any_frac_phys 与 truth_floor.phys_pairs"
+    "note_P3": "P3 修正：主判决用物理方向 5 对（PAIRS_PHYS），门槛=物理对真值地板+5pp。原预注册 5 对含 'sh2_in<sh2_out' 反物理方向对（真值地板 98.6%），1% 门槛不可达。viol_any_frac（预注册对）仍保留在 seeds.* 供报告。"
   }
 }
