@@ -104,24 +104,24 @@ pred_b = bilinear2d(hpT, P, Tg, pv_b, Tv_b)
 errs["hpT_boundary"] = float(np.max(np.abs(pred_b - ref_b)))
 print(f"hpT (饱和边界延拓区): maxerr = {errs['hpT_boundary']:.4f} kJ/kg", flush=True)
 
-# ---- 液态水焓 h_liq(T) 多项式（喷水焓用，IAPWS 基准） ----
-# 压力依赖弱（10→30MPa 下 <10 kJ/kg），取 19MPa 代表压力拟合。
-# 拟合窗口 [295,355]°C 覆盖实际给水温度范围（实测 309–346°C），窄窗口高精度。
-T_LIQ = np.arange(295.0, 355.01, 1.0)
-hliq_ref = np.array([IAPWS97(P=19.0, T=t + 273.15).h for t in T_LIQ])
-hliq_coef = np.polyfit(T_LIQ, hliq_ref, 6)
-err_hliq = float(np.max(np.abs(np.polyval(hliq_coef, T_LIQ) - hliq_ref)))
-print(f"h_liq(T) poly(deg6, 19MPa, [295,355]°C) maxerr={err_hliq:.4f} kJ/kg", flush=True)
+# ---- 液态水焓 h_liq(T) 1D 网格（喷水焓用，IAPWS 基准） ----
+# 压力依赖弱（10→30MPa 下 <10 kJ/kg），取 19MPa 代表压力。
+# 网格 [295,355]°C 覆盖实际给水温度范围（实测 309–346°C）。不用多项式：
+# deg6 float64→float32 系数转换误差放大到 ~10 kJ/kg，网格线性插值在 float32 下稳定。
+T_LIQ = np.arange(295.0, 355.5, 0.5)
+hliq_grid = np.array([IAPWS97(P=19.0, T=t + 273.15).h for t in T_LIQ])
+hliq_linerr = float(np.max(np.abs(0.5 * (hliq_grid[:-2] + hliq_grid[2:]) - hliq_grid[1:-1])))
+print(f"h_liq(T) 1D grid ({len(T_LIQ)}pts, 19MPa, [295,355]°C) midpoint-linerr<={hliq_linerr:.4f} kJ/kg", flush=True)
 
 np.savez(os.path.join(OUT, "iapws_surrogate.npz"),
          P=P, H=H, Tg=Tg, Tph=Tph, hpT=hpT,
          Psub=Psub, Tsat=Tsat, hsatV=hsatV, tsat_coef=tsat_coef,
-         hliq_coef=hliq_coef, t_liq=[float(T_LIQ[0]), float(T_LIQ[-1])],
+         t_liq=T_LIQ, hliq_grid=hliq_grid,
          p_crit=np.float32(P_CRIT))
 meta = {"p": [P_LO, P_HI, DP], "h": [H_LO, H_HI, DH], "T": [T_LO, T_HI, DT],
         "p_crit": P_CRIT, "errs": errs,
         "err_tsat_C": err_tsat, "hsatv_linerr_bound_kJkg": hsatv_linerr,
-        "hliq_poly_maxerr_kJkg": err_hliq,
+        "hliq_grid_linerr_bound_kJkg": hliq_linerr,
         "built": time.strftime("%Y-%m-%d %H:%M:%S")}
 with open(os.path.join(OUT, "iapws_surrogate_meta.json"), "w") as f:
     json.dump(meta, f, ensure_ascii=False, indent=2)

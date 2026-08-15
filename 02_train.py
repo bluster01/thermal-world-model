@@ -51,8 +51,8 @@ TPH = torch.tensor(S["Tph"], dtype=torch.float32, device=DEVICE)           # (Np
 HPT = torch.tensor(S["hpT"], dtype=torch.float32, device=DEVICE)           # (Np, NT)
 Psub_t = torch.tensor(S["Psub"], dtype=torch.float32, device=DEVICE)       # 亚临界 p 网格
 HSATV_t = torch.tensor(S["hsatV"], dtype=torch.float32, device=DEVICE)
-HLIQ_C = torch.tensor(S["hliq_coef"], dtype=torch.float32, device=DEVICE)   # 降幂, deg5
-T_LIQ_LO, T_LIQ_HI = float(S["t_liq"][0]), float(S["t_liq"][1])
+T_LIQ_T = torch.tensor(S["t_liq"], dtype=torch.float32, device=DEVICE)     # 1D 网格 (121,)
+HLIQ_G_T = torch.tensor(S["hliq_grid"], dtype=torch.float32, device=DEVICE)
 TSAT_C = torch.tensor(S["tsat_coef"], dtype=torch.float32, device=DEVICE)  # deg 8, in p(亚临界)
 P_CRIT = float(S["p_crit"])
 P_LO, P_HI = float(P_GRID[0]), float(P_GRID[-1])
@@ -115,8 +115,15 @@ def hsatv_of_p(p):
 
 
 def hliq_of_T(T):
-    """液态水焓 h_liq(T) kJ/kg（IAPWS 基准，19MPa 代表压力多项式）。喷水焓用。"""
-    return _polyval(HLIQ_C, T.clamp(T_LIQ_LO, T_LIQ_HI))
+    """液态水焓 h_liq(T) kJ/kg（IAPWS 基准，19MPa 代表压力，1D 网格线性插值）。喷水焓用。"""
+    T = T.clamp(T_LIQ_T[0], T_LIQ_T[-1])
+    flat = T.reshape(-1)
+    idx = torch.searchsorted(T_LIQ_T, flat).clamp(1, len(T_LIQ_T) - 1)
+    t0 = T_LIQ_T[idx - 1]
+    t1 = T_LIQ_T[idx]
+    w = (flat - t0) / (t1 - t0 + 1e-12)
+    h = HLIQ_G_T[idx - 1] + w * (HLIQ_G_T[idx] - HLIQ_G_T[idx - 1])
+    return h.view_as(T)
 
 
 def h_sep_of(pm, Tm):
