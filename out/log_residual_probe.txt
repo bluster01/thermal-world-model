@@ -1,0 +1,24 @@
+[r0 sanity] {"rmse_main_diff": 0.00017111968994143467, "rmse_main": 12.6568, "dry_diff": 0.0, "wet_diff": 0.0, "win60_dry_diff": 0.0, "win60_wet_diff": 0.0, "first_dry_diff": 0.0, "first_wet_diff": 0.0, "PASS": true}
+[r0 sanity PASS] 6s
+[ra s0] train=5988 val=497 F=20 mode=q
+[ra s0] trained 40ep val_mse=39.8129 (341s)
+[ra s0] rollout rmse=5.190 win60dry=1.86
+[ra s1] train=5988 val=497 F=20 mode=q
+[ra s1] trained 37ep val_mse=39.3414 (315s)
+[ra s1] rollout rmse=4.438 win60dry=1.54
+[rb s0] train=5988 val=497 F=13 mode=q
+[rb s0] trained 40ep val_mse=46.8764 (322s)
+[rb s0] rollout rmse=2.854 win60dry=2.09
+[rc s0] train=5988 val=497 F=20 mode=dk
+[rc s0] trained 36ep val_mse=42.5169 (311s)
+[rc s0] rollout rmse=5.329 win60dry=1.93
+[json] out/residual_probe_summary.json
+Traceback (most recent call last):
+  File "/home/bluster/.hermes/workspace/adhoc2_lumped_enthalpy/09_residual.py", line 632, in <module>
+    main()
+  File "/home/bluster/.hermes/workspace/adhoc2_lumped_enthalpy/09_residual.py", line 625, in main
+    make_figs(df, fig_arrays, summ, fig_roll)
+  File "/home/bluster/.hermes/workspace/adhoc2_lumped_enthalpy/09_residual.py", line 420, in make_figs
+    em, _, pm0 = arrays["e0"][0], arrays["e0"][3]
+    ^^^^^^^^^^
+ValueError: not enough values to unpack (expected 3, got 2)
