@@ -1,0 +1,42 @@
+[ra s0] reuse ckpt
+[ra s0] rollout=5.190 dry=5.81 wet=4.59
+[ra s1] reuse ckpt
+[ra s1] rollout=4.438 dry=4.78 wet=4.13
+[ra s2] train=5988 val=497 F=20 mode=q
+[ra s2] trained 40ep val_mse=37.9494 (336s)
+[ra s2] rollout=5.347 dry=6.23 wet=4.45
+[rb s0] reuse ckpt
+[rb s0] rollout=2.854 dry=2.09 wet=3.37
+[rb s1] train=5988 val=497 F=13 mode=q
+[rb s1] trained 22ep val_mse=47.7330 (174s)
+[rb s1] rollout=2.798 dry=2.13 wet=3.26
+[rb s2] train=5988 val=497 F=13 mode=q
+[rb s2] trained 40ep val_mse=45.7479 (316s)
+[rb s2] rollout=2.968 dry=2.00 wet=3.60
+[rc s0] reuse ckpt
+[rc s0] rollout=5.329 dry=6.10 wet=4.57
+[rc s1] train=5988 val=497 F=20 mode=dk
+[rc s1] trained 28ep val_mse=42.6751 (237s)
+[rc s1] rollout=6.342 dry=7.36 wet=5.32
+[rc s2] train=5988 val=497 F=20 mode=dk
+[rc s2] trained 40ep val_mse=41.7446 (339s)
+[rc s2] rollout=6.458 dry=7.41 wet=5.51
+[json] out/refine_repro_summary.json
+[fig] fig10_repro.png
+=== Step① 判定 ===
+{
+  "R1": true,
+  "R2": true,
+  "rb_dry_vals": [
+    2.093,
+    2.129,
+    1.995
+  ],
+  "rb_wet_vals": [
+    3.37,
+    3.263,
+    3.596
+  ],
+  "rb_dry_mean": 2.072,
+  "rb_dry_std": 0.057
+}
