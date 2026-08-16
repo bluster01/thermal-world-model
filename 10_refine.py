@@ -291,7 +291,7 @@ def fig11_inject(recs, judge, lam_hist):
         for j, hh in enumerate(lam_hist):
             ax3.hist(hh, bins=40, alpha=0.55, label=f"seg{j} λ (mean={hh.mean():.2f})")
         ax3.axvline(0.5, color="k", ls=":", lw=1)
-        ax3.set_xlabel("λ (1=全进Tm, 0=全进h)")
+        ax3.set_xlabel("λ (1=all→Tm, 0=all→h)")
         ax3.set_ylabel("count")
         ax3.legend(fontsize=8)
         ax3.set_title("learned split λ on test windows")

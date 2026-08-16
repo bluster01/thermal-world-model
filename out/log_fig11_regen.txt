@@ -1,0 +1,17 @@
+[rb s0] reuse ckpt
+[rb s0] rollout=2.854 dry=2.09 wet=3.37
+[qtm s0] reuse ckpt
+[qtm s0] rollout=2.775 dry=1.90 wet=3.35
+[qh s0] reuse ckpt
+[qh s0] rollout=2.737 dry=2.36 wet=3.02
+[qcon s0] reuse ckpt
+[qcon s0] rollout=11.516 dry=16.58 wet=3.34
+[qspl s0] reuse ckpt
+[qspl s0] rollout=2.635 dry=2.03 wet=3.06
+=== qspl λ stats (test windows) ===
+seg0: mean=0.031 std=0.011 p50=0.027 P(λ>0.5)=0.000 (λ=1→全Tm)
+seg1: mean=0.400 std=0.075 p50=0.407 P(λ>0.5)=0.048 (λ=1→全Tm)
+seg2: mean=0.091 std=0.045 p50=0.071 P(λ>0.5)=0.000 (λ=1→全Tm)
+judge: {'I1': True, 'I2': False, 'winner': 'qspl', 'score': {'rb': 2.732, 'qtm': 2.623, 'qh': 2.69, 'qcon': 9.961, 'qspl': 2.543}, 'winner_dry': 2.028, 'rb_dry': 2.093}
+[fig] fig11_inject.png
+[fig11] regenerated
