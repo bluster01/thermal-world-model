@@ -1,0 +1,27 @@
+[q0 s0] train=5988 val=497 F=13 mode=q0
+[q0 s0] trained 32ep val_mse=48.6920 (266s)
+[q0 s0] rollout=5.024 dry=5.26 wet=4.82
+[q0 s1] train=5988 val=497 F=13 mode=q0
+[q0 s1] trained 35ep val_mse=48.4994 (291s)
+[q0 s1] rollout=5.143 dry=5.44 wet=4.88
+[q0 s2] train=5988 val=497 F=13 mode=q0
+[q0 s2] trained 32ep val_mse=47.6548 (266s)
+[q0 s2] rollout=4.919 dry=5.15 wet=4.71
+[seg0] rb ref from repro summary: {'dry': 2.072, 'wet': 3.4096666666666664}
+[json] out/refine_seg0_summary.json
+[rb s0] reuse ckpt
+[rb s0] rollout=2.854 dry=2.09 wet=3.37
+[fig] fig12_seg0.png
+=== Step③ 判定 ===
+{
+  "S1": false,
+  "S2": false,
+  "q0_wet_mean": 4.802,
+  "q0_wet_std": 0.068,
+  "q0_dry_mean": 5.282,
+  "q0_dry_std": 0.119,
+  "rb_ref": {
+    "dry": 2.072,
+    "wet": 3.4096666666666664
+  }
+}
