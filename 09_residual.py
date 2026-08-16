@@ -83,16 +83,20 @@ def load_e0_df():
 
 # ---------------- 残差网络 ----------------
 class ResMLP(nn.Module):
-    def __init__(self, F_in, scale):
+    def __init__(self, F_in, scale, out=3):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(F_in, 64), nn.Tanh(),
             nn.Linear(64, 64), nn.Tanh(),
-            nn.Linear(64, 3))
+            nn.Linear(64, out))
         self.scale = scale
 
     def forward(self, x):
-        return self.scale * torch.tanh(self.net(x))  # (B,3)
+        y = self.net(x)
+        if y.shape[1] == 3:
+            return self.scale * torch.tanh(y)  # (B,3)
+        z = self.scale * torch.tanh(y[:, :3])  # Q 残差幅值饱和保护
+        return torch.cat([z, y[:, 3:]], dim=1)  # (B,6): 后3=λ logit 不缩放(防sigmoid饱和)
 
 
 def build_feats(ts, Tm, pm, D, uB, rB, v1, v2, W, anchor):
@@ -113,9 +117,13 @@ def build_feats(ts, Tm, pm, D, uB, rB, v1, v2, W, anchor):
 
 
 # ---------------- 带残差的 integrate（逐行复制 E0Model.integrate, mode="none" 时逐位一致） ----------------
-def integrate_res(model, res, exo, h, Tm, rB, steps, anchor=None, mode="none"):
+def integrate_res(model, res, exo, h, Tm, rB, steps, anchor=None, mode="none",
+                  lam_list=None):
     """exo: (B,steps,9); h,Tm: (3,B); rB: (B,)。anchor: (B,7) 或 None。
-    mode: none=冻结灰盒原路径; q=Q残差; dk=Δk残差。"""
+    mode: none=冻结灰盒原路径; q=Q残差(同注Tm+h); dk=Δk残差;
+          qtm/qh/qcon=注入点消融(Tm-only/h-only/守恒传递Tm失h得);
+          q0=q残差仅段0; qspl=学到的分配系数λ(Tm得λz,h得(1-λ)z)。
+    lam_list: 可选 list, qspl 模式收集每子步 λ(3,B), 仅诊断图用。"""
     Bsz = exo.shape[0]
     M = model.tri("M")[:, None]
     UA = model.tri("UA")[:, None]
@@ -151,15 +159,41 @@ def integrate_res(model, res, exo, h, Tm, rB, steps, anchor=None, mode="none"):
             else:
                 feats = build_feats(ts, Tm, pm[:, t], D[:, t], uB[:, t], rB,
                                     v1[:, t], v2[:, t], Wt, anchor)
-                z = res(feats).permute(1, 0)  # (3,B)
+                zraw = res(feats)  # (B,out)
                 if mode == "q":
+                    z = zraw.permute(1, 0)  # (3,B) 同注 Tm 与 h
                     Tm = (Tm + t02.DT_SUB * (k_t * rB[None, :] / 3600.0 + UA * ts + z) / Cm) / (
                         1.0 + t02.DT_SUB * UA / Cm)
                     hin = torch.stack([hsep[:, t], hm1, hm2])
                     h = (h + t02.DT_SUB * (D[:, t][None, :] * hin + Q + z) / M) / (
                         1.0 + t02.DT_SUB * D[:, t][None, :] / M)
+                elif mode in ("qtm", "qh", "qcon", "q0"):
+                    # 注入点消融: Tm-only / h-only / 守恒传递(Tm失h得) / 仅段0
+                    z = zraw.permute(1, 0).clone()  # (3,B)
+                    if mode == "q0":
+                        z[1:] = 0.0
+                    zT = {"qtm": z, "qh": torch.zeros_like(z),
+                          "qcon": -z, "q0": z}[mode]
+                    zh = {"qtm": torch.zeros_like(z), "qh": z,
+                          "qcon": z, "q0": z}[mode]
+                    Tm = (Tm + t02.DT_SUB * (k_t * rB[None, :] / 3600.0 + UA * ts + zT) / Cm) / (
+                        1.0 + t02.DT_SUB * UA / Cm)
+                    hin = torch.stack([hsep[:, t], hm1, hm2])
+                    h = (h + t02.DT_SUB * (D[:, t][None, :] * hin + Q + zh) / M) / (
+                        1.0 + t02.DT_SUB * D[:, t][None, :] / M)
+                elif mode == "qspl":
+                    # 学到的分配系数 λ: Tm 得 λz, h 得 (1-λ)z
+                    zz = zraw[:, :3].permute(1, 0)  # (3,B)
+                    lam = torch.sigmoid(zraw[:, 3:]).permute(1, 0)  # (3,B)
+                    if lam_list is not None:
+                        lam_list.append(lam.detach())
+                    Tm = (Tm + t02.DT_SUB * (k_t * rB[None, :] / 3600.0 + UA * ts + lam * zz) / Cm) / (
+                        1.0 + t02.DT_SUB * UA / Cm)
+                    hin = torch.stack([hsep[:, t], hm1, hm2])
+                    h = (h + t02.DT_SUB * (D[:, t][None, :] * hin + Q + (1.0 - lam) * zz) / M) / (
+                        1.0 + t02.DT_SUB * D[:, t][None, :] / M)
                 else:  # dk
-                    k_eff = k_t + z
+                    k_eff = k_t + zraw.permute(1, 0)
                     Tm = (Tm + t02.DT_SUB * (k_eff * rB[None, :] / 3600.0 + UA * ts) / Cm) / (
                         1.0 + t02.DT_SUB * UA / Cm)
                     hin = torch.stack([hsep[:, t], hm1, hm2])
@@ -210,14 +244,14 @@ def load_e0(seed=0):
 
 
 # ---------------- 训练 ----------------
-def train_res(df, seed, variant, mode, use_anchor, fast):
+def train_res(df, seed, variant, mode, use_anchor, fast, out=3):
     tag = ".fast" if fast else ""
     torch.manual_seed(seed)
     np.random.seed(seed)
     model = load_e0(0)
     F_in = 20 if use_anchor else 13
-    scale = Q_SCALE if mode == "q" else K_SCALE
-    res = ResMLP(F_in, scale).to(DEVICE)
+    scale = Q_SCALE if mode != "dk" else K_SCALE
+    res = ResMLP(F_in, scale, out).to(DEVICE)
     opt = torch.optim.Adam(res.parameters(), lr=1e-3)
     w5 = torch.tensor([1.0, 1.0, 1.0, 1.0, 2.0], device=DEVICE)
     tr_s = 25 if fast else 5
