@@ -1,0 +1,7 @@
+[ra_chk s0] train=5988 val=497 F=20 mode=q
+[ra_chk s0] trained 40ep val_mse=39.8129 (349s)
+[chk ra] new=5.1897 old=5.19 diff=0.0003 dry=5.81 wet=4.594 val=39.81 ep=40 equiv=True
+[rc_chk s0] train=5988 val=497 F=20 mode=dk
+[rc_chk s0] trained 36ep val_mse=42.5169 (318s)
+[chk rc] new=5.3293 old=5.33 diff=0.0007 dry=6.096 wet=4.574 val=42.52 ep=36 equiv=True
+[chk] verdict=EQUIV saved out/retrain_check.json

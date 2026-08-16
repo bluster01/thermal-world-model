@@ -1,0 +1,39 @@
+[rb s0] reuse ckpt
+[rb s0] rollout=2.854 dry=2.09 wet=3.37
+[qtm s0] train=5988 val=497 F=13 mode=qtm
+[qtm s0] trained 30ep val_mse=49.3480 (254s)
+[qtm s0] rollout=2.775 dry=1.90 wet=3.35
+[qh s0] train=5988 val=497 F=13 mode=qh
+[qh s0] trained 26ep val_mse=46.4308 (221s)
+[qh s0] rollout=2.737 dry=2.36 wet=3.02
+[qcon s0] train=5988 val=497 F=13 mode=qcon
+[qcon s0] trained 26ep val_mse=51.3384 (221s)
+[qcon s0] rollout=11.516 dry=16.58 wet=3.34
+[qspl s0] train=5988 val=497 F=13 mode=qspl
+[qspl s0] trained 26ep val_mse=46.3871 (232s)
+[qspl s0] rollout=2.635 dry=2.03 wet=3.06
+[json] out/refine_inject_summary.json
+/home/bluster/.hermes/workspace/adhoc2_lumped_enthalpy/10_refine.py:298: UserWarning: Glyph 20840 (\N{CJK UNIFIED IDEOGRAPH-5168}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+/home/bluster/.hermes/workspace/adhoc2_lumped_enthalpy/10_refine.py:298: UserWarning: Glyph 36827 (\N{CJK UNIFIED IDEOGRAPH-8FDB}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+/home/bluster/.hermes/workspace/adhoc2_lumped_enthalpy/10_refine.py:299: UserWarning: Glyph 20840 (\N{CJK UNIFIED IDEOGRAPH-5168}) missing from font(s) DejaVu Sans.
+  fig.savefig(os.path.join(OUT, "figs", "fig11_inject.png"), dpi=150)
+/home/bluster/.hermes/workspace/adhoc2_lumped_enthalpy/10_refine.py:299: UserWarning: Glyph 36827 (\N{CJK UNIFIED IDEOGRAPH-8FDB}) missing from font(s) DejaVu Sans.
+  fig.savefig(os.path.join(OUT, "figs", "fig11_inject.png"), dpi=150)
+[fig] fig11_inject.png
+=== Step② 判定 ===
+{
+  "I1": true,
+  "I2": false,
+  "winner": "qspl",
+  "score": {
+    "rb": 2.732,
+    "qtm": 2.623,
+    "qh": 2.69,
+    "qcon": 9.961,
+    "qspl": 2.543
+  },
+  "winner_dry": 2.028,
+  "rb_dry": 2.093
+}
