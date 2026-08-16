@@ -142,6 +142,9 @@ def baseline_windowed_arrays(df_b, model, info, phys):
     steam = df_b["主蒸汽流量"].to_numpy()
     coal = df_b["未校正总煤量"].to_numpy()
     pm_series = df_b["分离器出口压力"].to_numpy()
+    # float64 视图: 与 baseline_rollout 的 pd/float64 重算协议一致（float32 双舍入会经 60 步递归放大 ~1e-2°C）
+    cmd64, w64, feco64 = cmd.astype(np.float64), w_exo.astype(np.float64), feco.astype(np.float64)
+    sep64, steam64, coal64 = sep.astype(np.float64), steam.astype(np.float64), coal.astype(np.float64)
     model.eval()
     with torch.no_grad():
         for t in range(t02.SEQ):
@@ -153,20 +156,21 @@ def baseline_windowed_arrays(df_b, model, info, phys):
             errs_sh1[:, t] = pred[:, 0] - truth[:, 0]
             preds_main[:, t] = pred[:, 4]
             new_z = Z[idx].copy()
-            new_z[:, out_start: out_start + 5] = (pred - mu_o) / sd_o
+            new_z[:, out_start: out_start + 5] = (
+                (pred.astype(np.float64) - mu_o.astype(np.float64)) / sd_o.astype(np.float64)).astype(np.float32)
             if phys:
-                sh1i, sh1o, sh2i, sh2o, main = [pred[:, j] for j in range(5)]
+                sh1i, sh1o, sh2i, sh2o, main = [pred[:, j].astype(np.float64) for j in range(5)]
                 feats_arr = np.stack([
-                    w_exo[idx] * (sh1i - feco[idx]),
-                    w_exo[idx] * (sh2i - feco[idx]),
-                    steam[idx] * (sh1i - sep[idx]),
-                    steam[idx] * (sh2i - sh1o),
-                    steam[idx] * (main - sh2o),
-                    coal[idx] / (steam[idx] + 1.0),
-                    cmd[idx] - cmd[idx - 6],
-                ], axis=1)  # (Nw,7) 顺序同 physics_features
+                    w64[idx] * (sh1i - feco64[idx]),
+                    w64[idx] * (sh2i - feco64[idx]),
+                    steam64[idx] * (sh1i - sep64[idx]),
+                    steam64[idx] * (sh2i - sh1o),
+                    steam64[idx] * (main - sh2o),
+                    coal64[idx] / (steam64[idx] + 1.0),
+                    cmd64[idx] - cmd64[idx - 6],
+                ], axis=1)  # (Nw,7) 顺序同 physics_features, float64
                 for k, c in enumerate(phy_cols):
-                    new_z[:, out_start + 5 + k] = (feats_arr[:, k] - mu[c]) / sd[c]
+                    new_z[:, out_start + 5 + k] = ((feats_arr[:, k] - mu[c]) / sd[c]).astype(np.float32)
             hist = np.concatenate([hist[:, 1:], new_z[:, None]], axis=1)
     return errs_main, errs_sh1, preds_main, pm_series[i0]
 
