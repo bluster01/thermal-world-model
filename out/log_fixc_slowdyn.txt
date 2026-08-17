@@ -1,0 +1,23 @@
+[qslow s0] 26ep val=47.423 τ_sw=75.8s τ_sens=19.5s τ_res=94.5s
+[qslow s1] 23ep val=48.497 τ_sw=73.5s τ_sens=18.6s τ_res=99.3s
+[qslow s0 loaded] τ_sw=75.8 τ_sens=19.5 τ_res=94.5
+[qslow s0] rollout=2.911
+[qslow s1] rollout=2.909
+[step wet] K=-1.219 τ63=320.0s θ=0.0s
+[step dry] K=-0.857 τ63=10.0s θ=0.0s
+[loop wet] anchors=[-0.219, -0.485, -0.431, 0.767, 1.132, 1.104] norm600=1.0 tail_std=0.0 Δ=[np.float64(0.219), np.float64(0.585), np.float64(0.601), np.float64(0.277), np.float64(0.432), np.float64(0.134)]
+[loop dry] anchors=[-0.004, 1.893, 3.075, 2.718, 1.895, 1.428] norm600=0.912 tail_std=0.1379 Δ=None
+=== FIXC 判定 ===
+{
+  "C1": false,
+  "C2": false,
+  "C3": false,
+  "C4": true,
+  "C5_audit": {
+    "tau_res": 94.5,
+    "in_bounds": true
+  },
+  "rollout_mean": 2.91,
+  "verdict": "FAIL"
+}
+[fig] fig24_slowdyn.png
