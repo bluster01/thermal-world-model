@@ -1,0 +1,19 @@
+[qnaw s0] train=5988 val=497 F=11 mode=qh
+[qnaw s0] trained 26ep val_mse=45.9882 (207s)
+[qnaw s0] rollout=2.784 dry=2.72 wet=2.84
+[qnaw s1] train=5988 val=497 F=11 mode=qh
+[qnaw s1] trained 24ep val_mse=46.4029 (191s)
+[qnaw s1] rollout=2.358 dry=1.99 wet=2.63
+[step wet] main_final=-0.191
+[step dry] main_final=-0.082
+=== qnaw 判定 ===
+{
+  "W1": true,
+  "W2": true,
+  "rollout_mean": 2.571,
+  "rollout_vals": [
+    2.784,
+    2.358
+  ],
+  "verdict": "PASS"
+}

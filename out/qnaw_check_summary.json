@@ -1,0 +1,118 @@
+{
+  "train": {
+    "0": {
+      "val_mse": 45.9882,
+      "ep": 26
+    },
+    "1": {
+      "val_mse": 46.4029,
+      "ep": 24
+    }
+  },
+  "rollout": {
+    "0": {
+      "rmse_main": 2.7842,
+      "maxerr_main": 6.5418,
+      "rmse_all": 6.1657,
+      "band_viol_frac": 0.0,
+      "order_viol_any_frac": 0.0,
+      "drift_main_mean_z": 0.37,
+      "nan": false
+    },
+    "1": {
+      "rmse_main": 2.3576,
+      "maxerr_main": 6.5659,
+      "rmse_all": 6.1199,
+      "band_viol_frac": 0.0,
+      "order_viol_any_frac": 0.0,
+      "drift_main_mean_z": 0.458,
+      "nan": false
+    }
+  },
+  "strat": {
+    "0": {
+      "wet": {
+        "n": 971,
+        "rmse_main": 2.838,
+        "rmse_all": 7.019,
+        "bias_5": [
+          -6.57,
+          5.19,
+          -5.76,
+          -3.28,
+          0.52
+        ],
+        "band_viol_frac": 0.0,
+        "viol_phys_frac": 0.0,
+        "drift_main_mean_z": 0.443
+      },
+      "dry": {
+        "n": 829,
+        "rmse_main": 2.72,
+        "rmse_all": 4.984,
+        "bias_5": [
+          8.12,
+          1.16,
+          -1.52,
+          1.11,
+          2.04
+        ],
+        "band_viol_frac": 0.0,
+        "viol_phys_frac": 0.0,
+        "drift_main_mean_z": 0.285
+      }
+    },
+    "1": {
+      "wet": {
+        "n": 971,
+        "rmse_main": 2.628,
+        "rmse_all": 6.973,
+        "bias_5": [
+          -6.28,
+          5.48,
+          -5.54,
+          -3.06,
+          0.24
+        ],
+        "band_viol_frac": 0.0,
+        "viol_phys_frac": 0.0,
+        "drift_main_mean_z": 0.449
+      },
+      "dry": {
+        "n": 829,
+        "rmse_main": 1.994,
+        "rmse_all": 4.937,
+        "bias_5": [
+          8.23,
+          1.26,
+          -2.06,
+          0.59,
+          1.01
+        ],
+        "band_viol_frac": 0.0,
+        "viol_phys_frac": 0.0,
+        "drift_main_mean_z": 0.469
+      }
+    }
+  },
+  "step_test": {
+    "wet": {
+      "main_final": -0.191,
+      "sh1_in_final": -0.026
+    },
+    "dry": {
+      "main_final": -0.082,
+      "sh1_in_final": -0.01
+    }
+  },
+  "judge": {
+    "W1": true,
+    "W2": true,
+    "rollout_mean": 2.571,
+    "rollout_vals": [
+      2.784,
+      2.358
+    ],
+    "verdict": "PASS"
+  }
+}
