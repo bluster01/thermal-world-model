@@ -1,0 +1,24 @@
+[qnaw s2] train=5988 val=497 F=11 mode=qh
+[qnaw s2] trained 21ep val_mse=46.5090 (168s)
+[qnaw s2] 21ep val=46.509
+[qnaw s0] rollout=2.784
+[qnaw s1] rollout=2.358
+[qnaw s2] rollout=2.569
+[qnaw s2 sign wet] final=-0.366
+[qnaw s2 sign dry] final=-0.19
+=== qnaw 3seeds 判定 ===
+{
+  "W1": true,
+  "W2": true,
+  "rollout_mean_3seeds": 2.57,
+  "rollout_vals": [
+    2.784,
+    2.358,
+    2.569
+  ],
+  "signs_s2": {
+    "wet": -0.366,
+    "dry": -0.19
+  },
+  "verdict": "PASS"
+}
