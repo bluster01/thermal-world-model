@@ -4,6 +4,7 @@
 Step① repro : ra/rb/rc × 3 seeds —— 3seeds 复现
 Step② inject: qboth(=rb)/qtm/qh/qcon/qspl × seed0 —— 注入点消融
 Step③ seg0  : q0(rb 残差只注段0) × 3 seeds —— 湿态段0专项
+Step④ confirm: qspl/qh × 3 seeds —— 坐实"超 v2" (s0 复用 Step② ckpt, s1/s2 重训)
 
 预注册判定 (冻结 2026-08-17, 不可改):
   R1: rb 3 个种子每个 dry rollout ≤ 3.0 且 wet ≤ 4.0 —— 方向跨种子复现
@@ -12,11 +13,15 @@ Step③ seg0  : q0(rb 残差只注段0) × 3 seeds —— 湿态段0专项
   I2: 若胜者 ∈ {qcon, qspl} 且优于 qboth 平均 ≥ 0.3 —— 守恒/分配版注入被实证
   S1: q0 wet rollout 3seed mean ≤ rb wet mean − 0.5 —— 段0确为湿态短板主因
   S2: q0 dry rollout 3seed mean ≤ rb dry mean + 0.5 —— 干态不回退
+  C1: qspl 3seed mean rollout < 2.93 (v2 基线) —— 灰盒+残差超黑盒坐实
+  C2: qh   3seed mean rollout < 2.93 —— 简单h-only版同样超 v2
+  C3: qspl/qh 每个种子 rollout ≤ 3.2 —— 无种子显著劣于 v2
 
 用法:
   python 10_refine.py repro [--fast]
   python 10_refine.py inject [--fast]
   python 10_refine.py seg0 [--fast]
+  python 10_refine.py confirm [--fast]
   python 10_refine.py smoke     # 新模式冒烟 (2ep + rollout 120 步, 无 windowed, 仅崩溃检测)
 产物:
   out/refine_repro_summary.json / refine_inject_summary.json / refine_seg0_summary.json
@@ -199,6 +204,27 @@ def judge_seg0(recs, rb_ref):
             "rb_ref": rb_ref}
 
 
+def judge_confirm(recs):
+    qspl = [r["rollout"]["rmse_main"] for r in recs["qspl"]]
+    qh = [r["rollout"]["rmse_main"] for r in recs["qh"]]
+    qspl_dry = [r["strat"]["dry"]["rmse_main"] for r in recs["qspl"]]
+    qspl_wet = [r["strat"]["wet"]["rmse_main"] for r in recs["qspl"]]
+    qh_dry = [r["strat"]["dry"]["rmse_main"] for r in recs["qh"]]
+    qh_wet = [r["strat"]["wet"]["rmse_main"] for r in recs["qh"]]
+    C1 = bool(np.mean(qspl) < BASE["v2"]["all"])
+    C2 = bool(np.mean(qh) < BASE["v2"]["all"])
+    C3 = bool(all(v <= 3.2 for v in qspl + qh))
+    return {"C1": C1, "C2": C2, "C3": C3,
+            "qspl_mean": round(float(np.mean(qspl)), 3),
+            "qspl_std": round(float(np.std(qspl)), 3),
+            "qh_mean": round(float(np.mean(qh)), 3),
+            "qh_std": round(float(np.std(qh)), 3),
+            "qspl_dry": round(float(np.mean(qspl_dry)), 3),
+            "qspl_wet": round(float(np.mean(qspl_wet)), 3),
+            "qh_dry": round(float(np.mean(qh_dry)), 3),
+            "qh_wet": round(float(np.mean(qh_wet)), 3)}
+
+
 # ---------------- 图 ----------------
 
 
@@ -365,6 +391,37 @@ def fig12_seg0(recs, judge, rb_recs):
 # ---------------- 主流程 ----------------
 
 
+def fig13_confirm(recs, judge):
+    plt = _setup_plot()
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4.2))
+    layers = [("all", "rollout overall rmse", BASE["v2"]["all"]),
+              ("dry", "rollout dry rmse", BASE["v2"]["dry"]),
+              ("wet", "rollout wet rmse", BASE["v2"]["wet"])]
+    for k, (layer, title, v2v) in enumerate(layers):
+        ax = axes[k]
+        for vi, v in enumerate(("qh", "qspl")):
+            if layer == "all":
+                vals = [r["rollout"]["rmse_main"] for r in recs[v]]
+            else:
+                vals = [r["strat"][layer]["rmse_main"] for r in recs[v]]
+            x = np.arange(3) + vi * 0.24
+            ax.bar(x, vals, width=0.2, color=C[v], label=f"{v} ({VSPEC[v][3]})")
+            ax.text(x.mean(), max(vals) + 0.05, f"{np.mean(vals):.2f}±{np.std(vals):.2f}",
+                    ha="center", fontsize=7)
+        ax.axhline(v2v, color="0.4", ls="--", lw=1.2, label=f"v2 {v2v}")
+        ax.set_title(title)
+        ax.set_xticks(np.arange(3) + 0.24, ["s0", "s1", "s2"])
+        ax.grid(alpha=0.3)
+        ax.legend(fontsize=7)
+    fig.suptitle(f"Step④ confirm 3seeds — C1={'PASS' if judge['C1'] else 'FAIL'} "
+                 f"C2={'PASS' if judge['C2'] else 'FAIL'} C3={'PASS' if judge['C3'] else 'FAIL'}",
+                 fontsize=11)
+    fig.tight_layout()
+    fig.savefig(os.path.join(OUT, "figs", "fig13_confirm.png"), dpi=150)
+    plt.close(fig)
+    print("[fig] fig13_confirm.png", flush=True)
+
+
 def _dump(summ, step, fast):
     tag = ".fast" if fast else ""
     with open(os.path.join(OUT, f"refine_{step}_summary{tag}.json"), "w") as f:
@@ -374,7 +431,7 @@ def _dump(summ, step, fast):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["repro", "inject", "seg0", "smoke"])
+    ap.add_argument("step", choices=["repro", "inject", "seg0", "confirm", "smoke"])
     ap.add_argument("--fast", action="store_true")
     args = ap.parse_args()
 
@@ -448,6 +505,21 @@ def main():
                                       mu_o, sd_o, pm_roll, reuse=True)
             fig12_seg0(recs, judge, rb_recs)
         print("=== Step③ 判定 ===")
+        print(json.dumps(judge, ensure_ascii=False, indent=2), flush=True)
+
+
+    elif args.step == "confirm":
+        for v in ("qh", "qspl"):
+            recs[v] = run_variant(df, model0, v, [0, 1, 2], args.fast, n_roll,
+                                  mu_o, sd_o, pm_roll, reuse=not args.fast)
+        summ["variants"] = {v: [{k: x for k, x in r.items() if not k.startswith("_")}
+                                for r in recs[v]] for v in recs}
+        judge = judge_confirm(recs)
+        summ["judge"] = judge
+        _dump(summ, "confirm", args.fast)
+        if not args.fast:
+            fig13_confirm(recs, judge)
+        print("=== Step④ 判定 ===")
         print(json.dumps(judge, ensure_ascii=False, indent=2), flush=True)
 
 
