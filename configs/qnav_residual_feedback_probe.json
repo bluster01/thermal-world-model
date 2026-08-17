@@ -1,0 +1,48 @@
+{
+  "experiment": "Q32-R-residual-feedback-probe",
+  "version": 1,
+  "status": "ready_for_linux",
+  "purpose": "Test whether action-descendant state feedback through the h_now residual causes dry-regime response cancellation or sign reversal.",
+  "parent": {
+    "results_commit": "aa04388",
+    "manifest_path": "out/qnav_first_principles/manifest.json",
+    "manifest_sha256": "31ebbdf40333c33d2675fea4cf148d6ee9165b5debd4ce51f1f7b906269552ac",
+    "checkpoints": {
+      "F0": {
+        "path": "out/qnav_first_principles/h_now_F0_s0/residual_best_validation.pt",
+        "sha256": "5ec95cc39956bd8e8b7e0a2d93e84955f72be8acc5e49c863255b7e6837d6e86"
+      },
+      "F1": {
+        "path": "out/qnav_first_principles/h_now_F1_s0/residual_best_validation.pt",
+        "sha256": "8870f3ef87fc81a6e9da30b2e29bc1c0375c8c97f60a84f65ec60e3f05320e22"
+      }
+    }
+  },
+  "data": {
+    "window_start": 70686,
+    "development_rows": 40000,
+    "reserved_rows": [40000, 50000],
+    "sample_seconds": 10
+  },
+  "folds": {
+    "F0": {"training": [0, 20000], "evaluation": [25000, 30000]},
+    "F1": {"training": [0, 30000], "evaluation": [35000, 40000]}
+  },
+  "probe": {
+    "state": "dry",
+    "points_per_fold": 8,
+    "steps": 600,
+    "valve_step_fraction": 0.05,
+    "paths": ["valve_only", "coupled"],
+    "modes": ["physical", "live", "replay", "half", "freeze_ts", "freeze_tm"]
+  },
+  "linux_boundary": {
+    "allowed": "Execute this inference-only probe once and return raw artifacts.",
+    "forbidden": [
+      "train or alter checkpoints",
+      "change folds, points, modes or intervention",
+      "access reserved rows 40000:50000",
+      "write scientific verdict or edit NOTES/PAPER_MATERIALS"
+    ]
+  }
+}
