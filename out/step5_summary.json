@@ -1,0 +1,109 @@
+{
+  "ops": {
+    "wet": {
+      "row": 40161,
+      "pm": 16.62079620361328,
+      "power": 332.85369873046875,
+      "main0": 570.785888671875
+    },
+    "dry": {
+      "row": 40437,
+      "pm": 22.422924041748047,
+      "power": 464.5293884277344,
+      "main0": 562.8146362304688
+    }
+  },
+  "anchors_exp099": [
+    0.0,
+    0.1,
+    0.17,
+    0.49,
+    0.7,
+    0.97
+  ],
+  "channels": {
+    "wet": {
+      "fopdt_v2_main": {
+        "K": 0.073,
+        "tau63": 79,
+        "theta": 0,
+        "monotonic": false
+      },
+      "fopdt_v1_main": {
+        "K": 0.1,
+        "tau63": 0,
+        "theta": 0,
+        "monotonic": false
+      },
+      "cl_ss": 1.93,
+      "cl_anchors": [
+        1.04,
+        1.164,
+        1.26,
+        1.314,
+        1.292,
+        1.217
+      ],
+      "anchor_delta": [
+        1.04,
+        1.064,
+        1.09,
+        0.824,
+        0.592,
+        0.247
+      ],
+      "sh1_out_first_step_offset": -0.97,
+      "u_cl_min": 0.0,
+      "u_cl_max": 0.102
+    },
+    "dry": {
+      "fopdt_v2_main": {
+        "K": -0.166,
+        "tau63": 1,
+        "theta": 0,
+        "monotonic": false
+      },
+      "fopdt_v1_main": {
+        "K": 0.047,
+        "tau63": 0,
+        "theta": 0,
+        "monotonic": false
+      },
+      "cl_ss": -1.22,
+      "cl_anchors": [
+        0.417,
+        0.59,
+        0.753,
+        0.882,
+        0.932,
+        0.967
+      ],
+      "anchor_delta": [
+        0.417,
+        0.49,
+        0.583,
+        0.392,
+        0.232,
+        0.003
+      ],
+      "sh1_out_first_step_offset": 1.29,
+      "u_cl_min": 0.0,
+      "u_cl_max": 1.0
+    }
+  },
+  "judge": {
+    "G1_wet": false,
+    "G1_dry": false,
+    "G1": false,
+    "G2_wet": false,
+    "G2_dry": false,
+    "G2": false,
+    "G3": false,
+    "G3_ratio": -0.44,
+    "G4_record": {
+      "wet": -0.97,
+      "dry": 1.29
+    },
+    "verdict": "FAIL"
+  }
+}
