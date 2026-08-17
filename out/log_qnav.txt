@@ -1,0 +1,19 @@
+[qnav s0] 22ep val=74.662
+[qnav s1] 15ep val=71.096
+[E5] wet sh1_out first-step bias=2.79°C (B1=3.07, gate 8)
+[qnav s0] rollout=2.616
+[qnav s1] rollout=2.310
+[step wet] K=-2.040 τ63=480.0s
+[step dry] K=-2.080 τ63=670.0s
+[loop wet] anchors=[-0.039, -0.032, 0.289, 0.827, 0.999, 1.075] norm600=1.0 tail_std=0.0 Δ=[np.float64(0.039), np.float64(0.132), np.float64(0.119), np.float64(0.337), np.float64(0.299), np.float64(0.105)]
+[loop dry] anchors=[0.07, -0.511, -1.61, -2.162, -0.102, 1.809] norm600=-1.022 tail_std=1.8548 Δ=None
+=== qnav 判定 ===
+{
+  "E1": true,
+  "E2": true,
+  "E3": true,
+  "E4": true,
+  "E5": true,
+  "rollout_mean": 2.463,
+  "verdict": "PASS"
+}
