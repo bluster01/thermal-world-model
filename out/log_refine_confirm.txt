@@ -1,0 +1,32 @@
+[qh s0] reuse ckpt
+[qh s0] rollout=2.737 dry=2.36 wet=3.02
+[qh s1] train=5988 val=497 F=13 mode=qh
+[qh s1] trained 24ep val_mse=47.1606 (193s)
+[qh s1] rollout=2.690 dry=2.29 wet=2.98
+[qh s2] train=5988 val=497 F=13 mode=qh
+[qh s2] trained 28ep val_mse=45.2197 (226s)
+[qh s2] rollout=3.022 dry=2.58 wet=3.35
+[qspl s0] reuse ckpt
+[qspl s0] rollout=2.635 dry=2.03 wet=3.06
+[qspl s1] train=5988 val=497 F=13 mode=qspl
+[qspl s1] trained 16ep val_mse=47.3030 (143s)
+[qspl s1] rollout=3.390 dry=3.72 wet=3.08
+[qspl s2] train=5988 val=497 F=13 mode=qspl
+[qspl s2] trained 40ep val_mse=45.1998 (358s)
+[qspl s2] rollout=2.596 dry=1.67 wet=3.18
+[json] out/refine_confirm_summary.json
+[fig] fig13_confirm.png
+=== Step④ 判定 ===
+{
+  "C1": true,
+  "C2": true,
+  "C3": false,
+  "qspl_mean": 2.873,
+  "qspl_std": 0.365,
+  "qh_mean": 2.816,
+  "qh_std": 0.147,
+  "qspl_dry": 2.471,
+  "qspl_wet": 3.108,
+  "qh_dry": 2.41,
+  "qh_wet": 3.121
+}
