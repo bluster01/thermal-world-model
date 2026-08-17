@@ -1,0 +1,18 @@
+[qgate s0] 40ep val=49.241 τ_sw=84.8 τ_sens=23.1 τ_res=78.4
+[qgate s1] 37ep val=48.711 τ_sw=80.6 τ_sens=21.2 τ_res=86.9
+[qgate s0] rollout=5.230
+[qgate s1] rollout=4.897
+[step wet] K=-1.088 τ63=40.0s
+[step dry] K=0.198 τ63=1140.0s
+[loop wet] anchors=[0.128, 0.389, 0.528, 0.722, 0.883, 1.046] norm600=1.0 tail_std=0.0 Δ=[np.float64(0.128), np.float64(0.289), np.float64(0.358), np.float64(0.232), np.float64(0.183), np.float64(0.076)]
+[loop dry] anchors=[-0.014, 0.233, 0.492, 0.713, 0.819, 0.915] norm600=1.009 tail_std=0.0058 Δ=None
+=== 修复② 判定 ===
+{
+  "Q1": true,
+  "Q2": true,
+  "Q3": false,
+  "Q4": false,
+  "rollout_mean": 5.064,
+  "verdict": "FAIL"
+}
+[fig] fig25_gate.png
