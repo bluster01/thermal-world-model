@@ -214,6 +214,8 @@ def main():
         res, va = train_lag(df, sd)
         summ["train"][str(sd)] = {"val_mse": round(va, 4)}
     res_s0 = load_res("qlag", 0)
+    for p in res_s0.parameters():
+        p.requires_grad_(False)  # 评估路径冻结, 防 numpy() 于 requires_grad 张量上崩溃
 
     # ---- rollout (传感器状态跨步持久化) ----
     for sd in (0, 1):
