@@ -1,0 +1,185 @@
+{
+  "experiment": "Q32-qnav-first-principles",
+  "candidate": "h_now",
+  "fold": "F1",
+  "seed": 0,
+  "candidate_config": {
+    "injection": "h_only",
+    "residual_reads_w": false,
+    "train_residual": true
+  },
+  "validation_loss_c2": 97.96550750732422,
+  "epochs": 34,
+  "conditional_rollout": {
+    "mode": "logged_future_boundary_conditional_rollout",
+    "steps": 1800,
+    "rmse_main": 2.9039690494537354,
+    "rmse_outputs": [
+      10.628335952758789,
+      9.293997764587402,
+      8.99587631225586,
+      6.367228984832764,
+      2.9039690494537354
+    ],
+    "bias_outputs": [
+      9.793097496032715,
+      -7.696671009063721,
+      8.304546356201172,
+      -3.250889301300049,
+      -2.3095734119415283
+    ],
+    "rmse_wet_main": null,
+    "rmse_dry_main": 2.9039690494537354,
+    "band_violation_fraction": 0.0,
+    "physical_order_violation_fraction": 0.0
+  },
+  "diagnostics": {
+    "w_coupling_estimated_on": "fold_training_rows_only",
+    "w_coupling": {
+      "wet": 4.0,
+      "dry": 4.0
+    },
+    "operating_points": {
+      "wet": {
+        "available": true,
+        "row": 39492,
+        "pm_mpa": 15.083295822143555,
+        "action_paths": {
+          "valve_only": {
+            "steady_main_c": -0.18658447265625,
+            "tau63_seconds": 690,
+            "anchors_main_c": [
+              -0.03179931640625,
+              -0.0400390625,
+              -0.04986572265625,
+              -0.06884765625,
+              -0.0855712890625,
+              -0.1080322265625
+            ]
+          },
+          "w_only": {
+            "steady_main_c": -0.34197998046875,
+            "tau63_seconds": 600,
+            "anchors_main_c": [
+              -0.06671142578125,
+              -0.0892333984375,
+              -0.10986328125,
+              -0.1456298828125,
+              -0.17645263671875,
+              -0.214599609375
+            ]
+          },
+          "coupled": {
+            "steady_main_c": -0.55877685546875,
+            "tau63_seconds": 650,
+            "anchors_main_c": [
+              -0.09796142578125,
+              -0.12969970703125,
+              -0.1607666015625,
+              -0.2178955078125,
+              -0.2684326171875,
+              -0.333740234375
+            ]
+          },
+          "coupled_residual_off": {
+            "steady_main_c": -1.6197509765625,
+            "tau63_seconds": 910,
+            "anchors_main_c": [
+              -0.1248779296875,
+              -0.18817138671875,
+              -0.25628662109375,
+              -0.39666748046875,
+              -0.53662109375,
+              -0.73370361328125
+            ]
+          },
+          "w_multiplier": 1.2
+        },
+        "closed_loop": {
+          "setpoint_delta_c": 2.0,
+          "achieved_delta_c": 1.5400390625,
+          "tracking_error_c": 0.4599609375,
+          "tail_std_delta_c": 0.0,
+          "valve_min": 0.0,
+          "valve_max": 0.11766681914329528,
+          "valve_saturation_fraction": 0.985,
+          "valve_reversals": 0,
+          "max_valve_move_per_step": 0.013700000000000004,
+          "controller_power_mw": 296.56884765625,
+          "actuator_lag_seconds": null
+        }
+      },
+      "dry": {
+        "available": true,
+        "row": 35616,
+        "pm_mpa": 26.261005401611328,
+        "action_paths": {
+          "valve_only": {
+            "steady_main_c": 0.551513671875,
+            "tau63_seconds": 340,
+            "anchors_main_c": [
+              0.08197021484375,
+              0.1544189453125,
+              0.2164306640625,
+              0.3172607421875,
+              0.387939453125,
+              0.45697021484375
+            ]
+          },
+          "w_only": {
+            "steady_main_c": -0.16046142578125,
+            "tau63_seconds": 410,
+            "anchors_main_c": [
+              -0.02667236328125,
+              -0.04193115234375,
+              -0.056396484375,
+              -0.08172607421875,
+              -0.1016845703125,
+              -0.12347412109375
+            ]
+          },
+          "coupled": {
+            "steady_main_c": 0.61700439453125,
+            "tau63_seconds": 320,
+            "anchors_main_c": [
+              0.10247802734375,
+              0.18548583984375,
+              0.2562255859375,
+              0.36932373046875,
+              0.4473876953125,
+              0.52117919921875
+            ]
+          },
+          "coupled_residual_off": {
+            "steady_main_c": -0.4952392578125,
+            "tau63_seconds": 920,
+            "anchors_main_c": [
+              0.1260986328125,
+              0.14154052734375,
+              0.12139892578125,
+              0.05126953125,
+              -0.03179931640625,
+              -0.15130615234375
+            ]
+          },
+          "w_multiplier": 1.2
+        },
+        "closed_loop": {
+          "setpoint_delta_c": 2.0,
+          "achieved_delta_c": 0.0,
+          "tracking_error_c": 2.0,
+          "tail_std_delta_c": 0.0,
+          "valve_min": 0.0,
+          "valve_max": 0.0,
+          "valve_saturation_fraction": 1.0,
+          "valve_reversals": 0,
+          "max_valve_move_per_step": 0.0,
+          "controller_power_mw": 601.3833618164062,
+          "actuator_lag_seconds": null
+        }
+      }
+    }
+  },
+  "checkpoint_sha256": "8870f3ef87fc81a6e9da30b2e29bc1c0375c8c97f60a84f65ec60e3f05320e22",
+  "scientific_verdict": null
+}

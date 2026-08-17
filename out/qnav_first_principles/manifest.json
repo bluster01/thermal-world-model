@@ -1,0 +1,15 @@
+{
+  "experiment": "Q32-qnav-first-principles",
+  "git_commit": "af58d285e2e608a37c9943cbfdafe77108fa74c9",
+  "matrix_path": "configs/qnav_first_principles_matrix.json",
+  "matrix_sha256": "406d8f5182544dd8bc5b6ed34080c71504d95c46018f765bc4b91d6e92c226f3",
+  "script_sha256": "0f739c11276f582ac0f160ba82c13bb1ec4cae0cc779b32472fa21552b9ffc89",
+  "data_path": "/home/bluster/Desktop/AI/时序预测/TIME-all-model/TCN-Improved-GRU/data/mainT/A侧主汽温全数据_cleaned_10s.csv",
+  "data_sha256": "632bf7e53dec59c18ac24781efa2861708c1fa102e541eddb11e93c1e78b0191",
+  "evap_checkpoint_sha256": "6dc9c1582c937700c4ac040fa7a0628ece2bf2f05503bc6557df62eca4860386",
+  "torch_version": "2.11.0+cu130",
+  "device": "cuda",
+  "exact_command": "python 32_qnav_first_principles.py --execute --csv /home/bluster/Desktop/AI/时序预测/TIME-all-model/TCN-Improved-GRU/data/mainT/A侧主汽温全数据_cleaned_10s.csv --output /home/bluster/.hermes/workspace/adhoc2_lumped_enthalpy/out/qnav_first_principles",
+  "elapsed_seconds": 4108.1398096084595,
+  "reserved_rows_accessed": false
+}

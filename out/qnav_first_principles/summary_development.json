@@ -1,0 +1,1858 @@
+{
+  "experiment": "Q32-qnav-first-principles",
+  "status": "raw_results_returned_for_local_audit",
+  "unit_count": 10,
+  "units": [
+    {
+      "experiment": "Q32-qnav-first-principles",
+      "candidate": "evap_only",
+      "fold": "F0",
+      "seed": 0,
+      "candidate_config": {
+        "injection": "none",
+        "residual_reads_w": false,
+        "train_residual": false
+      },
+      "validation_loss_c2": null,
+      "epochs": 0,
+      "conditional_rollout": {
+        "mode": "logged_future_boundary_conditional_rollout",
+        "steps": 1800,
+        "rmse_main": 5.211446762084961,
+        "rmse_outputs": [
+          4.267007350921631,
+          15.811568260192871,
+          8.002326011657715,
+          13.138001441955566,
+          5.211446762084961
+        ],
+        "bias_outputs": [
+          0.4415547549724579,
+          -12.594598770141602,
+          7.3138532638549805,
+          -11.287931442260742,
+          -3.8404107093811035
+        ],
+        "rmse_wet_main": 9.732123374938965,
+        "rmse_dry_main": 4.4949951171875,
+        "band_violation_fraction": 0.11555555555555555,
+        "physical_order_violation_fraction": 0.0
+      },
+      "diagnostics": {
+        "w_coupling_estimated_on": "fold_training_rows_only",
+        "w_coupling": {
+          "wet": 3.401388804033412,
+          "dry": 4.0
+        },
+        "operating_points": {
+          "wet": {
+            "available": true,
+            "row": 29771,
+            "pm_mpa": 12.841669082641602,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.02536926232278347,
+                "tau63_seconds": 0,
+                "anchors_main_c": [
+                  -0.02728271484375,
+                  -0.030517578125,
+                  -0.0355224609375,
+                  -0.043701171875,
+                  -0.04931640625,
+                  -0.055419921875
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -1.139373779296875,
+                "tau63_seconds": 1040,
+                "anchors_main_c": [
+                  -0.074951171875,
+                  -0.11944580078125,
+                  -0.16259765625,
+                  -0.25,
+                  -0.33648681640625,
+                  -0.4608154296875
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -1.1708883047103882,
+                "tau63_seconds": 950,
+                "anchors_main_c": [
+                  -0.104736328125,
+                  -0.1524658203125,
+                  -0.20111083984375,
+                  -0.297607421875,
+                  -0.39166259765625,
+                  -0.5230712890625
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.1708883047103882,
+                "tau63_seconds": 950,
+                "anchors_main_c": [
+                  -0.104736328125,
+                  -0.1524658203125,
+                  -0.20111083984375,
+                  -0.297607421875,
+                  -0.39166259765625,
+                  -0.5230712890625
+                ]
+              },
+              "w_multiplier": 1.1700694402016707
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 2.0000701904296876,
+              "tracking_error_c": 7.019042968758882e-05,
+              "tail_std_delta_c": 0.0057141815168921545,
+              "valve_min": 0.0,
+              "valve_max": 0.14785505260740017,
+              "valve_saturation_fraction": 0.235,
+              "valve_reversals": 441,
+              "max_valve_move_per_step": 0.013700000000000004,
+              "controller_power_mw": 240.6425323486328,
+              "actuator_lag_seconds": null
+            }
+          },
+          "dry": {
+            "available": true,
+            "row": 27999,
+            "pm_mpa": 26.199951171875,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.04510498046875,
+                "tau63_seconds": 1720,
+                "anchors_main_c": [
+                  0.32489013671875,
+                  0.3560791015625,
+                  0.36175537109375,
+                  0.3338623046875,
+                  0.28094482421875,
+                  0.1939697265625
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -1.7071533203125,
+                "tau63_seconds": 880,
+                "anchors_main_c": [
+                  0.78271484375,
+                  0.7930908203125,
+                  0.69378662109375,
+                  0.37518310546875,
+                  0.0069580078125,
+                  -0.50103759765625
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -1.75750732421875,
+                "tau63_seconds": 970,
+                "anchors_main_c": [
+                  1.2705078125,
+                  1.3216552734375,
+                  1.22698974609375,
+                  0.86041259765625,
+                  0.410400390625,
+                  -0.22637939453125
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.75750732421875,
+                "tau63_seconds": 970,
+                "anchors_main_c": [
+                  1.2705078125,
+                  1.3216552734375,
+                  1.22698974609375,
+                  0.86041259765625,
+                  0.410400390625,
+                  -0.22637939453125
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": -13.441111246744791,
+              "tracking_error_c": 15.441111246744791,
+              "tail_std_delta_c": 8.372161897612685,
+              "valve_min": 0.0,
+              "valve_max": 1.0,
+              "valve_saturation_fraction": 0.49166666666666664,
+              "valve_reversals": 4,
+              "max_valve_move_per_step": 0.013700000000000045,
+              "controller_power_mw": 565.0621948242188,
+              "actuator_lag_seconds": null
+            }
+          }
+        }
+      },
+      "checkpoint_sha256": null,
+      "scientific_verdict": null
+    },
+    {
+      "experiment": "Q32-qnav-first-principles",
+      "candidate": "evap_only",
+      "fold": "F1",
+      "seed": 0,
+      "candidate_config": {
+        "injection": "none",
+        "residual_reads_w": false,
+        "train_residual": false
+      },
+      "validation_loss_c2": null,
+      "epochs": 0,
+      "conditional_rollout": {
+        "mode": "logged_future_boundary_conditional_rollout",
+        "steps": 1800,
+        "rmse_main": 5.770300388336182,
+        "rmse_outputs": [
+          16.642541885375977,
+          4.373624801635742,
+          19.52016258239746,
+          9.335309982299805,
+          5.770300388336182
+        ],
+        "bias_outputs": [
+          15.908865928649902,
+          -2.0130791664123535,
+          18.961444854736328,
+          6.437768936157227,
+          1.2202333211898804
+        ],
+        "rmse_wet_main": null,
+        "rmse_dry_main": 5.770300388336182,
+        "band_violation_fraction": 0.3161111111111111,
+        "physical_order_violation_fraction": 0.0
+      },
+      "diagnostics": {
+        "w_coupling_estimated_on": "fold_training_rows_only",
+        "w_coupling": {
+          "wet": 4.0,
+          "dry": 4.0
+        },
+        "operating_points": {
+          "wet": {
+            "available": true,
+            "row": 39492,
+            "pm_mpa": 15.083295822143555,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.0447998046875,
+                "tau63_seconds": 0,
+                "anchors_main_c": [
+                  -0.025634765625,
+                  -0.0267333984375,
+                  -0.0311279296875,
+                  -0.04022216796875,
+                  -0.0478515625,
+                  -0.05633544921875
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -1.5655517578125,
+                "tau63_seconds": 960,
+                "anchors_main_c": [
+                  -0.1009521484375,
+                  -0.1630859375,
+                  -0.22625732421875,
+                  -0.35601806640625,
+                  -0.48626708984375,
+                  -0.671142578125
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -1.6197509765625,
+                "tau63_seconds": 910,
+                "anchors_main_c": [
+                  -0.1248779296875,
+                  -0.18817138671875,
+                  -0.25628662109375,
+                  -0.39666748046875,
+                  -0.53662109375,
+                  -0.73370361328125
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.6197509765625,
+                "tau63_seconds": 910,
+                "anchors_main_c": [
+                  -0.1248779296875,
+                  -0.18817138671875,
+                  -0.25628662109375,
+                  -0.39666748046875,
+                  -0.53662109375,
+                  -0.73370361328125
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 2.0003763834635415,
+              "tracking_error_c": 0.00037638346354151864,
+              "tail_std_delta_c": 0.010132524500152465,
+              "valve_min": 0.0,
+              "valve_max": 0.12953738275936671,
+              "valve_saturation_fraction": 0.16333333333333333,
+              "valve_reversals": 487,
+              "max_valve_move_per_step": 0.013700000000000004,
+              "controller_power_mw": 296.56884765625,
+              "actuator_lag_seconds": null
+            }
+          },
+          "dry": {
+            "available": true,
+            "row": 35616,
+            "pm_mpa": 26.261005401611328,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.19482421875,
+                "tau63_seconds": 0,
+                "anchors_main_c": [
+                  0.11090087890625,
+                  0.14141845703125,
+                  0.141845703125,
+                  0.11663818359375,
+                  0.07745361328125,
+                  0.01373291015625
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -0.25994873046875,
+                "tau63_seconds": 480,
+                "anchors_main_c": [
+                  -0.03302001953125,
+                  -0.0552978515625,
+                  -0.07647705078125,
+                  -0.115234375,
+                  -0.1474609375,
+                  -0.185302734375
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -0.4952392578125,
+                "tau63_seconds": 920,
+                "anchors_main_c": [
+                  0.1260986328125,
+                  0.14154052734375,
+                  0.12139892578125,
+                  0.05126953125,
+                  -0.03179931640625,
+                  -0.15130615234375
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -0.4952392578125,
+                "tau63_seconds": 920,
+                "anchors_main_c": [
+                  0.1260986328125,
+                  0.14154052734375,
+                  0.12139892578125,
+                  0.05126953125,
+                  -0.03179931640625,
+                  -0.15130615234375
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 0.0,
+              "tracking_error_c": 2.0,
+              "tail_std_delta_c": 0.0,
+              "valve_min": 0.0,
+              "valve_max": 0.0,
+              "valve_saturation_fraction": 1.0,
+              "valve_reversals": 0,
+              "max_valve_move_per_step": 0.0,
+              "controller_power_mw": 601.3833618164062,
+              "actuator_lag_seconds": null
+            }
+          }
+        }
+      },
+      "checkpoint_sha256": null,
+      "scientific_verdict": null
+    },
+    {
+      "experiment": "Q32-qnav-first-principles",
+      "candidate": "double_w",
+      "fold": "F0",
+      "seed": 0,
+      "candidate_config": {
+        "injection": "double",
+        "residual_reads_w": true,
+        "train_residual": true
+      },
+      "validation_loss_c2": 141.18084716796875,
+      "epochs": 14,
+      "conditional_rollout": {
+        "mode": "logged_future_boundary_conditional_rollout",
+        "steps": 1800,
+        "rmse_main": 3.3935234546661377,
+        "rmse_outputs": [
+          6.137497901916504,
+          11.444987297058105,
+          17.785905838012695,
+          7.2592058181762695,
+          3.3935234546661377
+        ],
+        "bias_outputs": [
+          5.291617393493652,
+          -8.577343940734863,
+          15.844244956970215,
+          -4.2011213302612305,
+          -2.0848937034606934
+        ],
+        "rmse_wet_main": 3.0873732566833496,
+        "rmse_dry_main": 3.423485279083252,
+        "band_violation_fraction": 0.0,
+        "physical_order_violation_fraction": 0.0
+      },
+      "diagnostics": {
+        "w_coupling_estimated_on": "fold_training_rows_only",
+        "w_coupling": {
+          "wet": 3.401388804033412,
+          "dry": 4.0
+        },
+        "operating_points": {
+          "wet": {
+            "available": true,
+            "row": 29771,
+            "pm_mpa": 12.841669082641602,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.08807373046875,
+                "tau63_seconds": 330,
+                "anchors_main_c": [
+                  -0.02880859375,
+                  -0.034912109375,
+                  -0.0416259765625,
+                  -0.05291748046875,
+                  -0.06103515625,
+                  -0.0699462890625
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -0.22711181640625,
+                "tau63_seconds": 840,
+                "anchors_main_c": [
+                  -0.01751708984375,
+                  -0.0196533203125,
+                  -0.02496337890625,
+                  -0.04412841796875,
+                  -0.0673828125,
+                  -0.10223388671875
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -0.3299560546875,
+                "tau63_seconds": 720,
+                "anchors_main_c": [
+                  -0.0489501953125,
+                  -0.05792236328125,
+                  -0.0709228515625,
+                  -0.102783203125,
+                  -0.13568115234375,
+                  -0.181396484375
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.1708883047103882,
+                "tau63_seconds": 950,
+                "anchors_main_c": [
+                  -0.104736328125,
+                  -0.1524658203125,
+                  -0.20111083984375,
+                  -0.297607421875,
+                  -0.39166259765625,
+                  -0.5230712890625
+                ]
+              },
+              "w_multiplier": 1.1700694402016707
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 0.70556640625,
+              "tracking_error_c": 1.29443359375,
+              "tail_std_delta_c": 0.0,
+              "valve_min": 0.0,
+              "valve_max": 0.1466417992591858,
+              "valve_saturation_fraction": 0.9816666666666667,
+              "valve_reversals": 0,
+              "max_valve_move_per_step": 0.013700000000000004,
+              "controller_power_mw": 240.6425323486328,
+              "actuator_lag_seconds": null
+            }
+          },
+          "dry": {
+            "available": true,
+            "row": 27999,
+            "pm_mpa": 26.199951171875,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": 0.0848388671875,
+                "tau63_seconds": 10,
+                "anchors_main_c": [
+                  0.3017578125,
+                  0.31451416015625,
+                  0.31201171875,
+                  0.2838134765625,
+                  0.24383544921875,
+                  0.18865966796875
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -1.60467529296875,
+                "tau63_seconds": 340,
+                "anchors_main_c": [
+                  -0.34527587890625,
+                  -0.46820068359375,
+                  -0.62677001953125,
+                  -0.91668701171875,
+                  -1.13067626953125,
+                  -1.33941650390625
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -1.54107666015625,
+                "tau63_seconds": 510,
+                "anchors_main_c": [
+                  0.11480712890625,
+                  0.00750732421875,
+                  -0.16131591796875,
+                  -0.50872802734375,
+                  -0.79559326171875,
+                  -1.1019287109375
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.75750732421875,
+                "tau63_seconds": 970,
+                "anchors_main_c": [
+                  1.2705078125,
+                  1.3216552734375,
+                  1.22698974609375,
+                  0.86041259765625,
+                  0.410400390625,
+                  -0.22637939453125
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 2.000762939453125,
+              "tracking_error_c": 0.000762939453125,
+              "tail_std_delta_c": 0.086578369140625,
+              "valve_min": 0.1114619831562043,
+              "valve_max": 0.22106198315620423,
+              "valve_saturation_fraction": 0.0,
+              "valve_reversals": 582,
+              "max_valve_move_per_step": 0.013700000000000004,
+              "controller_power_mw": 565.0621948242188,
+              "actuator_lag_seconds": null
+            }
+          }
+        }
+      },
+      "checkpoint_sha256": "7a007c7af5639fe54bcd729bd3c1d5649c4bb8804cc458391eeb4c0cda099d1c",
+      "scientific_verdict": null
+    },
+    {
+      "experiment": "Q32-qnav-first-principles",
+      "candidate": "double_w",
+      "fold": "F1",
+      "seed": 0,
+      "candidate_config": {
+        "injection": "double",
+        "residual_reads_w": true,
+        "train_residual": true
+      },
+      "validation_loss_c2": 109.9233627319336,
+      "epochs": 22,
+      "conditional_rollout": {
+        "mode": "logged_future_boundary_conditional_rollout",
+        "steps": 1800,
+        "rmse_main": 1.9316332340240479,
+        "rmse_outputs": [
+          13.694025993347168,
+          6.102465629577637,
+          8.292126655578613,
+          7.385003089904785,
+          1.9316332340240479
+        ],
+        "bias_outputs": [
+          13.202838897705078,
+          -4.543006896972656,
+          6.226400375366211,
+          -5.366379261016846,
+          -1.0481829643249512
+        ],
+        "rmse_wet_main": null,
+        "rmse_dry_main": 1.9316332340240479,
+        "band_violation_fraction": 0.0,
+        "physical_order_violation_fraction": 0.0
+      },
+      "diagnostics": {
+        "w_coupling_estimated_on": "fold_training_rows_only",
+        "w_coupling": {
+          "wet": 4.0,
+          "dry": 4.0
+        },
+        "operating_points": {
+          "wet": {
+            "available": true,
+            "row": 39492,
+            "pm_mpa": 15.083295822143555,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.13525390625,
+                "tau63_seconds": 330,
+                "anchors_main_c": [
+                  -0.03607177734375,
+                  -0.04888916015625,
+                  -0.06097412109375,
+                  -0.08099365234375,
+                  -0.0955810546875,
+                  -0.11053466796875
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -0.30279541015625,
+                "tau63_seconds": 670,
+                "anchors_main_c": [
+                  0.11279296875,
+                  0.1060791015625,
+                  0.0762939453125,
+                  -0.003173828125,
+                  -0.077880859375,
+                  -0.16412353515625
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -0.458984375,
+                "tau63_seconds": 600,
+                "anchors_main_c": [
+                  0.07623291015625,
+                  0.05535888671875,
+                  0.01141357421875,
+                  -0.09088134765625,
+                  -0.18316650390625,
+                  -0.28753662109375
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.6197509765625,
+                "tau63_seconds": 910,
+                "anchors_main_c": [
+                  -0.1248779296875,
+                  -0.18817138671875,
+                  -0.25628662109375,
+                  -0.39666748046875,
+                  -0.53662109375,
+                  -0.73370361328125
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": -1.37579345703125,
+              "tracking_error_c": 3.37579345703125,
+              "tail_std_delta_c": 0.0,
+              "valve_min": 0.0,
+              "valve_max": 0.11766681914329528,
+              "valve_saturation_fraction": 0.985,
+              "valve_reversals": 0,
+              "max_valve_move_per_step": 0.013700000000000004,
+              "controller_power_mw": 296.56884765625,
+              "actuator_lag_seconds": null
+            }
+          },
+          "dry": {
+            "available": true,
+            "row": 35616,
+            "pm_mpa": 26.261005401611328,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.47991943359375,
+                "tau63_seconds": 580,
+                "anchors_main_c": [
+                  0.065185546875,
+                  0.02532958984375,
+                  -0.02569580078125,
+                  -0.12432861328125,
+                  -0.21051025390625,
+                  -0.30914306640625
+                ]
+              },
+              "w_only": {
+                "steady_main_c": 0.4013671875,
+                "tau63_seconds": 490,
+                "anchors_main_c": [
+                  0.11627197265625,
+                  0.14581298828125,
+                  0.1580810546875,
+                  0.19293212890625,
+                  0.230224609375,
+                  0.281005859375
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -0.16754150390625,
+                "tau63_seconds": 0,
+                "anchors_main_c": [
+                  0.216796875,
+                  0.19732666015625,
+                  0.14788818359375,
+                  0.062255859375,
+                  -0.00634765625,
+                  -0.0765380859375
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -0.4952392578125,
+                "tau63_seconds": 920,
+                "anchors_main_c": [
+                  0.1260986328125,
+                  0.14154052734375,
+                  0.12139892578125,
+                  0.05126953125,
+                  -0.03179931640625,
+                  -0.15130615234375
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 0.0,
+              "tracking_error_c": 2.0,
+              "tail_std_delta_c": 0.0,
+              "valve_min": 0.0,
+              "valve_max": 0.0,
+              "valve_saturation_fraction": 1.0,
+              "valve_reversals": 0,
+              "max_valve_move_per_step": 0.0,
+              "controller_power_mw": 601.3833618164062,
+              "actuator_lag_seconds": null
+            }
+          }
+        }
+      },
+      "checkpoint_sha256": "18151b89ea1beeb5fc8de157d274812d507ee555215bcdbdd43ddb9edcff8389",
+      "scientific_verdict": null
+    },
+    {
+      "experiment": "Q32-qnav-first-principles",
+      "candidate": "h_w",
+      "fold": "F0",
+      "seed": 0,
+      "candidate_config": {
+        "injection": "h_only",
+        "residual_reads_w": true,
+        "train_residual": true
+      },
+      "validation_loss_c2": 141.8429412841797,
+      "epochs": 14,
+      "conditional_rollout": {
+        "mode": "logged_future_boundary_conditional_rollout",
+        "steps": 1800,
+        "rmse_main": 3.2111313343048096,
+        "rmse_outputs": [
+          5.128385543823242,
+          12.344664573669434,
+          16.015941619873047,
+          7.851760387420654,
+          3.2111313343048096
+        ],
+        "bias_outputs": [
+          4.1952385902404785,
+          -9.52260971069336,
+          14.537367820739746,
+          -5.346259117126465,
+          -2.086027145385742
+        ],
+        "rmse_wet_main": 3.1704916954040527,
+        "rmse_dry_main": 3.215285539627075,
+        "band_violation_fraction": 0.0,
+        "physical_order_violation_fraction": 0.0
+      },
+      "diagnostics": {
+        "w_coupling_estimated_on": "fold_training_rows_only",
+        "w_coupling": {
+          "wet": 3.401388804033412,
+          "dry": 4.0
+        },
+        "operating_points": {
+          "wet": {
+            "available": true,
+            "row": 29771,
+            "pm_mpa": 12.841669082641602,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.09320068359375,
+                "tau63_seconds": 330,
+                "anchors_main_c": [
+                  -0.03082275390625,
+                  -0.03741455078125,
+                  -0.044189453125,
+                  -0.05609130859375,
+                  -0.0650634765625,
+                  -0.0748291015625
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -0.0335693359375,
+                "tau63_seconds": 1370,
+                "anchors_main_c": [
+                  0.03411865234375,
+                  0.034912109375,
+                  0.03643798828125,
+                  0.03387451171875,
+                  0.02764892578125,
+                  0.01568603515625
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -0.1434326171875,
+                "tau63_seconds": 810,
+                "anchors_main_c": [
+                  0.0003662109375,
+                  -0.0062255859375,
+                  -0.0128173828125,
+                  -0.028076171875,
+                  -0.04449462890625,
+                  -0.06805419921875
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.1708883047103882,
+                "tau63_seconds": 950,
+                "anchors_main_c": [
+                  -0.104736328125,
+                  -0.1524658203125,
+                  -0.20111083984375,
+                  -0.297607421875,
+                  -0.39166259765625,
+                  -0.5230712890625
+                ]
+              },
+              "w_multiplier": 1.1700694402016707
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 0.1534423828125,
+              "tracking_error_c": 1.8465576171875,
+              "tail_std_delta_c": 0.0,
+              "valve_min": 0.0,
+              "valve_max": 0.1466417992591858,
+              "valve_saturation_fraction": 0.9816666666666667,
+              "valve_reversals": 0,
+              "max_valve_move_per_step": 0.013700000000000004,
+              "controller_power_mw": 240.6425323486328,
+              "actuator_lag_seconds": null
+            }
+          },
+          "dry": {
+            "available": true,
+            "row": 27999,
+            "pm_mpa": 26.199951171875,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": 0.02587890625,
+                "tau63_seconds": 0,
+                "anchors_main_c": [
+                  0.29473876953125,
+                  0.3038330078125,
+                  0.2998046875,
+                  0.26531982421875,
+                  0.2178955078125,
+                  0.15252685546875
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -1.0728759765625,
+                "tau63_seconds": 510,
+                "anchors_main_c": [
+                  -0.26385498046875,
+                  -0.18218994140625,
+                  -0.2335205078125,
+                  -0.40716552734375,
+                  -0.57086181640625,
+                  -0.7635498046875
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -1.0701904296875,
+                "tau63_seconds": 690,
+                "anchors_main_c": [
+                  0.1881103515625,
+                  0.2828369140625,
+                  0.22113037109375,
+                  -0.012939453125,
+                  -0.25677490234375,
+                  -0.558837890625
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.75750732421875,
+                "tau63_seconds": 970,
+                "anchors_main_c": [
+                  1.2705078125,
+                  1.3216552734375,
+                  1.22698974609375,
+                  0.86041259765625,
+                  0.410400390625,
+                  -0.22637939453125
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 2.0100728352864583,
+              "tracking_error_c": 0.010072835286458304,
+              "tail_std_delta_c": 0.1495301890707906,
+              "valve_min": 0.1388619831562043,
+              "valve_max": 0.22106198315620423,
+              "valve_saturation_fraction": 0.0,
+              "valve_reversals": 589,
+              "max_valve_move_per_step": 0.01369999999999999,
+              "controller_power_mw": 565.0621948242188,
+              "actuator_lag_seconds": null
+            }
+          }
+        }
+      },
+      "checkpoint_sha256": "c34ea974bfd314aca3021cfe42e5ede624aa7cdb66a567f739d3fc99c8428d94",
+      "scientific_verdict": null
+    },
+    {
+      "experiment": "Q32-qnav-first-principles",
+      "candidate": "h_w",
+      "fold": "F1",
+      "seed": 0,
+      "candidate_config": {
+        "injection": "h_only",
+        "residual_reads_w": true,
+        "train_residual": true
+      },
+      "validation_loss_c2": 108.9631118774414,
+      "epochs": 16,
+      "conditional_rollout": {
+        "mode": "logged_future_boundary_conditional_rollout",
+        "steps": 1800,
+        "rmse_main": 2.273439884185791,
+        "rmse_outputs": [
+          13.605417251586914,
+          5.984978199005127,
+          9.965518951416016,
+          6.0250773429870605,
+          2.273439884185791
+        ],
+        "bias_outputs": [
+          13.106587409973145,
+          -4.63461446762085,
+          8.688892364501953,
+          -2.965193748474121,
+          -0.8791411519050598
+        ],
+        "rmse_wet_main": null,
+        "rmse_dry_main": 2.273439884185791,
+        "band_violation_fraction": 0.0,
+        "physical_order_violation_fraction": 0.0
+      },
+      "diagnostics": {
+        "w_coupling_estimated_on": "fold_training_rows_only",
+        "w_coupling": {
+          "wet": 4.0,
+          "dry": 4.0
+        },
+        "operating_points": {
+          "wet": {
+            "available": true,
+            "row": 39492,
+            "pm_mpa": 15.083295822143555,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.15277099609375,
+                "tau63_seconds": 430,
+                "anchors_main_c": [
+                  -0.036865234375,
+                  -0.046875,
+                  -0.057861328125,
+                  -0.07781982421875,
+                  -0.09393310546875,
+                  -0.112548828125
+                ]
+              },
+              "w_only": {
+                "steady_main_c": 0.099365234375,
+                "tau63_seconds": 0,
+                "anchors_main_c": [
+                  0.17864990234375,
+                  0.19573974609375,
+                  0.203125,
+                  0.19989013671875,
+                  0.186279296875,
+                  0.16204833984375
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -0.08148193359375,
+                "tau63_seconds": 1150,
+                "anchors_main_c": [
+                  0.1412353515625,
+                  0.14697265625,
+                  0.1419677734375,
+                  0.1156005859375,
+                  0.08203125,
+                  0.03399658203125
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.6197509765625,
+                "tau63_seconds": 910,
+                "anchors_main_c": [
+                  -0.1248779296875,
+                  -0.18817138671875,
+                  -0.25628662109375,
+                  -0.39666748046875,
+                  -0.53662109375,
+                  -0.73370361328125
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": -0.74127197265625,
+              "tracking_error_c": 2.74127197265625,
+              "tail_std_delta_c": 0.0,
+              "valve_min": 0.0,
+              "valve_max": 0.11766681914329528,
+              "valve_saturation_fraction": 0.985,
+              "valve_reversals": 0,
+              "max_valve_move_per_step": 0.013700000000000004,
+              "controller_power_mw": 296.56884765625,
+              "actuator_lag_seconds": null
+            }
+          },
+          "dry": {
+            "available": true,
+            "row": 35616,
+            "pm_mpa": 26.261005401611328,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.44647216796875,
+                "tau63_seconds": 650,
+                "anchors_main_c": [
+                  0.0848388671875,
+                  0.05908203125,
+                  0.01873779296875,
+                  -0.069580078125,
+                  -0.154541015625,
+                  -0.258056640625
+                ]
+              },
+              "w_only": {
+                "steady_main_c": 0.37896728515625,
+                "tau63_seconds": 110,
+                "anchors_main_c": [
+                  0.177490234375,
+                  0.239013671875,
+                  0.26898193359375,
+                  0.3135986328125,
+                  0.3392333984375,
+                  0.35955810546875
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -0.16455078125,
+                "tau63_seconds": 0,
+                "anchors_main_c": [
+                  0.301513671875,
+                  0.3297119140625,
+                  0.3094482421875,
+                  0.24298095703125,
+                  0.16192626953125,
+                  0.0526123046875
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -0.4952392578125,
+                "tau63_seconds": 920,
+                "anchors_main_c": [
+                  0.1260986328125,
+                  0.14154052734375,
+                  0.12139892578125,
+                  0.05126953125,
+                  -0.03179931640625,
+                  -0.15130615234375
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 0.0,
+              "tracking_error_c": 2.0,
+              "tail_std_delta_c": 0.0,
+              "valve_min": 0.0,
+              "valve_max": 0.0,
+              "valve_saturation_fraction": 1.0,
+              "valve_reversals": 0,
+              "max_valve_move_per_step": 0.0,
+              "controller_power_mw": 601.3833618164062,
+              "actuator_lag_seconds": null
+            }
+          }
+        }
+      },
+      "checkpoint_sha256": "d2efd4720d6f780b2686f41a227614b33bd2caa3cfa190600b151c97aceeb272",
+      "scientific_verdict": null
+    },
+    {
+      "experiment": "Q32-qnav-first-principles",
+      "candidate": "h_now",
+      "fold": "F0",
+      "seed": 0,
+      "candidate_config": {
+        "injection": "h_only",
+        "residual_reads_w": false,
+        "train_residual": true
+      },
+      "validation_loss_c2": 187.9303436279297,
+      "epochs": 10,
+      "conditional_rollout": {
+        "mode": "logged_future_boundary_conditional_rollout",
+        "steps": 1800,
+        "rmse_main": 4.220791816711426,
+        "rmse_outputs": [
+          4.339999198913574,
+          16.500503540039062,
+          7.460592269897461,
+          13.69333553314209,
+          4.220791816711426
+        ],
+        "bias_outputs": [
+          -0.02063903771340847,
+          -12.948819160461426,
+          6.817800521850586,
+          -11.67461109161377,
+          -3.5304031372070312
+        ],
+        "rmse_wet_main": 7.145145893096924,
+        "rmse_dry_main": 3.793879508972168,
+        "band_violation_fraction": 0.015555555555555555,
+        "physical_order_violation_fraction": 0.0
+      },
+      "diagnostics": {
+        "w_coupling_estimated_on": "fold_training_rows_only",
+        "w_coupling": {
+          "wet": 3.401388804033412,
+          "dry": 4.0
+        },
+        "operating_points": {
+          "wet": {
+            "available": true,
+            "row": 29771,
+            "pm_mpa": 12.841669082641602,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.107177734375,
+                "tau63_seconds": 480,
+                "anchors_main_c": [
+                  -0.02716064453125,
+                  -0.0323486328125,
+                  -0.038818359375,
+                  -0.0511474609375,
+                  -0.06219482421875,
+                  -0.07586669921875
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -0.77166748046875,
+                "tau63_seconds": 880,
+                "anchors_main_c": [
+                  -0.07025146484375,
+                  -0.10784912109375,
+                  -0.1429443359375,
+                  -0.2115478515625,
+                  -0.27691650390625,
+                  -0.366455078125
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -0.90399169921875,
+                "tau63_seconds": 830,
+                "anchors_main_c": [
+                  -0.100341796875,
+                  -0.1436767578125,
+                  -0.1864013671875,
+                  -0.26947021484375,
+                  -0.34765625,
+                  -0.45428466796875
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.1708883047103882,
+                "tau63_seconds": 950,
+                "anchors_main_c": [
+                  -0.104736328125,
+                  -0.1524658203125,
+                  -0.20111083984375,
+                  -0.297607421875,
+                  -0.39166259765625,
+                  -0.5230712890625
+                ]
+              },
+              "w_multiplier": 1.1700694402016707
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 2.000038655598958,
+              "tracking_error_c": 3.865559895821491e-05,
+              "tail_std_delta_c": 0.0002311285447088453,
+              "valve_min": 0.0,
+              "valve_max": 0.1466417992591858,
+              "valve_saturation_fraction": 0.3883333333333333,
+              "valve_reversals": 204,
+              "max_valve_move_per_step": 0.013700000000000004,
+              "controller_power_mw": 240.6425323486328,
+              "actuator_lag_seconds": null
+            }
+          },
+          "dry": {
+            "available": true,
+            "row": 27999,
+            "pm_mpa": 26.199951171875,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": 0.04833984375,
+                "tau63_seconds": 0,
+                "anchors_main_c": [
+                  0.3045654296875,
+                  0.33013916015625,
+                  0.33526611328125,
+                  0.312744140625,
+                  0.2706298828125,
+                  0.20458984375
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -0.6044921875,
+                "tau63_seconds": 1050,
+                "anchors_main_c": [
+                  0.76275634765625,
+                  0.80755615234375,
+                  0.770263671875,
+                  0.59918212890625,
+                  0.38311767578125,
+                  0.0791015625
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -0.519775390625,
+                "tau63_seconds": 1200,
+                "anchors_main_c": [
+                  1.22491455078125,
+                  1.3021240234375,
+                  1.2698974609375,
+                  1.06207275390625,
+                  0.782470703125,
+                  0.380126953125
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.75750732421875,
+                "tau63_seconds": 970,
+                "anchors_main_c": [
+                  1.2705078125,
+                  1.3216552734375,
+                  1.22698974609375,
+                  0.86041259765625,
+                  0.410400390625,
+                  -0.22637939453125
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 4.681967163085938,
+              "tracking_error_c": 2.681967163085938,
+              "tail_std_delta_c": 0.01159137750736688,
+              "valve_min": 0.0,
+              "valve_max": 1.0,
+              "valve_saturation_fraction": 0.73,
+              "valve_reversals": 2,
+              "max_valve_move_per_step": 0.013700000000000045,
+              "controller_power_mw": 565.0621948242188,
+              "actuator_lag_seconds": null
+            }
+          }
+        }
+      },
+      "checkpoint_sha256": "5ec95cc39956bd8e8b7e0a2d93e84955f72be8acc5e49c863255b7e6837d6e86",
+      "scientific_verdict": null
+    },
+    {
+      "experiment": "Q32-qnav-first-principles",
+      "candidate": "h_now",
+      "fold": "F1",
+      "seed": 0,
+      "candidate_config": {
+        "injection": "h_only",
+        "residual_reads_w": false,
+        "train_residual": true
+      },
+      "validation_loss_c2": 97.96550750732422,
+      "epochs": 34,
+      "conditional_rollout": {
+        "mode": "logged_future_boundary_conditional_rollout",
+        "steps": 1800,
+        "rmse_main": 2.9039690494537354,
+        "rmse_outputs": [
+          10.628335952758789,
+          9.293997764587402,
+          8.99587631225586,
+          6.367228984832764,
+          2.9039690494537354
+        ],
+        "bias_outputs": [
+          9.793097496032715,
+          -7.696671009063721,
+          8.304546356201172,
+          -3.250889301300049,
+          -2.3095734119415283
+        ],
+        "rmse_wet_main": null,
+        "rmse_dry_main": 2.9039690494537354,
+        "band_violation_fraction": 0.0,
+        "physical_order_violation_fraction": 0.0
+      },
+      "diagnostics": {
+        "w_coupling_estimated_on": "fold_training_rows_only",
+        "w_coupling": {
+          "wet": 4.0,
+          "dry": 4.0
+        },
+        "operating_points": {
+          "wet": {
+            "available": true,
+            "row": 39492,
+            "pm_mpa": 15.083295822143555,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.18658447265625,
+                "tau63_seconds": 690,
+                "anchors_main_c": [
+                  -0.03179931640625,
+                  -0.0400390625,
+                  -0.04986572265625,
+                  -0.06884765625,
+                  -0.0855712890625,
+                  -0.1080322265625
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -0.34197998046875,
+                "tau63_seconds": 600,
+                "anchors_main_c": [
+                  -0.06671142578125,
+                  -0.0892333984375,
+                  -0.10986328125,
+                  -0.1456298828125,
+                  -0.17645263671875,
+                  -0.214599609375
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -0.55877685546875,
+                "tau63_seconds": 650,
+                "anchors_main_c": [
+                  -0.09796142578125,
+                  -0.12969970703125,
+                  -0.1607666015625,
+                  -0.2178955078125,
+                  -0.2684326171875,
+                  -0.333740234375
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.6197509765625,
+                "tau63_seconds": 910,
+                "anchors_main_c": [
+                  -0.1248779296875,
+                  -0.18817138671875,
+                  -0.25628662109375,
+                  -0.39666748046875,
+                  -0.53662109375,
+                  -0.73370361328125
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 1.5400390625,
+              "tracking_error_c": 0.4599609375,
+              "tail_std_delta_c": 0.0,
+              "valve_min": 0.0,
+              "valve_max": 0.11766681914329528,
+              "valve_saturation_fraction": 0.985,
+              "valve_reversals": 0,
+              "max_valve_move_per_step": 0.013700000000000004,
+              "controller_power_mw": 296.56884765625,
+              "actuator_lag_seconds": null
+            }
+          },
+          "dry": {
+            "available": true,
+            "row": 35616,
+            "pm_mpa": 26.261005401611328,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": 0.551513671875,
+                "tau63_seconds": 340,
+                "anchors_main_c": [
+                  0.08197021484375,
+                  0.1544189453125,
+                  0.2164306640625,
+                  0.3172607421875,
+                  0.387939453125,
+                  0.45697021484375
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -0.16046142578125,
+                "tau63_seconds": 410,
+                "anchors_main_c": [
+                  -0.02667236328125,
+                  -0.04193115234375,
+                  -0.056396484375,
+                  -0.08172607421875,
+                  -0.1016845703125,
+                  -0.12347412109375
+                ]
+              },
+              "coupled": {
+                "steady_main_c": 0.61700439453125,
+                "tau63_seconds": 320,
+                "anchors_main_c": [
+                  0.10247802734375,
+                  0.18548583984375,
+                  0.2562255859375,
+                  0.36932373046875,
+                  0.4473876953125,
+                  0.52117919921875
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -0.4952392578125,
+                "tau63_seconds": 920,
+                "anchors_main_c": [
+                  0.1260986328125,
+                  0.14154052734375,
+                  0.12139892578125,
+                  0.05126953125,
+                  -0.03179931640625,
+                  -0.15130615234375
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 0.0,
+              "tracking_error_c": 2.0,
+              "tail_std_delta_c": 0.0,
+              "valve_min": 0.0,
+              "valve_max": 0.0,
+              "valve_saturation_fraction": 1.0,
+              "valve_reversals": 0,
+              "max_valve_move_per_step": 0.0,
+              "controller_power_mw": 601.3833618164062,
+              "actuator_lag_seconds": null
+            }
+          }
+        }
+      },
+      "checkpoint_sha256": "8870f3ef87fc81a6e9da30b2e29bc1c0375c8c97f60a84f65ec60e3f05320e22",
+      "scientific_verdict": null
+    },
+    {
+      "experiment": "Q32-qnav-first-principles",
+      "candidate": "conservative_now",
+      "fold": "F0",
+      "seed": 0,
+      "candidate_config": {
+        "injection": "conservative",
+        "residual_reads_w": false,
+        "train_residual": true
+      },
+      "validation_loss_c2": 159.24038696289062,
+      "epochs": 23,
+      "conditional_rollout": {
+        "mode": "logged_future_boundary_conditional_rollout",
+        "steps": 1800,
+        "rmse_main": 5.012938499450684,
+        "rmse_outputs": [
+          4.206841468811035,
+          15.974169731140137,
+          7.041210651397705,
+          13.461432456970215,
+          5.012938499450684
+        ],
+        "bias_outputs": [
+          0.40787339210510254,
+          -12.620484352111816,
+          6.335769176483154,
+          -11.519601821899414,
+          -4.044606685638428
+        ],
+        "rmse_wet_main": 10.472530364990234,
+        "rmse_dry_main": 4.052957057952881,
+        "band_violation_fraction": 0.08944444444444444,
+        "physical_order_violation_fraction": 0.0
+      },
+      "diagnostics": {
+        "w_coupling_estimated_on": "fold_training_rows_only",
+        "w_coupling": {
+          "wet": 3.401388804033412,
+          "dry": 4.0
+        },
+        "operating_points": {
+          "wet": {
+            "available": true,
+            "row": 29771,
+            "pm_mpa": 12.841669082641602,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.02552388422191143,
+                "tau63_seconds": 0,
+                "anchors_main_c": [
+                  -0.025146484375,
+                  -0.03424072265625,
+                  -0.04302978515625,
+                  -0.057861328125,
+                  -0.069580078125,
+                  -0.0811767578125
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -1.1472941637039185,
+                "tau63_seconds": 1300,
+                "anchors_main_c": [
+                  -0.05474853515625,
+                  -0.07855224609375,
+                  -0.10186767578125,
+                  -0.150146484375,
+                  -0.20220947265625,
+                  -0.28955078125
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -1.1775685548782349,
+                "tau63_seconds": 1180,
+                "anchors_main_c": [
+                  -0.0828857421875,
+                  -0.1168212890625,
+                  -0.150146484375,
+                  -0.2149658203125,
+                  -0.280029296875,
+                  -0.38116455078125
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.1708883047103882,
+                "tau63_seconds": 950,
+                "anchors_main_c": [
+                  -0.104736328125,
+                  -0.1524658203125,
+                  -0.20111083984375,
+                  -0.297607421875,
+                  -0.39166259765625,
+                  -0.5230712890625
+                ]
+              },
+              "w_multiplier": 1.1700694402016707
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 2.063592529296875,
+              "tracking_error_c": 0.06359252929687509,
+              "tail_std_delta_c": 0.005788122957994868,
+              "valve_min": 0.0,
+              "valve_max": 0.1466417992591858,
+              "valve_saturation_fraction": 0.25666666666666665,
+              "valve_reversals": 427,
+              "max_valve_move_per_step": 0.013700000000000004,
+              "controller_power_mw": 240.6425323486328,
+              "actuator_lag_seconds": null
+            }
+          },
+          "dry": {
+            "available": true,
+            "row": 27999,
+            "pm_mpa": 26.199951171875,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.03581441193819046,
+                "tau63_seconds": 1330,
+                "anchors_main_c": [
+                  0.1572265625,
+                  0.17279052734375,
+                  0.22308349609375,
+                  0.3885498046875,
+                  0.5677490234375,
+                  0.6993408203125
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -1.6785796880722046,
+                "tau63_seconds": 1450,
+                "anchors_main_c": [
+                  0.45452880859375,
+                  0.54730224609375,
+                  0.69488525390625,
+                  1.08990478515625,
+                  1.4945068359375,
+                  1.81524658203125
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -1.7621906995773315,
+                "tau63_seconds": 2030,
+                "anchors_main_c": [
+                  0.689208984375,
+                  0.78564453125,
+                  0.9752197265625,
+                  1.5413818359375,
+                  2.2037353515625,
+                  2.9937744140625
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.75750732421875,
+                "tau63_seconds": 970,
+                "anchors_main_c": [
+                  1.2705078125,
+                  1.3216552734375,
+                  1.22698974609375,
+                  0.86041259765625,
+                  0.410400390625,
+                  -0.22637939453125
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 7.701194254557292,
+              "tracking_error_c": 5.701194254557292,
+              "tail_std_delta_c": 0.7148853442940349,
+              "valve_min": 0.0,
+              "valve_max": 1.0,
+              "valve_saturation_fraction": 0.73,
+              "valve_reversals": 2,
+              "max_valve_move_per_step": 0.013700000000000045,
+              "controller_power_mw": 565.0621948242188,
+              "actuator_lag_seconds": null
+            }
+          }
+        }
+      },
+      "checkpoint_sha256": "107a9af998c73fe0d8f68476ef58bc82b4438305fc2fe07646ef1c68b952c09f",
+      "scientific_verdict": null
+    },
+    {
+      "experiment": "Q32-qnav-first-principles",
+      "candidate": "conservative_now",
+      "fold": "F1",
+      "seed": 0,
+      "candidate_config": {
+        "injection": "conservative",
+        "residual_reads_w": false,
+        "train_residual": true
+      },
+      "validation_loss_c2": 105.53368377685547,
+      "epochs": 28,
+      "conditional_rollout": {
+        "mode": "logged_future_boundary_conditional_rollout",
+        "steps": 1800,
+        "rmse_main": 5.285617828369141,
+        "rmse_outputs": [
+          16.50929832458496,
+          4.4146199226379395,
+          18.83863067626953,
+          9.239317893981934,
+          5.285617828369141
+        ],
+        "bias_outputs": [
+          15.942647933959961,
+          -1.9035969972610474,
+          18.312030792236328,
+          6.362331867218018,
+          1.1859610080718994
+        ],
+        "rmse_wet_main": null,
+        "rmse_dry_main": 5.285617828369141,
+        "band_violation_fraction": 0.2783333333333333,
+        "physical_order_violation_fraction": 0.0
+      },
+      "diagnostics": {
+        "w_coupling_estimated_on": "fold_training_rows_only",
+        "w_coupling": {
+          "wet": 4.0,
+          "dry": 4.0
+        },
+        "operating_points": {
+          "wet": {
+            "available": true,
+            "row": 39492,
+            "pm_mpa": 15.083295822143555,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.02386881597340107,
+                "tau63_seconds": 0,
+                "anchors_main_c": [
+                  -0.02728271484375,
+                  -0.0396728515625,
+                  -0.05078125,
+                  -0.0692138671875,
+                  -0.0838623046875,
+                  -0.099365234375
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -1.7341898679733276,
+                "tau63_seconds": 2720,
+                "anchors_main_c": [
+                  -0.04217529296875,
+                  -0.05657958984375,
+                  -0.070068359375,
+                  -0.09649658203125,
+                  -0.12347412109375,
+                  -0.16534423828125
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -1.7616302967071533,
+                "tau63_seconds": 2610,
+                "anchors_main_c": [
+                  -0.071044921875,
+                  -0.09967041015625,
+                  -0.1259765625,
+                  -0.1739501953125,
+                  -0.2166748046875,
+                  -0.2750244140625
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -1.6197509765625,
+                "tau63_seconds": 910,
+                "anchors_main_c": [
+                  -0.1248779296875,
+                  -0.18817138671875,
+                  -0.25628662109375,
+                  -0.39666748046875,
+                  -0.53662109375,
+                  -0.73370361328125
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": -10.87040506998698,
+              "tracking_error_c": 12.87040506998698,
+              "tail_std_delta_c": 2.8259126954899494,
+              "valve_min": 0.0,
+              "valve_max": 1.0,
+              "valve_saturation_fraction": 0.745,
+              "valve_reversals": 2,
+              "max_valve_move_per_step": 0.013700000000000045,
+              "controller_power_mw": 296.56884765625,
+              "actuator_lag_seconds": null
+            }
+          },
+          "dry": {
+            "available": true,
+            "row": 35616,
+            "pm_mpa": 26.261005401611328,
+            "action_paths": {
+              "valve_only": {
+                "steady_main_c": -0.19580078125,
+                "tau63_seconds": 0,
+                "anchors_main_c": [
+                  0.01348876953125,
+                  0.03326416015625,
+                  0.0958251953125,
+                  0.1962890625,
+                  0.22967529296875,
+                  0.22027587890625
+                ]
+              },
+              "w_only": {
+                "steady_main_c": -0.263427734375,
+                "tau63_seconds": 1030,
+                "anchors_main_c": [
+                  -0.0152587890625,
+                  -0.02325439453125,
+                  -0.0341796875,
+                  -0.04705810546875,
+                  -0.0487060546875,
+                  -0.04095458984375
+                ]
+              },
+              "coupled": {
+                "steady_main_c": -0.493896484375,
+                "tau63_seconds": 1200,
+                "anchors_main_c": [
+                  0.0208740234375,
+                  0.04290771484375,
+                  0.117919921875,
+                  0.2432861328125,
+                  0.28955078125,
+                  0.2891845703125
+                ]
+              },
+              "coupled_residual_off": {
+                "steady_main_c": -0.4952392578125,
+                "tau63_seconds": 920,
+                "anchors_main_c": [
+                  0.1260986328125,
+                  0.14154052734375,
+                  0.12139892578125,
+                  0.05126953125,
+                  -0.03179931640625,
+                  -0.15130615234375
+                ]
+              },
+              "w_multiplier": 1.2
+            },
+            "closed_loop": {
+              "setpoint_delta_c": 2.0,
+              "achieved_delta_c": 0.0,
+              "tracking_error_c": 2.0,
+              "tail_std_delta_c": 0.0,
+              "valve_min": 0.0,
+              "valve_max": 0.0,
+              "valve_saturation_fraction": 1.0,
+              "valve_reversals": 0,
+              "max_valve_move_per_step": 0.0,
+              "controller_power_mw": 601.3833618164062,
+              "actuator_lag_seconds": null
+            }
+          }
+        }
+      },
+      "checkpoint_sha256": "0844f5099f93e095ae7a9997cf8ba0bfc057cfc7cc72b22e56dde7268a64356c",
+      "scientific_verdict": null
+    }
+  ],
+  "scientific_verdict": null
+}
