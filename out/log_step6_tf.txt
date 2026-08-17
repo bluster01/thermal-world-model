@@ -1,0 +1,24 @@
+op points: [(40009, 15.6, 'wet'), (41781, 17.2, 'wet'), (40293, 19.9, 'wet'), (40385, 22.0, 'wet'), (40386, 22.0, 'wet'), (41078, 24.2, 'dry')]
+[op 40009] pm=15.6 wet FOPDT R²=0.836 → SO R²=0.736 τ1=20 τ2=95
+[op 41781] pm=17.2 wet FOPDT R²=0.802 → SO R²=0.678 τ1=20 τ2=80
+[op 40293] pm=19.9 wet FOPDT R²=0.682 → SO R²=0.540 τ1=20 τ2=80
+[op 40385] pm=22.0 wet FOPDT R²=0.669 → SO R²=0.510 τ1=20 τ2=56
+[op 40386] pm=22.0 wet FOPDT R²=0.665 → SO R²=0.505 τ1=20 τ2=56
+[op 41078] pm=24.2 dry FOPDT R²=0.641 → SO R²=0.467 τ1=20 τ2=24
+[tf-cl row 40009] norm600=1.001 tail_std=0.001 (so)
+[tf-cl row 41781] norm600=1.001 tail_std=0.001 (so)
+[tf-cl row 40293] norm600=1.001 tail_std=0.001 (so)
+[tf-cl row 40385] norm600=1.0 tail_std=0.001 (so)
+[tf-cl row 40386] norm600=1.0 tail_std=0.001 (so)
+[tf-cl row 41078] norm600=1.0 tail_std=0.0009 (so)
+=== STEP6 判定 ===
+{
+  "T1": false,
+  "T1_fopdt_n": 0,
+  "T1_so_n": 0,
+  "T2": true,
+  "T3_spearman_K_pm": 0.085,
+  "T4": true,
+  "verdict": "FAIL"
+}
+[fig] fig20_tf_schedule.png

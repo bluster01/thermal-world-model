@@ -1,0 +1,20 @@
+[lin 40009] pm=15.6 R²_main=0.996 max|λ|=0.9749 stable=True
+[lin 41781] pm=17.2 R²_main=0.996 max|λ|=0.9715 stable=True
+[lin 40293] pm=19.9 R²_main=0.993 max|λ|=0.9747 stable=True
+[lin 40385] pm=22.0 R²_main=0.994 max|λ|=0.9725 stable=True
+[lin 40386] pm=22.0 R²_main=0.995 max|λ|=0.9723 stable=True
+[lin 41078] pm=24.2 R²_main=0.990 max|λ|=0.9665 stable=True
+[lti-cl 40009] norm600=0.999 tail_std=0.01
+[lti-cl 41781] norm600=1.001 tail_std=0.0012
+[lti-cl 40293] norm600=1.0 tail_std=0.0
+[lti-cl 40385] norm600=1.0 tail_std=0.0
+[lti-cl 40386] norm600=1.0 tail_std=0.0
+[lti-cl 41078] norm600=1.001 tail_std=0.0011
+=== STEP6b 判定 ===
+{
+  "L1": true,
+  "L2": true,
+  "L3": true,
+  "verdict": "PASS"
+}
+[fig] fig21_linearized.png
