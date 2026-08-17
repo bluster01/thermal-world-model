@@ -1,0 +1,45 @@
+{
+  "experiment": "Q32-qnav-first-principles",
+  "version": 1,
+  "purpose": "Separate residual injection placement from measured-W shortcut effects on the frozen evaporation grey-box.",
+  "data": {
+    "window_start": 70686,
+    "window_rows": 50000,
+    "sequence_steps": 60,
+    "conditional_rollout_steps": 1800,
+    "sample_seconds": 10,
+    "reserved_historical_rows": [40000, 50000]
+  },
+  "folds": {
+    "F0": {"train": [0, 20000], "validation": [20000, 25000], "evaluation": [25000, 30000]},
+    "F1": {"train": [0, 30000], "validation": [30000, 35000], "evaluation": [35000, 40000]}
+  },
+  "seed": 0,
+  "candidates": {
+    "evap_only": {"injection": "none", "residual_reads_w": false, "train_residual": false},
+    "double_w": {"injection": "double", "residual_reads_w": true, "train_residual": true},
+    "h_w": {"injection": "h_only", "residual_reads_w": true, "train_residual": true},
+    "h_now": {"injection": "h_only", "residual_reads_w": false, "train_residual": true},
+    "conservative_now": {"injection": "conservative", "residual_reads_w": false, "train_residual": true}
+  },
+  "training": {
+    "max_epochs": 40,
+    "patience": 8,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "train_stride": 5,
+    "validation_stride": 20
+  },
+  "interventions": {
+    "steps": 600,
+    "valve_step_fraction": 0.05,
+    "valve_rate_per_step": 0.0137,
+    "setpoint_step_c": 2.0,
+    "actuator_lag_seconds": null,
+    "probes": ["valve_only", "w_only", "coupled", "coupled_residual_off"]
+  },
+  "linux_boundary": {
+    "allowed": "Execute the frozen matrix once and return raw artifacts.",
+    "forbidden": ["change candidates", "change folds", "change seed", "change thresholds", "write scientific verdict", "access rows 40000:50000"]
+  }
+}
