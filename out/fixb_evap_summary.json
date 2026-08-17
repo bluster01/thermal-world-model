@@ -1,0 +1,42 @@
+{
+  "train": {
+    "0": {
+      "val_mse": null,
+      "tau_evap": 6.2,
+      "aW1": 115.0,
+      "aW2": 289.0,
+      "m_dry0": 53.7
+    },
+    "1": {
+      "val_mse": null,
+      "tau_evap": 6.2,
+      "aW1": 115.0,
+      "aW2": 290.0,
+      "m_dry0": 53.7
+    },
+    "2": {
+      "val_mse": null,
+      "tau_evap": 6.2,
+      "aW1": 115.0,
+      "aW2": 290.0,
+      "m_dry0": 53.7
+    }
+  },
+  "judge": {
+    "B1": true,
+    "B2": false,
+    "B3": false,
+    "B4": true,
+    "bias_sh1out": 3.07,
+    "rollout_main": 11.33,
+    "verdict": "FAIL"
+  },
+  "step_wet": {
+    "K": -2.338,
+    "tau63_s": 1030.0
+  },
+  "step_dry": {
+    "K": -3.018,
+    "tau63_s": 1050.0
+  }
+}

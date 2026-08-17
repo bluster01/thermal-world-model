@@ -284,13 +284,25 @@ def main():
     df = r09.load_e0_df()
     warm = torch.load(os.path.join(OUT, "model_e0_seed0.pt"), map_location=DEVICE, weights_only=True)
     summ = {"train": {}, "judge": {}}
-    for sd in (0, 1, 2):
-        model, va = train_evap(df, sd, warm)
-        summ["train"][str(sd)] = {"val_mse": round(va, 4),
-                                  "tau_evap": round(float(model.val("tau_evap").item()), 1),
-                                  "aW1": round(float(model.val("aW1").item()), 0),
-                                  "aW2": round(float(model.val("aW2").item()), 0),
-                                  "m_dry0": round(float(model.val("m_dry0").item()), 1)}
+    ckpts = [os.path.join(OUT, f"model_e0_evap_seed{sd}.pt") for sd in (0, 1, 2)]
+    if all(os.path.exists(c) for c in ckpts):
+        print("[skip] 3 checkpoints exist, skip training", flush=True)
+        for sd, c in enumerate(ckpts):
+            m = E0Evap(warm).to(DEVICE)
+            m.load_state_dict(torch.load(c, map_location=DEVICE, weights_only=True))
+            summ["train"][str(sd)] = {"val_mse": None,
+                                      "tau_evap": round(float(m.val("tau_evap").item()), 1),
+                                      "aW1": round(float(m.val("aW1").item()), 0),
+                                      "aW2": round(float(m.val("aW2").item()), 0),
+                                      "m_dry0": round(float(m.val("m_dry0").item()), 1)}
+    else:
+        for sd in (0, 1, 2):
+            model, va = train_evap(df, sd, warm)
+            summ["train"][str(sd)] = {"val_mse": round(va, 4),
+                                      "tau_evap": round(float(model.val("tau_evap").item()), 1),
+                                      "aW1": round(float(model.val("aW1").item()), 0),
+                                      "aW2": round(float(model.val("aW2").item()), 0),
+                                      "m_dry0": round(float(model.val("m_dry0").item()), 1)}
 
     # 验证用 seed0
     model0 = E0Evap(warm).to(DEVICE)
@@ -320,7 +332,7 @@ def main():
             h, Tm, rB, m1, m2 = init_states_evap(
                 model0, torch.tensor(row, device=DEVICE)[None, :],
                 torch.tensor(obs, device=DEVICE)[None, :])
-            out, *_ = model0.integrate(exo_t, h, Tm, rB, m1, m2, 1)
+            out = model0.integrate(exo_t, h, Tm, rB, m1, m2, 1)
             errs.append(float(out[0, 0, 1] - T_all[r + 1, 1]))
     errs = np.array(errs)
     bias = float(np.mean(errs))
@@ -367,7 +379,7 @@ def main():
         h, Tm, rB, m1, m2 = init_states_evap(
             model0, torch.tensor(row, device=DEVICE)[None, :],
             torch.tensor(obs, device=DEVICE)[None, :])
-        out, *_ = model0.integrate(exo, h, Tm, rB, m1, m2, N)
+        out = model0.integrate(exo, h, Tm, rB, m1, m2, N)
         return out[0, :, 4].cpu().numpy()
 
     for name, row_idx, state in (("wet", OP_WET, "wet"), ("dry", OP_DRY, "dry")):

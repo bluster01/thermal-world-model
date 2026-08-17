@@ -1,0 +1,16 @@
+[skip] 3 checkpoints exist, skip training
+[B1] wet sh1_out first-step: n=971 bias=3.07°C rmse=11.30°C
+[B3] rollout main=11.33 dry=15.37 wet=6.01
+[step wet] K=-2.338 τ63=1030.0s
+[step dry] K=-3.018 τ63=1050.0s
+=== FIXB 判定 ===
+{
+  "B1": true,
+  "B2": false,
+  "B3": false,
+  "B4": true,
+  "bias_sh1out": 3.07,
+  "rollout_main": 11.33,
+  "verdict": "FAIL"
+}
+[fig] fig27_evap.png
