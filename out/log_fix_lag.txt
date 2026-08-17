@@ -1,0 +1,18 @@
+[qlag s0] 17ep val=47.042
+[qlag s1] 15ep val=47.018
+[qlag s0] rollout=3.049 dry=3.09 wet=3.02
+[qlag s1] rollout=2.828 dry=2.37 wet=3.17
+[step wet] K=-0.140 tau63=1 theta=0
+[step dry] K=-0.067 tau63=0 theta=0
+[cl wet] anchors=[np.float64(0.948), np.float64(1.125), np.float64(1.152), np.float64(1.286), np.float64(1.253), np.float64(1.169)] Δ=[np.float64(0.948), np.float64(1.025), np.float64(0.982), np.float64(0.796), np.float64(0.553), np.float64(0.199)]
+[cl dry] anchors=[np.float64(1.326), np.float64(1.595), np.float64(1.611), np.float64(1.515), np.float64(1.373), np.float64(1.198)] Δ=[np.float64(1.326), np.float64(1.495), np.float64(1.441), np.float64(1.025), np.float64(0.673), np.float64(0.228)]
+=== 修复② 判定 ===
+{
+  "B1": false,
+  "B2": false,
+  "B3": true,
+  "B4": true,
+  "rollout_mean": 2.938,
+  "verdict": "FAIL"
+}
+[fig] fig16_fix_lag.png
