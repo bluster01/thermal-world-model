@@ -1,0 +1,20 @@
+[qstate s0] 40ep val=71.889 τ_sw=86.8 τ_sens=24.8 τ_res=69.6 s_gate=0.94MPa
+[qstate s1] 24ep val=74.155 τ_sw=74.0 τ_sens=19.0 τ_res=96.6 s_gate=0.66MPa
+[gate curve] s=0.94MPa: g(20.0)=0.899 g(22.064)=0.500 g(24.2)=0.094
+[qstate s0] rollout=9.638
+[qstate s1] rollout=10.958
+[step wet] K=-0.648 τ63=20.0s
+[step dry] K=-1.291 τ63=20.0s
+[loop wet] anchors=[-0.123, -0.23, -0.144, 0.528, 0.739, 0.91] norm600=1.0 tail_std=0.0 Δ=[np.float64(0.123), np.float64(0.33), np.float64(0.314), np.float64(0.038), np.float64(0.039), np.float64(0.06)]
+[loop dry] anchors=[-0.107, 1.691, 2.025, 1.831, 1.297, 1.196] norm600=0.949 tail_std=0.0433 Δ=None
+=== 修复C 判定 ===
+{
+  "S1": false,
+  "S2": true,
+  "S3": false,
+  "S4": true,
+  "rollout_mean": 10.298,
+  "s_gate_MPa": 0.94,
+  "verdict": "FAIL"
+}
+[fig] fig26_stategate.png
