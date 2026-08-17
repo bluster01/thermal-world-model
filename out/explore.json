@@ -1,0 +1,105 @@
+{
+  "n_rows": 267090,
+  "nan_counts": {},
+  "window_start": 70686,
+  "window_end": 120686,
+  "load_std_in_window": 150.58023071289062,
+  "temp_chain_corr": {
+    "分离器出口温度": 0.2112,
+    "一级减温器入口温度": -0.1069,
+    "一级减温器出口温度": 0.0637,
+    "二级减温器入口温度": 0.0154,
+    "二级减温器出口温度": 0.2216
+  },
+  "spray_direction_6step": {
+    "sh1_out": {
+      "n_events": 233191,
+      "opposite_sign_rate": 0.5289
+    },
+    "sh2_out": {
+      "n_events": 233191,
+      "opposite_sign_rate": 0.4161
+    }
+  },
+  "Tmain_quantiles": {
+    "0.5": 555.99,
+    "1": 557.75,
+    "99": 572.13,
+    "99.5": 572.85
+  },
+  "valve_cmd_corr": {
+    "sh1": 0.9993,
+    "sh2": 0.9982
+  },
+  "chain_order_rates": {
+    "T_sh1_in > T_sep_out": 1.0,
+    "T_sh1_out < T_sh1_in": 0.6622,
+    "T_sh2_in > T_sh1_out": 1.0,
+    "T_sh2_out < T_sh2_in": 0.9073,
+    "T_main > T_sh2_out": 1.0
+  },
+  "chain_order_conditional": {},
+  "spray_direction_lag_scan": {
+    "lag1_sh1_out": {
+      "n": 233191,
+      "opposite_rate": 0.5916
+    },
+    "lag1_sh2_out": {
+      "n": 233191,
+      "opposite_rate": 0.5051
+    },
+    "lag3_sh1_out": {
+      "n": 233191,
+      "opposite_rate": 0.5899
+    },
+    "lag3_sh2_out": {
+      "n": 233191,
+      "opposite_rate": 0.4814
+    },
+    "lag6_sh1_out": {
+      "n": 233191,
+      "opposite_rate": 0.5289
+    },
+    "lag6_sh2_out": {
+      "n": 233191,
+      "opposite_rate": 0.4161
+    },
+    "lag12_sh1_out": {
+      "n": 233185,
+      "opposite_rate": 0.444
+    },
+    "lag12_sh2_out": {
+      "n": 233185,
+      "opposite_rate": 0.3596
+    },
+    "lag18_sh1_out": {
+      "n": 233180,
+      "opposite_rate": 0.4146
+    },
+    "lag18_sh2_out": {
+      "n": 233180,
+      "opposite_rate": 0.3515
+    },
+    "lag30_sh1_out": {
+      "n": 233168,
+      "opposite_rate": 0.4162
+    },
+    "lag30_sh2_out": {
+      "n": 233168,
+      "opposite_rate": 0.3256
+    }
+  },
+  "dTmain_abs_quantiles": {
+    "90": 0.192,
+    "99": 0.407,
+    "99.9": 0.695
+  },
+  "window_Tmain_range": [
+    543.15,
+    574.52
+  ],
+  "window_load_range": [
+    188.8,
+    613.6
+  ]
+}
