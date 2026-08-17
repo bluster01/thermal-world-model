@@ -149,7 +149,7 @@ def train_lag(df, seed, fast=False):
     IvaT_t = torch.from_numpy(Iva_T).to(DEVICE)
 
     def fwd(exo_t, init_t, obs_t):
-        h, Tm, rB = init_state(model0, init_t, obs_t)
+        h, Tm, rB, _anchor = r09.init_states(model0, init_t, obs_t)  # 批次版初始化
         T_sens0 = obs_t.permute(1, 0)  # (5,B) 传感器初值=窗口起点真值
         out, *_ = integrate_lag(model0, res, exo_t, h, Tm, rB, exo_t.shape[1], T_sens=T_sens0)
         return out
