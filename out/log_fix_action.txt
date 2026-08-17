@@ -1,0 +1,26 @@
+[qna s0] train=5988 val=497 F=10 mode=qh
+[qna s0] trained 26ep val_mse=47.6759 (205s)
+[qna s0] rollout=2.923 dry=2.23 wet=3.41 win60dry=2.26
+[qna s1] train=5988 val=497 F=10 mode=qh
+[qna s1] trained 29ep val_mse=47.8078 (228s)
+[qna s1] rollout=2.896 dry=2.19 wet=3.38 win60dry=2.12
+[qna s2] train=5988 val=497 F=10 mode=qh
+[qna s2] trained 23ep val_mse=47.5645 (181s)
+[qna s2] rollout=3.309 dry=2.68 wet=3.76 win60dry=2.56
+[step wet] main_final=-0.153
+[step dry] main_final=-0.095
+[cl wet] ss=2.13 norm600=1.000
+=== 修复① 判定 ===
+{
+  "A1": true,
+  "A2": false,
+  "A3": true,
+  "rollout_mean": 3.042,
+  "rollout_vals": [
+    2.923,
+    2.896,
+    3.309
+  ],
+  "verdict": "FAIL"
+}
+[fig] fig15_fix_action.png
