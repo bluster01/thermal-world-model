@@ -1,0 +1,20 @@
+[qnavlag s0] 30ep val=76.288 τ_res=86.6s
+[qnavlag s1] 25ep val=75.481 τ_res=93.4s
+[qnavlag s0] τ_res=86.6s
+[F4] wet sh1_out bias=3.07°C (gate 8)
+[qnavlag s0] rollout=11.328
+[qnavlag s1] rollout=11.328
+[step wet] K=-2.204 τ63=540.0s
+[step dry] K=-2.603 τ63=670.0s
+[loop wet] anchors=[0.003, 0.021, 0.063, 0.16, 0.256, 0.397] norm600=1.0 tail_std=0.0 Δ=[np.float64(0.003), np.float64(0.079), np.float64(0.107), np.float64(0.33), np.float64(0.444), np.float64(0.573)]
+[loop dry] anchors=[0.01, -0.153, -0.365, -0.462, -0.12, 0.628] norm600=0.461 tail_std=0.2388 Δ=None
+=== qnavlag 判定 ===
+{
+  "F1": false,
+  "F2": true,
+  "F3": false,
+  "F4": true,
+  "rollout_mean": 11.328,
+  "tau_res": 86.6,
+  "verdict": "FAIL"
+}
