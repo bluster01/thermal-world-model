@@ -869,6 +869,7 @@ def execute(args, matrix: dict[str, Any], matrix_path: Path):
                     exo[row_index],
                     targets[row_index],
                     float(kw),
+                    float(power_mw[row_index]),
                     matrix["interventions"],
                     sample_seconds,
                 ),
