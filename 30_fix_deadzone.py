@@ -169,7 +169,86 @@ def main():
     results["verdict"] = "PASS" if best else "FAIL"
     with open(os.path.join(OUT, "deadzone_summary.json"), "w") as f:
         json.dump(results, f, ensure_ascii=False, indent=2, default=str)
-    print(f"=== 死区判定: verdict={results['verdict']} best_dz={best} ===", flush=True)
+    print(f"=== 湿态死区判定: verdict={results['verdict']} best_dz={best} ===", flush=True)
+
+    # ---- 干态: 死区的真正用武之地 (qnav 干态闭环震荡 tail_std=1.85) ----
+    sub_d = Ea[START: START + t02.ROLL_STEPS][pm_seg > P_CRIT]
+    A_d = np.stack([sub_d[:, 5], sub_d[:, 6], np.ones(len(sub_d))], 1)
+    coef_d, _, _, _ = np.linalg.lstsq(A_d, sub_d[:, 8], rcond=None)
+    k_wd = float(np.clip(coef_d[1] / np.mean(sub_d[:, 8]), 0.5, 4.0))
+    row_d, obs_d = Ea[40437], T_all[40437]
+    u0d, W0d = float(row_d[V2]), float(row_d[8])
+    SPd = float(obs_d[4]) + 2.0
+    power_d = 464.53
+
+    def run_loop_dry(dz):
+        h, Tm, rB, m1, m2 = r26.init_states_evap(
+            model0, torch.tensor(row_d, device=DEVICE)[None, :],
+            torch.tensor(obs_d, device=DEVICE)[None, :])
+        u, integ, v = u0d, 0.0, u0d
+        mh = np.zeros(N)
+        v_hist = np.zeros(N)
+        with torch.no_grad():
+            for t in range(N):
+                exo = torch.tensor(row_d, device=DEVICE)[None, None, :].clone()
+                exo[0, 0, V2] = v
+                exo[0, 0, 8] = W0d * (1 + k_wd * (v - u0d))
+                out, h, Tm, rB, m1, m2 = r27.integrate_evap_res(
+                    model0, res0, exo, h, Tm, rB, m1, m2, 1)
+                mh[t] = float(out[0, 0, 4])
+                e = mh[t] - SPd
+                if abs(e) > dz:
+                    kp, ti = r27.r22_pi(-e, power_d)
+                    integ += e * DT
+                    u = float(np.clip(u0d + kp * e + (kp / ti) * integ, 0.0, 1.0))
+                v = float(np.clip(v + np.clip(u - v, -RATE, RATE), 0.0, 1.0))
+                v_hist[t] = v
+        h, Tm, rB, m1, m2 = r26.init_states_evap(
+            model0, torch.tensor(row_d, device=DEVICE)[None, :],
+            torch.tensor(obs_d, device=DEVICE)[None, :])
+        b = np.zeros(N)
+        with torch.no_grad():
+            for t in range(N):
+                exo = torch.tensor(row_d, device=DEVICE)[None, None, :].clone()
+                out, h, Tm, rB, m1, m2 = r27.integrate_evap_res(
+                    model0, res0, exo, h, Tm, rB, m1, m2, 1)
+                b[t] = float(out[0, 0, 4])
+        dC = mh - b
+        dC_ss = float(np.mean(dC[-60:]))
+        norm = dC / dC_ss
+        v_rev = int(np.sum(np.diff(np.sign(np.diff(v_hist))) != 0))
+        dmain_tail = np.abs(np.diff(mh[-120:]))
+        return {"norm": norm, "norm600": round(float(norm[599]), 3),
+                "tail_std": round(float(np.std(norm[-120:])), 4),
+                "v_rev": v_rev,
+                "dmain_tail_med": round(float(np.median(dmain_tail)), 4),
+                "dmain_tail_p95": round(float(np.percentile(dmain_tail, 95)), 4)}
+
+    dry_res = {}
+    for dz in (0.0, 0.5, 1.0):
+        r = run_loop_dry(dz)
+        r.pop("norm")
+        dry_res[str(dz)] = r
+        print(f"[dry dz={dz}] norm600={r['norm600']} tail_std={r['tail_std']} "
+              f"v_rev={r['v_rev']} dmain_tail_med={r['dmain_tail_med']} "
+              f"p95={r['dmain_tail_p95']}", flush=True)
+    results["dry"] = dry_res
+    dry_base = dry_res["0.0"]
+    dry_pass = None
+    for dz in ("0.5", "1.0"):
+        r = dry_res[dz]
+        DD1 = 0.8 <= r["norm600"] <= 1.2 and r["tail_std"] <= 0.05
+        DD2 = r["v_rev"] <= dry_base["v_rev"]
+        DD3 = r["dmain_tail_med"] <= dry_base["dmain_tail_med"]
+        ok = DD1 and DD2 and DD3
+        dry_res[dz + "_judge"] = {"DD1": DD1, "DD2": DD2, "DD3": DD3, "pass": ok}
+        if ok and dry_pass is None:
+            dry_pass = dz
+        print(f"[dry dz={dz} judge] DD1={DD1} DD2={DD2} DD3={DD3} PASS={ok}", flush=True)
+    results["dry_best_dz"] = dry_pass
+    with open(os.path.join(OUT, "deadzone_summary.json"), "w") as f:
+        json.dump(results, f, ensure_ascii=False, indent=2, default=str)
+    print(f"=== 干态死区: best_dz={dry_pass} ===", flush=True)
 
     import matplotlib
     matplotlib.use("Agg")

@@ -1,0 +1,126 @@
+{
+  "0.0": {
+    "anchors": [
+      -0.039,
+      -0.032,
+      0.289,
+      0.827,
+      0.999,
+      1.075
+    ],
+    "deltas": [
+      0.039,
+      0.132,
+      0.119,
+      0.337,
+      0.299,
+      0.105
+    ],
+    "norm600": 1.0,
+    "tail_std": 0.0,
+    "u_move_frac": 0.0017,
+    "dmain_tail_med": 0.0,
+    "dmain_tail_p95": 0.0,
+    "valve_reversals": 1
+  },
+  "0.5": {
+    "anchors": [
+      -0.039,
+      -0.032,
+      0.289,
+      0.827,
+      0.999,
+      1.075
+    ],
+    "deltas": [
+      0.039,
+      0.132,
+      0.119,
+      0.337,
+      0.299,
+      0.105
+    ],
+    "norm600": 1.0,
+    "tail_std": 0.0,
+    "u_move_frac": 0.0017,
+    "dmain_tail_med": 0.0,
+    "dmain_tail_p95": 0.0,
+    "valve_reversals": 1
+  },
+  "1.0": {
+    "anchors": [
+      -0.039,
+      -0.032,
+      0.289,
+      0.827,
+      0.999,
+      1.075
+    ],
+    "deltas": [
+      0.039,
+      0.132,
+      0.119,
+      0.337,
+      0.299,
+      0.105
+    ],
+    "norm600": 1.0,
+    "tail_std": 0.0,
+    "u_move_frac": 0.0017,
+    "dmain_tail_med": 0.0,
+    "dmain_tail_p95": 0.0,
+    "valve_reversals": 1
+  },
+  "0.5_judge": {
+    "DZ1": true,
+    "DZ2": true,
+    "DZ3": "True",
+    "DZ4": true,
+    "pass": true
+  },
+  "1.0_judge": {
+    "DZ1": true,
+    "DZ2": true,
+    "DZ3": "True",
+    "DZ4": true,
+    "pass": true
+  },
+  "best_dz": "0.5",
+  "verdict": "PASS",
+  "dry": {
+    "0.0": {
+      "norm600": -1.022,
+      "tail_std": 1.8548,
+      "v_rev": 12,
+      "dmain_tail_med": 0.1652,
+      "dmain_tail_p95": 0.5451
+    },
+    "0.5": {
+      "norm600": -0.803,
+      "tail_std": 1.7792,
+      "v_rev": 12,
+      "dmain_tail_med": 0.1514,
+      "dmain_tail_p95": 0.5451
+    },
+    "1.0": {
+      "norm600": -0.599,
+      "tail_std": 1.7168,
+      "v_rev": 12,
+      "dmain_tail_med": 0.1486,
+      "dmain_tail_p95": 0.5451
+    },
+    "0.5_judge": {
+      "DD1": false,
+      "DD2": true,
+      "DD3": true,
+      "pass": false
+    },
+    "1.0_judge": {
+      "DD1": false,
+      "DD2": true,
+      "DD3": true,
+      "pass": false
+    }
+  },
+  "dry_best_dz": null
+}
