@@ -1,0 +1,26 @@
+[qnal s0] 25ep val=46.627 τ_sw=73.2s τ_sens=19.0s
+[qnal s1] 40ep val=45.235 τ_sw=85.6s τ_sens=24.0s
+[qnal s0 loaded] τ_sw=73.2 τ_sens=19.0
+[qnal s0] rollout=2.764 dry=1.92 wet=3.32
+[qnal s1] rollout=3.174 dry=2.14 wet=3.84
+[wfit wet] slope=42.044 R²=0.425 n=971 k_w=3.220
+[wfit dry] slope=156.010 R²=0.729 n=829 k_w=4.000
+[step wet] K=-1.115 final=-1.115
+[step dry] K=-1.586 final=-1.586
+[cl wet] anchors=[0.533, 0.641, 0.71, 0.81, 0.875, 0.932] norm600=1.0 tail_std=0.0
+[cl dry] anchors=[-2.751, -2.527, -1.363, -0.936, -0.847, 2.658] norm600=3.006 tail_std=1.6478
+=== FIX3 判定 ===
+{
+  "A1p": true,
+  "A2p": true,
+  "A3p": true,
+  "B1p": false,
+  "B2_audit": {
+    "tau_sw": 73.2,
+    "tau_sens": 19.0,
+    "in_bounds": true
+  },
+  "rollout_mean": 2.969,
+  "verdict": "FAIL"
+}
+[fig] fig18_learnlag.png
