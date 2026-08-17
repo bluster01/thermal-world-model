@@ -99,15 +99,18 @@ class ResMLP(nn.Module):
         return torch.cat([z, y[:, 3:]], dim=1)  # (B,6): 后3=λ logit 不缩放(防sigmoid饱和)
 
 
-def build_feats(ts, Tm, pm, D, uB, rB, v1, v2, W, anchor):
-    """ts/Tm: (3,B) raw; 其余 (B,); anchor: (B,7) raw [ts0a,ts1a,ts2a,Tm0a,Tm1a,Tm2a,pm0a] 或 None。→ (B,F)"""
+def build_feats(ts, Tm, pm, D, uB, rB, v1, v2, W, anchor, no_act=False):
+    """ts/Tm: (3,B) raw; 其余 (B,); anchor: (B,7) raw 或 None。→ (B,F)
+    no_act=True: 去掉动作通道特征 v1/v2/W (Step⑤ 发现残差污染动作通道——训练数据中
+    阀门动作与扰动并发, 残差学到伪相关, 湿态下翻转阀门因果符号)。"""
     f = [
         (ts[0] - TS_M) / TS_S, (ts[1] - TS_M) / TS_S, (ts[2] - TS_M) / TS_S,
         (Tm[0] - TM_M) / TM_S, (Tm[1] - TM_M) / TM_S, (Tm[2] - TM_M) / TM_S,
         (pm - PM_M) / PM_S, (D - D_M) / D_S,
         (uB - UB_M) / UB_S, (rB - UB_M) / UB_S,
-        (v1 - V_M) / V_S, (v2 - V_M) / V_S, (W - W_M) / W_S,
     ]
+    if not no_act:
+        f += [(v1 - V_M) / V_S, (v2 - V_M) / V_S, (W - W_M) / W_S]
     if anchor is not None:
         f += [(anchor[:, 0] - TS_M) / TS_S, (anchor[:, 1] - TS_M) / TS_S,
               (anchor[:, 2] - TS_M) / TS_S,
@@ -118,7 +121,7 @@ def build_feats(ts, Tm, pm, D, uB, rB, v1, v2, W, anchor):
 
 # ---------------- 带残差的 integrate（逐行复制 E0Model.integrate, mode="none" 时逐位一致） ----------------
 def integrate_res(model, res, exo, h, Tm, rB, steps, anchor=None, mode="none",
-                  lam_list=None):
+                  lam_list=None, no_act=False):
     """exo: (B,steps,9); h,Tm: (3,B); rB: (B,)。anchor: (B,7) 或 None。
     mode: none=冻结灰盒原路径; q=Q残差(同注Tm+h); dk=Δk残差;
           qtm/qh/qcon=注入点消融(Tm-only/h-only/守恒传递Tm失h得);
@@ -158,7 +161,7 @@ def integrate_res(model, res, exo, h, Tm, rB, steps, anchor=None, mode="none",
                     1.0 + t02.DT_SUB * D[:, t][None, :] / M)
             else:
                 feats = build_feats(ts, Tm, pm[:, t], D[:, t], uB[:, t], rB,
-                                    v1[:, t], v2[:, t], Wt, anchor)
+                                    v1[:, t], v2[:, t], Wt, anchor, no_act=no_act)
                 zraw = res(feats)  # (B,out)
                 if mode == "q":
                     z = zraw.permute(1, 0)  # (3,B) 同注 Tm 与 h
@@ -244,12 +247,12 @@ def load_e0(seed=0):
 
 
 # ---------------- 训练 ----------------
-def train_res(df, seed, variant, mode, use_anchor, fast, out=3):
+def train_res(df, seed, variant, mode, use_anchor, fast, out=3, no_act=False):
     tag = ".fast" if fast else ""
     torch.manual_seed(seed)
     np.random.seed(seed)
     model = load_e0(0)
-    F_in = 20 if use_anchor else 13
+    F_in = (20 if use_anchor else 13) - (3 if no_act else 0)
     scale = Q_SCALE if mode != "dk" else K_SCALE
     res = ResMLP(F_in, scale, out).to(DEVICE)
     opt = torch.optim.Adam(res.parameters(), lr=1e-3)
@@ -271,7 +274,7 @@ def train_res(df, seed, variant, mode, use_anchor, fast, out=3):
     def fwd(exo_t, init_t, obs_t):
         h, Tm, rB, anchor = init_states(model, init_t, obs_t)
         out, *_ = integrate_res(model, res, exo_t, h, Tm, rB, exo_t.shape[1],
-                                anchor if use_anchor else None, mode)
+                                anchor if use_anchor else None, mode, no_act=no_act)
         return out
 
     max_ep = 2 if fast else 40
@@ -307,7 +310,7 @@ def train_res(df, seed, variant, mode, use_anchor, fast, out=3):
 
 
 # ---------------- rollout（复制 e0_rollout, 残差路径） ----------------
-def rollout_res(model, res, df, start, n_steps, mode, use_anchor):
+def rollout_res(model0, res, df, start, n_steps, mode, use_anchor, no_act=False):
     E_full = df[E0_COLS].copy()
     E_full["主蒸汽流量"] = E_full["主蒸汽流量"] / 3.6
     E_full["一级减温调节门阀位"] = E_full["一级减温调节门阀位"].clip(lower=0) / 100.0
@@ -337,11 +340,12 @@ def rollout_res(model, res, df, start, n_steps, mode, use_anchor):
                 ts = t02.T_of_ph(pst, h)
                 rB = torch.tensor([row[1]], device=DEVICE)
                 pm0 = torch.tensor([row[2]], device=DEVICE)
-                Tm = (ts + model.k_of(pm0) * rB / 3600.0 / model.tri("UA")[:, None]
-                      + model.tri("dTm")[:, None])
+                Tm = (ts + model0.k_of(pm0) * rB / 3600.0 / model0.tri("UA")[:, None]
+                      + model0.tri("dTm")[:, None])
                 if use_anchor:
                     anchor = torch.stack([ts[0], ts[1], ts[2], Tm[0], Tm[1], Tm[2], pm0], dim=1)
-            out, h, Tm, rB, hm1, hm2 = integrate_res(model, res, exo_t, h, Tm, rB, 1, anchor, mode)
+            out, h, Tm, rB, hm1, hm2 = integrate_res(model0, res, exo_t, h, Tm, rB, 1, anchor, mode,
+                                                     no_act=no_act)
             preds[t] = out[0, 0].cpu().numpy()
     main_p, main_t = preds[:, 4], truths[:, 4]
     viol = np.zeros(n_steps, dtype=bool)
@@ -361,7 +365,7 @@ def rollout_res(model, res, df, start, n_steps, mode, use_anchor):
 
 
 # ---------------- windowed 分层（复制 07 的 e0_windowed_arrays + layer_agg） ----------------
-def windowed_arrays_res(df, model, res, mode, use_anchor):
+def windowed_arrays_res(df, model, res, mode, use_anchor, no_act=False):
     Xte, Yte, Ite, Ite_T = t02.e0_build_windows(df, START, len(df) - 1, 10)
     errs_main, errs_sh1, preds_main, pm0_list = [], [], [], []
     with torch.no_grad():
@@ -384,7 +388,7 @@ def windowed_arrays_res(df, model, res, mode, use_anchor):
                   + model.tri("dTm")[:, None])
             anchor = torch.stack([ts[0], ts[1], ts[2], Tm[0], Tm[1], Tm[2], pm], dim=1)
             pred, *_ = integrate_res(model, res, xb, h, Tm, rB, xb.shape[1],
-                                     anchor if use_anchor else None, mode)
+                                     anchor if use_anchor else None, mode, no_act=no_act)
             err = pred - yb
             errs_main.append(err[:, :, 4].cpu().numpy())
             errs_sh1.append(err[:, :, 0].cpu().numpy())
