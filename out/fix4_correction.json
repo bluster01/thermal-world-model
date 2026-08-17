@@ -1,0 +1,19 @@
+{
+  "correction": "FIX4 tau_a effective value bug (found by actuator ablation 19_actuator_ablation.py)",
+  "bug": "16_fix_actuator.py: use_tau = np.isfinite(tau_a) and 0.5 < tau_a < 120; 实测 tau_a=883.2s 不满足上界 → tau_a_eff 静默回退 5.0s → 速率限制(0.0137/步)在闭环中恒绑定",
+  "effect": "FIX4 报告的 D1/D2/D3 实际测的是 rate-only 动态, 不是 τ_a=883s 双表征; 湿态锚点 [0.118,0.329,0.541,0.738,0.827,0.906] = rate-only 曲线",
+  "corrected_results_from_ablation": {
+    "rate_only": {
+      "wet": {"anchors": [0.121, 0.335, 0.549, 0.74, 0.828, 0.906], "converged": true},
+      "dry": {"norm600": 1.052, "tail_std": 0.0507, "converged": false, "note": "临界, 对速率限制参数±2%敏感"}
+    },
+    "tau_only_or_both": {
+      "wet": {"anchors": [0.025, 0.069, 0.115, 0.209, 0.301, 0.426], "converged": true,
+              "note": "真 τ_a=883s 使湿态过度迟缓, G1 后段锚点(300s-600s)大幅偏离"},
+      "dry": {"norm600": 1.0, "tail_std": 0.0001, "converged": true, "note": "τ_a 883s 干净稳定干态"}
+    }
+  },
+  "verdict_impact": "D1/D2/D3 判定不翻转 (D 门只测收敛性, 两种表征都收敛), 但 FIX4 叙事修正: 干态稳定器=速率限制(rate-only), 真 τ_a 进环使湿态过度迟缓",
+  "g1_rescore": "G1 原门槛(各锚点|Δ|≤0.15, 600s≤0.10)在全部执行机构表征下仍未过: rate-only 前中段超(120s 0.235/180s 0.379/300s 0.25), τ_a 中后段超(300s 0.281/420s 0.399/600s 0.544)",
+  "generated_by": "19_actuator_ablation.py, 2026-08-17"
+}
