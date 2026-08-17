@@ -574,6 +574,7 @@ def action_path_probes(
     row: np.ndarray,
     observed: np.ndarray,
     kw: float,
+    power_mw: float,
     interventions: dict[str, Any],
     sample_seconds: int,
 ):
