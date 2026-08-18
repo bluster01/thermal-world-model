@@ -124,15 +124,20 @@ def synthetic_canonical_arrays(
         obs = torch.cat([obs1, obs2, obs3, obs4, obs5], dim=-1)[0]
     else:
         with torch.no_grad():
-            anchor = torch.tensor([[385.0, 383.0, 405.0, 402.0, 565.0]])
-            state = teacher.initial_steady_state(boundary[:1], actions[:1], anchor)
+            # executor-side fix (2026-08-18, per user instruction; Supervisor review
+            # required): move rollout inputs to the teacher's device.  The CPU tensors
+            # are kept untouched for the returned arrays below.
+            dev = next(teacher.parameters()).device
+            anchor = torch.tensor([[385.0, 383.0, 405.0, 402.0, 565.0]], device=dev)
+            state = teacher.initial_steady_state(boundary[:1].to(dev), actions[:1].to(dev), anchor)
             temps_all = []
             for start in range(0, total_steps, chunk):
                 end = min(start + chunk, total_steps)
-                states, temps = teacher.integrate(state, boundary[start:end].unsqueeze(0), actions[start:end].unsqueeze(0))
+                states, temps = teacher.integrate(state, boundary[start:end].unsqueeze(0).to(dev),
+                                                  actions[start:end].unsqueeze(0).to(dev))
                 state = states[:, -1]
                 temps_all.append(temps[0])
-            obs = torch.cat(temps_all, dim=0)
+            obs = torch.cat(temps_all, dim=0).cpu()
         obs = obs + 0.3 * torch.randn(obs.shape, generator=gen)
 
     n = total_steps

@@ -213,6 +213,20 @@ class GridThermoProperties:
     def separator_enthalpy(self, pm: torch.Tensor, tm_sep: torch.Tensor) -> torch.Tensor:
         return _two_phase_separator(self, pm, tm_sep)
 
+    # executor-side fix (2026-08-18, per user instruction; Supervisor review
+    # required): device movement for GPU execution.
+    def to(self, *args, **kwargs) -> "GridThermoProperties":
+        for name in ("_p", "_h", "_tg", "_tph", "_hpt", "_psub", "_hsatv",
+                     "_tliq", "_hliq", "_tsat_coef"):
+            setattr(self, name, getattr(self, name).to(*args, **kwargs))
+        return self
+
+    def _apply(self, fn) -> "GridThermoProperties":
+        for name in ("_p", "_h", "_tg", "_tph", "_hpt", "_psub", "_hsatv",
+                     "_tliq", "_hliq", "_tsat_coef"):
+            setattr(self, name, fn(getattr(self, name)))
+        return self
+
 
 def load_grid_properties(path: str | Path, *, device: str | torch.device = "cpu") -> GridThermoProperties:
     """Load the production IAPWS grid supplied at execution time."""
@@ -307,3 +321,17 @@ class AnalyticThermoProperties:
 
     def separator_enthalpy(self, pm: torch.Tensor, tm_sep: torch.Tensor) -> torch.Tensor:
         return _two_phase_separator(self, pm, tm_sep)
+
+    # executor-side fix (2026-08-18, per user instruction; Supervisor review
+    # required): device movement for GPU execution.
+    def to(self, *args, **kwargs) -> "AnalyticThermoProperties":
+        self._tsat_p = self._tsat_p.to(*args, **kwargs)
+        self._tsat_t = self._tsat_t.to(*args, **kwargs)
+        self._hsatv = self._hsatv.to(*args, **kwargs)
+        return self
+
+    def _apply(self, fn) -> "AnalyticThermoProperties":
+        self._tsat_p = fn(self._tsat_p)
+        self._tsat_t = fn(self._tsat_t)
+        self._hsatv = fn(self._hsatv)
+        return self

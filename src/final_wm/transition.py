@@ -133,6 +133,17 @@ class Fan2020UDETransition(nn.Module):
         if self.layout.latent_dim > 0:
             self.latent_rho_raw = nn.Parameter(torch.zeros(self.layout.latent_dim))
 
+    # executor-side fix (2026-08-18, per user instruction; Supervisor review
+    # required): move injected thermo properties together with the module for
+    # GPU execution.  properties is a plain attribute, so nn.Module._apply
+    # does not touch it; a to() override on a child module is never invoked
+    # by the parent's .to(), which recurses via _apply only.
+    def _apply(self, fn, recurse=True):
+        result = super()._apply(fn, recurse)
+        if hasattr(self.properties, "_apply"):
+            self.properties = self.properties._apply(fn)
+        return result
+
     # ------------------------------------------------------------------
     # Parameters (positive-by-construction or bounded signed)
     # ------------------------------------------------------------------
