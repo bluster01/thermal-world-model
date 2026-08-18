@@ -1,0 +1,64 @@
+{
+  "canonical_record": "canonical_record.npz (本地, 不入git; 矩阵§1: 数据不入仓)",
+  "sha256": "5617257f4c26a8769e0ef9b155befa8a724532b41493102b29db63ddb83ce22b",
+  "n_rows": 707721,
+  "n_channels_boundary": 7,
+  "n_channels_action": 4,
+  "n_channels_observation": 10,
+  "sample_period_s": 10,
+  "start": "2025-12-23 08:25:20",
+  "end": "2026-03-16 00:00:00",
+  "split": {
+    "train": [
+      0,
+      566176
+    ],
+    "validation": [
+      566176,
+      707721
+    ],
+    "note": "时间顺序切分提案 80/20; test 锁定不参与; 切分点由本地审计最终冻结"
+  },
+  "cross_side_mapping": {
+    "valve1_A / valve2_A": "管控 B 侧汽温 (obsB)",
+    "valve1_B / valve2_B": "管控 A 侧汽温 (obsA)",
+    "source": "用户2026-08-09确认 + RM3 交叉 cache 先例"
+  },
+  "registry_order": {
+    "boundary": [
+      "steam_flow",
+      "coal_command",
+      "separator_pressure",
+      "separator_temperature",
+      "feedwater_temperature",
+      "outlet_pressure",
+      "spray_flow_total"
+    ],
+    "action": [
+      "valve1_A",
+      "valve2_A",
+      "valve1_B",
+      "valve2_B"
+    ],
+    "observation_A": [
+      "sh1_inlet(缺失见mapping)",
+      "sh1_outlet",
+      "sh2_inlet",
+      "sh2_outlet",
+      "final_outlet"
+    ],
+    "observation_B": [
+      "同上B侧"
+    ]
+  },
+  "gap_mask": "无缺口 (gap_rate=0.0000, 见 quality_gates.json)",
+  "source_files": {
+    "A": "/home/bluster/Desktop/AI/时序预测/TIME-all-model/TCN-Improved-GRU/data/mainT/A侧主汽温全数据03_cleaned_10s.csv",
+    "B": "/home/bluster/Desktop/AI/时序预测/TIME-all-model/TCN-Improved-GRU/data/mainT/B侧主汽温全数据03_cleaned_10s.csv"
+  },
+  "units": {
+    "steam_flow": "kg/s (=t/h /3.6)",
+    "action": "fraction 0-1 (=%/100)",
+    "其余": "原单位"
+  }
+}

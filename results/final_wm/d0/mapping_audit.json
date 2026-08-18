@@ -1,0 +1,125 @@
+{
+  "mapping": [
+    {
+      "registry_channel": "steam_flow",
+      "dcs_tag": "主蒸汽流量",
+      "unit_conversion": "t/h -> kg/s (x1/3.6)",
+      "confidence": "HIGH",
+      "note": "",
+      "closure": "CLOSED"
+    },
+    {
+      "registry_channel": "coal_command",
+      "dcs_tag": "未校正总煤量",
+      "unit_conversion": "t/h, 原单位",
+      "confidence": "MEDIUM",
+      "note": "双候选: 燃料主控输出(指令) vs 未校正总煤量(实测流量); legacy Fan2020-E0 用未校正总煤量作 uB; 需本地确认",
+      "closure": "MIXED"
+    },
+    {
+      "registry_channel": "separator_pressure",
+      "dcs_tag": "分离器出口压力",
+      "unit_conversion": "MPa, 原单位",
+      "confidence": "HIGH",
+      "note": "",
+      "closure": "CLOSED"
+    },
+    {
+      "registry_channel": "separator_temperature",
+      "dcs_tag": "分离器出口温度",
+      "unit_conversion": "degC, 原单位",
+      "confidence": "HIGH",
+      "note": "",
+      "closure": "CLOSED"
+    },
+    {
+      "registry_channel": "feedwater_temperature",
+      "dcs_tag": "省煤器出口给水温度",
+      "unit_conversion": "degC, 原单位",
+      "confidence": "MEDIUM",
+      "note": "喷水给水温度; 双候选: 省煤器入口 vs 出口给水温度; legacy 用出口; 需本地确认",
+      "closure": "MIXED"
+    },
+    {
+      "registry_channel": "outlet_pressure",
+      "dcs_tag": "末级过热器出口压力",
+      "unit_conversion": "MPa, 原单位",
+      "confidence": "HIGH",
+      "note": "",
+      "closure": "CLOSED"
+    },
+    {
+      "registry_channel": "spray_flow_total",
+      "dcs_tag": "减温水总流量",
+      "unit_conversion": "t/h, 原单位",
+      "confidence": "HIGH",
+      "note": "oracle-only 诊断通道; registry 标注 unreliable; E4/Q32 证据: 读W污染动作通道",
+      "closure": "CLOSED"
+    },
+    {
+      "registry_channel": "valve1_position",
+      "dcs_tag": "一级减温调节门阀位",
+      "unit_conversion": "0-100% -> 0-1 fraction (/100)",
+      "confidence": "HIGH",
+      "note": "交叉映射(用户2026-08-09确认+RM3先例): A侧阀注入右(B)管, 管控B侧气温; 单侧文件内 action->obs 不自洽",
+      "closure": "CLOSED"
+    },
+    {
+      "registry_channel": "valve2_position",
+      "dcs_tag": "二级减温调节门阀位",
+      "unit_conversion": "0-100% -> 0-1 fraction (/100)",
+      "confidence": "HIGH",
+      "note": "同上交叉映射",
+      "closure": "CLOSED"
+    },
+    {
+      "registry_channel": "sh1_inlet_temp",
+      "dcs_tag": null,
+      "unit_conversion": null,
+      "confidence": "MISSING",
+      "note": "屏过入口温度: 41列导出中无对应tag; 最近似为分离器出口温度但中间隔顶棚/低温过热器, 不等价",
+      "closure": "MIXED"
+    },
+    {
+      "registry_channel": "sh1_outlet_temp",
+      "dcs_tag": "一级减温器入口温度",
+      "unit_conversion": "degC, 原单位",
+      "confidence": "MEDIUM",
+      "note": "推断: 屏过出口=一级减温器入口(蒸汽路径: 屏过->一级减温); tag名推断非DCS点名, 需本地确认",
+      "closure": "MIXED"
+    },
+    {
+      "registry_channel": "sh2_inlet_temp",
+      "dcs_tag": "一级减温器出口温度",
+      "unit_conversion": "degC, 原单位",
+      "confidence": "MEDIUM",
+      "note": "推断: 一级减温器出口=高过入口; 同上需确认",
+      "closure": "MIXED"
+    },
+    {
+      "registry_channel": "sh2_outlet_temp",
+      "dcs_tag": "二级减温器入口温度",
+      "unit_conversion": "degC, 原单位",
+      "confidence": "MEDIUM",
+      "note": "推断: 高过出口=二级减温器入口; 同上需确认",
+      "closure": "MIXED"
+    },
+    {
+      "registry_channel": "final_outlet_temp",
+      "dcs_tag": "末级过热器出口汽温",
+      "unit_conversion": "degC, 原单位",
+      "confidence": "HIGH",
+      "note": "",
+      "closure": "CLOSED"
+    }
+  ],
+  "mixed_channels": [
+    "coal_command",
+    "feedwater_temperature",
+    "sh1_inlet_temp",
+    "sh1_outlet_temp",
+    "sh2_inlet_temp",
+    "sh2_outlet_temp"
+  ],
+  "note": "执行侧如实标注, MIXED 由本地审计最终裁定"
+}

@@ -1,0 +1,23 @@
+authorization_note.txt
+======================
+批次: final_wm D0 数据审计 (矩阵 2026-08-18-final-wm-discrimination-matrix.md §1)
+执行时间: 2026-08-18 晚
+git HEAD: (见 git_commit.txt 同目录; 执行时 HEAD=37f3f94=origin/main, 工作树含执行方自写脚本)
+
+授权状态: 用户 2026-08-18 聊天口头授权执行 ("Linux 可执行范围仍是矩阵 §5 边界内:
+D0 数据审计、D-SYN 门禁、O1/B1/T1/R1/J1 各单元（≤36 GPU 小时预算）；test 不访问、
+K1 不解冻、不改代码/阈值。跑完把原始产物回传，本地做独立审计判决。")
+注册表在 exec 时 linux_authorized_gate=null (授权未同步), 远端无冻结 release commit。
+本 note 让 Supervisor 审计知情, 不掩盖状态差异。
+
+执行范围: 仅 D0 (数据审计性质, 矩阵 §1 合同具体可执行)。
+D-SYN/O1/B1/T1/R1/J1 未执行: 仓库无对应 runner/CLI (角色边界: 执行方不写实验代码), 等 Codex 冻结提交。
+
+产物:
+- mapping_audit.json: 14 通道映射表 (8 HIGH / 5 MEDIUM / 1 MISSING), MIXED 列表
+- quality_gates.json: A/B 双份四门全过 (gap<1% / stuck<5% / valve非饱和>=60% / 时长>=30d)
+- canonical_record.npz (本地, 不入git): 707721 行, boundary7+action4+obsA5+obsB5, sha256 在 canonical_manifest.json
+- canonical_manifest.json: SHA/切分提案(train 80% val 20%, test 锁定)/交叉映射/注册表序
+- d0_audit.py / d0_canonical.py / survey_files.py: 执行方自写审计脚本 (数据任务, 未触碰 src/final_wm/)
+
+纪律遵守: test 未访问; 未改 src/final_wm/ 接口/阈值/配置; K1 未解冻。
