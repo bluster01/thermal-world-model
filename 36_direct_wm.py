@@ -253,6 +253,7 @@ def apply_persistent_shift(a_future, action_dim, delta):
     return shifted, float(actual.mean().item())
 
 
+@torch.no_grad()
 def eval_sensitivity(model, raw, indices):
     """Persistent valve-only ±2% conditional response; no W coupling is implied."""
     model.eval()
