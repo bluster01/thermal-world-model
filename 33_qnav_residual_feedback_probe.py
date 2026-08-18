@@ -38,6 +38,14 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def sha256_git_file(revision: str, path: str) -> str:
+    """Hash canonical Git bytes so text EOL conversion cannot break preflight."""
+    content = subprocess.check_output(
+        ["git", "show", f"{revision}:{path}"], cwd=ROOT
+    )
+    return hashlib.sha256(content).hexdigest()
+
+
 def json_dump(path: Path, payload: Any):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -124,9 +132,17 @@ def load_config(path: Path) -> dict[str, Any]:
 
 def verify_parent(config: dict[str, Any]):
     parent = config["parent"]
-    manifest_path = ROOT / parent["manifest_path"]
-    if sha256_file(manifest_path) != parent["manifest_sha256"]:
+    manifest_path = parent["manifest_path"]
+    if (
+        sha256_git_file(parent["results_commit"], manifest_path)
+        != parent["manifest_sha256"]
+    ):
         raise RuntimeError("Q32 parent manifest changed")
+    if subprocess.run(
+        ["git", "diff", "--quiet", parent["results_commit"], "--", manifest_path],
+        cwd=ROOT,
+    ).returncode != 0:
+        raise RuntimeError("Q32 parent manifest differs from frozen result commit")
     for fold, item in parent["checkpoints"].items():
         path = ROOT / item["path"]
         if sha256_file(path) != item["sha256"]:

@@ -1,0 +1,59 @@
+{
+  "experiment": "Q32-S-shared-disturbance-deviation-loop",
+  "version": 1,
+  "status": "ready_for_linux",
+  "purpose": "Test whether a paired shared-residual disturbance trajectory restores incremental closed-loop action authority across genuinely wet and dry development points.",
+  "parent": {
+    "results_commit": "af9f205",
+    "manifest_path": "out/qnav_residual_feedback_probe/manifest.json",
+    "manifest_sha256_git": "46058365f0bdabb535c232fe6064829e69a759d9f2910e9687f5ce696f95a0c2",
+    "summary_path": "out/qnav_residual_feedback_probe/summary_development.json",
+    "summary_sha256_git": "f3ab79d9e2904660c9ec67ecf7639dc3e1b081d78511713084a6b0b2fea7c3f8",
+    "checkpoints": {
+      "F0": {
+        "path": "out/qnav_first_principles/h_now_F0_s0/residual_best_validation.pt",
+        "sha256": "5ec95cc39956bd8e8b7e0a2d93e84955f72be8acc5e49c863255b7e6837d6e86"
+      },
+      "F1": {
+        "path": "out/qnav_first_principles/h_now_F1_s0/residual_best_validation.pt",
+        "sha256": "8870f3ef87fc81a6e9da30b2e29bc1c0375c8c97f60a84f65ec60e3f05320e22"
+      }
+    }
+  },
+  "data": {
+    "window_start": 70686,
+    "development_rows": 40000,
+    "reserved_rows": [40000, 50000],
+    "sample_seconds": 10
+  },
+  "folds": {
+    "F0": {"training": [0, 20000], "evaluation": [25000, 30000]},
+    "F1": {"training": [0, 30000], "evaluation": [35000, 40000]}
+  },
+  "probe": {
+    "states": ["wet", "dry"],
+    "points_per_state_per_fold": 4,
+    "warm_steps": 600,
+    "control_steps": 600,
+    "setpoint_delta_c": 0.5,
+    "valve_rate_fraction_per_step": 0.0137,
+    "modes": ["physical", "live", "shared"],
+    "diagnostic_thresholds": {
+      "tracking_error_c": 0.1,
+      "tail_std_delta_c": 0.05,
+      "valve_saturation_fraction": 0.95
+    }
+  },
+  "linux_boundary": {
+    "allowed": "Execute this inference-only frozen probe once and return raw artifacts and the execution log.",
+    "command": "set -o pipefail; python 34_qnav_shared_disturbance_loop.py --execute --csv '/home/bluster/Desktop/AI/时序预测/TIME-all-model/TCN-Improved-GRU/data/mainT/A侧主汽温全数据_cleaned_10s.csv' --output out/qnav_shared_disturbance_loop 2>&1 | tee out/qnav_shared_disturbance_loop_exec.log",
+    "forbidden": [
+      "train or alter checkpoints",
+      "change folds, point selection, states, modes, setpoint or thresholds",
+      "access reserved rows 40000:50000",
+      "retry, repair code/config, select examples, make figures or edit interpretation documents",
+      "write a scientific verdict"
+    ],
+    "failure_policy": "Stop at the first preflight or execution error and return the unmodified error log to the supervisor."
+  }
+}
