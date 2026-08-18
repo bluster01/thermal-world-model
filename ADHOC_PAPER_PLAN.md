@@ -82,7 +82,11 @@ PINN 拆解思想迁移验证（EWH PINN 三件套：物理派生特征 / 不变
 | 干态探针 | 23 | **F2 直接证明**：e0 140s / qnal 50s / qslow 10s（残差看得越多抵抗越强） |
 | 修复②段门控 | 24 | FAIL（湿 τ63 塌回 40s，精度 5.06）；发现残差湿态=阻尼/干态=破坏者 |
 | 修复C相态门控 | 25 | FAIL（9% 残差权威仍 τ63=20s——动态破坏是结构性）；精度崩 10.3 |
-| **FIXB 蒸发干燥**（进行中） | 26 | 液滴状态+壁面供热+干燥度门控；预注册 B1-B5 |
+| **FIXB 蒸发干燥** | 26 | B1 PASS 21-25→3.07°C（物理本体首次修复两相病灶）；B2/B3 FAIL（1030s 过慢） |
+| qnav 残差上蒸发底座 | 27 | E1-E5 全 PASS：τ63=480s 进窗、rollout 2.463 历史最佳、前 3 G1 锚点首过 |
+| qnavlag 反证 | 28 | FAIL：τ_res 钝刀（rollout 11.33）——qnav 无滞后即最优 |
+| Q32 第一性原理筛查（Codex） | `97ee326`/`aa04388` | 精度层=捷径（读W+非守恒注热）、物理层=h_now 成立；干态 F0/F1 折分裂 |
+| Q32-R 残差反馈归因（Codex） | `7448a6b`/`af9f205` | 干态符号翻转=残差对动作后代状态的反馈反应；replay 8/8 全恢复 |
 
 **收口文档**：NOTES.md（§0-§6.5）、PAPER_MATERIALS.md、本规划稿；skill 归档 `thermal-world-model-ablation/references/adhoc2-control-embedding-fixchain-2026-08-17.md`
 
@@ -115,7 +119,9 @@ PINN 拆解思想迁移验证（EWH PINN 三件套：物理派生特征 / 不变
 - FIXB：液滴状态 + 壁面供热 + 干燥度门控进灰盒本体。B1 湿态 sh1_out 偏差 21-25→3.07°C（物理本体首次修复两相病灶）；B4 干态正确退化
 - qnav（残差上蒸发底座）：E1-E5 全 PASS——湿 τ63=480s 进窗、rollout 2.463 历史最佳、前 3 G1 锚点首过、两相偏差保持
 - qnavlag 反证：τ_res 是钝刀（rollout 崩 11.33）——qnav 无滞后即最优
-- 剩余局限：湿 G1 中段（300s Δ0.34/420s Δ0.30）；干态闭环（数据 8.4%，范围外）
+- Q32 第一性原理筛查（Codex 独立审计）：精度层来自捷径（读 W+非守恒净注热），物理层在 h_now 诚实配置成立——论文以 h_now 为干净配置、double_w 为精度上界
+- Q32-R 残差反馈归因（Codex 审计执行）：干态符号翻转 = 残差对动作后代状态的反馈反应（live 2/8 vs physical 6-8/8 双折复现；replay 切断反馈三对儿全恢复 8/8、median 差 ≤0.02°C；half 剂量依赖；干态反馈主载体=蒸汽温度类特征、湿态折依赖）
+- 剩余局限：湿 G1 中段（300s Δ0.34/420s Δ0.30）；干态闭环折分裂（F0 收敛/F1 冻结阀饱和）独立于已归因的符号翻转
 
 ---
 
@@ -144,6 +150,7 @@ PINN 拆解思想迁移验证（EWH PINN 三件套：物理派生特征 / 不变
 - e0 12.7 / 干态 17.11 / 黑盒 2.44：`out/strat_ablation_summary.json`（07）
 - 学习滞后 τ_sw 73-86s/τ_sens 19-24s：`out/fix3_learnlag_summary.json`
 - 执行机构：`out/actuator_identity_conclusion.json`
+- Q32-R 归因：`out/qnav_residual_feedback_probe/summary_development.json`（manifest + 16 点明细）
 - 线性化 R² 0.990-0.996：`out/step6b_lin_summary.json`（18）
 - F2 探针：`out/dry_tau63_probe.json`
 
@@ -172,6 +179,6 @@ PINN 拆解思想迁移验证（EWH PINN 三件套：物理派生特征 / 不变
 
 - [ ] 核实 exp_099 出处（主仓事件研究 or adhoc 仓内重建）
 - [ ] 补 Fan2020 完整引文
-- [ ] FIXB 结果落地后更新 §3.5 与本稿
+- [x] FIXB/qnav/qnavlag/Q32/Q32-R 结果落地后更新 §3.5 与本稿（2026-08-18 完成）
 - [ ] 论文 A 与论文 B 的引言段互相不引用（各写各的对象描述）
-- [ ] 干态（8.4% 数据）在两文中的归属声明：论文 A 明确"干态控制嵌入判为数据集范围外"
+- [ ] 干态（8.4% 数据）在两文中的归属声明：论文 A 明确"干态验证受限（n=4 事件）而非范围外；符号翻转已由 Q32-R 归因（残差反馈机制），干净形态 = h_now + replay 式残差运行"
