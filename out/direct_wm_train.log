@@ -1,0 +1,14 @@
+[36] dev rows=40000 | n_feat=40 | target_idx=29 | valve_idx=[37, 38] | device=cuda | smoke=False
+  [F0 s42] stop@32 best@30
+  [F0 s42] train 594s | rollout step17=0.7556 (step0=0.2070)
+  [F0 s0] stop@29 best@27
+  [F0 s0] train 568s | rollout step17=0.6817 (step0=0.1980)
+  [F0 s7] stop@30 best@24
+  [F0 s7] train 575s | rollout step17=0.8069 (step0=0.2174)
+  [F1 s42] stop@28 best@13
+  [F1 s42] train 554s | rollout step17=0.8895 (step0=0.2698)
+  [F1 s0] stop@26 best@22
+  [F1 s0] train 506s | rollout step17=0.8624 (step0=0.2510)
+  [F1 s7] stop@24 best@16
+  [F1 s7] train 467s | rollout step17=1.0030 (step0=0.2312)
+Saved: out/direct_wm/results.json

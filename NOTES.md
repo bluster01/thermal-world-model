@@ -222,3 +222,16 @@ raw artifacts：out/qnav_residual_feedback_probe/（manifest.json + summary_deve
 控制器边界：Q32-S 的启发式 PI 每10s直接更新，无死区、滤波和 anti-windup。湿态达标点的高换向更像离散控制极限环，不能单独作为对象模型失败证据。Q32-S 还使用600步定输入 warm-up 与基线差分，消除了绝对初始偏差，因此也不能回答初始化误差。
 
 **Q32-T 已冻结、待 Linux 执行**：`35_qnav_boundary_attribution_probe.py` + `configs/qnav_boundary_attribution_probe.json`。三块独立面板分别验证：湿/干双向开环对象增益；anti-windup/死区/低通滤波控制器消融；一步、180步历史与1/60/180/600步定输入初始化漂移。无训练、无自动裁决，Linux禁止调参或解释。
+
+## §6.9 Direct WM 精度端点移植（2026-08-18，commit 1f329a1 起）
+
+**论文 A 框架 v2 第一个新协议数字**：phase1 Direct WM 移植（36_direct_wm.py，自包含，[PHASE-REF] exp_023 蓝本），折匹配协议（F0 训练[0,20k)评测[25k,30k)；F1 训练[0,30k)评测[35k,40k)，dev-only 40k，reserved 禁触），RevIN 内部 + denorm 物理尺度，3 seeds。
+
+**rollout step17（180s）MAE**：F0 0.756/0.682/0.807（均值 0.748）；F1 0.889/0.862/1.003（均值 0.918）。
+
+**敏感性（二级阀位 +10 分位，t12）**：F0 −0.066/−0.063/−0.073；F1 −0.370/−0.045/−0.249。方向全部物理正确（负），幅度协议依赖。
+
+**诚实记录（三点）**：
+1. phase1 旧协议的 0.528 在本协议下**不复现**（≈0.75-0.92）——训练数据量（dev-only vs 全文件70%）与评测窗口（折窗口 vs 文件尾15%）都变了，这正是"跨仓数字必须重测"纪律的实证
+2. 敏感性幅度比 phase1 旧值 −0.382 小一个量级（F0 −0.067）——同样协议依赖；方向稳定性（6/6 负）是唯一可跨协议保留的结论
+3. 曲线端点对比的**口径统一仍未完成**：Direct WM 是 H18 直接多步 + MAE，adhoc 系列是 H60 自回归 + RMSE；±2% 耦合阶跃（Q32-T 对象面板口径）对 Direct WM 的测试是下一步工作
