@@ -281,6 +281,132 @@ def build_canonical(
 
 
 # ---------------------------------------------------------------------------
+# D0 bridge: dual-side field record -> per-side registry-schema records
+# ---------------------------------------------------------------------------
+
+# Cross-side control mapping, user-confirmed 2026-08-09 with RM3 precedent:
+# the A-labeled valves drive the B-side temperatures and vice versa.
+_DUAL_ACTION_COLUMNS = {"A": (2, 3), "B": (0, 1)}  # per-side controlling valves in the dual record
+_DUAL_OBS_KEYS = {"A": "obsA", "B": "obsB"}
+
+
+def import_dual_canonical(
+    dual_path: str | Path,
+    out_dir: str | Path,
+    *,
+    gates: QualityGateConfig = QualityGateConfig(),
+) -> dict[str, str]:
+    """Split the D0 dual-side record into per-side canonical records.
+
+    The dual record (produced by the D0 executor under
+    `results/final_wm/d0/`, data itself never enters git) carries
+    boundary(7) + action(4) + obsA(5) + obsB(5).  Per side we select the
+    cross-mapped valve pair, apply the frozen 75/15/10 chronological
+    split, re-run every quality gate fail-closed, and write one
+    registry-schema record per side plus meta with full provenance.
+    """
+    import hashlib
+
+    dual_path = Path(dual_path)
+    if not dual_path.exists():
+        raise FinalWMProtocolError(f"dual canonical record missing: {dual_path}")
+    arrays = np.load(dual_path)
+    for key in ("boundary", "action", "date_ns"):
+        if key not in arrays:
+            raise FinalWMProtocolError(f"dual record lacks key: {key}")
+    boundary = arrays["boundary"].astype(np.float64)
+    action = arrays["action"].astype(np.float64)
+    if boundary.shape[1] != len(BOUNDARY_ELEMENTS) or action.shape[1] != 4:
+        raise FinalWMProtocolError("dual record channel widths do not match the D0 manifest")
+    timestamps = (arrays["date_ns"].astype(np.int64) // 10**9).astype(np.int64)
+    dual_sha = hashlib.sha256(dual_path.read_bytes()).hexdigest()
+
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    written: dict[str, str] = {}
+    for side in ("A", "B"):
+        obs_key = _DUAL_OBS_KEYS[side]
+        if obs_key not in arrays:
+            raise FinalWMProtocolError(f"dual record lacks key: {obs_key}")
+        obs = arrays[obs_key].astype(np.float64)
+        actions = action[:, _DUAL_ACTION_COLUMNS[side]]
+        n = len(timestamps)
+        if not (boundary.shape[0] == actions.shape[0] == obs.shape[0] == n):
+            raise FinalWMProtocolError(f"side {side}: inconsistent row counts")
+
+        valid = (
+            np.isfinite(boundary).all(axis=1)
+            & np.isfinite(actions).all(axis=1)
+            & np.isfinite(obs).all(axis=1)
+        )
+        gap_ratio = 1.0 - float(valid.mean())
+        min_run = int(gates.stuck_minutes * 60.0 / gates.dt_seconds)
+        series = {n_: boundary[:, i] for i, n_ in enumerate(BOUNDARY_ELEMENTS)}
+        series.update({n_: actions[:, i] for i, n_ in enumerate(ACTION_ELEMENTS)})
+        series.update({n_: obs[:, i] for i, n_ in enumerate(OBSERVATION_ELEMENTS)})
+        stuck = {name: _stuck_ratio(values, min_run) for name, values in series.items()}
+        v1, v2 = actions[:, 0], actions[:, 1]
+        valve_active = float(((v1 > 0.02) & (v1 < 0.98) & (v2 > 0.02) & (v2 < 0.98)).mean())
+        days = float((timestamps[-1] - timestamps[0]) / 86400.0)
+
+        breaches = []
+        if gap_ratio > gates.max_gap_ratio:
+            breaches.append(f"gap_ratio {gap_ratio:.4f}")
+        if max(stuck.values()) > gates.max_stuck_ratio:
+            breaches.append(f"stuck_ratio {max(stuck.values()):.4f}")
+        if valve_active < gates.min_valve_active_ratio:
+            breaches.append(f"valve_active_ratio {valve_active:.3f}")
+        if days < gates.min_days:
+            breaches.append(f"days {days:.1f}")
+        if breaches:
+            raise FinalWMProtocolError(f"side {side} quality gates breached: " + "; ".join(breaches))
+
+        n_test = int(n * gates.test_fraction)
+        n_val = int(n * gates.val_fraction)
+        split = np.zeros(n, dtype=np.int8)
+        split[n - n_val - n_test : n - n_test] = SPLIT_VAL
+        split[n - n_test :] = SPLIT_TEST
+
+        out_path = out_dir / f"canonical_side{side}.npz"
+        np.savez_compressed(
+            out_path,
+            boundary=boundary.astype(np.float32),
+            actions=actions.astype(np.float32),
+            obs=obs.astype(np.float32),
+            valid=valid,
+            timestamps=timestamps,
+            split=split,
+        )
+        meta = {
+            "version": CANONICAL_VERSION,
+            "side": side,
+            "dt_seconds": gates.dt_seconds,
+            "n_samples": n,
+            "start_epoch": int(timestamps[0]),
+            "end_epoch": int(timestamps[-1]),
+            "quality": {
+                "gap_ratio": gap_ratio,
+                "stuck_ratio": stuck,
+                "valve_active_ratio": valve_active,
+                "days": days,
+            },
+            "splits": {"train": [0, n - n_val - n_test], "val": [n - n_val - n_test, n - n_test], "test": "LOCKED"},
+            "test_locked": True,
+            "provenance": {
+                "dual_record_sha256": dual_sha,
+                "dual_record_path": str(dual_path),
+                "cross_side_valves": list(_DUAL_ACTION_COLUMNS[side]),
+                "d0_artifacts": "results/final_wm/d0/",
+            },
+        }
+        (out_dir / f"canonical_side{side}_meta.json").write_text(
+            json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        written[side] = str(out_path)
+    return written
+
+
+# ---------------------------------------------------------------------------
 # Runtime: canonical record loading and window sampling
 # ---------------------------------------------------------------------------
 

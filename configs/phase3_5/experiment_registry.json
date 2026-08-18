@@ -1228,7 +1228,7 @@
           "required": true
         }
       },
-      "decision": "ACTIVE / INTERFACES + MICRO-SMOKE LOCAL PASS / NO LINUX AUTHORIZATION；src/final_wm 九个模块与 tests/final_wm 82 项专项测试已完成；O1/B1/T1/R1/J1/K1 判别实验矩阵冻结后以独立提交授权 micro-to-long 训练",
+      "decision": "ACTIVE / MATRIX FROZEN v0.1 + RUNNER READY + D0 CLOSED；矩阵文档+run_matrix 四阶段入口+双侧桥接就位，96 项专项测试通过；D0 已由 Linux 执行回传（14/14 HIGH、四门全过、82.6天×2侧）并经本地审计认可；下一步授权 Linux 执行 D-SYN 门禁与逐侧矩阵（--side A/B），产物回传本地审计",
       "advisories": [
         "Fan2020-UDE是物理transition候选，不是plant truth；动作通道必须保留constant-action identity、方向与支持域审计",
         "Direct-WM v2只支持direct H18 observer/backbone候选；未验证递归rollout、双阀稳定响应或概率校准",

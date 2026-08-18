@@ -24,7 +24,13 @@ import numpy as np
 import torch
 
 from src.final_wm.contracts import FinalWMProtocolError
-from src.final_wm.data import SPLIT_VAL, CanonicalRecord, build_canonical, discover_dataset
+from src.final_wm.data import (
+    SPLIT_VAL,
+    CanonicalRecord,
+    build_canonical,
+    discover_dataset,
+    import_dual_canonical,
+)
 from src.final_wm.diagnostics import leakage_probe
 from src.final_wm.evaluation import (
     boundary_forecast_metrics,
@@ -84,6 +90,16 @@ def phase_build(args) -> None:
         "days": report.days,
     })
     print(f"[d0] canonical record built: {record_path} (gates passed)")
+
+
+def phase_split_sides(args) -> None:
+    """Bridge the D0 dual-side record into per-side registry-schema records."""
+    if not args.record:
+        raise FinalWMProtocolError("--record (dual canonical npz) required for split-sides")
+    written = import_dual_canonical(args.record, args.out)
+    for side, path in written.items():
+        print(f"[d0] side {side} record: {path} (gates passed)")
+    _write_json(Path(args.out) / "split_sides_report.json", {"records": written})
 
 
 # ---------------------------------------------------------------------------
@@ -211,7 +227,13 @@ def run_matrix(args) -> dict:
     units = args.units.split(",") if args.units else ["o1", "t1", "b1", "j1", "r1"]
     quick = bool(args.quick)
     seeds = (0,) if quick else ms.SEEDS
-    summary: dict = {"quick": quick, "properties": type(properties).__name__, "units": {}}
+    summary: dict = {
+        "quick": quick,
+        "side": args.side,
+        "record": str(args.record),
+        "properties": type(properties).__name__,
+        "units": {},
+    }
 
     metrics_store: dict[str, object] = {}
 
@@ -371,8 +393,9 @@ def run_matrix(args) -> dict:
         summary["units"]["r1"] = {"verdict": verdict, "reports": r1_reports}
         _write_json(out / "r1_report.json", summary["units"]["r1"])
 
-    _write_json(out / "matrix_summary.json", summary)
-    print(f"[matrix] summary written: {out / 'matrix_summary.json'}")
+    summary_name = "matrix_summary.json" if not args.side else f"matrix_summary_side{args.side}.json"
+    _write_json(out / summary_name, summary)
+    print(f"[matrix] summary written: {out / summary_name}")
     return summary
 
 
@@ -382,10 +405,13 @@ def run_matrix(args) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase", required=True, choices=["discover", "build", "dsyn", "matrix"])
+    parser.add_argument("--phase", required=True,
+                        choices=["discover", "build", "split-sides", "dsyn", "matrix"])
     parser.add_argument("--data-root", default=None)
     parser.add_argument("--mapping", default=None)
     parser.add_argument("--record", default=None)
+    parser.add_argument("--side", default=None, choices=["A", "B"],
+                        help="label for per-side matrix runs (recorded in the summary)")
     parser.add_argument("--out", default="artifacts/final_wm")
     parser.add_argument("--units", default=None, help="comma-separated subset: o1,t1,b1,j1,r1")
     parser.add_argument("--properties-npz", default=None, help="real IAPWS grid (else analytic fallback)")
@@ -401,6 +427,8 @@ def main() -> None:
         if not args.data_root:
             raise FinalWMProtocolError("--data-root required for build")
         phase_build(args)
+    elif args.phase == "split-sides":
+        phase_split_sides(args)
     elif args.phase == "dsyn":
         run_dsyn(args)
     elif args.phase == "matrix":

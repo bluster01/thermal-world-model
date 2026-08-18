@@ -18,7 +18,7 @@ from src.final_wm.synthetic import synthetic_canonical_arrays
 
 def _args(tmp_path, **kw) -> Namespace:
     base = dict(
-        data_root=None, mapping=None, record=None, out=str(tmp_path / "out"),
+        data_root=None, mapping=None, record=None, side=None, out=str(tmp_path / "out"),
         units=None, properties_npz=None, device="cpu", quick=True,
     )
     base.update(kw)

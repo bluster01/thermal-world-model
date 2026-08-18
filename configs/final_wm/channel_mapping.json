@@ -1,0 +1,24 @@
+{
+  "_provenance": "FROZEN 2026-08-18 from the D0 execution audit (results/final_wm/d0/mapping_audit.json, 14/14 HIGH/CLOSED). The executable path is the dual-record bridge (`run_matrix.py --phase split-sides`), not a CSV rebuild; this file is the frozen tag-level provenance for audit. Cross-side control (user-confirmed 2026-08-09): A-labeled valves drive B-side temperatures and vice versa; the bridge selects columns (2,3) for side A and (0,1) for side B.",
+  "source_files": {
+    "A": "/home/bluster/Desktop/AI/时序预测/TIME-all-model/TCN-Improved-GRU/data/mainT/A侧主汽温全数据03_cleaned_10s.csv",
+    "B": "/home/bluster/Desktop/AI/时序预测/TIME-all-model/TCN-Improved-GRU/data/mainT/B侧主汽温全数据03_cleaned_10s.csv"
+  },
+  "time_column": "date",
+  "channels": {
+    "steam_flow":            {"column": "主蒸汽流量", "unit_scale": 0.2777777777777778, "unit_offset": 0.0, "note": "t/h -> kg/s (/3.6); unit-level, from side-A file"},
+    "coal_command":          {"column": "未校正总煤量", "unit_scale": 1.0, "unit_offset": 0.0, "note": "t/h"},
+    "separator_pressure":    {"column": "分离器出口压力", "unit_scale": 1.0, "unit_offset": 0.0, "note": "MPa"},
+    "separator_temperature": {"column": "分离器出口温度", "unit_scale": 1.0, "unit_offset": 0.0, "note": "degC"},
+    "feedwater_temperature": {"column": "省煤器出口给水温度", "unit_scale": 1.0, "unit_offset": 0.0, "note": "degC"},
+    "outlet_pressure":       {"column": "末级过热器出口压力", "unit_scale": 1.0, "unit_offset": 0.0, "note": "MPa"},
+    "spray_flow_total":      {"column": "减温水总流量", "unit_scale": 1.0, "unit_offset": 0.0, "note": "t/h; oracle-only channel, never enters forecast mode"},
+    "valve1_position":       {"column": "一级减温调节门阀位", "unit_scale": 0.01, "unit_offset": 0.0, "note": "clip(lower=0)/100; cross-side mapped by the bridge"},
+    "valve2_position":       {"column": "二级减温调节门阀位", "unit_scale": 0.01, "unit_offset": 0.0, "note": "clip(lower=0)/100; cross-side mapped by the bridge"},
+    "sh1_inlet_temp":        {"column": "一级减温器入口温度", "unit_scale": 1.0, "unit_offset": 0.0, "note": "物理位置=低过出口/一级减温器前; WM 锚点 h0=obs[0]"},
+    "sh1_outlet_temp":       {"column": "一级减温器出口温度", "unit_scale": 1.0, "unit_offset": 0.0, "note": "物理位置=屏过入口"},
+    "sh2_inlet_temp":        {"column": "二级减温器入口温度", "unit_scale": 1.0, "unit_offset": 0.0, "note": "物理位置=屏过出口/二级减温器前; WM 锚点 h1=obs[2]"},
+    "sh2_outlet_temp":       {"column": "二级减温器出口温度", "unit_scale": 1.0, "unit_offset": 0.0, "note": "物理位置=高过入口"},
+    "final_outlet_temp":     {"column": "末级过热器出口汽温", "unit_scale": 1.0, "unit_offset": 0.0, "note": "WM 锚点 h2=obs[4]; RM3 TARGET_COLUMN"}
+  }
+}

@@ -102,3 +102,38 @@ def test_quality_gate_rejects_stuck_channel(tmp_path) -> None:
     gates = QualityGateConfig(min_days=0.0, min_valve_active_ratio=0.0)
     with pytest.raises(FinalWMProtocolError):
         build_canonical(tmp_path, mapping_path, tmp_path / "out.npz", gates=gates)
+
+
+def test_dual_canonical_bridge_cross_maps_valves(tmp_path) -> None:
+    from src.final_wm.data import import_dual_canonical
+
+    arrays = synthetic_canonical_arrays(total_steps=1500, seed=7)
+    n = 1500
+    action4 = np.stack(
+        [arrays["actions"][:, 0] + 10.0, arrays["actions"][:, 1] + 10.0,  # A-labeled valves
+         arrays["actions"][:, 0], arrays["actions"][:, 1]],               # B-labeled valves
+        axis=1,
+    ).astype(np.float32)
+    dual = {
+        "date_ns": arrays["timestamps"].astype(np.int64) * 10**9,
+        "boundary": arrays["boundary"],
+        "action": action4,
+        "obsA": arrays["obs"],
+        "obsB": arrays["obs"] + 1.0,
+        "split_train": np.array([int(n * 0.8)], dtype=np.int64),
+    }
+    dual_path = tmp_path / "canonical_record.npz"
+    np.savez_compressed(dual_path, **dual)
+    gates = QualityGateConfig(min_days=0.0, min_valve_active_ratio=0.0)
+    written = import_dual_canonical(dual_path, tmp_path / "out", gates=gates)
+    assert set(written) == {"A", "B"}
+    rec_a = CanonicalRecord(written["A"])
+    rec_b = CanonicalRecord(written["B"])
+    # side A is driven by the B-labeled valves (columns 2,3 of the dual record)
+    assert torch.allclose(rec_a.actions, torch.from_numpy(action4[:, 2:4]), atol=1e-4)
+    assert torch.allclose(rec_b.actions, torch.from_numpy(action4[:, 0:2]), atol=1e-4)
+    assert rec_a.obs.shape[1] == 5 and rec_b.obs.shape[1] == 5
+    assert (rec_a.split == SPLIT_TEST).sum() > 0  # locked test reserve exists
+    meta = json.loads((tmp_path / "out" / "canonical_sideA_meta.json").read_text(encoding="utf-8"))
+    assert meta["provenance"]["cross_side_valves"] == [2, 3]
+    assert meta["test_locked"] is True

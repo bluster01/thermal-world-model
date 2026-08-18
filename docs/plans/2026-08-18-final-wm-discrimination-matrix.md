@@ -24,10 +24,18 @@
 | `outlet_pressure` | 过热器出口压力 p_out | MPa | 边界 |
 | `spray_flow_total` | 减温水总流量 W（oracle-only） | t/h | 边界（诊断） |
 | `valve1_position` / `valve2_position` | 一级/二级减温水调节阀阀位 | 0..1（0-100% 归一化） | 动作 |
-| 5 个 `OBSERVATION_ELEMENTS` | 屏过入/出口、高过入/出口、末过出口汽温 | degC | 观测 |
+| 5 个 `OBSERVATION_ELEMENTS` | 减温器站汽温：一级减温器入/出口、二级减温器入/出口、末过出口（即低过出口、屏过入口、屏过出口、高过入口、末过出口） | degC | 观测 |
 
 D0 必须产出**点位映射审计表**（DCS 点名 → 注册表通道 → 单位换算 → 可信度），未闭合的通道
 映射直接判 MIXED 并阻断对应实验。RM3-R 审计遗留的 tag 证据缺口在此一次性收口。
+
+**D0 执行结果（2026-08-18 回传，本地审计认可）**：14/14 通道 HIGH 置信闭合
+（`results/final_wm/d0/mapping_audit.json`）；A/B 双侧各 ≈70.8 万行、82.6 天、10 s 采样，四项
+质量门全过（`quality_gates.json`）。数据为**双侧结构**：单级边界 7 通道共享，阀位与汽温按侧
+成对；交叉控制映射（用户 2026-08-09 确认 + RM3 先例）为 A 侧阀控 B 侧温、B 侧阀控 A 侧温。
+因此矩阵按侧独立执行：桥接 `run_matrix.py --phase split-sides` 产出每侧注册表格式记录，
+矩阵 phase 逐侧跑两次（`--side A/B`），判决按侧报告。冻结点位映射：
+`configs/final_wm/channel_mapping.json`。
 
 ### 1.2 质量门（fail-closed）
 
@@ -38,7 +46,8 @@ D0 必须产出**点位映射审计表**（DCS 点名 → 注册表通道 → �
 
 ### 1.3 切分与 canonical records
 
-- 按时间顺序切 train / validation；**test 继续锁定**，本矩阵全部判决只用 validation；
+- 按时间顺序切分，冻结比例 **train 75% / validation 15% / test 10%（保留锁定）**；本矩阵全部
+  判决只用 validation；D0 执行侧原提案 80/20 由本地审计改冻结为 75/15/10；
 - D0 生成唯一 canonical record（10 s 对齐、单位归一、通道按注册表序打包），后续所有实验只读
   canonical record；窗口化在线完成，不物化大窗口张量；
 - 切分点、缺口掩码、映射表随产物回传，本地独立审计。
