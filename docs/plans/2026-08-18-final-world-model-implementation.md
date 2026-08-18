@@ -98,8 +98,10 @@ python -m pytest tests/final_wm/ -q
 - `experiments/final_wm/run_matrix.py` — 四阶段统一入口：`discover` / `build` / `dsyn` / `matrix`
   （O1→T1→B1→J1→R1 顺序执行，自动产出 `matrix_summary.json` 判决与逐项 ledger）。
 
-新增 13 项测试（`test_data/test_evaluation/test_training/test_matrix_smoke`），全套件 95 项本地通过；
+新增 13 项测试（`test_data/test_evaluation/test_training/test_matrix_smoke`），全套件 96 项本地通过；
 `--quick` dry-run 已验证（D-SYN quick 门禁 skeleton NLL 150.1 → student 40.3，PASS）。
+Linux 冻结执行提交：`experiments/final_wm/README.md`（命令序列、门禁顺序、回传清单、禁止事项）；
+D0 双侧记录的桥接为 `--phase split-sides`（交叉阀位映射、75/15/10 冻结切分、质量门复跑）。
 
 ## 5. 已知环境备注
 
