@@ -15,35 +15,41 @@ OUT = "/home/bluster/projectA/thermal-world-model/results/final_wm/d0"
 A, B = f"{BASE}/A侧主汽温全数据03_cleaned_10s.csv", f"{BASE}/B侧主汽温全数据03_cleaned_10s.csv"
 
 # ---------------- 1. 点位映射审计表 ----------------
+# 来源: 既有代码映射 (不自行推断):
+#   E0: adhoc2 02_train.py e0_build_windows (exo_cols 9通道顺序+单位换算+init_states 分段边界)
+#   PINN: adhoc_pinn 01_experiment.py (EXO/OUTPUTS, 同 5 观测温度)
+#   RM3: src/phase35/schema.py (TARGET/VALVE/SP 列) + RM3 交叉 cache (A阀→B温)
 # registry channel -> (DCS tag, 单位换算, 置信度, 注记)
 MAPPING = [
-    # BOUNDARY
-    ("steam_flow", "主蒸汽流量", "t/h -> kg/s (x1/3.6)", "HIGH", ""),
-    ("coal_command", "未校正总煤量", "t/h, 原单位", "MEDIUM",
-     "双候选: 燃料主控输出(指令) vs 未校正总煤量(实测流量); legacy Fan2020-E0 用未校正总煤量作 uB; 需本地确认"),
-    ("separator_pressure", "分离器出口压力", "MPa, 原单位", "HIGH", ""),
-    ("separator_temperature", "分离器出口温度", "degC, 原单位", "HIGH", ""),
-    ("feedwater_temperature", "省煤器出口给水温度", "degC, 原单位", "MEDIUM",
-     "喷水给水温度; 双候选: 省煤器入口 vs 出口给水温度; legacy 用出口; 需本地确认"),
-    ("outlet_pressure", "末级过热器出口压力", "MPa, 原单位", "HIGH", ""),
-    ("spray_flow_total", "减温水总流量", "t/h, 原单位", "HIGH",
-     "oracle-only 诊断通道; registry 标注 unreliable; E4/Q32 证据: 读W污染动作通道"),
-    # ACTION
-    ("valve1_position", "一级减温调节门阀位", "0-100% -> 0-1 fraction (/100)", "HIGH",
-     "交叉映射(用户2026-08-09确认+RM3先例): A侧阀注入右(B)管, 管控B侧气温; 单侧文件内 action->obs 不自洽"),
-    ("valve2_position", "二级减温调节门阀位", "0-100% -> 0-1 fraction (/100)", "HIGH",
-     "同上交叉映射"),
-    # OBSERVATION
+    # BOUNDARY (E0 exo_cols L274-276)
+    ("steam_flow", "主蒸汽流量", "t/h -> kg/s (x1/3.6)", "HIGH", "E0 L278 换算 /3.6"),
+    ("coal_command", "未校正总煤量", "t/h, 原单位", "HIGH", "E0 exo_cols[1] 作 uB; PINN EXO 同时含燃料主控输出, 但煤量通道选未校正总煤量"),
+    ("separator_pressure", "分离器出口压力", "MPa, 原单位", "HIGH", "E0 exo_cols[2]"),
+    ("separator_temperature", "分离器出口温度", "degC, 原单位", "HIGH", "E0 exo_cols[3]"),
+    ("feedwater_temperature", "省煤器出口给水温度", "degC, 原单位", "HIGH", "E0 exo_cols[4]; PINN EXO 同"),
+    ("outlet_pressure", "末级过热器出口压力", "MPa, 原单位", "HIGH", "E0 exo_cols[7]"),
+    ("spray_flow_total", "减温水总流量", "t/h, 原单位", "HIGH", "E0 exo_cols[8]; registry 标注 unreliable (E4: 读W污染动作通道)"),
+    # ACTION (E0 exo_cols[5,6], L279-280)
+    ("valve1_position", "一级减温调节门阀位", "clip(lower=0)/100 -> fraction", "HIGH",
+     "E0 L279; 交叉映射(用户2026-08-09确认+RM3交叉cache): A侧阀管B侧温"),
+    ("valve2_position", "二级减温调节门阀位", "clip(lower=0)/100 -> fraction", "HIGH",
+     "E0 L280; RM3 schema VALVE_COLUMN=二级减温调节门阀位; 交叉同上"),
+    # OBSERVATION (E0 OUTPUTS L35-36 + init_states L320-338 分段边界)
     ("sh1_inlet_temp", None, None, "MISSING",
-     "屏过入口温度: 41列导出中无对应tag; 最近似为分离器出口温度但中间隔顶棚/低温过热器, 不等价"),
-    ("sh1_outlet_temp", "一级减温器入口温度", "degC, 原单位", "MEDIUM",
-     "推断: 屏过出口=一级减温器入口(蒸汽路径: 屏过->一级减温); tag名推断非DCS点名, 需本地确认"),
-    ("sh2_inlet_temp", "一级减温器出口温度", "degC, 原单位", "MEDIUM",
-     "推断: 一级减温器出口=高过入口; 同上需确认"),
-    ("sh2_outlet_temp", "二级减温器入口温度", "degC, 原单位", "MEDIUM",
-     "推断: 高过出口=二级减温器入口; 同上需确认"),
-    ("final_outlet_temp", "末级过热器出口汽温", "degC, 原单位", "HIGH", ""),
+     "屏过入口温度: 41列导出无此tag; 既有 E0/PINN/RM3 映射均无此通道"),
+    ("sh1_outlet_temp", "一级减温器入口温度", "degC, 原单位", "HIGH",
+     "E0 分段0边界=一级减温器入口温度 (init_states L327: h0=h_of_pT(p0, obs_T[:,0])); 语义等价=屏过出口(命名推断, 保留注记)"),
+    ("sh2_inlet_temp", "一级减温器出口温度", "degC, 原单位", "HIGH",
+     "E0 OUTPUTS[1]; 语义等价=高过入口(命名推断)"),
+    ("sh2_outlet_temp", "二级减温器入口温度", "degC, 原单位", "HIGH",
+     "E0 分段1边界 (init_states L328: h1=h_of_pT(p1, obs_T[:,2])); 语义等价=高过出口(命名推断)"),
+    ("final_outlet_temp", "末级过热器出口汽温", "degC, 原单位", "HIGH",
+     "E0 分段2边界 (L329) + RM3 TARGET_COLUMN"),
 ]
+# 既有映射 vs 注册表的不对称 (重要, 供 Codex 复核):
+# E0/PINN 的 5 输出 = [一减入, 一减出, 二减入, 二减出, 末过出];
+# final_wm 注册表 5 观测 = [sh1_in, sh1_out, sh2_in, sh2_out, final_out];
+# 差异: 注册表含 sh1_in(数据无tag), 缺 二减出(数据有tag, E0 OUTPUTS[3], 末过入口)
 
 mapping_rows = []
 for ch, tag, conv, conf, note in MAPPING:

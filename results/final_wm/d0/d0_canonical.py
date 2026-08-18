@@ -44,10 +44,10 @@ boundary = np.stack([
     m["减温水总流量_A"].values,                 # t/h oracle
 ], axis=1).astype(np.float32)
 action = np.stack([
-    m["一级减温调节门阀位_A"].values / 100.0,
-    m["二级减温调节门阀位_A"].values / 100.0,
-    m["一级减温调节门阀位_B"].values / 100.0,
-    m["二级减温调节门阀位_B"].values / 100.0,
+    np.clip(m["一级减温调节门阀位_A"].values, 0, None) / 100.0,
+    np.clip(m["二级减温调节门阀位_A"].values, 0, None) / 100.0,
+    np.clip(m["一级减温调节门阀位_B"].values, 0, None) / 100.0,
+    np.clip(m["二级减温调节门阀位_B"].values, 0, None) / 100.0,
 ], axis=1).astype(np.float32)
 obsA = np.stack([
     m["一级减温器入口温度_A"].values, m["一级减温器出口温度_A"].values,

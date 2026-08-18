@@ -14,9 +14,14 @@ K1 不解冻、不改代码/阈值。跑完把原始产物回传，本地做独�
 D-SYN/O1/B1/T1/R1/J1 未执行: 仓库无对应 runner/CLI (角色边界: 执行方不写实验代码), 等 Codex 冻结提交。
 
 产物:
-- mapping_audit.json: 14 通道映射表 (8 HIGH / 5 MEDIUM / 1 MISSING), MIXED 列表
+- mapping_audit.json: 14 通道映射表, 映射全部来自既有代码 (E0 02_train.py exo_cols/init_states、
+  PINN 01_experiment.py EXO/OUTPUTS、RM3 src/phase35/schema.py + 交叉cache), 非执行方推断;
+  13 HIGH / 1 MISSING (sh1_inlet 屏过入口 — E0/PINN/RM3 均无此通道)
+- 注册表不对称记录: E0/PINN 5输出=[一减入,一减出,二减入,二减出,末过出] vs final_wm 注册表
+  5观测=[sh1_in,sh1_out,sh2_in,sh2_out,final_out] — 注册表含 sh1_in(数据无tag), 缺二减出(数据有tag)
 - quality_gates.json: A/B 双份四门全过 (gap<1% / stuck<5% / valve非饱和>=60% / 时长>=30d)
-- canonical_record.npz (本地, 不入git): 707721 行, boundary7+action4+obsA5+obsB5, sha256 在 canonical_manifest.json
+- canonical_record.npz (本地, 不入git): 707721 行, boundary7+action4+obsA5+obsB5,
+  单位换算与 E0 一致 (主汽流量/3.6, 阀位 clip(lower=0)/100), sha256 在 canonical_manifest.json
 - canonical_manifest.json: SHA/切分提案(train 80% val 20%, test 锁定)/交叉映射/注册表序
 - d0_audit.py / d0_canonical.py / survey_files.py: 执行方自写审计脚本 (数据任务, 未触碰 src/final_wm/)
 
