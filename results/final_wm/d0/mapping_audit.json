@@ -74,34 +74,34 @@
     },
     {
       "registry_channel": "sh1_inlet_temp",
-      "dcs_tag": null,
-      "unit_conversion": null,
-      "confidence": "MISSING",
-      "note": "屏过入口温度: 41列导出无此tag; 既有 E0/PINN/RM3 映射均无此通道",
-      "closure": "MIXED"
-    },
-    {
-      "registry_channel": "sh1_outlet_temp",
       "dcs_tag": "一级减温器入口温度",
       "unit_conversion": "degC, 原单位",
       "confidence": "HIGH",
-      "note": "E0 分段0边界=一级减温器入口温度 (init_states L327: h0=h_of_pT(p0, obs_T[:,0])); 语义等价=屏过出口(命名推断, 保留注记)",
+      "note": "E0 OUTPUTS[0] + WM 锚点 h0=obs[0] (transition.py L261); 物理位置=低过出口/一级减温器前",
+      "closure": "CLOSED"
+    },
+    {
+      "registry_channel": "sh1_outlet_temp",
+      "dcs_tag": "一级减温器出口温度",
+      "unit_conversion": "degC, 原单位",
+      "confidence": "HIGH",
+      "note": "E0 OUTPUTS[1]; 物理位置=屏过入口(一级喷水控屏过出口, 见汽水系统结构)",
       "closure": "CLOSED"
     },
     {
       "registry_channel": "sh2_inlet_temp",
-      "dcs_tag": "一级减温器出口温度",
+      "dcs_tag": "二级减温器入口温度",
       "unit_conversion": "degC, 原单位",
       "confidence": "HIGH",
-      "note": "E0 OUTPUTS[1]; 语义等价=高过入口(命名推断)",
+      "note": "E0 OUTPUTS[2] + WM 锚点 h1=obs[2] (L262); 物理位置=屏过出口/二级减温器前",
       "closure": "CLOSED"
     },
     {
       "registry_channel": "sh2_outlet_temp",
-      "dcs_tag": "二级减温器入口温度",
+      "dcs_tag": "二级减温器出口温度",
       "unit_conversion": "degC, 原单位",
       "confidence": "HIGH",
-      "note": "E0 分段1边界 (init_states L328: h1=h_of_pT(p1, obs_T[:,2])); 语义等价=高过出口(命名推断)",
+      "note": "E0 OUTPUTS[3]; 物理位置=高过入口(二级喷水控末过出口)",
       "closure": "CLOSED"
     },
     {
@@ -109,12 +109,10 @@
       "dcs_tag": "末级过热器出口汽温",
       "unit_conversion": "degC, 原单位",
       "confidence": "HIGH",
-      "note": "E0 分段2边界 (L329) + RM3 TARGET_COLUMN",
+      "note": "E0 OUTPUTS[4] + WM 锚点 h2=obs[4] (L263) + RM3 TARGET_COLUMN",
       "closure": "CLOSED"
     }
   ],
-  "mixed_channels": [
-    "sh1_inlet_temp"
-  ],
+  "mixed_channels": [],
   "note": "执行侧如实标注, MIXED 由本地审计最终裁定"
 }

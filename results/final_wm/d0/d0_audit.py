@@ -34,22 +34,25 @@ MAPPING = [
      "E0 L279; 交叉映射(用户2026-08-09确认+RM3交叉cache): A侧阀管B侧温"),
     ("valve2_position", "二级减温调节门阀位", "clip(lower=0)/100 -> fraction", "HIGH",
      "E0 L280; RM3 schema VALVE_COLUMN=二级减温调节门阀位; 交叉同上"),
-    # OBSERVATION (E0 OUTPUTS L35-36 + init_states L320-338 分段边界)
-    ("sh1_inlet_temp", None, None, "MISSING",
-     "屏过入口温度: 41列导出无此tag; 既有 E0/PINN/RM3 映射均无此通道"),
-    ("sh1_outlet_temp", "一级减温器入口温度", "degC, 原单位", "HIGH",
-     "E0 分段0边界=一级减温器入口温度 (init_states L327: h0=h_of_pT(p0, obs_T[:,0])); 语义等价=屏过出口(命名推断, 保留注记)"),
-    ("sh2_inlet_temp", "一级减温器出口温度", "degC, 原单位", "HIGH",
-     "E0 OUTPUTS[1]; 语义等价=高过入口(命名推断)"),
-    ("sh2_outlet_temp", "二级减温器入口温度", "degC, 原单位", "HIGH",
-     "E0 分段1边界 (init_states L328: h1=h_of_pT(p1, obs_T[:,2])); 语义等价=高过出口(命名推断)"),
+    # OBSERVATION (E0 OUTPUTS L35-36; WM transition.py initial_steady_state L260-264 锚点 obs[0]/obs[2]/obs[4])
+    # 汽水系统路径: 低过 -> 一级减温 -> 屏过 -> 二级减温 -> 高过(末级过热器)
+    # WM 的 sh1/sh2 指减温器站 (与 E0 输出原样同序), 非过热器束; 14/14 全有 tag, 无缺失
+    ("sh1_inlet_temp", "一级减温器入口温度", "degC, 原单位", "HIGH",
+     "E0 OUTPUTS[0] + WM 锚点 h0=obs[0] (transition.py L261); 物理位置=低过出口/一级减温器前"),
+    ("sh1_outlet_temp", "一级减温器出口温度", "degC, 原单位", "HIGH",
+     "E0 OUTPUTS[1]; 物理位置=屏过入口(一级喷水控屏过出口, 见汽水系统结构)"),
+    ("sh2_inlet_temp", "二级减温器入口温度", "degC, 原单位", "HIGH",
+     "E0 OUTPUTS[2] + WM 锚点 h1=obs[2] (L262); 物理位置=屏过出口/二级减温器前"),
+    ("sh2_outlet_temp", "二级减温器出口温度", "degC, 原单位", "HIGH",
+     "E0 OUTPUTS[3]; 物理位置=高过入口(二级喷水控末过出口)"),
     ("final_outlet_temp", "末级过热器出口汽温", "degC, 原单位", "HIGH",
-     "E0 分段2边界 (L329) + RM3 TARGET_COLUMN"),
+     "E0 OUTPUTS[4] + WM 锚点 h2=obs[4] (L263) + RM3 TARGET_COLUMN"),
 ]
-# 既有映射 vs 注册表的不对称 (重要, 供 Codex 复核):
-# E0/PINN 的 5 输出 = [一减入, 一减出, 二减入, 二减出, 末过出];
-# final_wm 注册表 5 观测 = [sh1_in, sh1_out, sh2_in, sh2_out, final_out];
-# 差异: 注册表含 sh1_in(数据无tag), 缺 二减出(数据有tag, E0 OUTPUTS[3], 末过入口)
+# 矩阵文档命名对齐问题 (供 Codex 复核, 非数据缺口):
+# 矩阵 §1.1 写"5个观测元素=屏过入/出口、高过入/出口、末过出口汽温";
+# 实际蒸汽路径 低过->一减->屏过->二减->高过, 故"屏过入"=一减出(sh1_outlet),
+# "屏过出"=二减入(sh2_inlet), "高过入"=二减出(sh2_outlet), "高过出"=末过出(final)。
+# 代码层 WM 注册表 = E0 5输出原样 (transition.py 锚点同位置), 5个tag全部存在, 无 MISSING。
 
 mapping_rows = []
 for ch, tag, conv, conf, note in MAPPING:

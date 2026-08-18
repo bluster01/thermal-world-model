@@ -14,11 +14,15 @@ K1 不解冻、不改代码/阈值。跑完把原始产物回传，本地做独�
 D-SYN/O1/B1/T1/R1/J1 未执行: 仓库无对应 runner/CLI (角色边界: 执行方不写实验代码), 等 Codex 冻结提交。
 
 产物:
-- mapping_audit.json: 14 通道映射表, 映射全部来自既有代码 (E0 02_train.py exo_cols/init_states、
-  PINN 01_experiment.py EXO/OUTPUTS、RM3 src/phase35/schema.py + 交叉cache), 非执行方推断;
-  13 HIGH / 1 MISSING (sh1_inlet 屏过入口 — E0/PINN/RM3 均无此通道)
-- 注册表不对称记录: E0/PINN 5输出=[一减入,一减出,二减入,二减出,末过出] vs final_wm 注册表
-  5观测=[sh1_in,sh1_out,sh2_in,sh2_out,final_out] — 注册表含 sh1_in(数据无tag), 缺二减出(数据有tag)
+- mapping_audit.json: 14 通道映射表 **14/14 HIGH, 无 MIXED**。映射全部来自既有代码
+  (E0 02_train.py exo_cols/OUTPUTS/init_states、PINN 01_experiment.py、RM3 src/phase35/schema.py
+  + 交叉cache) + WM 代码锚点 (transition.py initial_steady_state L260-264: h0/h1/h2 = obs[0]/obs[2]/obs[4],
+  与 E0 init_states 同位置 → WM 注册表 = E0 5输出原样, sh1/sh2 指减温器站非过热器束)
+- 汽水系统结构 (低过→一减→屏过→二减→高过): sh1_in=一减入(低过出口), sh1_out=一减出(屏过入),
+  sh2_in=二减入(屏过出), sh2_out=二减出(高过入), final=末过出 — 5 个 tag 全部存在
+- 矩阵文档命名对齐问题 (非数据缺口, 供 Codex 复核): 矩阵 §1.1 写"屏过入/出口、高过入/出口、
+  末过出口汽温"; 按实际路径 "屏过入"=一减出(sh1_outlet), "屏过出"=二减入(sh2_inlet),
+  "高过入"=二减出(sh2_outlet), "高过出"=末过出(final) — 文档命名与代码注册表语义需对齐
 - quality_gates.json: A/B 双份四门全过 (gap<1% / stuck<5% / valve非饱和>=60% / 时长>=30d)
 - canonical_record.npz (本地, 不入git): 707721 行, boundary7+action4+obsA5+obsB5,
   单位换算与 E0 一致 (主汽流量/3.6, 阀位 clip(lower=0)/100), sha256 在 canonical_manifest.json
