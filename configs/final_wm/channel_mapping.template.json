@@ -1,0 +1,24 @@
+{
+  "_comment": "D0 channel-mapping TEMPLATE (not executable). Fill from the D0 discovery report, freeze locally, then commit as channel_mapping.json before the build phase. Every registry channel must appear exactly once; unit_scale/unit_offset convert raw DCS units to registry units (valve positions 0-100% -> 0..1 use unit_scale 0.01). Schema is validated fail-closed by src/final_wm/data.py:load_channel_mapping.",
+  "time_columns": {
+    "relative/path/to/boundary_source.csv": "timestamp_column_name",
+    "relative/path/to/action_source.csv": "timestamp_column_name",
+    "relative/path/to/temperature_source.csv": "timestamp_column_name"
+  },
+  "channels": {
+    "steam_flow":           {"file": "boundary_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0},
+    "coal_command":         {"file": "boundary_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0},
+    "separator_pressure":   {"file": "boundary_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0},
+    "separator_temperature":{"file": "boundary_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0},
+    "feedwater_temperature":{"file": "boundary_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0},
+    "outlet_pressure":      {"file": "boundary_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0},
+    "spray_flow_total":     {"file": "boundary_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0},
+    "valve1_position":      {"file": "action_source.csv", "column": "<DCS tag>", "unit_scale": 0.01, "unit_offset": 0.0},
+    "valve2_position":      {"file": "action_source.csv", "column": "<DCS tag>", "unit_scale": 0.01, "unit_offset": 0.0},
+    "sh1_inlet_temp":  {"file": "temperature_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0},
+    "sh1_outlet_temp": {"file": "temperature_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0},
+    "sh2_inlet_temp":  {"file": "temperature_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0},
+    "sh2_outlet_temp": {"file": "temperature_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0},
+    "final_outlet_temp":   {"file": "temperature_source.csv", "column": "<DCS tag>", "unit_scale": 1.0, "unit_offset": 0.0}
+  }
+}

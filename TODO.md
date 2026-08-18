@@ -12,7 +12,7 @@
 | 最终 pipeline 架构 | ✓ DESIGN v0.1 | Observer + Boundary + Fan2020-UDE + action-blind closure + Observation + Koopman student |
 | RM3-B1 原始结果 | ✓ AUDITED / CLOSED | 22/22 与 ledger 闭合；不生成 B2、不访问 test |
 | 新模型正式包 | ✓ INTERFACES + MICRO-SMOKE | `src/final_wm/`：observer/boundary/transition/closure/observation/controller/model + 82 项本地测试通过；未授权长训 |
-| 判别实验 O1/B1/T1/R1/J1/K1 | ◉ MATRIX FROZEN v0.1 | `docs/plans/2026-08-18-final-wm-discrimination-matrix.md`；K1 条件 HOLD；待独立授权提交 Hermes |
+| 判别实验 O1/B1/T1/R1/J1/K1 | ◉ MATRIX FROZEN v0.1 + RUNNER READY | 矩阵文档 + `experiments/final_wm/run_matrix.py`（discover/build/dsyn/matrix 四阶段）；K1 条件 HOLD；待 D0a 发现报告回填通道映射后授权执行 |
 
 ## 当前主线
 
@@ -164,6 +164,7 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 39 | RM3-B1 checkpoint/ledger/paired verdict 本地审计 | 本地 | ✓ 110+3 ledger闭合；1 supported simplification / 5 mixed / 2 rejected |
 | 40 | 最终世界模型 transition/observer/boundary/closure 接口与 micro-smoke | 本地 | ✓ `src/final_wm/` 九模块 + 82 项专项测试通过；不授权长训 |
 | 41 | O1/B1/T1/R1/J1 判别实验矩阵冻结（含 D0 数据合同与 D-SYN 门禁） | 本地 | ✓ 矩阵 v0.1 冻结；K1 条件 HOLD；待独立授权提交 |
+| 42 | 判别矩阵执行代码（D0管道/训练/评估/runner）与本地 smoke | 本地 | ✓ `src/final_wm/{data,training,evaluation,diagnostics}.py` + `experiments/final_wm/run_matrix.py`；95 项专项测试通过；quick dry-run 验证过 |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 

@@ -89,8 +89,11 @@ D0 必须产出**点位映射审计表**（DCS 点名 → 注册表通道 → �
   2. 残差功率分位数报告（p50/p90/max，kW），相对典型段级热流（≈1e5 kW）占比；
   3. 阶跃响应方向一致性审计：closure 开启/关闭两种配置下，v2 阶跃 +0.05 的长期终端温度
      响应必须为负；任一配置翻号 → closure REJECTED（E4 防线）；
-  4. 负对照：action-aware closure 变体若显著优于 action-blind（H18 NLL 改善 > 5%，CI 下界>0），
-     判 closure 存在动作泄漏，整臂 REJECTED，回报残差结构供本地归因。
+  4. 负对照（操作化）：生产 closure 合同上不可读动作，负对照以独立残差泄漏探针实现
+     （`src/final_wm/diagnostics.py:leakage_probe`）——两个独立探针分别用 [状态+白名单边界] 与
+     [状态+边界+动作] 拟合冻结物理骨架的一步前观测残差；aware 探针验证 MSE 相对 blind 改善
+     > 5% 判 closure 存在动作泄漏，整臂 REJECTED，回报残差结构供本地归因。探针为诊断件，
+     不进入生产装配。
 - 判决：四项全过 → SUPPORTED；方向翻号或泄漏坐实 → REJECTED；其余 → MIXED。
 
 ### J1：联合端到端 vs 分阶段训练

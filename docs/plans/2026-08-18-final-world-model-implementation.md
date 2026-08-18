@@ -77,10 +77,29 @@ python -m pytest tests/final_wm/ -q
 
 ## 4. 明确未做
 
-- 不训练任何参数（micro-smoke 只证明同型可训练性）；
+- 不在本地训练真实参数（micro-smoke 只证明同型可训练性）；
 - 不实现 Koopman student（P5 需母模型过门禁后另行授权）；
-- 不跑 O1/B1/T1/R1/J1/K1；真实数据适配、真实 IAPWS 网格注入、Linux 执行均需独立冻结提交；
+- 真实数据适配、真实 IAPWS 网格注入需 D0a 发现报告回传后冻结通道映射再授权执行；
 - Direct-WM 高容量 backbone 尚未接入为 observer 替代实现（当前 observer 为 GRU 基线）。
+
+## 4.1 执行层（2026-08-18 增补）
+
+判别矩阵的执行代码已就位，Linux 只做执行与产物回传，不改代码/阈值：
+
+- `src/final_wm/data.py` — D0 两阶段：`discover_dataset`（有界 schema/质量发现报告）→
+  本地冻结通道映射（`configs/final_wm/channel_mapping.json`）→ `build_canonical`
+  （10 s 重采样 + fail-closed 质量门 + train/val/test 锁定时序切分 + 唯一 canonical npz）；
+- `src/final_wm/training.py` — 单臂训练循环（Adam + clip + val-NLL 早停 + checkpoint + JSONL ledger，
+  含 commit/properties/device 审计字段）；
+- `src/final_wm/evaluation.py` — 窗口 rollout 指标（NLL/MAE/CRPS@H1/H6/H18）、UTC-day block
+  bootstrap 的相对改善 CI、阶跃方向审计、残差功率分位数、B1 persistence 基线；
+- `src/final_wm/diagnostics.py` — R1 负对照残差泄漏探针（blind vs action-aware，诊断件不进入生产装配）；
+- `experiments/final_wm/matrix_spec.py` — 冻结臂/种子/阈值（矩阵文档的可执行镜像）；
+- `experiments/final_wm/run_matrix.py` — 四阶段统一入口：`discover` / `build` / `dsyn` / `matrix`
+  （O1→T1→B1→J1→R1 顺序执行，自动产出 `matrix_summary.json` 判决与逐项 ledger）。
+
+新增 13 项测试（`test_data/test_evaluation/test_training/test_matrix_smoke`），全套件 95 项本地通过；
+`--quick` dry-run 已验证（D-SYN quick 门禁 skeleton NLL 150.1 → student 40.3，PASS）。
 
 ## 5. 已知环境备注
 

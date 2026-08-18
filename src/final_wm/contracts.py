@@ -21,7 +21,7 @@ Contract rules enforced here (violations raise `FinalWMProtocolError`):
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
 
 
@@ -254,13 +254,14 @@ class ControllerConfig:
 
 @dataclass(frozen=True)
 class WorldModelConfig:
-    transition: TransitionConfig = TransitionConfig()
-    closure: ClosureConfig = ClosureConfig()
-    observer: ObserverConfig = ObserverConfig()
-    boundary: BoundaryModelConfig = BoundaryModelConfig()
-    observation: ObservationConfig = ObservationConfig()
-    controller: ControllerConfig = ControllerConfig()
-    boundary_mode: str = "forecast"
+    transition: TransitionConfig = field(default_factory=TransitionConfig)
+    closure: ClosureConfig = field(default_factory=ClosureConfig)
+    observer: ObserverConfig = field(default_factory=ObserverConfig)
+    boundary: BoundaryModelConfig = field(default_factory=BoundaryModelConfig)
+    observation: ObservationConfig = field(default_factory=ObservationConfig)
+    controller: ControllerConfig = field(default_factory=ControllerConfig)
+    boundary_mode: str = "forecast"          # "forecast" | "oracle"
+    initial_state_mode: str = "steady"       # "steady" | "learned" | "hybrid"
     support_margin: float = 0.05            # action support slack (fraction)
 
 
@@ -323,6 +324,8 @@ def validate_world_model_config(config: WorldModelConfig) -> StateLayout:
     validate_controller_config(config.controller)
     if config.boundary_mode not in BOUNDARY_MODES:
         raise FinalWMProtocolError(f"boundary_mode must be one of {BOUNDARY_MODES}")
+    if config.initial_state_mode not in ("steady", "learned", "hybrid"):
+        raise FinalWMProtocolError("initial_state_mode must be steady | learned | hybrid")
     if config.support_margin < 0:
         raise FinalWMProtocolError("support_margin must be >= 0")
     latent_dims = {

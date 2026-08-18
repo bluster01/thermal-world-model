@@ -1166,6 +1166,36 @@
           "path": "src/final_wm/synthetic.py",
           "status": "active",
           "required": true
+        },
+        "data": {
+          "path": "src/final_wm/data.py",
+          "status": "active",
+          "required": true
+        },
+        "training": {
+          "path": "src/final_wm/training.py",
+          "status": "active",
+          "required": true
+        },
+        "evaluation": {
+          "path": "src/final_wm/evaluation.py",
+          "status": "active",
+          "required": true
+        },
+        "diagnostics": {
+          "path": "src/final_wm/diagnostics.py",
+          "status": "active",
+          "required": true
+        },
+        "matrix_spec": {
+          "path": "experiments/final_wm/matrix_spec.py",
+          "status": "active",
+          "required": true
+        },
+        "matrix_runner": {
+          "path": "experiments/final_wm/run_matrix.py",
+          "status": "active",
+          "required": true
         }
       },
       "artifacts": {

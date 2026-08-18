@@ -72,6 +72,33 @@ class FinalWorldModel(nn.Module):
     def initial_state_posterior(self, history: HistoryWindow) -> tuple[torch.Tensor, torch.Tensor]:
         return self.observer.posterior(history.obs, history.actions, history.boundary)
 
+    def _steady_initial_state(self, history: HistoryWindow) -> torch.Tensor:
+        """Observation-anchored steady init (legacy Step 8 pattern); latent
+        block is zero, so this mode ignores learned latent content."""
+        return self.transition.initial_steady_state(
+            history.boundary[:, -1], history.actions[:, -1], history.obs[:, -1]
+        )
+
+    def _initial_state(self, history: HistoryWindow, sample_posterior: bool = False) -> torch.Tensor:
+        """Dispatch on the declared initial_state_mode (O1 arms)."""
+        mode = self.config.initial_state_mode
+        if mode == "steady":
+            return self._steady_initial_state(history)
+        mu, sigma = self.initial_state_posterior(history)
+        if mode == "learned":
+            return self.observer.sample(mu, sigma) if sample_posterior else mu
+        # hybrid: precision-weighted fusion of the steady anchor (fixed
+        # sigma = 0.3 x state scale) with the learned posterior.
+        steady = self._steady_initial_state(history)
+        steady_sigma = 0.3 * self.observer.state_scale
+        w_steady = 1.0 / steady_sigma**2
+        w_learned = 1.0 / sigma**2
+        fused = (steady * w_steady + mu * w_learned) / (w_steady + w_learned)
+        if sample_posterior:
+            fused_sigma = (w_steady + w_learned).rsqrt()
+            fused = fused + fused_sigma * torch.randn_like(fused)
+        return fused
+
     def _check_history(self, history: HistoryWindow) -> None:
         steps = self.config.observer.history_steps
         if history.obs.shape != (history.obs.shape[0], steps, len(OBSERVATION_ELEMENTS)):
@@ -148,8 +175,7 @@ class FinalWorldModel(nn.Module):
         mode = boundary_mode or self.config.boundary_mode
         horizon = action_seq.shape[1]
         boundary = self._boundary_sequence(history, horizon, mode, true_future_boundary, scenario)
-        mu, sigma = self.initial_state_posterior(history)
-        state_0 = self.observer.sample(mu, sigma) if sample_posterior else mu
+        state_0 = self._initial_state(history, sample_posterior=sample_posterior)
         return self._rollout(state_0, boundary, action_seq, mode=mode, noise=noise)
 
     def counterfactual(
@@ -180,8 +206,8 @@ class FinalWorldModel(nn.Module):
         boundary = self._boundary_sequence(
             history, action_seq.shape[1], mode, true_future_boundary, scenario
         )
-        mu, _sigma = self.initial_state_posterior(history)
-        return self._rollout(mu, boundary, action_seq, mode=mode, in_support=in_support)
+        state_0 = self._initial_state(history)
+        return self._rollout(state_0, boundary, action_seq, mode=mode, in_support=in_support)
 
     def closed_loop(
         self,
@@ -206,12 +232,12 @@ class FinalWorldModel(nn.Module):
         mode = boundary_mode or self.config.boundary_mode
         horizon = sp_seq.shape[1]
         boundary = self._boundary_sequence(history, horizon, mode, true_future_boundary, scenario)
-        mu, _sigma = self.initial_state_posterior(history)
+        state_0 = self._initial_state(history)
         controller.reset(history.actions[:, -1, controlled_valve_index])
         held_valve = history.actions[:, -1, 1 - controlled_valve_index]
 
         closure = self.closure if self.config.closure.injection_mode != "none" else None
-        state = mu
+        state = state_0
         states, temps = [], []
         support_masks = []
         support = action_support_from_history(history.actions, self.config.support_margin)
