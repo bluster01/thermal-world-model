@@ -56,11 +56,11 @@
 
 ## 5. 硬工作清单（依赖排序）
 
-1. **统一评测协议设计**（待拍板）：phase1 Direct WM 与 adhoc 系列在同一数据切分/窗口/归一化协议下重测。归一化方案三选项：①RevIN 协议统一（phase1 原生）②物理空间协议统一（adhoc 原生）③双协议各测一遍、主表用同协议。**用户论文研读偏好已定：基线须与主模型同归一化协议（默认 RevIN），全局 minmax 仅作消融对照**
-2. **端点重测**：Direct WM 在 Phase 4 新 split 上重训（修复 test 反复使用问题）+ evap_only/qnav/h_now/double_w 同协议 rollout
+1. **统一评测协议（已定 2026-08-18）**：残差/神经组件内部用 RevIN（phase1 原生），物理灰盒用真实尺度；对比口径 = **物理空间 rollout/MAE**，同一数据切分与窗口。端点重测即在此协议下进行
+2. **端点重测**：Direct WM **移植一版进 adhoc 仓**（主仓 src/world_model.py v2 + exp_023 配置为移植蓝本）后在新 split 重训（修复 test 反复使用问题）+ evap_only/qnav/h_now/double_w 同协议 rollout
 3. **头对头控制可用性**：各点在动态响应域协议下的增益/τ63/闭环对比（部分已有，按统一协议重跑）
 4. **曲线图 + case 图**
-5. 写作（模板可用 tech-paper-template / benchmark-paper-template skill）
+5. 写作（目标期刊 **Applied Energy**，图表全英文）
 
 ## 6. 风险（审稿人视角，提前备好）
 
@@ -77,9 +77,9 @@
 - 共享术语：L1-L5 证据阶梯、observer/boundary/controller/dynamics/residual 分层、D0-D6 候选矩阵口径
 - A 的 §9 讨论给 B 留两个接口：初始化误差→observer 必要性；残差注入位 S 门控→系统层残差隔离
 
-## 8. 开放决策（待拍板）
+## 8. 开放决策（2026-08-18 已拍板）
 
-- [ ] 统一协议归一化方案（§5 硬工作 1）
-- [ ] 精度端点 Direct WM 的代码归属：主仓重训（Phase 4 已规划）vs adhoc 仓移植重建
-- [ ] 论文 A 投哪类刊（方法类：Applied Energy / Control Eng. Practice 口径 vs 控制类）
-- [ ] 干态控制可用性证据是否补强（Q32-T 已给对象层，闭环层干态证据仍薄）
+- [x] 统一协议归一化：**残差用 RevIN、物理用真实尺度**；对比口径=物理空间 rollout/MAE 同切分
+- [x] 精度端点 Direct WM 代码归属：**移植一版进 adhoc 仓**（world_model.py v2 + exp_023 蓝本）
+- [x] 目标期刊：**Applied Energy**
+- [ ] 干态控制可用性证据补强：**目前无新增数据，推迟**（Q32-T 对象层已给，闭环层干态证据仍薄，待有数据再议）
