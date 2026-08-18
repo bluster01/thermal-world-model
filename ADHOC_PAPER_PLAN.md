@@ -160,6 +160,8 @@ PINN 拆解思想迁移验证（EWH PINN 三件套：物理派生特征 / 不变
 
 ## 5. 论文 A 结构建议（基于完整证据链的最终版）
 
+> **2026-08-18 升级**：论文 A 主题已升级为"精度–控制保真度张力 + 物理嵌入折中曲线"，完整框架见 **PAPER_A_FRAMEWORK_V2.md**（grill 四决策后重设计：两文分家/A 先 B 后/phase1 重协议作精度端点/主题=张力+折中曲线）。本节保留旧版结构作历史。
+
 **标题方向**：Learning a Physically Structured Steam Temperature Model for Closed-Loop Control from Operating Data（或 Applied Energy 风格）
 
 **结构**：
