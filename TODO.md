@@ -1,6 +1,6 @@
 # Thermal World Model TODO
 
-> 更新：2026-08-18。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。RM3-B1 的 22/22 validation 已完成独立 paired audit 并关闭：1 项支持结构化简、5 项混合、2 项拒绝，不生成 RM3-B2。当前唯一活动项是最终世界模型 pipeline 的本地实现；Linux 授权为空，test 与 MS4 继续锁定。
+> 更新：2026-08-18。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。RM3-B1 的 22/22 validation 已完成独立 paired audit 并关闭：1 项支持结构化简、5 项混合、2 项拒绝，不生成 RM3-B2。最终世界模型 pipeline 的本地接口包 `src/final_wm/`（observer/boundary/Fan2020-UDE transition/action-blind closure/observation/controller/装配层）已完成并通过 82 项本地合同与 micro-smoke 测试；下一判决点是 O1/B1/T1/R1/J1/K1 判别实验矩阵的冻结与独立授权提交。Linux 授权为空，test 与 MS4 继续锁定。
 
 ## 最终 Pipeline 组装（当前本地任务）
 
@@ -11,7 +11,7 @@
 | 已有证据链 | ✓ MAPPED | 区分已支持、部分支持和缺口；历史 PASS 不自动升级 |
 | 最终 pipeline 架构 | ✓ DESIGN v0.1 | Observer + Boundary + Fan2020-UDE + action-blind closure + Observation + Koopman student |
 | RM3-B1 原始结果 | ✓ AUDITED / CLOSED | 22/22 与 ledger 闭合；不生成 B2、不访问 test |
-| 新模型正式包 | ◻ NOT STARTED | 下一步先抽取可测试 transition 接口，不继续叠加 legacy 编号脚本 |
+| 新模型正式包 | ✓ INTERFACES + MICRO-SMOKE | `src/final_wm/`：observer/boundary/transition/closure/observation/controller/model + 82 项本地测试通过；未授权长训 |
 | 判别实验 O1/B1/T1/R1/J1/K1 | ◻ HOLD | 先实现本地 micro-smoke，再由独立提交授权 Hermes |
 
 ## 当前主线
@@ -48,7 +48,7 @@ MS5 已回答在冻结已知真值下动作响应不会被 joint `free` 分支�
 | **MS3** | A/B 真实数据适配 | ✓ **AUDITED FAIL / ASYMMETRIC** | B 3/3 PASS；A 0/3 non-collapse FAIL；不重跑、不访问 test |
 | **MS3-D** | A/B 响应不对称诊断 | ✓ **AUDITED** | 模型 A attenuation 未获现场热链路支持；B 阀位持久性更强；单侧 plant 归因不足 |
 | **MS3-R** | 点位辨识、分支归因与真实模型扩充 | ✓ **RM3-B1 AUDITED / CLOSED** | 对角化简支持；5 mixed、2 rejected；不生成 B2 |
-| **Final WM** | Observer+Boundary+Fan2020-UDE+Closure+Observation | ◉ **IMPLEMENTATION** | 本地先冻结接口和 micro-smoke；尚未授权 Hermes |
+| **Final WM** | Observer+Boundary+Fan2020-UDE+Closure+Observation | ✓ **INTERFACES + MICRO-SMOKE LOCAL PASS** | `src/final_wm/` 与 `tests/final_wm/` 完成；O1/B1/T1/R1/J1/K1 判别实验待独立提交授权 Hermes |
 | MS4 | SP→阀位→温度闭环响应 | ◻ HOLD | MS3-R 冻结前不启动；不恢复旧 E 匹配 |
 
 ## D3 收口
@@ -116,7 +116,7 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 
 | 本地 / Codex | Linux 远端 |
 |---|---|
-| 当前只实现最终 pipeline 的接口、测试与 micro-smoke；冻结新假设/矩阵后才能授权训练 | 当前无授权任务；不得继续执行 RM3-B1、生成 B2 或复用历史命令 |
+| 最终 pipeline 接口、测试与 micro-smoke 已完成；下一步是冻结判别实验矩阵/预算后才能授权训练 | 当前无授权任务；不得继续执行 RM3-B1、生成 B2 或复用历史命令 |
 | 只有本地可改 TODO、注册表和 Supervisor 文档并给出唯一审计判决 | 后续获新 commit 授权时只执行冻结矩阵并回传机器产物；不改代码/配置/阈值，不访问 test |
 
 ## MS3 执行清单
@@ -162,7 +162,7 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 37 | 按 AV2 输入清单重写 RM3-B paired composition 设计与 B1 runner | 本地 | ✓ 11候选、8配对、22 units；一更新与400项回归通过 |
 | 38 | RM3-B1 单次 validation 执行与原始产物回传 | Hermes | ✓ 22/22；不得重试或生成B2 |
 | 39 | RM3-B1 checkpoint/ledger/paired verdict 本地审计 | 本地 | ✓ 110+3 ledger闭合；1 supported simplification / 5 mixed / 2 rejected |
-| 40 | 最终世界模型 transition/observer/boundary/closure 接口与 micro-smoke | 本地 | ◉ 当前任务；不授权长训 |
+| 40 | 最终世界模型 transition/observer/boundary/closure 接口与 micro-smoke | 本地 | ✓ `src/final_wm/` 九模块 + 82 项专项测试通过；不授权长训 |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 

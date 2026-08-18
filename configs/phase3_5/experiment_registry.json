@@ -1116,10 +1116,65 @@
       "status": "implementation",
       "owner": "local_design_code_linux_run_local_audit",
       "evidence_scope": "observer_boundary_fan2020_ude_transition_action_blind_closure_observation_and_koopman_student",
-      "scripts": {},
+      "scripts": {
+        "contracts": {
+          "path": "src/final_wm/contracts.py",
+          "status": "active",
+          "required": true
+        },
+        "properties": {
+          "path": "src/final_wm/properties.py",
+          "status": "active",
+          "required": true
+        },
+        "transition": {
+          "path": "src/final_wm/transition.py",
+          "status": "active",
+          "required": true
+        },
+        "closure": {
+          "path": "src/final_wm/closure.py",
+          "status": "active",
+          "required": true
+        },
+        "observer": {
+          "path": "src/final_wm/observer.py",
+          "status": "active",
+          "required": true
+        },
+        "boundary": {
+          "path": "src/final_wm/boundary.py",
+          "status": "active",
+          "required": true
+        },
+        "observation": {
+          "path": "src/final_wm/observation.py",
+          "status": "active",
+          "required": true
+        },
+        "controller": {
+          "path": "src/final_wm/controller.py",
+          "status": "active",
+          "required": true
+        },
+        "model": {
+          "path": "src/final_wm/model.py",
+          "status": "active",
+          "required": true
+        },
+        "synthetic": {
+          "path": "src/final_wm/synthetic.py",
+          "status": "active",
+          "required": true
+        }
+      },
       "artifacts": {
         "design": {
           "path": "docs/plans/2026-08-18-final-world-model-pipeline-design.md",
+          "required": true
+        },
+        "implementation": {
+          "path": "docs/plans/2026-08-18-final-world-model-implementation.md",
           "required": true
         },
         "physical_model": {
@@ -1139,7 +1194,7 @@
           "required": true
         }
       },
-      "decision": "ACTIVE / LOCAL IMPLEMENTATION ONLY / NO LINUX AUTHORIZATION；先实现概率observer、boundary接口、Fan2020-UDE transition、action-blind closure与observation合同，再以独立冻结提交授权micro-to-long训练",
+      "decision": "ACTIVE / INTERFACES + MICRO-SMOKE LOCAL PASS / NO LINUX AUTHORIZATION；src/final_wm 九个模块与 tests/final_wm 82 项专项测试已完成；O1/B1/T1/R1/J1/K1 判别实验矩阵冻结后以独立提交授权 micro-to-long 训练",
       "advisories": [
         "Fan2020-UDE是物理transition候选，不是plant truth；动作通道必须保留constant-action identity、方向与支持域审计",
         "Direct-WM v2只支持direct H18 observer/backbone候选；未验证递归rollout、双阀稳定响应或概率校准",

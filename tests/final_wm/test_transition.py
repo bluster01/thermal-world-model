@@ -1,0 +1,217 @@
+from __future__ import annotations
+
+import pytest
+import torch
+
+from src.final_wm.contracts import (
+    FinalWMProtocolError,
+    KAPPA_TPH_TO_KGS,
+    StateLayout,
+    TransitionConfig,
+)
+from src.final_wm.properties import AnalyticThermoProperties
+from src.final_wm.synthetic import synthetic_history
+from src.final_wm.transition import Fan2020UDETransition, ResidualInjection
+
+
+def _transition(**kwargs) -> Fan2020UDETransition:
+    config = TransitionConfig(**kwargs)
+    return Fan2020UDETransition(config, AnalyticThermoProperties())
+
+
+def _batch(seed: int = 0, horizon: int = 12):
+    return synthetic_history(batch=3, history_steps=16, horizon=horizon, seed=seed)
+
+
+def test_step_shapes_and_finiteness() -> None:
+    model = _transition()
+    batch = _batch()
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    assert state.shape == (3, 9)
+    result = model.step(state, batch.future_boundary[:, 0], batch.future_actions[:, 0])
+    assert result.state.shape == (3, 9)
+    assert bool(torch.isfinite(result.state).all())
+    assert set(result.aux) >= {"dsw1", "dsw2", "hm1", "hm2"}
+
+
+def test_integrate_shapes() -> None:
+    model = _transition()
+    batch = _batch(horizon=10)
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    states, temps = model.integrate(state, batch.future_boundary, batch.future_actions)
+    assert states.shape == (3, 10, 9)
+    assert temps.shape == (3, 10, 5)
+    assert bool(torch.isfinite(states).all()) and bool(torch.isfinite(temps).all())
+
+
+def test_parameter_positivity_and_valve_monotonicity() -> None:
+    model = _transition()
+    for name in model.priors:
+        value = model.val(name)
+        if name.startswith("b"):
+            assert abs(value.item()) <= model.priors[name]
+        else:
+            assert value.item() > 0
+    v = torch.linspace(0.0, 1.0, 11)
+    phi = model.varphi(v, 1)
+    assert phi[0].item() == 0.0
+    assert bool((phi[1:] >= phi[:-1]).all())
+
+
+def test_zero_action_gives_zero_spray_and_dries_out() -> None:
+    model = _transition()
+    batch = _batch()
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    zero_action = torch.zeros(3, 12, 2)
+    result = model.step(state, batch.future_boundary[:, 0], zero_action[:, 0])
+    assert result.aux["dsw1"].abs().max().item() == pytest.approx(0.0, abs=1e-8)
+    assert result.aux["dsw2"].abs().abs().max().item() == pytest.approx(0.0, abs=1e-8)
+    states, _temps = model.integrate(state, batch.future_boundary, zero_action)
+    m_init = state[:, 7:9]
+    m_final = states[:, -1, 7:9]
+    assert bool((m_final <= m_init + 1e-6).all())
+    assert m_final.max().item() < 1.0  # tau_evap = 15 s, 120 s of zero feed
+
+
+def test_output_equation_zero_action_matches_none() -> None:
+    model = _transition()
+    batch = _batch()
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    t_none = model.output_temperatures(state, batch.future_boundary[:, 0], None)
+    t_zero = model.output_temperatures(state, batch.future_boundary[:, 0], torch.zeros(3, 2))
+    assert torch.allclose(t_none, t_zero)
+
+
+def test_observation_anchored_init_recovers_anchor_channels() -> None:
+    model = _transition()
+    batch = _batch()
+    obs0 = batch.history.obs[:, -1]
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], obs0
+    )
+    temps = model.output_temperatures(state, batch.future_boundary[:, 0], batch.future_actions[:, 0])
+    # State-anchored channels (sh1 inlet, sh2 inlet, final outlet) match exactly.
+    assert torch.allclose(temps[:, 0], obs0[:, 0], atol=1e-3)
+    assert torch.allclose(temps[:, 2], obs0[:, 2], atol=1e-3)
+    assert torch.allclose(temps[:, 4], obs0[:, 4], atol=1e-3)
+
+
+def test_constant_conditions_rollout_stays_finite_and_bounded() -> None:
+    model = _transition()
+    batch = _batch(horizon=60)
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    boundary = batch.future_boundary[:, :1].repeat(1, 60, 1)
+    actions = batch.future_actions[:, :1].repeat(1, 60, 1)
+    states, temps = model.integrate(state, boundary, actions)
+    assert bool(torch.isfinite(states).all())
+    drift = (temps[:, -1, 4] - temps[:, 0, 4]).abs()
+    assert drift.max().item() < 60.0
+    # The transient settles rather than diverging.
+    settle = (temps[:, -1, 4] - temps[:, -6, 4]).abs()
+    assert settle.max().item() < 5.0
+
+
+def test_valve_opening_cools_terminal_long_run() -> None:
+    model = _transition()
+    batch = _batch(horizon=60)
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    boundary = batch.future_boundary[:, :1].repeat(1, 60, 1)
+    base_actions = batch.future_actions[:, :1].repeat(1, 60, 1)
+    step_actions = base_actions.clone()
+    step_actions[:, :, 1] = (step_actions[:, :, 1] + 0.05).clamp(max=1.0)
+    _s0, temps_base = model.integrate(state, boundary, base_actions)
+    _s1, temps_step = model.integrate(state, boundary, step_actions)
+    delta = (temps_step[:, -10:, 4] - temps_base[:, -10:, 4]).mean()
+    assert delta.item() < -0.1  # spray increase must cool the terminal steam
+
+
+def test_boundary_spray_mode_conserves_total() -> None:
+    model = _transition(spray_total_mode="boundary")
+    batch = _batch()
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    result = model.step(state, batch.future_boundary[:, 0], batch.future_actions[:, 0])
+    total = (result.aux["dsw1"] + result.aux["dsw2"])
+    expected = KAPPA_TPH_TO_KGS * batch.future_boundary[:, 0, 6].clamp(min=0.0)
+    assert torch.allclose(total, expected, atol=1e-5)
+
+
+def test_residual_injection_direction() -> None:
+    model = _transition()
+    batch = _batch(horizon=20)
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    boundary = batch.future_boundary[:, :1].repeat(1, 20, 1)
+    actions = batch.future_actions[:, :1].repeat(1, 20, 1)
+    _s0, temps_base = model.integrate(state, boundary, actions)
+    heat = ResidualInjection(
+        steam_power=torch.full((3, 3), 3.0e4),
+        metal_power=None,
+        latent_step=None,
+    )
+    state_h = state
+    temps_h = []
+    for t in range(20):
+        result = model.step(state_h, boundary[:, t], actions[:, t], heat)
+        state_h = result.state
+        temps_h.append(model.output_temperatures(state_h, boundary[:, t], actions[:, t]))
+    temps_heat = torch.stack(temps_h, dim=1)
+    assert (temps_heat[:, -1, 4] - temps_base[:, -1, 4]).mean().item() > 0.5
+
+
+def test_latent_block_decays_when_driven_by_zero_residual() -> None:
+    model = _transition(latent_dim=2)
+    batch = _batch()
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    assert state.shape == (3, 11)
+    state[:, 9:] = 1.0
+    result = model.step(state, batch.future_boundary[:, 0], batch.future_actions[:, 0])
+    # rho = tanh(0) = 0 at init -> latent resets toward zero.
+    assert result.state[:, 9:].abs().max().item() < 1e-6
+    assert model.latent_rho.abs().max().item() < 1.0
+
+
+def test_shape_violations_raise() -> None:
+    model = _transition()
+    batch = _batch()
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    with pytest.raises(FinalWMProtocolError):
+        model.step(state, torch.zeros(3, 6), batch.future_actions[:, 0])
+    with pytest.raises(FinalWMProtocolError):
+        model.step(state, batch.future_boundary[:, 0], torch.zeros(3, 3))
+    with pytest.raises(FinalWMProtocolError):
+        model.step(state[:, :8], batch.future_boundary[:, 0], batch.future_actions[:, 0])
+    with pytest.raises(FinalWMProtocolError):
+        model.initial_steady_state(
+            batch.future_boundary[:, 0], batch.future_actions[:, 0], torch.zeros(3, 4)
+        )
+    with pytest.raises(FinalWMProtocolError):
+        Fan2020UDETransition(TransitionConfig(), AnalyticThermoProperties(), priors={"nope": 1.0})
+
+
+def test_layout_is_consistent_with_state_width() -> None:
+    model = _transition(latent_dim=3)
+    assert model.layout == StateLayout(latent_dim=3)
+    batch = _batch()
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    assert state.shape[-1] == 12
