@@ -48,6 +48,7 @@ def test_rm2_registry_preflight_requires_final_linux_state(tmp_path: Path) -> No
         (ROOT / "configs/phase3_5/experiment_registry.json").read_text(encoding="utf-8")
     )
     changed = copy.deepcopy(registry)
+    changed["active_gate"] = "ms3_r"
     changed["linux_authorized_gate"] = "ms3_r"
     changed["experiments"]["ms3_r"]["status"] = "ready_for_linux"
     path = tmp_path / "registry.json"

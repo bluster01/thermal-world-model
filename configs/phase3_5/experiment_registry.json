@@ -1,8 +1,8 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
-  "updated_at": "2026-08-14",
-  "active_gate": "ms3_r",
-  "linux_authorized_gate": "ms3_r",
+  "updated_at": "2026-08-18",
+  "active_gate": "final_world_model_pipeline",
+  "linux_authorized_gate": null,
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -15,6 +15,7 @@
     "ms3",
     "ms3_d",
     "ms3_r",
+    "final_world_model_pipeline",
     "ms4"
   ],
   "status_vocabulary": [
@@ -546,7 +547,7 @@
     },
     "ms3_r": {
       "title": "真实点位响应辨识与模型扩充",
-      "status": "ready_for_linux",
+      "status": "closed",
       "owner": "local_design_code_linux_batch_run_local_audit",
       "evidence_scope": "validation_only_observational_point_identifiability_and_model_expansion_not_causal",
       "scripts": {
@@ -1007,11 +1008,23 @@
         "rm3b_matrix": {
           "path": "configs/phase3_5/ms3r_rm3b_matrix.json",
           "required": true
+        },
+        "rm3b_validation_summary": {
+          "path": "results/phase3_5/ms3r_rm3b/summary_validation.json",
+          "required": true
+        },
+        "rm3b_supervisor_audit_json": {
+          "path": "results/phase3_5/ms3r_rm3b/supervisor_audit_validation.json",
+          "required": true
+        },
+        "rm3b_supervisor_audit": {
+          "path": "docs/PHASE35_MS3R_RM3B1_SUPERVISOR_AUDIT_2026-08-18.md",
+          "required": true
         }
       },
       "decision": {
-        "summary": "RM3-B1 LOCAL VERIFIED / 11 CANDIDATES / 8 PAIRED QUESTIONS / 2 FOLDS / SEED0 / 22 UNITS；400 tests PASS；仅授权Hermes一次执行冻结validation矩阵并回传原始产物，不判科学结论",
-        "authorized_batch": "RM3-B1",
+        "summary": "RM3-B1 AUDITED AND CLOSED / 22/22 VALIDATION UNITS / TEST LOCKED；1项支持结构化简、5项混合、2项拒绝，不生成RM3-B2；项目转入最终世界模型pipeline本地实现",
+        "authorized_batch": null,
         "rm3av_training_unit_count": 64,
         "rm3av_supervisor_verdict_counts": {
           "SUPPORTED": 30,
@@ -1020,9 +1033,16 @@
           "NOT_TESTABLE": 0
         },
         "rm3b_design_allowed": true,
-        "rm3b_training_authorized": true,
+        "rm3b_training_authorized": false,
         "rm3b_training_unit_count": 22,
         "rm3b_optimizer_updates_cap": 8000,
+        "rm3b_results_returned": true,
+        "rm3b_supervisor_audited": true,
+        "rm3b_pair_verdict_counts": {
+          "SUPPORTED_AS_SIMPLIFICATION": 1,
+          "MIXED": 5,
+          "REJECTED": 2
+        },
         "rm3b2_authorized": false,
         "test_authorized": false,
         "ms4_authorized": false,
@@ -1085,6 +1105,46 @@
         ,"RM3-A A3/A4只改变full-multitask component weights；terminal/local以Pareto表报告，不设单一综合冠军"
         ,"独立审计不直接否决P5或RM3-B；先用RM3-AV成对实验验证free/bypass/response/valve/MIMO/timing/init/convergence等命题"
         ,"RM3-AV matrix/runner/AV0/诊断与32候选逐一一更新全链路已本地闭合；Hermes现仅获RM3-AV0+AV1一次执行授权，不得访问test、代写AV2判决或启动RM3-B/MS4"
+        ,"RM3-B1 22/22 validation产物、110项run ledger与3项root ledger闭合；episode四项MAE复算最大差9.54e-7"
+        ,"RM3-B1只支持对角响应作为等效简化；shield、R-loss、valve dynamics、PI+GRU和ramp为混合证据，一极点与bypass add-on拒绝"
+        ,"RM3-B1筛查不含预注册非劣界，只作validation候选压缩；不生成B2、不访问test、不升级路线冠军"
+        ,"MS3-R模型扩展路线在此关闭；Linux授权清空，后续仅按最终世界模型pipeline的新冻结提交逐批授权"
+      ]
+    },
+    "final_world_model_pipeline": {
+      "title": "最终概率物理状态世界模型 Pipeline",
+      "status": "implementation",
+      "owner": "local_design_code_linux_run_local_audit",
+      "evidence_scope": "observer_boundary_fan2020_ude_transition_action_blind_closure_observation_and_koopman_student",
+      "scripts": {},
+      "artifacts": {
+        "design": {
+          "path": "docs/plans/2026-08-18-final-world-model-pipeline-design.md",
+          "required": true
+        },
+        "physical_model": {
+          "path": "physical_models/fan2020_ude/README.md",
+          "required": true
+        },
+        "physical_evidence_chain": {
+          "path": "physical_models/fan2020_ude/evidence/EVIDENCE_CHAIN.md",
+          "required": true
+        },
+        "direct_world_model_audit": {
+          "path": "docs/ADHOC_DIRECT_WM_V2_SUPERVISOR_AUDIT_2026-08-18.md",
+          "required": true
+        },
+        "rm3b_closure_audit": {
+          "path": "docs/PHASE35_MS3R_RM3B1_SUPERVISOR_AUDIT_2026-08-18.md",
+          "required": true
+        }
+      },
+      "decision": "ACTIVE / LOCAL IMPLEMENTATION ONLY / NO LINUX AUTHORIZATION；先实现概率observer、boundary接口、Fan2020-UDE transition、action-blind closure与observation合同，再以独立冻结提交授权micro-to-long训练",
+      "advisories": [
+        "Fan2020-UDE是物理transition候选，不是plant truth；动作通道必须保留constant-action identity、方向与支持域审计",
+        "Direct-WM v2只支持direct H18 observer/backbone候选；未验证递归rollout、双阀稳定响应或概率校准",
+        "最终pipeline不复活RM3-B2/MS4旧批次；任何Linux训练都需要新的矩阵、预算和单独授权提交",
+        "test继续锁定；当前只允许本地接口、单元测试与micro-smoke"
       ]
     },
     "ms4": {

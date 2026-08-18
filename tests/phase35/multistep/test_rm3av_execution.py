@@ -178,6 +178,7 @@ def test_execute_refuses_explicitly_unauthorized_registry(
     registry = json.loads(
         (ROOT / "configs/phase3_5/experiment_registry.json").read_text(encoding="utf-8")
     )
+    registry["active_gate"] = "ms3_r"
     registry["linux_authorized_gate"] = None
     registry["experiments"]["ms3_r"]["status"] = "local_verified"
     registry["experiments"]["ms3_r"]["decision"]["authorized_batch"] = None
@@ -194,6 +195,7 @@ def test_registry_accepts_only_explicit_rm3av_batch_authorization(
     registry = json.loads(
         (ROOT / "configs/phase3_5/experiment_registry.json").read_text(encoding="utf-8")
     )
+    registry["active_gate"] = "ms3_r"
     registry["linux_authorized_gate"] = "ms3_r"
     registry["experiments"]["ms3_r"]["status"] = "ready_for_linux"
     registry["experiments"]["ms3_r"]["decision"]["authorized_batch"] = "RM3-AV0+AV1"

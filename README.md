@@ -2,16 +2,21 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-08-14）**：Phase 4 暂停，Phase 3.5-MS 尚未进入论文收口。RM3-AV 已审计为 `30 SUPPORTED / 3 MIXED / NO CHAMPION`。RM3-B1 已按 AV2 重写为 11 candidates、8 个单模块配对、F0/F1、seed 0、统一 8000 updates，共 22 个 validation units；本地 11 候选一更新和 400 项全回归通过。当前只授权 Linux 一次执行冻结 RM3-B1 并回传原始产物；test、自动科学 PASS、RM3-B2、MS4 与论文结论仍禁止。
+> **当前判断（2026-08-18）**：Phase 3.5-MS 的 RM3-B1 已完成 22/22 validation 和独立审计：仅“对角响应作为等效简化”获得两折稳定支持，5 项为混合证据，1-pole 与 bypass add-on 被拒绝。该模型扩展路线到此关闭，不生成 RM3-B2、不访问 test，也不恢复 MS4。当前唯一活动项已经切换为“最终概率物理状态世界模型 pipeline”的本地实现；Linux 授权为空，后续训练必须由新的冻结提交逐批开放。
 
 ## 当前入口
 
+- [最终概率物理世界模型 pipeline 设计](docs/plans/2026-08-18-final-world-model-pipeline-design.md)
+- [Fan2020-UDE 物理模型资产](physical_models/fan2020_ude/README.md)
+- [Fan2020-UDE 证据链](physical_models/fan2020_ude/evidence/EVIDENCE_CHAIN.md)
 - [唯一活任务队列](TODO.md)
 - [上下文恢复快照](docs/PHASE35_CONTEXT_SNAPSHOT.md)
 - [机器实验注册表](configs/phase3_5/experiment_registry.json)
 - [Phase 3.5 主线实验上下文](docs/PHASE35_MAINLINE_CONTEXT.md)
 - [RM3-AV 独立审计验证设计](docs/plans/2026-08-13-phase35-ms3r-rm3-independent-audit-validation-design.md)
 - [RM3-B 成对组合筛查设计](docs/plans/2026-08-13-phase35-ms3r-rm3b-design.md)
+- [RM3-B1 Supervisor 收口审计](docs/PHASE35_MS3R_RM3B1_SUPERVISOR_AUDIT_2026-08-18.md)
+- [Direct-WM v2 Supervisor 审计](docs/ADHOC_DIRECT_WM_V2_SUPERVISOR_AUDIT_2026-08-18.md)
 - [历史 E1–E5 实验设计](docs/PHASE3_5_EXPERIMENT_DESIGN.md)
 - [Linux 执行手册](experiments/phase3_5/README.md)
 - [项目状态与证据边界](docs/PROJECT_STATUS.md)

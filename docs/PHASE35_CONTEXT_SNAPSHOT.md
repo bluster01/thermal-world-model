@@ -84,7 +84,7 @@ Linux 在 `5260d3f` 完成 MS2-J test，27/27 root/run ledger 为 completed。�
 
 ## 5. 当前下一步
 
-RM3-AV 已由 Linux 回传并完成本地 AV2 审计：64/64 training units 与 120 个历史 checkpoint/ledger 闭合，test 未访问，初始化 56/56 对照一致。基于该结论，RM3-B1 已冻结为三个角色锚点和八个单模块配对，不堆叠所有候选；22 个单元统一 8000 updates。合同、runner、11 候选一更新、完整产物 schema、compileall、dry-run 与 400 项全回归已闭合。当前 registry 只授权 `RM3-B1` 一次执行；Linux 只回传机器产物，不写 verdict、不生成 B2、不访问 test。MS4、模型选择和论文均保持 HOLD。
+RM3-AV 已由 Linux 回传并完成本地 AV2 审计；其后 RM3-B1 的 22/22 validation、110 项 run ledger、3 项 root ledger 与 episode 指标复算也已闭合。八项 paired screening 中仅对角响应支持作为等效简化，5 项为混合证据，one-pole 与 bypass add-on 拒绝。MS3-R 在此关闭，不生成 B2、不访问 test。当前 registry 已切换到 `final_world_model_pipeline=implementation`，`linux_authorized_gate=null`；下一步是本地提取 Fan2020-UDE transition 并冻结 observer/boundary/closure/observation 接口，之后才可由新提交授权 Linux。MS4 与论文结论仍 HOLD。
 
 ## 6. 上下文读取优先级
 

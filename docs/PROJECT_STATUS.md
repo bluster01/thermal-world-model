@@ -4,7 +4,7 @@
 
 ## 一句话状态
 
-项目已完成 RM3-AV 审计，并据此冻结 RM3-B1：C28/C29/C30 三个角色锚点、八个单模块配对、F0/F1、seed 0、统一 8000 updates，共 22 个 validation units。本地 11 候选一更新、完整产物 smoke、compileall、dry-run 与 400 项回归均通过。项目**尚未完成真实模型定性，也未进入论文收口**；当前仅授权 Linux 一次执行 RM3-B1 并回传原始产物。RM3-B2、MS4、test、模型冠军和论文声明继续 HOLD。旧 E1–E5 已废弃；Phase 4 继续暂停。恢复入口见 [`PHASE35_CONTEXT_SNAPSHOT.md`](PHASE35_CONTEXT_SNAPSHOT.md)。
+项目已完成 RM3-B1 的 22/22 validation 与独立 Supervisor 审计。八项 paired screening 中，只有对角响应获得“可作为等效简化”的两折支持；shield、R-loss、valve loss、PI+GRU 与 ramp 为混合证据，one-pole 和 bypass add-on 被拒绝。MS3-R 模型扩展路线因此关闭，不生成 RM3-B2、不访问 test、不启动 MS4。当前活动项已经切换为最终概率物理状态世界模型 pipeline 的本地实现，`linux_authorized_gate=null`；任何后续训练必须由新的冻结提交逐批授权。旧 E1–E5 已废弃，Phase 4 继续暂停。恢复入口见 [`plans/2026-08-18-final-world-model-pipeline-design.md`](plans/2026-08-18-final-world-model-pipeline-design.md)。
 
 ## Phase 3.5 当前状态
 
@@ -24,7 +24,8 @@
 | MS3-D 不对称诊断 | audited | B 阀位持久性更强；模型 A response attenuation 未获现场热链路支持；归因仍受双回路联动限制 |
 | RM3/RM3-A | validation results returned / independently audited | P5 terminal 较好但来源未归因；OOF 校准未接入 P5 训练；独立审计意见均作为待验证假设 |
 | RM3-AV | audited / authorization closed | AV1 64/64、AV0 120 checkpoint闭合；Q01–Q33 为30 SUPPORTED/3 MIXED；P5 bypass主导、阀位过平滑、shape不可分、recursive失败；无冠军 |
-| RM3-B1 | ready_for_linux | 11 candidates、8 paired questions、22 units；本地400项回归通过；只授权一次validation执行 |
+| RM3-B1 | closed | 22/22、ledger 与 episode 复算闭合；1 supported simplification / 5 mixed / 2 rejected |
+| Final WM pipeline | implementation | 本地冻结 observer/boundary/transition/closure/observation 接口；Linux 未授权 |
 
 Phase 3.5 的目标不是证明质量/能量守恒，而是建立分层物理一致性：阀门动作可辨认、经验温度响应可复核、模型反事实响应能复现该曲线、SP 未执行时模型不制造阀门效应。完整协议见 [`PHASE3_5_EXPERIMENT_DESIGN.md`](PHASE3_5_EXPERIMENT_DESIGN.md)。
 

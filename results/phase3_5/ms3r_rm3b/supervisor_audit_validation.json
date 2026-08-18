@@ -1,0 +1,29 @@
+{
+  "audit_status": "AUDITED_VALIDATION_ONLY_PAIRED_SCREEN",
+  "run_count": 22,
+  "run_ledger_members_verified": 110,
+  "root_ledger_members_verified": 3,
+  "episode_metric_max_abs_diff": 9.5367431640625e-07,
+  "test_accessed": false,
+  "model_champion": null,
+  "rm3b2_authorized": false,
+  "ms4_authorized": false,
+  "pair_verdicts": {
+    "B03-B01": "MIXED",
+    "B04-B01": "MIXED",
+    "B05-B02": "MIXED",
+    "B06-B02": "MIXED",
+    "B07-B01": "SUPPORTED_AS_SIMPLIFICATION",
+    "B08-B01": "REJECTED_FOR_PRIMARY_RESPONSE",
+    "B09-B01": "MIXED_SHAPE_SENSITIVE",
+    "B10-B00": "REJECTED_AS_ADD_ON"
+  },
+  "decision": "CLOSE_PHASE35_MODEL_EXPANSION_AND_TRANSITION_TO_FINAL_WORLD_MODEL_PIPELINE",
+  "claim_boundary": {
+    "causal_identification": false,
+    "arbitrary_do_valve": false,
+    "independent_side_gain": false,
+    "state_closed_simulator": false,
+    "paper_claim_ready": false
+  }
+}

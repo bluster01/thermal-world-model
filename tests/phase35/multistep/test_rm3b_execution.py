@@ -99,8 +99,12 @@ def test_rm3b_execute_refuses_a_different_authorized_batch(
         )
 
 
-def test_rm3b_current_registry_authorizes_only_rm3b1() -> None:
-    rm3b_train._verify_registry()
+def test_rm3b_current_registry_refuses_closed_batch() -> None:
+    with pytest.raises(
+        RuntimeError,
+        match="Linux-authorized gate|ready_for_linux|authorized_batch",
+    ):
+        rm3b_train._verify_registry()
 
 
 @pytest.mark.parametrize("candidate_id", [f"B{index:02d}" for index in range(11)])

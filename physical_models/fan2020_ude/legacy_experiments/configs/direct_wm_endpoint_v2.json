@@ -1,0 +1,50 @@
+{
+  "experiment": "direct_wm_endpoint_v2",
+  "status": "ready_for_linux",
+  "purpose": "Repair the exploratory Direct WM endpoint protocol before any paper comparison.",
+  "supersedes": {
+    "commit": "612a62a",
+    "reason": [
+      "validation overlapped training",
+      "horizon weights were applied after BetaNLL scalar reduction",
+      "evaluation windows depended on the training RNG",
+      "checkpoint selection used H5 instead of the H18 endpoint",
+      "sensitivity perturbed only one future action sample"
+    ]
+  },
+  "data": {
+    "window_start": 70686,
+    "development_rows": [0, 40000],
+    "reserved_rows": [40000, 50000],
+    "history_steps": 96,
+    "forecast_steps": 18,
+    "sample_seconds": 10
+  },
+  "folds": {
+    "F0": {"train": [0, 20000], "validation": [20000, 25000], "evaluation": [25000, 30000]},
+    "F1": {"train": [0, 30000], "validation": [30000, 35000], "evaluation": [35000, 40000]}
+  },
+  "seeds": [42, 0, 7],
+  "selector": "fixed validation H18 MAE",
+  "evaluation": {
+    "fixed_windows_per_fold": 200,
+    "index_rule": "inclusive linspace over valid starts",
+    "intervention": "persistent valve-only",
+    "valve_delta_pct": [-2.0, 2.0],
+    "response_steps": [1, 3, 8, 12, 17]
+  },
+  "claim_boundary": {
+    "prediction": "logged-future-action conditional oracle, not deployable forecast",
+    "response": "short-horizon conditional valve response, not coupled valve-flow-W plant response"
+  },
+  "linux": {
+    "command": "python 36_direct_wm.py --execute --seed 42 --seed 0 --seed 7 --output out/direct_wm_v2",
+    "allowed": "Execute this command once and return results.json, manifest.json, and stdout.log.",
+    "forbidden": [
+      "change folds, seeds, selector, indices, action dose, or thresholds",
+      "access reserved rows 40000:50000",
+      "write a scientific verdict",
+      "commit .pt checkpoints or other binary model artifacts"
+    ]
+  }
+}

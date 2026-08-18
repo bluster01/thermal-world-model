@@ -4,6 +4,11 @@
 
 ## 当前入口
 
+- [plans/2026-08-18-final-world-model-pipeline-design.md](plans/2026-08-18-final-world-model-pipeline-design.md)：概率 Observer、未来边界、Fan2020-UDE 状态转移、动作隔离闭合项与 Koopman 快速代理的最终 pipeline 基线。
+- [PHASE35_MS3R_RM3B1_SUPERVISOR_AUDIT_2026-08-18.md](PHASE35_MS3R_RM3B1_SUPERVISOR_AUDIT_2026-08-18.md)：RM3-B1 22-run ledger/episode 复算、八组成对判决与 Phase3.5 模型扩展关闭。
+- [ADHOC_DIRECT_WM_V2_SUPERVISOR_AUDIT_2026-08-18.md](ADHOC_DIRECT_WM_V2_SUPERVISOR_AUDIT_2026-08-18.md)：Direct H18 预测端点、双动作敏感性纠偏及 Observer/Boundary 证据边界。
+- [../physical_models/fan2020_ude/README.md](../physical_models/fan2020_ude/README.md)：从孤立 ad hoc 分支选择性导入的物理模型代码、配置与证据入口。
+- [../physical_models/fan2020_ude/evidence/EVIDENCE_CHAIN.md](../physical_models/fan2020_ude/evidence/EVIDENCE_CHAIN.md)：已有证据、当前能力覆盖和决定性缺口。
 - [../TODO.md](../TODO.md)：项目唯一活任务队列与本地/Linux 状态机。
 - [PHASE35_CONTEXT_SNAPSHOT.md](PHASE35_CONTEXT_SNAPSHOT.md)：上下文丢失后的第一恢复入口、完整 MS 顺序和当前 Gate。
 - [../configs/phase3_5/experiment_registry.json](../configs/phase3_5/experiment_registry.json)：机器可校验的 Gate、Linux 授权、关键脚本和产物状态。

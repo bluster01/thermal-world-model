@@ -30,6 +30,7 @@ def test_rm3a_refuses_a_different_authorized_batch(
     registry = json.loads(
         (ROOT / "configs/phase3_5/experiment_registry.json").read_text(encoding="utf-8")
     )
+    registry["active_gate"] = "ms3_r"
     registry["linux_authorized_gate"] = "ms3_r"
     registry["experiments"]["ms3_r"]["status"] = "ready_for_linux"
     registry["experiments"]["ms3_r"]["decision"]["authorized_batch"] = "RM3-AV0+AV1"
@@ -46,6 +47,7 @@ def test_rm3a_registry_accepts_only_its_own_batch(
     registry = json.loads(
         (ROOT / "configs/phase3_5/experiment_registry.json").read_text(encoding="utf-8")
     )
+    registry["active_gate"] = "ms3_r"
     registry["linux_authorized_gate"] = "ms3_r"
     registry["experiments"]["ms3_r"]["status"] = "ready_for_linux"
     registry["experiments"]["ms3_r"]["decision"]["authorized_batch"] = "RM3-A"

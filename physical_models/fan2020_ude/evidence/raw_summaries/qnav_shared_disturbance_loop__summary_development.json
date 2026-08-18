@@ -1,0 +1,1064 @@
+{
+  "experiment": "Q32-S-shared-disturbance-deviation-loop",
+  "status": "results_returned",
+  "diagnostic_thresholds": {
+    "tracking_error_c": 0.1,
+    "tail_std_delta_c": 0.05,
+    "valve_saturation_fraction": 0.95
+  },
+  "folds": {
+    "F0": {
+      "states": {
+        "wet": {
+          "training_only_w_coupling": 3.401388804033412,
+          "point_count": 4,
+          "points": [
+            {
+              "row": 25000,
+              "state": "wet",
+              "pressure_mpa": 21.24420166015625,
+              "valve2_fraction": 0.2489452362060547,
+              "spray_w": 13.753623962402344,
+              "power_mw": 448.067626953125,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 7.025373331705729,
+                  "tracking_error_c": 6.525373331705729,
+                  "tail_std_delta_c": 1.3441707958739573,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.2489452362060547,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.6066666666666667,
+                  "valve_reversals": 3,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 448.067626953125,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 5.168531290690104,
+                  "tracking_error_c": 4.668531290690104,
+                  "tail_std_delta_c": 1.476170482301093,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.2489452362060547,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.61,
+                  "valve_reversals": 3,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 448.067626953125,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 6.848816935221354,
+                  "tracking_error_c": 6.348816935221354,
+                  "tail_std_delta_c": 1.229199728825443,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.2489452362060547,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.61,
+                  "valve_reversals": 3,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 448.067626953125,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 28996,
+              "state": "wet",
+              "pressure_mpa": 12.549400329589844,
+              "valve2_fraction": 0.11382658034563065,
+              "spray_w": 6.619846343994141,
+              "power_mw": 229.46820068359375,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.500030517578125,
+                  "tracking_error_c": 3.0517578125e-05,
+                  "tail_std_delta_c": 0.006256103515625,
+                  "baseline_tail_drift_c": -0.01776123046875,
+                  "valve_initial": 0.11382658034563065,
+                  "valve_min": 0.0,
+                  "valve_max": 0.11035442632777351,
+                  "valve_saturation_fraction": 0.03166666666666667,
+                  "valve_reversals": 566,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 229.46820068359375,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.500030517578125,
+                  "tracking_error_c": 3.0517578125e-05,
+                  "tail_std_delta_c": 0.006439208984375,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.11382658034563065,
+                  "valve_min": 0.0,
+                  "valve_max": 0.10341734485455924,
+                  "valve_saturation_fraction": 0.03833333333333333,
+                  "valve_reversals": 561,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 229.46820068359375,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.500244140625,
+                  "tracking_error_c": 0.000244140625,
+                  "tail_std_delta_c": 0.00653076171875,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.11382658034563065,
+                  "valve_min": 0.0,
+                  "valve_max": 0.11307485043491634,
+                  "valve_saturation_fraction": 0.03333333333333333,
+                  "valve_reversals": 561,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 229.46820068359375,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 29497,
+              "state": "wet",
+              "pressure_mpa": 12.294899940490723,
+              "valve2_fraction": 0.2795567214488983,
+              "spray_w": 15.02194595336914,
+              "power_mw": 242.8955841064453,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.49464823404947916,
+                  "tracking_error_c": 0.005351765950520837,
+                  "tail_std_delta_c": 0.01501543492684156,
+                  "baseline_tail_drift_c": -0.00250244140625,
+                  "valve_initial": 0.2795567214488983,
+                  "valve_min": 0.12885672144889843,
+                  "valve_max": 0.30256894243104115,
+                  "valve_saturation_fraction": 0.0,
+                  "valve_reversals": 574,
+                  "max_valve_move_per_step": 0.01369999999999999,
+                  "controller_power_mw": 242.8955841064453,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.5045705159505208,
+                  "tracking_error_c": 0.004570515950520826,
+                  "tail_std_delta_c": 0.01505253245003764,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.2795567214488983,
+                  "valve_min": 0.11515672144889842,
+                  "valve_max": 0.29534098484175547,
+                  "valve_saturation_fraction": 0.0,
+                  "valve_reversals": 576,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 242.8955841064453,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.4943003336588542,
+                  "tracking_error_c": 0.005699666341145826,
+                  "tail_std_delta_c": 0.015252942673383832,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.2795567214488983,
+                  "valve_min": 0.1180430495738983,
+                  "valve_max": 0.31362223484175544,
+                  "valve_saturation_fraction": 0.0,
+                  "valve_reversals": 571,
+                  "max_valve_move_per_step": 0.01369999999999999,
+                  "controller_power_mw": 242.8955841064453,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 29999,
+              "state": "wet",
+              "pressure_mpa": 12.38260269165039,
+              "valve2_fraction": 0.18295948207378387,
+              "spray_w": 4.628330230712891,
+              "power_mw": 228.9412841796875,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.5,
+                  "tracking_error_c": 0.0,
+                  "tail_std_delta_c": 0.0,
+                  "baseline_tail_drift_c": -0.0008544921875,
+                  "valve_initial": 0.18295948207378387,
+                  "valve_min": 0.0,
+                  "valve_max": 0.16925948207378388,
+                  "valve_saturation_fraction": 0.02,
+                  "valve_reversals": 76,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 228.9412841796875,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.5001220703125,
+                  "tracking_error_c": 0.0001220703125,
+                  "tail_std_delta_c": 9.02722134872378e-05,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.18295948207378387,
+                  "valve_min": 0.0,
+                  "valve_max": 0.16925948207378388,
+                  "valve_saturation_fraction": 0.025,
+                  "valve_reversals": 77,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 228.9412841796875,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.500103759765625,
+                  "tracking_error_c": 0.00010375976562504441,
+                  "tail_std_delta_c": 9.10938205358844e-05,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.18295948207378387,
+                  "valve_min": 0.0,
+                  "valve_max": 0.1731220099755696,
+                  "valve_saturation_fraction": 0.02,
+                  "valve_reversals": 87,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 228.9412841796875,
+                  "residual_calls_shared": 3000
+                }
+              }
+            }
+          ],
+          "aggregate": {
+            "physical": {
+              "n": 4,
+              "median_tracking_error_c": 0.0026911417643229185,
+              "tracking_error_q90_c": 4.569366861979168,
+              "median_tail_std_delta_c": 0.01063576922123328,
+              "median_valve_saturation_fraction": 0.025833333333333333,
+              "median_valve_reversals": 321.0,
+              "tracking_within_threshold_fraction": 0.75,
+              "stable_within_threshold_fraction": 0.75,
+              "not_saturated_fraction": 1.0
+            },
+            "live": {
+              "n": 4,
+              "median_tracking_error_c": 0.002346293131510413,
+              "tracking_error_q90_c": 3.2693430582682295,
+              "median_tail_std_delta_c": 0.01074587071720632,
+              "median_valve_saturation_fraction": 0.03166666666666666,
+              "median_valve_reversals": 319.0,
+              "tracking_within_threshold_fraction": 0.75,
+              "stable_within_threshold_fraction": 0.75,
+              "not_saturated_fraction": 1.0
+            },
+            "shared": {
+              "n": 4,
+              "median_tracking_error_c": 0.002971903483072913,
+              "tracking_error_q90_c": 4.445881754557293,
+              "median_tail_std_delta_c": 0.010891852196066917,
+              "median_valve_saturation_fraction": 0.026666666666666665,
+              "median_valve_reversals": 324.0,
+              "tracking_within_threshold_fraction": 0.75,
+              "stable_within_threshold_fraction": 0.75,
+              "not_saturated_fraction": 1.0
+            }
+          }
+        },
+        "dry": {
+          "training_only_w_coupling": 4.0,
+          "point_count": 4,
+          "points": [
+            {
+              "row": 25011,
+              "state": "dry",
+              "pressure_mpa": 22.152687072753906,
+              "valve2_fraction": 0.26996833086013794,
+              "spray_w": 30.684776306152344,
+              "power_mw": 450.4296875,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 11.36131591796875,
+                  "tracking_error_c": 10.86131591796875,
+                  "tail_std_delta_c": 3.451254940669095,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.26996833086013794,
+                  "valve_min": 0.0,
+                  "valve_max": 0.9590000000000013,
+                  "valve_saturation_fraction": 0.4033333333333333,
+                  "valve_reversals": 5,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 450.4296875,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 5.85989990234375,
+                  "tracking_error_c": 5.35989990234375,
+                  "tail_std_delta_c": 3.737802574515657,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.26996833086013794,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.49,
+                  "valve_reversals": 4,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 450.4296875,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 11.713889567057292,
+                  "tracking_error_c": 11.213889567057292,
+                  "tail_std_delta_c": 4.212268215704371,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.26996833086013794,
+                  "valve_min": 0.0,
+                  "valve_max": 0.9727000000000013,
+                  "valve_saturation_fraction": 0.41833333333333333,
+                  "valve_reversals": 5,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 450.4296875,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 26332,
+              "state": "dry",
+              "pressure_mpa": 26.292057037353516,
+              "valve2_fraction": 0.23253795504570007,
+              "spray_w": 30.81228256225586,
+              "power_mw": 567.478759765625,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 4.020225016276042,
+                  "tracking_error_c": 3.520225016276042,
+                  "tail_std_delta_c": 6.524184934371631,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.23253795504570007,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.49333333333333335,
+                  "valve_reversals": 4,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 567.478759765625,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": -3.62276611328125,
+                  "tracking_error_c": 4.12276611328125,
+                  "tail_std_delta_c": 3.86953359852204,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.23253795504570007,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.48833333333333334,
+                  "valve_reversals": 4,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 567.478759765625,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 4.124981689453125,
+                  "tracking_error_c": 3.624981689453125,
+                  "tail_std_delta_c": 6.373762242316642,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.23253795504570007,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.49166666666666664,
+                  "valve_reversals": 4,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 567.478759765625,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 27497,
+              "state": "dry",
+              "pressure_mpa": 24.136035919189453,
+              "valve2_fraction": 0.232894629240036,
+              "spray_w": 18.615089416503906,
+              "power_mw": 514.3142700195312,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": -10.759403483072917,
+                  "tracking_error_c": 11.259403483072917,
+                  "tail_std_delta_c": 9.65273105691206,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.232894629240036,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.5133333333333333,
+                  "valve_reversals": 4,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 514.3142700195312,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": -0.9377756754557292,
+                  "tracking_error_c": 1.4377756754557292,
+                  "tail_std_delta_c": 5.18617629624222,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.232894629240036,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.5783333333333334,
+                  "valve_reversals": 4,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 514.3142700195312,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": -11.034880574544271,
+                  "tracking_error_c": 11.534880574544271,
+                  "tail_std_delta_c": 9.785713766926046,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.232894629240036,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.5116666666666667,
+                  "valve_reversals": 4,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 514.3142700195312,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 28662,
+              "state": "dry",
+              "pressure_mpa": 22.081560134887695,
+              "valve2_fraction": 0.21025598049163818,
+              "spray_w": 14.8487548828125,
+              "power_mw": 463.36651611328125,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 5.794655354817708,
+                  "tracking_error_c": 5.294655354817708,
+                  "tail_std_delta_c": 1.138164185418812,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.21025598049163818,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.635,
+                  "valve_reversals": 3,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 463.36651611328125,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 3.7097768147786456,
+                  "tracking_error_c": 3.2097768147786456,
+                  "tail_std_delta_c": 0.5774965231098348,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.21025598049163818,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.6483333333333333,
+                  "valve_reversals": 11,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 463.36651611328125,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 5.881580607096354,
+                  "tracking_error_c": 5.381580607096354,
+                  "tail_std_delta_c": 1.1774532231885309,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.21025598049163818,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.6333333333333333,
+                  "valve_reversals": 3,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 463.36651611328125,
+                  "residual_calls_shared": 3000
+                }
+              }
+            }
+          ],
+          "aggregate": {
+            "physical": {
+              "n": 4,
+              "median_tracking_error_c": 8.07798563639323,
+              "tracking_error_q90_c": 11.139977213541668,
+              "median_tail_std_delta_c": 4.987719937520363,
+              "median_valve_saturation_fraction": 0.5033333333333333,
+              "median_valve_reversals": 4.0,
+              "tracking_within_threshold_fraction": 0.0,
+              "stable_within_threshold_fraction": 0.0,
+              "not_saturated_fraction": 1.0
+            },
+            "live": {
+              "n": 4,
+              "median_tracking_error_c": 3.666271464029948,
+              "tracking_error_q90_c": 4.988759765625001,
+              "median_tail_std_delta_c": 3.8036680865188486,
+              "median_valve_saturation_fraction": 0.5341666666666667,
+              "median_valve_reversals": 4.0,
+              "tracking_within_threshold_fraction": 0.0,
+              "stable_within_threshold_fraction": 0.0,
+              "not_saturated_fraction": 1.0
+            },
+            "shared": {
+              "n": 4,
+              "median_tracking_error_c": 8.297735087076823,
+              "tracking_error_q90_c": 11.438583272298178,
+              "median_tail_std_delta_c": 5.293015229010506,
+              "median_valve_saturation_fraction": 0.5016666666666667,
+              "median_valve_reversals": 4.0,
+              "tracking_within_threshold_fraction": 0.0,
+              "stable_within_threshold_fraction": 0.0,
+              "not_saturated_fraction": 1.0
+            }
+          }
+        }
+      }
+    },
+    "F1": {
+      "states": {
+        "wet": {
+          "training_only_w_coupling": 4.0,
+          "point_count": 4,
+          "points": [
+            {
+              "row": 37108,
+              "state": "wet",
+              "pressure_mpa": 22.030155181884766,
+              "valve2_fraction": 0.10228694975376129,
+              "spray_w": 0.10353469848632812,
+              "power_mw": 438.5467529296875,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.02569580078125,
+                  "tracking_error_c": 0.47430419921875,
+                  "tail_std_delta_c": 0.0,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.10228694975376129,
+                  "valve_min": 0.0,
+                  "valve_max": 0.08858694975376129,
+                  "valve_saturation_fraction": 0.9883333333333333,
+                  "valve_reversals": 0,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 438.5467529296875,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.01654052734375,
+                  "tracking_error_c": 0.48345947265625,
+                  "tail_std_delta_c": 0.0,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.10228694975376129,
+                  "valve_min": 0.0,
+                  "valve_max": 0.08858694975376129,
+                  "valve_saturation_fraction": 0.9883333333333333,
+                  "valve_reversals": 0,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 438.5467529296875,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.01922607421875,
+                  "tracking_error_c": 0.48077392578125,
+                  "tail_std_delta_c": 0.0,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.10228694975376129,
+                  "valve_min": 0.0,
+                  "valve_max": 0.08858694975376129,
+                  "valve_saturation_fraction": 0.9883333333333333,
+                  "valve_reversals": 0,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 438.5467529296875,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 38071,
+              "state": "wet",
+              "pressure_mpa": 14.847467422485352,
+              "valve2_fraction": 0.2305867075920105,
+              "spray_w": 17.777339935302734,
+              "power_mw": 286.3756103515625,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 14.265846761067708,
+                  "tracking_error_c": 13.765846761067708,
+                  "tail_std_delta_c": 3.0141277385514464,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.2305867075920105,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.6216666666666667,
+                  "valve_reversals": 9,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 286.3756103515625,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.4988484700520833,
+                  "tracking_error_c": 0.001151529947916674,
+                  "tail_std_delta_c": 0.016355134130267505,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.2305867075920105,
+                  "valve_min": 0.052486707592010545,
+                  "valve_max": 0.2168867075920105,
+                  "valve_saturation_fraction": 0.0,
+                  "valve_reversals": 578,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 286.3756103515625,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 10.222696940104166,
+                  "tracking_error_c": 9.722696940104166,
+                  "tail_std_delta_c": 1.7818654849656712,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.2305867075920105,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.5383333333333333,
+                  "valve_reversals": 47,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 286.3756103515625,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 39035,
+              "state": "wet",
+              "pressure_mpa": 15.438715934753418,
+              "valve2_fraction": 0.18942169845104218,
+              "spray_w": 10.084148406982422,
+              "power_mw": 296.49615478515625,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.5012339274088542,
+                  "tracking_error_c": 0.0012339274088541963,
+                  "tail_std_delta_c": 0.0103857549205862,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.18942169845104218,
+                  "valve_min": 0.025021698451042188,
+                  "valve_max": 0.19418615157604216,
+                  "valve_saturation_fraction": 0.0,
+                  "valve_reversals": 578,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 296.49615478515625,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.50006103515625,
+                  "tracking_error_c": 6.103515625e-05,
+                  "tail_std_delta_c": 0.0096435546875,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.18942169845104218,
+                  "valve_min": 0.0,
+                  "valve_max": 0.17572169845104219,
+                  "valve_saturation_fraction": 0.0033333333333333335,
+                  "valve_reversals": 577,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 296.49615478515625,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.4976298014322917,
+                  "tracking_error_c": 0.002370198567708315,
+                  "tail_std_delta_c": 0.010458844829819243,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.18942169845104218,
+                  "valve_min": 0.025021698451042188,
+                  "valve_max": 0.19414429889747073,
+                  "valve_saturation_fraction": 0.0,
+                  "valve_reversals": 578,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 296.49615478515625,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 39999,
+              "state": "wet",
+              "pressure_mpa": 15.569429397583008,
+              "valve2_fraction": 0.18226711452007294,
+              "spray_w": 17.844757080078125,
+              "power_mw": 301.63818359375,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.5042226155598958,
+                  "tracking_error_c": 0.0042226155598957815,
+                  "tail_std_delta_c": 0.01737919661481148,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.18226711452007294,
+                  "valve_min": 0.045267114520072954,
+                  "valve_max": 0.2041995363950729,
+                  "valve_saturation_fraction": 0.0,
+                  "valve_reversals": 580,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 301.63818359375,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.498992919921875,
+                  "tracking_error_c": 0.001007080078125,
+                  "tail_std_delta_c": 0.014854364580578767,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.18226711452007294,
+                  "valve_min": 0.01786711452007295,
+                  "valve_max": 0.16856711452007295,
+                  "valve_saturation_fraction": 0.0,
+                  "valve_reversals": 583,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 301.63818359375,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.498687744140625,
+                  "tracking_error_c": 0.001312255859375,
+                  "tail_std_delta_c": 0.017379965106944825,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.18226711452007294,
+                  "valve_min": 0.045267114520072954,
+                  "valve_max": 0.20522283438614436,
+                  "valve_saturation_fraction": 0.0,
+                  "valve_reversals": 581,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 301.63818359375,
+                  "residual_calls_shared": 3000
+                }
+              }
+            }
+          ],
+          "aggregate": {
+            "physical": {
+              "n": 4,
+              "median_tracking_error_c": 0.2392634073893229,
+              "tracking_error_q90_c": 9.778383992513023,
+              "median_tail_std_delta_c": 0.01388247576769884,
+              "median_valve_saturation_fraction": 0.31083333333333335,
+              "median_valve_reversals": 293.5,
+              "tracking_within_threshold_fraction": 0.5,
+              "stable_within_threshold_fraction": 0.75,
+              "not_saturated_fraction": 0.75
+            },
+            "live": {
+              "n": 4,
+              "median_tracking_error_c": 0.001079305013020837,
+              "tracking_error_q90_c": 0.3387670898437501,
+              "median_tail_std_delta_c": 0.012248959634039384,
+              "median_valve_saturation_fraction": 0.0016666666666666668,
+              "median_valve_reversals": 577.5,
+              "tracking_within_threshold_fraction": 0.75,
+              "stable_within_threshold_fraction": 1.0,
+              "not_saturated_fraction": 0.75
+            },
+            "shared": {
+              "n": 4,
+              "median_tracking_error_c": 0.24157206217447916,
+              "tracking_error_q90_c": 6.950120035807293,
+              "median_tail_std_delta_c": 0.013919404968382034,
+              "median_valve_saturation_fraction": 0.26916666666666667,
+              "median_valve_reversals": 312.5,
+              "tracking_within_threshold_fraction": 0.5,
+              "stable_within_threshold_fraction": 0.75,
+              "not_saturated_fraction": 0.75
+            }
+          }
+        },
+        "dry": {
+          "training_only_w_coupling": 4.0,
+          "point_count": 4,
+          "points": [
+            {
+              "row": 35000,
+              "state": "dry",
+              "pressure_mpa": 25.940834045410156,
+              "valve2_fraction": 0.19724765419960022,
+              "spray_w": 17.734233856201172,
+              "power_mw": 600.6021118164062,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 7.304078165690104,
+                  "tracking_error_c": 6.804078165690104,
+                  "tail_std_delta_c": 2.671913756665903,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.19724765419960022,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.6333333333333333,
+                  "valve_reversals": 3,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 600.6021118164062,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.4647216796875,
+                  "tracking_error_c": 0.0352783203125,
+                  "tail_std_delta_c": 0.0,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.19724765419960022,
+                  "valve_min": 0.0,
+                  "valve_max": 0.18354765419960023,
+                  "valve_saturation_fraction": 0.9766666666666667,
+                  "valve_reversals": 0,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 600.6021118164062,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 6.709089152018229,
+                  "tracking_error_c": 6.209089152018229,
+                  "tail_std_delta_c": 2.4369194174595235,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.19724765419960022,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.6366666666666667,
+                  "valve_reversals": 3,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 600.6021118164062,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 35702,
+              "state": "dry",
+              "pressure_mpa": 27.20600128173828,
+              "valve2_fraction": 0.08287937194108963,
+              "spray_w": 10.999992370605469,
+              "power_mw": 599.693603515625,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 1.3762715657552083,
+                  "tracking_error_c": 0.8762715657552083,
+                  "tail_std_delta_c": 0.07188032996753055,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.08287937194108963,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.7433333333333333,
+                  "valve_reversals": 8,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 599.693603515625,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.0802001953125,
+                  "tracking_error_c": 0.4197998046875,
+                  "tail_std_delta_c": 0.0,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.08287937194108963,
+                  "valve_min": 0.0,
+                  "valve_max": 0.06917937194108963,
+                  "valve_saturation_fraction": 0.99,
+                  "valve_reversals": 0,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 599.693603515625,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 1.295403035481771,
+                  "tracking_error_c": 0.7954030354817709,
+                  "tail_std_delta_c": 0.06248135893872807,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.08287937194108963,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.7433333333333333,
+                  "valve_reversals": 8,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 599.693603515625,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 36404,
+              "state": "dry",
+              "pressure_mpa": 26.36800765991211,
+              "valve2_fraction": 0.11804379522800446,
+              "spray_w": 14.046680450439453,
+              "power_mw": 601.11083984375,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 2.207137044270833,
+                  "tracking_error_c": 1.7071370442708331,
+                  "tail_std_delta_c": 0.027066119768082115,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.11804379522800446,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.7433333333333333,
+                  "valve_reversals": 6,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 601.11083984375,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": -2.224365234375,
+                  "tracking_error_c": 2.724365234375,
+                  "tail_std_delta_c": 0.0,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.11804379522800446,
+                  "valve_min": 0.0,
+                  "valve_max": 0.10434379522800445,
+                  "valve_saturation_fraction": 0.9866666666666667,
+                  "valve_reversals": 0,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 601.11083984375,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 2.1982014973958335,
+                  "tracking_error_c": 1.6982014973958335,
+                  "tail_std_delta_c": 0.024792108069149818,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.11804379522800446,
+                  "valve_min": 0.0,
+                  "valve_max": 1.0,
+                  "valve_saturation_fraction": 0.7416666666666667,
+                  "valve_reversals": 6,
+                  "max_valve_move_per_step": 0.013700000000000045,
+                  "controller_power_mw": 601.11083984375,
+                  "residual_calls_shared": 3000
+                }
+              }
+            },
+            {
+              "row": 37107,
+              "state": "dry",
+              "pressure_mpa": 22.116809844970703,
+              "valve2_fraction": 0.10258068144321442,
+              "spray_w": 0.15379714965820312,
+              "power_mw": 439.67327880859375,
+              "modes": {
+                "physical": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.03436279296875,
+                  "tracking_error_c": 0.46563720703125,
+                  "tail_std_delta_c": 0.0,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.10258068144321442,
+                  "valve_min": 0.0,
+                  "valve_max": 0.08888068144321441,
+                  "valve_saturation_fraction": 0.9883333333333333,
+                  "valve_reversals": 0,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 439.67327880859375,
+                  "residual_calls_shared": null
+                },
+                "live": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.02520751953125,
+                  "tracking_error_c": 0.47479248046875,
+                  "tail_std_delta_c": 0.0,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.10258068144321442,
+                  "valve_min": 0.0,
+                  "valve_max": 0.08888068144321441,
+                  "valve_saturation_fraction": 0.9883333333333333,
+                  "valve_reversals": 0,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 439.67327880859375,
+                  "residual_calls_shared": null
+                },
+                "shared": {
+                  "setpoint_delta_c": 0.5,
+                  "achieved_delta_c": 0.025390625,
+                  "tracking_error_c": 0.474609375,
+                  "tail_std_delta_c": 0.0,
+                  "baseline_tail_drift_c": 0.0,
+                  "valve_initial": 0.10258068144321442,
+                  "valve_min": 0.0,
+                  "valve_max": 0.08888068144321441,
+                  "valve_saturation_fraction": 0.9883333333333333,
+                  "valve_reversals": 0,
+                  "max_valve_move_per_step": 0.013700000000000004,
+                  "controller_power_mw": 439.67327880859375,
+                  "residual_calls_shared": 3000
+                }
+              }
+            }
+          ],
+          "aggregate": {
+            "physical": {
+              "n": 4,
+              "median_tracking_error_c": 1.2917043050130208,
+              "tracking_error_q90_c": 5.2749958292643235,
+              "median_tail_std_delta_c": 0.04947322486780633,
+              "median_valve_saturation_fraction": 0.7433333333333333,
+              "median_valve_reversals": 4.5,
+              "tracking_within_threshold_fraction": 0.0,
+              "stable_within_threshold_fraction": 0.5,
+              "not_saturated_fraction": 0.75
+            },
+            "live": {
+              "n": 4,
+              "median_tracking_error_c": 0.447296142578125,
+              "tracking_error_q90_c": 2.0494934082031255,
+              "median_tail_std_delta_c": 0.0,
+              "median_valve_saturation_fraction": 0.9875,
+              "median_valve_reversals": 0.0,
+              "tracking_within_threshold_fraction": 0.25,
+              "stable_within_threshold_fraction": 1.0,
+              "not_saturated_fraction": 0.0
+            },
+            "shared": {
+              "n": 4,
+              "median_tracking_error_c": 1.2468022664388023,
+              "tracking_error_q90_c": 4.85582285563151,
+              "median_tail_std_delta_c": 0.04363673350393894,
+              "median_valve_saturation_fraction": 0.7424999999999999,
+              "median_valve_reversals": 4.5,
+              "tracking_within_threshold_fraction": 0.0,
+              "stable_within_threshold_fraction": 0.5,
+              "not_saturated_fraction": 0.75
+            }
+          }
+        }
+      }
+    }
+  },
+  "scientific_verdict": null
+}

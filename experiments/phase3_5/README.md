@@ -2,7 +2,7 @@
 
 本目录是 Phase 3.5-MS 完整模型验证的唯一执行入口。Linux 只运行注册表已授权的冻结命令并回传产物，不改代码、阈值、配置、seed 或 split。正式运行前先执行 `python experiments/phase3_5/experiment_status.py --check --json`，记录 `git rev-parse HEAD`，且工作树必须干净。历史 42-run/E 系列命令仅供追溯，除非注册表重新授权，不得执行。
 
-> 当前状态：`ms3_r=ready_for_linux`、`linux_authorized_gate=ms3_r`、`authorized_batch=RM3-B1`。只授权一次执行冻结的 22-unit validation 矩阵；test、自动科学PASS、RM3-B2、MS4和旧42-run/E系列均未授权。
+> 当前状态（2026-08-18）：RM3-B1 的 22/22 validation 已完成并由本地 Supervisor 审计关闭；`active_gate=final_world_model_pipeline`、`linux_authorized_gate=null`。以下全部命令仅作历史复现记录，不构成当前授权。RM3-B2、MS4、test 与旧 E 系列均未授权。
 
 RM3 本地框架入口如下。它只执行合同 dry-run 或合成真值 smoke，没有真实训练参数，也不构成 Hermes 授权：
 
