@@ -85,9 +85,10 @@ PINN 拆解思想迁移验证（EWH PINN 三件套：物理派生特征 / 不变
 | **FIXB 蒸发干燥** | 26 | B1 PASS 21-25→3.07°C（物理本体首次修复两相病灶）；B2/B3 FAIL（1030s 过慢） |
 | qnav 残差上蒸发底座 | 27 | E1-E5 全 PASS：τ63=480s 进窗、rollout 2.463 历史最佳、前 3 G1 锚点首过 |
 | qnavlag 反证 | 28 | FAIL：τ_res 钝刀（rollout 11.33）——qnav 无滞后即最优 |
-| Q32 第一性原理筛查（Codex） | `97ee326`/`aa04388` | 精度层=捷径（读W+非守恒注热）、物理层=h_now 成立；干态 F0/F1 折分裂 |
+| Q32 第一性原理筛查（Codex） | `97ee326`/`aa04388` | logged-future精度依赖读W+非守恒注热；h_now为权限更干净候选，仍须响应/闭环验证 |
 | Q32-R 残差反馈归因（Codex） | `7448a6b`/`af9f205` | 16点均为干态；replay 四组均恢复8/8，支持 residual feedback 机制；湿态/闭环尚未验证 |
-| Q32-S shared-disturbance 闭环 | 待执行 | 2折×湿/干各4点×3模式；配对增量 +0.5°C，无训练、无自动裁决 |
+| Q32-S shared-disturbance 闭环 | `534d297`/`af2b168` | 真湿/干16点；shared≈physical、live部分改善；对象/控制器/初始化尚未拆开，不能全局否定纯物理 |
+| Q32-T 边界归因 | ready_for_linux | 双向对象响应+控制器死区/滤波/anti-windup+初始化漂移三面板，无训练 |
 
 **收口文档**：NOTES.md（§0-§6.5）、PAPER_MATERIALS.md、本规划稿；skill 归档 `thermal-world-model-ablation/references/adhoc2-control-embedding-fixchain-2026-08-17.md`
 

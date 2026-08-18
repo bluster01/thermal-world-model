@@ -215,4 +215,10 @@
 
 raw artifacts：out/qnav_residual_feedback_probe/（manifest.json + summary_development.json + 16 点明细）
 
-**Q32-S 已冻结、待 Linux 执行**：`34_qnav_shared_disturbance_loop.py` + `configs/qnav_shared_disturbance_loop.json`。设计为 F0/F1 × 湿/干各4点 × physical/live/shared 三模式的配对增量闭环；只追踪 `T_controlled-T_baseline=+0.5°C`，无训练、无自动裁决、禁止执行端修复或改写结论。
+## §6.9 Q32-S shared-disturbance 配对闭环（Linux 执行 af2b168，Supervisor 审计完成）
+
+16个点已确认是 F0/F1 各湿4、干4；48个模式结果与聚合均复算一致。`shared` 整体接近 `physical`，说明 replay 确实移除了状态依赖 residual 的差分反馈；`live` 在部分点改善跟踪，表明 residual 同时承担预测闭合与稳定化。当前结果**不能全局否定纯物理对象**：低压湿态已有多个点能跟踪；近临界低喷水点主要受动作裕量限制；部分湿/干点则暴露出对象闭合或工况调度不足。
+
+控制器边界：Q32-S 的启发式 PI 每10s直接更新，无死区、滤波和 anti-windup。湿态达标点的高换向更像离散控制极限环，不能单独作为对象模型失败证据。Q32-S 还使用600步定输入 warm-up 与基线差分，消除了绝对初始偏差，因此也不能回答初始化误差。
+
+**Q32-T 已冻结、待 Linux 执行**：`35_qnav_boundary_attribution_probe.py` + `configs/qnav_boundary_attribution_probe.json`。三块独立面板分别验证：湿/干双向开环对象增益；anti-windup/死区/低通滤波控制器消融；一步、180步历史与1/60/180/600步定输入初始化漂移。无训练、无自动裁决，Linux禁止调参或解释。

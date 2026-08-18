@@ -1,0 +1,66 @@
+{
+  "experiment": "Q32-T-boundary-attribution-probe",
+  "version": 1,
+  "status": "ready_for_linux",
+  "purpose": "Separate local object response, controller implementation effects, and initialization mismatch on the frozen Q32-S wet/dry points.",
+  "parent": {
+    "results_commit": "af2b168",
+    "manifest_path": "out/qnav_shared_disturbance_loop/manifest.json",
+    "manifest_sha256_git": "07475c246058a2008be4e2b8cdb9b5f35c0305373df3c12314f915f690de4a22",
+    "summary_path": "out/qnav_shared_disturbance_loop/summary_development.json",
+    "summary_sha256_git": "4dff793f393071d607b6925091b8450d1ad9d801553b5a7d32b0de2dbf548da2",
+    "development_arrays_sha256": "00be453b3659c6e8826f80c7a65f72379753127d1463eed1fcab666c00f4b95b",
+    "checkpoints": {
+      "F0": {
+        "path": "out/qnav_first_principles/h_now_F0_s0/residual_best_validation.pt",
+        "sha256": "5ec95cc39956bd8e8b7e0a2d93e84955f72be8acc5e49c863255b7e6837d6e86"
+      },
+      "F1": {
+        "path": "out/qnav_first_principles/h_now_F1_s0/residual_best_validation.pt",
+        "sha256": "8870f3ef87fc81a6e9da30b2e29bc1c0375c8c97f60a84f65ec60e3f05320e22"
+      }
+    }
+  },
+  "data": {
+    "window_start": 70686,
+    "development_rows": 40000,
+    "reserved_rows": [40000, 50000],
+    "sample_seconds": 10
+  },
+  "folds": {
+    "F0": {"training": [0, 20000], "evaluation": [25000, 30000]},
+    "F1": {"training": [0, 30000], "evaluation": [35000, 40000]}
+  },
+  "object_panel": {
+    "steps": 600,
+    "valve_step_fractions": [-0.02, 0.02],
+    "residual_modes": ["physical", "live", "shared"]
+  },
+  "controller_panel": {
+    "warm_steps": 600,
+    "control_steps": 600,
+    "setpoint_delta_c": 0.5,
+    "valve_rate_fraction_per_step": 0.0137,
+    "residual_modes": ["physical", "live", "shared"],
+    "controllers": ["aw_only", "deadband_aw", "lpf_aw", "deadband_lpf_aw"],
+    "deadband_c": 0.03,
+    "lpf_tau_seconds": 30.0
+  },
+  "initialization_panel": {
+    "residual_modes": ["physical", "live"],
+    "history_steps": 180,
+    "constant_warm_horizons": [1, 60, 180, 600]
+  },
+  "linux_boundary": {
+    "allowed": "Execute the frozen inference-only three-panel probe once and return raw artifacts plus the execution log.",
+    "command": "set -o pipefail; python 35_qnav_boundary_attribution_probe.py --execute --csv '/home/bluster/Desktop/AI/时序预测/TIME-all-model/TCN-Improved-GRU/data/mainT/A侧主汽温全数据_cleaned_10s.csv' --output out/qnav_boundary_attribution_probe 2>&1 | tee out/qnav_boundary_attribution_probe_exec.log",
+    "forbidden": [
+      "train, fine-tune or alter checkpoints",
+      "change points, interventions, controller constants, panels or folds",
+      "access reserved rows 40000:50000",
+      "retry, repair code/config, select examples, make figures or edit interpretation documents",
+      "write a scientific verdict or choose a controller winner"
+    ],
+    "failure_policy": "Stop at the first preflight or execution error and return the unmodified error log to the supervisor."
+  }
+}
