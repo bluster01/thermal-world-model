@@ -4,8 +4,11 @@
 
 - 执行 HEAD：`f8ec07f`（含 3 个 executor-side fix，均标注 per user instruction; Supervisor review required）
 - 已完成：96 测试全绿 → **D-SYN PASS 3/3**（改善 99.3/107.0/136.5）→ split-sides 双侧过门、
-  SHA256 溯源一致（23a89ea6…）→ matrix 侧 A 首跑 O1/T1/B1/J1 完成、R1 崩 → 修复后完整重跑进行中
-- 侧 B 待侧 A 重跑收尾后顺序执行（同一冻结命令 + 真实 IAPWS 网格注入）
+  SHA256 溯源一致（23a89ea6…）→ matrix 侧 A 首跑 O1/T1/B1/J1 完成、R1 崩
+- **状态更新（用户指示）**：修复后的侧 A 完整重跑已中止——等 Codex 修复/冻结后再统一执行
+  （含 §4 持久化改造与 latent 预算裁决）。**注意：中止的重跑已部分覆盖 artifacts 里的
+  checkpoints/metrics 并追加了 ledger 重复块**，下次执行前需按 Codex 新指示清理或重跑覆盖。
+- 侧 B 未执行，等同样条件
 
 ## 2. Supervisor 代码缺陷（环境差异类 ×2 + 纯缺陷 ×1，均已最小修复）
 
