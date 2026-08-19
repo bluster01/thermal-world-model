@@ -1,7 +1,8 @@
-# 最终世界模型判别实验矩阵 v0.1（冻结稿）
+# 最终世界模型判别实验矩阵 v0.2（冻结稿）
 
-> 状态：**FROZEN MATRIX v0.1 / 待独立授权提交**。本文件冻结 O1/B1/T1/R1/J1 判别实验与前置 D0/D-SYN
+> 状态：**FROZEN MATRIX v0.2 / 重跑授权中**。本文件冻结 O1/B1/T1/R1/J1 判别实验与前置 D0/D-SYN
 > 门禁的假设、数据合同、预算、判决规则与禁止事项。K1 为条件实验，母模型未过门禁前保持 HOLD。
+> v0.1 → v0.2 修正案见 §5（首轮执行回传后生效）。
 >
 > 上游依据：[pipeline 设计稿](2026-08-18-final-world-model-pipeline-design.md) §6 初始矩阵、
 > [实现记录](2026-08-18-final-world-model-implementation.md)、RM3-B1 审计判决。
@@ -87,6 +88,9 @@ D0 必须产出**点位映射审计表**（DCS 点名 → 注册表通道 → �
 - 度量：H1/H6/H18 验证 NLL；60 步定常 rollout 有界性（|drift| 与 settle，同本地合同口径）。
 - 判决：每一层相对前一层 H18 NLL 改善 ≥ 2%（CI 下界 > 0）且 ≥ 2/3 seeds 过门才保留；
   任一臂 rollout 发散（非有限或 |drift| > 60 °C）直接 REJECTED 该臂。
+- 训练预算（v0.2 修正）：T1 全部臂统一 epochs ≤ 60 / patience 10；ledger 逐 run 记录
+  `stop_reason` / `converged` / `val_tail` 收敛诊断，凡 `stop_reason=cap` 且 `val_tail` 仍下降的
+  臂，其负贡献判决降级为 provisional 并在审计中单独标注（首轮 latent4 seed2 教训）。
 - 负对照：`closure(conservative)` 与 `closure(steam_only)` 差异不显著时优先 conservative
   （能量守恒先验），并在报告中声明该选择是先验驱动而非数据驱动。
 
@@ -141,7 +145,25 @@ D0 必须产出**点位映射审计表**（DCS 点名 → 注册表通道 → �
 | J1（joint vs staged × 3 seeds） | 6 runs | 8 h GPU |
 | **合计** | | **≤ 36 GPU 小时** |
 
-## 5. 明确禁止事项
+## 5. 修正案记录
+
+### v0.2（2026-08-19，首轮执行回传后生效）
+
+触发：Linux 首轮执行报告（`results/final_wm/execution_report.md`）。
+
+1. **T1 训练预算统一上调**：默认 30 epochs / patience 5 对含潜变量臂偏小（latent4 seed2 撞顶
+   仍在降，seed0/1 停在浅谷高原），T1 嵌套比较的负贡献判决存在预算混淆。修正为 T1 全部臂
+   统一 60 / 10——均匀上调保持比较对称，早停仍约束已收敛臂的成本；O1/B1/J1 臂不变。
+2. **收敛诊断入 ledger**：所有单元逐 run 记录 `stop_reason`（patience|cap）、`converged`、
+   `val_tail`（末 5 轮 val NLL）；审计阶段按 §T1 所述规则降级未收敛臂的判决。
+3. **runner 断点续跑与增量落盘**：run 级产物（checkpoint + metrics + spec 指纹）匹配时跳过
+   重训；spec 变更（如本修正案）自动触发对应臂重训，其余臂复用；matrix_summary 每单元增量
+   落盘。判决与训练由此解耦，`--units` 子集重跑安全。
+4. **执行侧修复复核**：cc81cb3（GPU 设备搬运）与 f8ec07f（R1 import）经 Supervisor 复核接受，
+   均补了回归测试；R1 路径另发现两个潜伏缺陷（`layout.state_dim`→`.dim`、`latent_raw`→
+   `latent_step`）已修并纳入端到端 smoke。
+
+## 6. 明确禁止事项
 
 - 不访问 test；不生成 B2 式重试批次；不复活旧 runner；
 - 不把 Direct-WM/物理分支历史数值当本矩阵先验之外的证据；

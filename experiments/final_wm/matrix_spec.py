@@ -13,6 +13,7 @@ from dataclasses import replace
 
 from src.final_wm.training import TrainSpec
 
+MATRIX_VERSION = "0.2"  # v0.2: uniform T1 training budget amendment (see matrix doc §5)
 SEEDS = (0, 1, 2)
 HISTORY_STEPS = 96
 HORIZON = 18
@@ -39,6 +40,11 @@ def o1_specs(seeds: tuple[int, ...] = SEEDS) -> list[TrainSpec]:
 
 
 def t1_specs(seeds: tuple[int, ...] = SEEDS) -> list[TrainSpec]:
+    """Nested structure arms.  v0.2 amendment: uniform budget epochs=60 /
+    patience=10 for ALL T1 arms (default 30/6 undertrained the latent arm on
+    side A seed 2 — it hit the epoch cap while still descending; a uniform
+    raise keeps the comparison symmetric, early stopping still bounds cost).
+    """
     arms = (
         ("physics_only", "none", 0),
         ("closure_cons", "conservative", 0),
@@ -47,7 +53,7 @@ def t1_specs(seeds: tuple[int, ...] = SEEDS) -> list[TrainSpec]:
     )
     return [
         _base("t1", arm, seed, boundary_mode="oracle", initial_state_mode="hybrid",
-              closure_mode=closure, latent_dim=latent)
+              closure_mode=closure, latent_dim=latent, epochs=60, patience=10)
         for seed in seeds
         for arm, closure, latent in arms
     ]

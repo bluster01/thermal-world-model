@@ -10,10 +10,12 @@ import json
 from argparse import Namespace
 
 import numpy as np
+import torch
 
 from experiments.final_wm import matrix_spec as ms
-from experiments.final_wm.run_matrix import run_dsyn, run_matrix
+from experiments.final_wm.run_matrix import closure_blindness_check, run_dsyn, run_matrix
 from src.final_wm.synthetic import synthetic_canonical_arrays
+from src.final_wm.training import build_world_model
 
 
 def _args(tmp_path, **kw) -> Namespace:
@@ -33,6 +35,63 @@ def test_dsyn_quick_gate_runs(tmp_path, monkeypatch) -> None:
     assert verdict["quick"] is True
     for entry in verdict["per_seed"]:
         assert np.isfinite(entry["student_val_nll"])
+
+
+def _ledger_final_count(out) -> int:
+    ledger = out / "ledger.jsonl"
+    return sum(1 for line in ledger.read_text(encoding="utf-8").splitlines()
+               if json.loads(line).get("final"))
+
+
+def test_matrix_rerun_resumes_without_retraining(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(ms, "HISTORY_STEPS", 16)
+    record_path = tmp_path / "record.npz"
+    np.savez_compressed(record_path, **synthetic_canonical_arrays(total_steps=1200, seed=3))
+    args = _args(tmp_path, record=str(record_path), units="o1")
+    run_matrix(args)
+    n_final = _ledger_final_count(tmp_path / "out")
+    assert n_final == 3  # steady/learned/hybrid, seed 0 in quick mode
+    summary = run_matrix(args)  # second run: resume everything, no retraining
+    assert _ledger_final_count(tmp_path / "out") == n_final
+    assert summary["matrix_version"] == ms.MATRIX_VERSION
+    assert (tmp_path / "out" / "matrix_summary.json").exists()
+
+
+def test_matrix_rerun_retrains_when_spec_changes(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(ms, "HISTORY_STEPS", 16)
+    record_path = tmp_path / "record.npz"
+    np.savez_compressed(record_path, **synthetic_canonical_arrays(total_steps=1200, seed=3))
+    args = _args(tmp_path, record=str(record_path), units="o1")
+    run_matrix(args)
+    n_final = _ledger_final_count(tmp_path / "out")
+    monkeypatch.setattr(ms, "HORIZON", 12)  # spec change -> fingerprint mismatch -> retrain
+    run_matrix(args)
+    assert _ledger_final_count(tmp_path / "out") == n_final + 3
+
+
+def test_matrix_quick_t1_and_r1_run(tmp_path, monkeypatch) -> None:
+    """End-to-end coverage of the R1 unit path (the unit that crashed the
+    first Linux run): trains the four T1 arms quick, then runs the R1 probes
+    against the closure_cons checkpoints."""
+    monkeypatch.setattr(ms, "HISTORY_STEPS", 16)
+    record_path = tmp_path / "record.npz"
+    np.savez_compressed(record_path, **synthetic_canonical_arrays(total_steps=1500, seed=9))
+    args = _args(tmp_path, record=str(record_path), units="t1,r1")
+    summary = run_matrix(args)
+    out = tmp_path / "out"
+    assert (out / "r1_report.json").exists()
+    reports = summary["units"]["r1"]["reports"]
+    assert len(reports) == 1 and "error" not in reports[0]
+    assert reports[0]["runtime_blind_ok"] is True
+    assert "leakage" in reports[0] and "direction" in reports[0]
+
+
+def test_closure_blindness_check_passes(tmp_path) -> None:
+    spec = ms._base("t1", "closure_cons", 0, boundary_mode="oracle",
+                    initial_state_mode="hybrid", closure_mode="conservative")
+    model = build_world_model(spec, properties=None)
+    report = closure_blindness_check(model, torch.device("cpu"))
+    assert report["runtime_blind_ok"] is True
 
 
 def test_matrix_quick_o1_and_b1_run(tmp_path, monkeypatch) -> None:

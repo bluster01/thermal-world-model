@@ -4,15 +4,23 @@
 > test 锁定；K1 不解冻。产物目录 `artifacts/final_wm/` 整体回传（含 ledger.jsonl、
 > checkpoints/、metrics/、各 summary/report JSON）。
 >
-> 上游合同：`docs/plans/2026-08-18-final-wm-discrimination-matrix.md`（矩阵 v0.1）、
+> 上游合同：`docs/plans/2026-08-18-final-wm-discrimination-matrix.md`（矩阵 v0.2）、
 > `docs/plans/2026-08-18-final-world-model-implementation.md` §4.1。
+
+## 重跑语义（v0.2 起）
+
+runner 具备 run 级断点续跑：`checkpoints/<run_id>.pt` + `metrics/<run_id>.pt` 存在且
+spec 指纹匹配（旧产物回退比对 ledger 末次 final 块的 spec）时**跳过重训**，直接复算判决；
+spec 变更（如 v0.2 的 T1 预算修正）自动触发对应臂重训，其余臂复用。matrix_summary 每单元
+增量落盘，中途崩溃不丢已完成判决。**首轮侧 A 重跑**：O1/B1/J1 臂 spec 未变将自动复用，
+T1 四臂按新预算重训，R1 用新 T1 权重复跑；ledger 中首轮重复块按既有约定以末次出现为准。
 
 ## 0. 环境准备
 
 ```bash
 cd <repo>
 git checkout main && git pull origin main
-python -m pytest tests/final_wm/ -q        # 96 项必须全过；任何失败立即停止并回传输出
+python -m pytest tests/final_wm/ -q        # 必须全过（101 项）；任何失败立即停止并回传输出
 ```
 
 ## 1. D-SYN 同型可解性门禁（先于真实数据，必过）

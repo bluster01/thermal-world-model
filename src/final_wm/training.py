@@ -133,6 +133,8 @@ def train_arm(
     best_val = float("inf")
     best_epoch = -1
     epochs_since_best = 0
+    val_history: list[float] = []
+    stop_reason = "cap"
     t0 = time.time()
     with ledger_path.open("a", encoding="utf-8") as ledger:
         for epoch in range(spec.epochs):
@@ -176,6 +178,7 @@ def train_arm(
                 boundary_mode=spec.boundary_mode, seed=10_000 + epoch, device=device,
             )
             val_nll = float(val.nll.mean())
+            val_history.append(val_nll)
             entry = dict(base_entry, epoch=epoch, train_loss=train_loss, val_nll=val_nll,
                          wall_seconds=time.time() - t0)
             ledger.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -192,10 +195,15 @@ def train_arm(
             else:
                 epochs_since_best += 1
                 if epochs_since_best >= spec.patience:
+                    stop_reason = "patience"
                     break
 
     final = dict(base_entry, final=True, best_val_nll=best_val, best_epoch=best_epoch,
-                 epochs_run=epoch + 1, wall_seconds=time.time() - t0)
+                 epochs_run=epoch + 1, wall_seconds=time.time() - t0,
+                 # Convergence diagnostics (matrix v0.2): stop_reason=cap with a still-
+                 # descending val_tail flags undertrained arms; converged = early stop.
+                 stop_reason=stop_reason, converged=stop_reason == "patience",
+                 val_tail=val_history[-5:])
     with ledger_path.open("a", encoding="utf-8") as ledger:
         ledger.write(json.dumps(final, ensure_ascii=False) + "\n")
     return final

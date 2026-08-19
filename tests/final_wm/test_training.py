@@ -6,6 +6,7 @@ import json
 
 import numpy as np
 import pytest
+import torch
 
 from src.final_wm.contracts import FinalWMProtocolError
 from src.final_wm.data import CanonicalRecord
@@ -46,9 +47,27 @@ def test_train_arm_writes_ledger_and_checkpoint(tmp_path) -> None:
     assert np.isfinite(final["best_val_nll"])
     ledger = (tmp_path / "out" / "ledger.jsonl").read_text(encoding="utf-8").strip().splitlines()
     assert len(ledger) >= 2  # at least one epoch + final
-    assert json.loads(ledger[-1])["final"] is True
+    last = json.loads(ledger[-1])
+    assert last["final"] is True
+    # convergence diagnostics (matrix v0.2)
+    assert last["stop_reason"] in ("patience", "cap")
+    assert last["converged"] == (last["stop_reason"] == "patience")
+    assert 1 <= len(last["val_tail"]) <= 5
     ckpt = tmp_path / "out" / "checkpoints" / "smoke_arm_seed0.pt"
     assert ckpt.exists()
+
+
+def test_properties_move_with_model_apply() -> None:
+    # Executor-fix regression (cc81cb3): properties tensors must follow the
+    # module's device/dtype moves; nn.Module._apply skips plain attributes.
+    from src.final_wm.contracts import TransitionConfig
+    from src.final_wm.properties import AnalyticThermoProperties
+    from src.final_wm.transition import Fan2020UDETransition
+
+    transition = Fan2020UDETransition(TransitionConfig(), AnalyticThermoProperties())
+    transition.to(dtype=torch.float64)
+    assert transition.properties._tsat_p.dtype == torch.float64
+    assert transition.properties._hsatv.dtype == torch.float64
 
 
 def test_train_arm_learns_on_teacher_record(tmp_path) -> None:

@@ -33,6 +33,7 @@ from src.final_wm.data import (
 )
 from src.final_wm.diagnostics import leakage_probe
 from src.final_wm.evaluation import (
+    WindowMetrics,
     boundary_forecast_metrics,
     evaluate_windows,
     horizon_summary,
@@ -43,9 +44,42 @@ from src.final_wm.evaluation import (
 )
 from src.final_wm.properties import AnalyticThermoProperties, load_grid_properties
 from src.final_wm.synthetic import synthetic_canonical_arrays
-from src.final_wm.training import build_world_model, train_arm
+from src.final_wm.training import build_world_model, config_fingerprint, train_arm
 
 from experiments.final_wm import matrix_spec as ms
+
+
+def closure_blindness_check(model, device) -> dict:
+    """Runtime action/W blindness check for the closure (R1).
+
+    The W channel (spray_flow_total, excluded from the closure whitelist) must
+    not move closure output.  Extracted as a top-level function so the import
+    path is covered by tests (the original inline version referenced a
+    non-existent CHANNEL_INDEX and crashed the first Linux run).
+    """
+    from src.final_wm.contracts import BOUNDARY_ELEMENTS, CLOSURE_BOUNDARY_CHANNELS
+
+    if "spray_flow_total" in CLOSURE_BOUNDARY_CHANNELS:
+        raise FinalWMProtocolError("closure whitelist must exclude spray_flow_total")
+    batch_state = torch.zeros(2, model.layout.dim, device=device)
+    boundary = torch.zeros(2, len(BOUNDARY_ELEMENTS), device=device)
+    w_idx = BOUNDARY_ELEMENTS.index("spray_flow_total")
+    boundary[:, w_idx] = 5.0
+    with torch.no_grad():
+        out_w = model.closure(batch_state, boundary)
+        boundary[:, w_idx] = 0.0
+        out_wo = model.closure(batch_state, boundary)
+    blind = (
+        torch.allclose(out_w.steam_power, out_wo.steam_power)
+        and torch.allclose(out_w.metal_power, out_wo.metal_power)
+    )
+    if out_w.latent_step is not None or out_wo.latent_step is not None:
+        blind = blind and (
+            out_w.latent_step is not None
+            and out_wo.latent_step is not None
+            and torch.allclose(out_w.latent_step, out_wo.latent_step)
+        )
+    return {"runtime_blind_ok": bool(blind)}
 
 
 def _device(name: str) -> torch.device:
@@ -170,7 +204,23 @@ def run_dsyn(args) -> dict:
 # Phase: matrix units
 # ---------------------------------------------------------------------------
 
-def _save_metrics(out: Path, run_id: str, metrics) -> Path:
+def _save_metrics(out: Path, run_id: str, metrics, spec, final) -> Path:
+    path = out / "metrics" / f"{run_id}.pt"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save({
+        "metrics": {
+            "nll": metrics.nll, "mae": metrics.mae, "crps": metrics.crps,
+            "day_ids": metrics.day_ids,
+        },
+        "final": final,
+        "fingerprint": config_fingerprint(spec),
+    }, path)
+    return path
+
+
+def _save_eval_metrics(out: Path, run_id: str, metrics) -> Path:
+    """Flat storage for secondary evaluation metrics (B1 boundary, J1 staged).
+    These are audit artifacts, not resume keys."""
     path = out / "metrics" / f"{run_id}.pt"
     path.parent.mkdir(parents=True, exist_ok=True)
     torch.save({
@@ -179,9 +229,59 @@ def _save_metrics(out: Path, run_id: str, metrics) -> Path:
     return path
 
 
+def _spec_matches_ledger(out: Path, run_id: str, spec) -> bool:
+    """Legacy-resume check: the ledger's final entry for run_id (last occurrence
+    wins, per the duplicate-block convention) must carry the identical spec."""
+    from dataclasses import asdict
+
+    ledger = Path(out) / "ledger.jsonl"
+    if not ledger.exists():
+        return False
+    want = asdict(spec)
+    found = None
+    for line in ledger.read_text(encoding="utf-8").splitlines():
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if entry.get("run_id") == run_id and entry.get("final"):
+            found = entry.get("spec")
+    return found == want
+
+
+def _try_resume(spec, out) -> tuple[dict, WindowMetrics] | None:
+    """Skip-if-artifacts-exist resume: a run is reused iff its checkpoint and
+    metrics exist AND the stored fingerprint matches (new format) or the
+    ledger's final-entry spec matches (legacy artifacts from the first run)."""
+    run_id = f"{spec.unit}_{spec.arm}_seed{spec.seed}"
+    ckpt = Path(out) / "checkpoints" / f"{run_id}.pt"
+    mpath = Path(out) / "metrics" / f"{run_id}.pt"
+    if not (ckpt.exists() and mpath.exists()):
+        return None
+    blob = torch.load(mpath, map_location="cpu", weights_only=False)
+    if "metrics" in blob:  # new format
+        if blob.get("fingerprint") != config_fingerprint(spec):
+            return None
+        m, final = blob["metrics"], blob.get("final") or {}
+    else:  # legacy flat format from the first Linux run
+        if not _spec_matches_ledger(out, run_id, spec):
+            return None
+        m, final = blob, {}
+    metrics = WindowMetrics(**m)
+    final = dict(final, run_id=run_id, resumed=True)
+    final.setdefault("best_val_nll", float("nan"))
+    return final, metrics
+
+
 def _train_and_eval(spec, record, out, device, properties, quick):
     if quick:
         spec = ms.quicken(spec)
+    resumed = _try_resume(spec, out)
+    if resumed is not None:
+        final, metrics = resumed
+        print(f"[{spec.unit}] {spec.arm} seed={spec.seed} RESUMED (artifacts match spec) "
+              f"eval={horizon_summary(metrics)}")
+        return final, metrics
     final = train_arm(spec, record, out, device=device, properties=properties)
     run_id = final["run_id"]
     ckpt = out / "checkpoints" / f"{run_id}.pt"
@@ -193,7 +293,7 @@ def _train_and_eval(spec, record, out, device, properties, quick):
         history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON,
         boundary_mode=spec.boundary_mode, seed=50_000 + spec.seed, device=device,
     )
-    _save_metrics(out, run_id, metrics)
+    _save_metrics(out, run_id, metrics, spec, final)
     print(f"[{spec.unit}] {spec.arm} seed={spec.seed} best_val={final['best_val_nll']:.3f} "
           f"eval={horizon_summary(metrics)}")
     return final, metrics
@@ -229,11 +329,19 @@ def run_matrix(args) -> dict:
     seeds = (0,) if quick else ms.SEEDS
     summary: dict = {
         "quick": quick,
+        "matrix_version": ms.MATRIX_VERSION,
         "side": args.side,
         "record": str(args.record),
         "properties": type(properties).__name__,
         "units": {},
     }
+    summary_name = "matrix_summary.json" if not args.side else f"matrix_summary_side{args.side}.json"
+
+    def dump_summary() -> None:
+        # Incremental verdict persistence: a crash in a later unit must not
+        # lose verdicts already computed (the first Linux run lost O1..J1 to
+        # the R1 crash).  Rewritten after every unit.
+        _write_json(out / summary_name, summary)
 
     metrics_store: dict[str, object] = {}
 
@@ -251,6 +359,7 @@ def run_matrix(args) -> dict:
                 passes, details = _seed_passes(pairs, ms.THRESH_O1_NLL)
                 unit_verdicts[arm] = {"verdict": _verdict(passes, len(seeds)), "per_seed": details}
             summary["units"]["o1"] = unit_verdicts
+        dump_summary()
 
     if "t1" in units:
         for spec in ms.t1_specs(seeds):
@@ -273,6 +382,7 @@ def run_matrix(args) -> dict:
                     "verdict": _verdict(passes, len(seeds)), "per_seed": details
                 }
             summary["units"]["t1"] = unit_verdicts
+        dump_summary()
 
     if "b1" in units:
         b_metrics = {}
@@ -285,7 +395,7 @@ def run_matrix(args) -> dict:
                 model, record, SPLIT_VAL, n_windows=32 if quick else 256, batch_size=32,
                 history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON, seed=60_000 + spec.seed, device=device,
             )
-            _save_metrics(out, f"{final['run_id']}_boundary", b_metrics[spec.seed])
+            _save_eval_metrics(out, f"{final['run_id']}_boundary", b_metrics[spec.seed])
         if not quick:
             pairs = []
             for s in seeds:
@@ -296,6 +406,7 @@ def run_matrix(args) -> dict:
                 pairs.append((base, b_metrics[s]))
             passes, details = _seed_passes(pairs, ms.THRESH_B1_CRPS, metric="crps")
             summary["units"]["b1"] = {"verdict": _verdict(passes, len(seeds)), "per_seed": details}
+        dump_summary()
 
     if "j1" in units:
         joint_metrics, staged_metrics = {}, {}
@@ -309,24 +420,31 @@ def run_matrix(args) -> dict:
             bnd_spec = ms.j1_staged_boundary_spec(seed, str(main_ckpt))
             if quick:
                 bnd_spec = ms.quicken(bnd_spec)
-            final = train_arm(bnd_spec, record, out, device=device, properties=properties)
+            bnd_run_id = f"{bnd_spec.unit}_{bnd_spec.arm}_seed{bnd_spec.seed}"
+            bnd_ckpt = out / "checkpoints" / f"{bnd_run_id}.pt"
+            if bnd_ckpt.exists() and _spec_matches_ledger(out, bnd_run_id, bnd_spec):
+                print(f"[j1] staged_boundary seed={seed} RESUMED (artifacts match spec)")
+            else:
+                final = train_arm(bnd_spec, record, out, device=device, properties=properties)
+                bnd_run_id = final["run_id"]
             model = build_world_model(
                 ms._base("j1", "staged", seed, boundary_mode="forecast", train_boundary=True,
                          initial_state_mode="hybrid", closure_mode="conservative"),
                 properties,
             ).to(device)
-            model.load_state_dict(torch.load(out / "checkpoints" / f"{final['run_id']}.pt",
+            model.load_state_dict(torch.load(out / "checkpoints" / f"{bnd_run_id}.pt",
                                              map_location=device, weights_only=False)["state_dict"])
             staged_metrics[seed] = evaluate_windows(
                 model, record, SPLIT_VAL, n_windows=32 if quick else 256, batch_size=32,
                 history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON, boundary_mode="forecast",
                 seed=70_000 + seed, device=device,
             )
-            _save_metrics(out, f"j1_staged_seed{seed}", staged_metrics[seed])
+            _save_eval_metrics(out, f"j1_staged_seed{seed}", staged_metrics[seed])
         if not quick:
             pairs = [(staged_metrics[s], joint_metrics[s]) for s in seeds]
             passes, details = _seed_passes(pairs, ms.THRESH_J1_NLL)
             summary["units"]["j1"] = {"verdict": _verdict(passes, len(seeds)), "per_seed": details}
+        dump_summary()
 
     if "r1" in units:
         r1_reports = []
@@ -339,30 +457,7 @@ def run_matrix(args) -> dict:
                             initial_state_mode="hybrid", closure_mode="conservative")
             model = build_world_model(spec, properties).to(device)
             model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=False)["state_dict"])
-            # Runtime blindness: the W channel (boundary index 6, excluded from
-            # the closure whitelist) must not move closure output.
-            from src.final_wm.contracts import (
-                BOUNDARY_ELEMENTS,
-                CLOSURE_BOUNDARY_CHANNELS,
-            )
-            if "spray_flow_total" in CLOSURE_BOUNDARY_CHANNELS:
-                raise FinalWMProtocolError("closure whitelist must exclude spray_flow_total")
-            batch_state = torch.zeros(2, model.layout.state_dim, device=device)
-            boundary = torch.zeros(2, len(BOUNDARY_ELEMENTS), device=device)
-            # executor-side fix (2026-08-18, per user instruction; Supervisor
-            # review required): contracts exports no CHANNEL_INDEX; derive the
-            # W channel position from BOUNDARY_ELEMENTS order instead.
-            w_idx = BOUNDARY_ELEMENTS.index("spray_flow_total")
-            boundary[:, w_idx] = 5.0
-            with torch.no_grad():
-                out_w = model.closure(batch_state, boundary)
-                boundary[:, w_idx] = 0.0
-                out_wo = model.closure(batch_state, boundary)
-            blind_ok = bool(
-                torch.allclose(out_w.steam_power, out_wo.steam_power)
-                and torch.allclose(out_w.metal_power, out_wo.metal_power)
-                and torch.allclose(out_w.latent_raw, out_wo.latent_raw)
-            )
+            blind_ok = closure_blindness_check(model, device)["runtime_blind_ok"]
             direction_on = step_response_direction(
                 model, record, SPLIT_VAL, n_windows=16 if quick else 32,
                 history_steps=ms.HISTORY_STEPS, seed=80_000 + seed, device=device,
@@ -394,9 +489,9 @@ def run_matrix(args) -> dict:
                 verdict = "REJECTED"
         summary["units"]["r1"] = {"verdict": verdict, "reports": r1_reports}
         _write_json(out / "r1_report.json", summary["units"]["r1"])
+        dump_summary()
 
-    summary_name = "matrix_summary.json" if not args.side else f"matrix_summary_side{args.side}.json"
-    _write_json(out / summary_name, summary)
+    dump_summary()
     print(f"[matrix] summary written: {out / summary_name}")
     return summary
 
