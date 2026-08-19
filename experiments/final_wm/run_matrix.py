@@ -343,14 +343,16 @@ def run_matrix(args) -> dict:
             # the closure whitelist) must not move closure output.
             from src.final_wm.contracts import (
                 BOUNDARY_ELEMENTS,
-                CHANNEL_INDEX,
                 CLOSURE_BOUNDARY_CHANNELS,
             )
             if "spray_flow_total" in CLOSURE_BOUNDARY_CHANNELS:
                 raise FinalWMProtocolError("closure whitelist must exclude spray_flow_total")
             batch_state = torch.zeros(2, model.layout.state_dim, device=device)
             boundary = torch.zeros(2, len(BOUNDARY_ELEMENTS), device=device)
-            w_idx = CHANNEL_INDEX["spray_flow_total"]
+            # executor-side fix (2026-08-18, per user instruction; Supervisor
+            # review required): contracts exports no CHANNEL_INDEX; derive the
+            # W channel position from BOUNDARY_ELEMENTS order instead.
+            w_idx = BOUNDARY_ELEMENTS.index("spray_flow_total")
             boundary[:, w_idx] = 5.0
             with torch.no_grad():
                 out_w = model.closure(batch_state, boundary)
