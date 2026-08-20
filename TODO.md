@@ -12,7 +12,7 @@
 | 最终 pipeline 架构 | ✓ DESIGN v0.1 | Observer + Boundary + Fan2020-UDE + action-blind closure + Observation + Koopman student |
 | RM3-B1 原始结果 | ✓ AUDITED / CLOSED | 22/22 与 ledger 闭合；不生成 B2、不访问 test |
 | 新模型正式包 | ✓ INTERFACES + MICRO-SMOKE | `src/final_wm/`：observer/boundary/transition/closure/observation/controller/model + 82 项本地测试通过；未授权长训 |
-| 判别实验 O1/B1/T1/R1/J1/K1 | ◉ v0.2 + 证据链对齐审计 | 侧A 判决已产生但产物未回传（UNVERIFIABLE）；审计冻结：R1 规则 v0.3 提案、物理修复批①-⑤、论文 FROZEN-DRAFT；待产物回传后本地判决审计 → 侧B授权 |
+| 判别实验 O1/B1/T1/R1/J1/K1 | ◉ 侧A 改本地执行 | 大产物不回传；canonical 记录带外拷贝后本地跑 D-SYN→矩阵A→auditpack（分析已协议化入仓 `src/final_wm/analysis.py`，110 项测试）；R1 规则 v0.3 提案冻结；侧B 暂缓 |
 | FMTS 2026 论文 | ❄ FROZEN-DRAFT | 初稿在仓（6pp+3图）但含已撤回数字；解冻条件见对齐审计 §5.1（证据链齐全前不补全） |
 
 ## 当前主线

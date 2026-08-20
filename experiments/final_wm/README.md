@@ -67,6 +67,20 @@ python experiments/final_wm/run_matrix.py --phase matrix \
   **provisional（定性骨架）**，本地审计据此降级处理，不回填为正式判决。
 - 预算：每侧 ≤36 GPU 小时（矩阵 §4），两侧合计 ≤72。
 
+## 3.5 证据包（auditpack，判决审计后执行）
+
+证据链全部分析已协议化入仓（`src/final_wm/analysis.py`）：真实对象阀位阶跃事件研究、
+persistence 增量基线、喷水灵敏度回归 + 混合冷却参考带、误差地板三锚点、残差负荷分箱、
+再湿消融探针。记录级分析只需 canonical 记录；模型探针需训练权重：
+
+```bash
+python experiments/final_wm/run_matrix.py --phase auditpack \
+  --record artifacts/final_wm/canonical_sideA.npz --side A \
+  --checkpoint artifacts/final_wm/checkpoints/t1_closure_cons_seed0.pt --arm closure_cons --seed 0
+```
+
+产出 `auditpack_A.json`；论文与证据链文档的数值只准引用该产物口径。
+
 ## 4. 回传清单
 
 - `artifacts/final_wm/` 整目录（ledger.jsonl、matrix_summary_side{A,B}.json、dsyn_verdict.json、

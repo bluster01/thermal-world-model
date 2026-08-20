@@ -319,6 +319,63 @@ def _verdict(passes, n_seeds):
     return "MIXED"
 
 
+# ---------------------------------------------------------------------------
+# auditpack: protocolized evidence-chain analyses (audit 2026-08-20 §P3)
+# ---------------------------------------------------------------------------
+
+def run_auditpack(args) -> dict:
+    """Record-only analyses always run; model-based probes run when
+    --checkpoint is given (model rebuilt from the matching T1 spec)."""
+    from src.final_wm.analysis import (
+        binning_stats,
+        error_floor_anchors,
+        event_study_summary,
+        mixing_cooling_reference,
+        persistence_increment_mae,
+        rewetting_ablation,
+        spray_sensitivity,
+        valve_step_events,
+        window_abs_errors,
+    )
+
+    device = _device(args.device)
+    record = CanonicalRecord(args.record)
+    out = Path(args.out)
+    report: dict = {"record": str(args.record), "matrix_version": ms.MATRIX_VERSION}
+    sensitivity = spray_sensitivity(record, SPLIT_VAL)
+    report["spray_sensitivity"] = sensitivity
+    report["mixing_reference"] = {
+        "v1": mixing_cooling_reference(sensitivity["dW_dv1_kgs_per_2pct"]),
+        "v2": mixing_cooling_reference(sensitivity["dW_dv2_kgs_per_2pct"]),
+    }
+    report["persistence_increment_mae"] = persistence_increment_mae(record, SPLIT_VAL)
+    report["error_floor"] = error_floor_anchors(record, SPLIT_VAL)
+    report["event_study"] = {
+        f"v{v + 1}": event_study_summary(valve_step_events(record, SPLIT_VAL, v))
+        for v in (0, 1)
+    }
+    if args.checkpoint:
+        arm, seed = args.arm, int(args.seed)
+        spec = next(s for s in ms.t1_specs((seed,)) if s.arm == arm)
+        model = build_world_model(spec, _properties(args.properties_npz)).to(device)
+        model.load_state_dict(
+            torch.load(args.checkpoint, map_location=device, weights_only=False)["state_dict"])
+        errors = window_abs_errors(
+            model, record, SPLIT_VAL, n_windows=64 if args.quick else 512, batch_size=32,
+            history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON,
+            boundary_mode="oracle", seed=110_000 + seed, device=device,
+        )
+        report["residual_binning"] = binning_stats(errors)
+        report["rewetting_ablation"] = rewetting_ablation(
+            model, record, SPLIT_VAL, n_windows=16 if args.quick else 64,
+            history_steps=ms.HISTORY_STEPS, seed=120_000 + seed, device=device,
+        )
+    name = f"auditpack{('_' + args.side) if args.side else ''}.json"
+    _write_json(out / name, report)
+    print(f"[auditpack] written: {out / name}")
+    return report
+
+
 def run_matrix(args) -> dict:
     device = _device(args.device)
     properties = _properties(args.properties_npz)
@@ -503,7 +560,7 @@ def run_matrix(args) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--phase", required=True,
-                        choices=["discover", "build", "split-sides", "dsyn", "matrix"])
+                        choices=["discover", "build", "split-sides", "dsyn", "matrix", "auditpack"])
     parser.add_argument("--data-root", default=None)
     parser.add_argument("--mapping", default=None)
     parser.add_argument("--record", default=None)
@@ -514,6 +571,9 @@ def main() -> None:
     parser.add_argument("--properties-npz", default=None, help="real IAPWS grid (else analytic fallback)")
     parser.add_argument("--device", default="auto")
     parser.add_argument("--quick", action="store_true", help="dry-run sizes; no verdicts")
+    parser.add_argument("--checkpoint", default=None, help="auditpack: trained model checkpoint")
+    parser.add_argument("--arm", default="closure_cons", help="auditpack: T1 arm of --checkpoint")
+    parser.add_argument("--seed", default=0, help="auditpack: seed of --checkpoint")
     args = parser.parse_args()
 
     if args.phase == "discover":
@@ -532,6 +592,10 @@ def main() -> None:
         if not args.record:
             raise FinalWMProtocolError("--record required for matrix")
         run_matrix(args)
+    elif args.phase == "auditpack":
+        if not args.record:
+            raise FinalWMProtocolError("--record required for auditpack")
+        run_auditpack(args)
 
 
 if __name__ == "__main__":

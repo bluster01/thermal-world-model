@@ -11,7 +11,7 @@
 |---|---|---|---|
 | P1 | 矩阵 §6 冻结"论文写作"，Linux 提前产出完整初稿 | 违规但用户已追认方向 | 登记 FROZEN-DRAFT，冻结至 §5 条件满足 |
 | P2 | 论文 §4 引用侧 A 全套判决（O1/T1/B1/J1/R1 具体数字），但 `matrix_summary_sideA.json`、ledger、checkpoints 均未回传入仓 | **UNVERIFIABLE** | Linux 回传 `artifacts/final_wm/` 前，论文任何判决数字不得视为已证 |
-| P3 | 证据链 §3/§4 与路线图 §6 的数值出自 Linux 本地 `/tmp` 脚本（residual_binning/error_floor/事件研究/消融），未入仓 | **UNVERIFIABLE** | 脚本转正为 `experiments/final_wm/analysis/` 协议化分析 + 测试，随产物回传 |
+| P3 | 证据链 §3/§4 与路线图 §6 的数值出自 Linux 本地 `/tmp` 脚本（residual_binning/error_floor/事件研究/消融），未入仓 | ~~UNVERIFIABLE~~ **已闭合（本地方案）** | 已由 Supervisor 重写为入仓模块 `src/final_wm/analysis.py`（事件研究/分箱/误差地板/喷水灵敏度/再湿消融）+ runner `--phase auditpack`，全部数值改为本地可复算口径；Linux /tmp 脚本不再作为证据源 |
 | P4 | 执行报告仍写"重跑中止、等 Codex 修复"，但路线图 §6 已有 v0.2 重测数值 | 状态自相矛盾 | Linux 更新 execution_report.md 为真实状态（v0.2 跑到哪步、哪些 run 是新预算） |
 
 ## 2. 数字口径冲突（CONFLICT，全部须改）
@@ -83,9 +83,27 @@
 
 ## 6. 对 Linux 的下一步授权（本审计闭合后执行）
 
-1. 回传 `artifacts/final_wm/` 全目录（含 ledger.jsonl、matrix_summary_sideA.json、
-   checkpoints、metrics、dsyn_verdict、split_sides_report）；
+**路线更新（用户 2026-08-20 裁定）**：大产物不回传；侧 A 矩阵改为**本地执行**（本机 RTX 4070
++ CUDA torch），canonical 记录经带外通道拷贝到本机；侧 B 暂缓。
+
+1. ~~回传 artifacts~~ → 改为：拷贝 `canonical_sideA.npz`（+ IAPWS 物性 npz）到本机
+   `artifacts/final_wm/`；
 2. 更新 `results/final_wm/execution_report.md` 为真实状态；
-3. `/tmp` 分析脚本转正为 `experiments/final_wm/analysis/`（带最小测试）入仓；
+3. ~~/tmp 脚本转正~~ → 已由 Supervisor 本地协议化（`src/final_wm/analysis.py`，
+   `--phase auditpack`），Linux 侧无需再传；
 4. 侧 B 暂缓，等本地侧 A 判决审计通过后单独授权；
 5. 论文目录 `docs/fmts2026/paper/` 冻结，禁止继续编辑直至 §5.1 条件满足。
+
+### 本地侧 A 执行序列（冻结命令，数据到位后按序执行）
+
+```bash
+python -m pytest tests/final_wm/ -q                     # 门禁：110 项全过
+python experiments/final_wm/run_matrix.py --phase dsyn --out artifacts/final_wm
+python experiments/final_wm/run_matrix.py --phase matrix \
+  --record artifacts/final_wm/canonical_sideA.npz --side A [--properties-npz <IAPWS>] \
+  --out artifacts/final_wm
+# 判决审计通过后补证据包（用 T1 closure_cons seed0 权重）：
+python experiments/final_wm/run_matrix.py --phase auditpack \
+  --record artifacts/final_wm/canonical_sideA.npz --side A \
+  --checkpoint artifacts/final_wm/checkpoints/t1_closure_cons_seed0.pt --arm closure_cons --seed 0
+```
