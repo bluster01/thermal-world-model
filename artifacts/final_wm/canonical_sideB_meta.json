@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "side": "B",
+  "dt_seconds": 10.0,
+  "n_samples": 707721,
+  "start_epoch": 1766478320,
+  "end_epoch": 1773619200,
+  "quality": {
+    "gap_ratio": 0.0,
+    "stuck_ratio": {
+      "steam_flow": 0.0,
+      "coal_command": 0.0,
+      "separator_pressure": 0.0,
+      "separator_temperature": 0.0,
+      "feedwater_temperature": 0.0,
+      "outlet_pressure": 0.0,
+      "spray_flow_total": 0.0,
+      "valve1_position": 0.0,
+      "valve2_position": 0.004997732157163628,
+      "sh1_inlet_temp": 0.0,
+      "sh1_outlet_temp": 0.0,
+      "sh2_inlet_temp": 0.0,
+      "sh2_outlet_temp": 0.0,
+      "final_outlet_temp": 0.0
+    },
+    "valve_active_ratio": 0.6574497577435175,
+    "days": 82.64907407407408
+  },
+  "splits": {
+    "train": [
+      0,
+      530791
+    ],
+    "val": [
+      530791,
+      636949
+    ],
+    "test": "LOCKED"
+  },
+  "test_locked": true,
+  "provenance": {
+    "dual_record_sha256": "23a89ea655453ce5ae8220aab766786b2eb27b7b15f31a1ce04684e3a00b9f22",
+    "dual_record_path": "results/final_wm/d0/canonical_record.npz",
+    "cross_side_valves": [
+      0,
+      1
+    ],
+    "d0_artifacts": "results/final_wm/d0/"
+  }
+}

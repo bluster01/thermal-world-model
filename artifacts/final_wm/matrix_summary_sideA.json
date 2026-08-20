@@ -1,0 +1,278 @@
+{
+  "quick": false,
+  "matrix_version": "0.2",
+  "side": "A",
+  "record": "artifacts/final_wm/canonical_sideA.npz",
+  "properties": "GridThermoProperties",
+  "units": {
+    "o1": {
+      "learned": {
+        "verdict": "MIXED",
+        "per_seed": [
+          {
+            "point": -0.30055296421051025,
+            "ci_lo": -0.524366021156311,
+            "ci_hi": -0.12154632061719894,
+            "n_days": 13,
+            "pass": false
+          },
+          {
+            "point": -0.3143165409564972,
+            "ci_lo": -0.5424507260322571,
+            "ci_hi": -0.10985127836465836,
+            "n_days": 13,
+            "pass": false
+          },
+          {
+            "point": 0.13301438093185425,
+            "ci_lo": 0.043041594326496124,
+            "ci_hi": 0.20368196070194244,
+            "n_days": 13,
+            "pass": true
+          }
+        ]
+      },
+      "hybrid": {
+        "verdict": "REJECTED",
+        "per_seed": [
+          {
+            "point": -0.003283789614215493,
+            "ci_lo": -0.13618874549865723,
+            "ci_hi": 0.10443563014268875,
+            "n_days": 13,
+            "pass": false
+          },
+          {
+            "point": -0.015900982543826103,
+            "ci_lo": -0.15048478543758392,
+            "ci_hi": 0.10492196679115295,
+            "n_days": 13,
+            "pass": false
+          },
+          {
+            "point": 0.03675366938114166,
+            "ci_lo": -0.1014799252152443,
+            "ci_hi": 0.14873459935188293,
+            "n_days": 13,
+            "pass": false
+          }
+        ]
+      }
+    },
+    "t1": {
+      "closure_cons_vs_physics_only": {
+        "verdict": "SUPPORTED",
+        "per_seed": [
+          {
+            "point": 0.056854214519262314,
+            "ci_lo": 0.031085873022675514,
+            "ci_hi": 0.08111635595560074,
+            "n_days": 13,
+            "pass": true
+          },
+          {
+            "point": 0.06937474012374878,
+            "ci_lo": 0.02475668303668499,
+            "ci_hi": 0.10813603550195694,
+            "n_days": 13,
+            "pass": true
+          },
+          {
+            "point": 0.026290062814950943,
+            "ci_lo": -0.0074190110899508,
+            "ci_hi": 0.06081321835517883,
+            "n_days": 13,
+            "pass": false
+          }
+        ]
+      },
+      "closure_steam_vs_closure_cons": {
+        "verdict": "REJECTED",
+        "per_seed": [
+          {
+            "point": -0.0640219897031784,
+            "ci_lo": -0.08325504511594772,
+            "ci_hi": -0.04524247720837593,
+            "n_days": 13,
+            "pass": false
+          },
+          {
+            "point": -0.023435063660144806,
+            "ci_lo": -0.07930102944374084,
+            "ci_hi": 0.02694425731897354,
+            "n_days": 13,
+            "pass": false
+          },
+          {
+            "point": -0.03672749921679497,
+            "ci_lo": -0.10153055191040039,
+            "ci_hi": 0.02122606709599495,
+            "n_days": 13,
+            "pass": false
+          }
+        ]
+      },
+      "latent4_vs_closure_cons": {
+        "verdict": "REJECTED",
+        "per_seed": [
+          {
+            "point": -0.016465790569782257,
+            "ci_lo": -0.03407654911279678,
+            "ci_hi": -0.0009327296866104007,
+            "n_days": 13,
+            "pass": false
+          },
+          {
+            "point": 0.0027793163899332285,
+            "ci_lo": -0.029469074681401253,
+            "ci_hi": 0.03785295784473419,
+            "n_days": 13,
+            "pass": false
+          },
+          {
+            "point": 0.03073878400027752,
+            "ci_lo": -0.003409639000892639,
+            "ci_hi": 0.06228315085172653,
+            "n_days": 13,
+            "pass": false
+          }
+        ]
+      }
+    },
+    "b1": {
+      "verdict": "REJECTED",
+      "per_seed": [
+        {
+          "point": -1.7048401832580566,
+          "ci_lo": -1.9718923568725586,
+          "ci_hi": -1.4772472381591797,
+          "n_days": 13,
+          "pass": false
+        },
+        {
+          "point": -1.676090121269226,
+          "ci_lo": -1.9632800817489624,
+          "ci_hi": -1.4055665731430054,
+          "n_days": 13,
+          "pass": false
+        },
+        {
+          "point": -1.9605962038040161,
+          "ci_lo": -2.250783920288086,
+          "ci_hi": -1.6317329406738281,
+          "n_days": 13,
+          "pass": false
+        }
+      ]
+    },
+    "j1": {
+      "verdict": "SUPPORTED",
+      "per_seed": [
+        {
+          "point": 0.1348477303981781,
+          "ci_lo": 0.03381316736340523,
+          "ci_hi": 0.2273976355791092,
+          "n_days": 13,
+          "pass": true
+        },
+        {
+          "point": 0.1638956367969513,
+          "ci_lo": 0.05524395406246185,
+          "ci_hi": 0.257280170917511,
+          "n_days": 13,
+          "pass": true
+        },
+        {
+          "point": 0.3325139880180359,
+          "ci_lo": 0.27771106362342834,
+          "ci_hi": 0.38364094495773315,
+          "n_days": 13,
+          "pass": true
+        }
+      ]
+    },
+    "r1": {
+      "verdict": "REJECTED",
+      "reports": [
+        {
+          "seed": 0,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": 0.26427555084228516,
+            "frac_negative": 0.1875,
+            "n_windows": 32
+          },
+          "leakage": {
+            "blind": {
+              "val_mse_norm": 0.010423342697322369,
+              "base_mse_norm": 0.010942275635898113
+            },
+            "aware": {
+              "val_mse_norm": 0.011497064493596554,
+              "base_mse_norm": 0.010942275635898113
+            },
+            "aware_relative_improvement": -0.10301127262658373,
+            "leakage_suspected": false
+          },
+          "residual_quantiles": {
+            "p50_kw": 26317.45703125,
+            "p90_kw": 29061.77734375,
+            "max_kw": 29908.74609375
+          }
+        },
+        {
+          "seed": 1,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": 0.19801178574562073,
+            "frac_negative": 0.34375,
+            "n_windows": 32
+          },
+          "leakage": {
+            "blind": {
+              "val_mse_norm": 0.0090513676404953,
+              "base_mse_norm": 0.011080610565841198
+            },
+            "aware": {
+              "val_mse_norm": 0.00965238269418478,
+              "base_mse_norm": 0.011080610565841198
+            },
+            "aware_relative_improvement": -0.06640046869829626,
+            "leakage_suspected": false
+          },
+          "residual_quantiles": {
+            "p50_kw": 26896.53125,
+            "p90_kw": 29260.091796875,
+            "max_kw": 29940.6328125
+          }
+        },
+        {
+          "seed": 2,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": 0.26130086183547974,
+            "frac_negative": 0.21875,
+            "n_windows": 32
+          },
+          "leakage": {
+            "blind": {
+              "val_mse_norm": 0.009543071500957012,
+              "base_mse_norm": 0.008598524145781994
+            },
+            "aware": {
+              "val_mse_norm": 0.009928746148943901,
+              "base_mse_norm": 0.008598524145781994
+            },
+            "aware_relative_improvement": -0.04041410021377416,
+            "leakage_suspected": false
+          },
+          "residual_quantiles": {
+            "p50_kw": 26736.4609375,
+            "p90_kw": 29451.544921875,
+            "max_kw": 29967.1484375
+          }
+        }
+      ]
+    }
+  }
+}
