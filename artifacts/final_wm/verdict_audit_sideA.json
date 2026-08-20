@@ -1,0 +1,106 @@
+{
+  "side": "A",
+  "matrix_version": "0.2",
+  "properties": "GridThermoProperties",
+  "checks": [
+    {
+      "unit": "o1_learned",
+      "verdict_match": true,
+      "per_seed_match": true,
+      "recomputed_verdict": "MIXED",
+      "recorded_verdict": "MIXED"
+    },
+    {
+      "unit": "o1_hybrid",
+      "verdict_match": true,
+      "per_seed_match": true,
+      "recomputed_verdict": "REJECTED",
+      "recorded_verdict": "REJECTED"
+    },
+    {
+      "unit": "t1_closure_cons_vs_physics_only",
+      "verdict_match": true,
+      "per_seed_match": true,
+      "recomputed_verdict": "SUPPORTED",
+      "recorded_verdict": "SUPPORTED"
+    },
+    {
+      "unit": "t1_closure_steam_vs_closure_cons",
+      "verdict_match": true,
+      "per_seed_match": true,
+      "recomputed_verdict": "REJECTED",
+      "recorded_verdict": "REJECTED"
+    },
+    {
+      "unit": "t1_latent4_vs_closure_cons",
+      "verdict_match": true,
+      "per_seed_match": true,
+      "recomputed_verdict": "REJECTED",
+      "recorded_verdict": "REJECTED"
+    },
+    {
+      "unit": "b1",
+      "verdict_match": true,
+      "per_seed_match": true,
+      "recomputed_verdict": "REJECTED",
+      "recorded_verdict": "REJECTED"
+    },
+    {
+      "unit": "j1",
+      "verdict_match": true,
+      "per_seed_match": true,
+      "recomputed_verdict": "SUPPORTED",
+      "recorded_verdict": "SUPPORTED"
+    },
+    {
+      "unit": "r1",
+      "verdict_match": true,
+      "report_file_consistent": true,
+      "recomputed_verdict": "REJECTED",
+      "recorded_verdict": "REJECTED",
+      "per_seed_match": true
+    },
+    {
+      "unit": "ledger",
+      "entries": 1562,
+      "final_runs": 36,
+      "missing_runs": [],
+      "t1_convergence_fields_missing": [],
+      "epochs_over_cap": [],
+      "duplicate_run_ids": [
+        "t1_closure_cons_seed0",
+        "t1_closure_cons_seed1",
+        "t1_closure_cons_seed2",
+        "t1_closure_steam_seed0",
+        "t1_closure_steam_seed1",
+        "t1_closure_steam_seed2",
+        "t1_latent4_seed0",
+        "t1_latent4_seed1",
+        "t1_latent4_seed2",
+        "t1_physics_only_seed0",
+        "t1_physics_only_seed1",
+        "t1_physics_only_seed2"
+      ],
+      "commits": [
+        "b673a4049dec4b922d8e6abea2d61bac53000852",
+        "cc81cb37394dc013865339ac84e8eeafd0d34df1",
+        "e9af3cceb28fb6e7878fa25323ba1309699b104d"
+      ]
+    },
+    {
+      "unit": "dsyn",
+      "verdict_match": true,
+      "passes": 3,
+      "quick": false
+    },
+    {
+      "unit": "split_sides",
+      "verdict_match": true,
+      "dual_record_sha256": [
+        "23a89ea655453ce5ae8220aab766786b2eb27b7b15f31a1ce04684e3a00b9f22"
+      ],
+      "gates_ok": true,
+      "splits_identical": true
+    }
+  ]
+}

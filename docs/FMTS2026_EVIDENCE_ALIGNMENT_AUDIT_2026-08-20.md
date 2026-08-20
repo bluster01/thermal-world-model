@@ -10,9 +10,9 @@
 | # | 事项 | 状态 | 处置 |
 |---|---|---|---|
 | P1 | 矩阵 §6 冻结"论文写作"，Linux 提前产出完整初稿 | 违规但用户已追认方向 | 登记 FROZEN-DRAFT，冻结至 §5 条件满足 |
-| P2 | 论文 §4 引用侧 A 全套判决（O1/T1/B1/J1/R1 具体数字），但 `matrix_summary_sideA.json`、ledger、checkpoints 均未回传入仓 | **UNVERIFIABLE** | Linux 回传 `artifacts/final_wm/` 前，论文任何判决数字不得视为已证 |
+| P2 | 论文 §4 引用侧 A 全套判决（O1/T1/B1/J1/R1 具体数字），但产物未入仓 | ~~UNVERIFIABLE~~ **已闭合** | 产物已入仓（6305b50）；判决复算审计 11/11 全过（见 §7），判决数字可追溯产物 |
 | P3 | 证据链 §3/§4 与路线图 §6 的数值出自 Linux 本地 `/tmp` 脚本（residual_binning/error_floor/事件研究/消融），未入仓 | ~~UNVERIFIABLE~~ **已闭合（本地方案）** | 已由 Supervisor 重写为入仓模块 `src/final_wm/analysis.py`（事件研究/分箱/误差地板/喷水灵敏度/再湿消融）+ runner `--phase auditpack`，全部数值改为本地可复算口径；Linux /tmp 脚本不再作为证据源 |
-| P4 | 执行报告仍写"重跑中止、等 Codex 修复"，但路线图 §6 已有 v0.2 重测数值 | 状态自相矛盾 | Linux 更新 execution_report.md 为真实状态（v0.2 跑到哪步、哪些 run 是新预算） |
+| P4 | 执行报告与 v0.2 实际状态矛盾 | **已闭合** | Linux 0d689d3 已更新执行报告 v0.2 |
 
 ## 2. 数字口径冲突（CONFLICT，全部须改）
 
@@ -30,12 +30,18 @@
    且 60 步符号反转 —— 这强化而非削弱张力叙事（两线都不过动作保真，路径不同）。
 4. 细节一致性：论文 §2 写 "600 MW class"，D0 合同为 **660 MW**；T1 段 "seed 3" 应为 seed 2
    （seeds=0/1/2）；R1 探针步幅论文写 +5%，须与 `step_response_direction` 实际配置一致标注。
+5. **论文 O1 表述与产物相反（新发现，严重）**：论文 §4/L193-196 称 learned posterior
+   "two seeds improve by 30–31% with confidence, one degrades 13%"；产物
+   `matrix_summary_sideA.json` 实为 **2/3 seeds 显著退化 −30%/−31%（CI<0）、1 seed 改善
+   +13.3%** —— 符号方向写反。hybrid REJECTED（CI 全跨零）与产物一致。
 
 ## 3. 与证据链一致的结论（SUPPORTED，可留用）
 
 - D-SYN 3/3 PASS（99.3/107.0/136.5 vs 阈值口径）——与执行报告一致；
-- 再湿反馈根因实锤（aW=0 消融：正确方向占比 0.12→0.94）——机制叙事完整、closure 已排除；
-- 真实对象 60 步正确方向占比 ~0.61–0.67（v2 事件 613/744 个，n 充足）；
+- 再湿反馈根因成立（本地复现：0.28→1.00，auditpack_A.json；原报 0.12→0.94，幅度以本地口径为准）；
+- 真实对象 60 步正确方向占比：本地协议化事件研究（双阀 ±60 步污染排除后）v2 up 0.68（n=22）、
+  v2 down 0.75（n=48）、v1 down 0.83（n=6，不足）——与原报 0.61–0.67 同带，R1 v0.3 参考带下沿 0.60 成立；
+- 真实对象 H1 响应 ≈0（本地：v2 up +0.038 / down −0.041 °C）——"响应分钟级建立"成立；
 - v0.2 重测后 final 通道分箱偏差消失（+2.1~+5.4 → ±0.2 °C）→"参数 MLP 主证据失效、
   优先级重排"的路线图 v1 结论与收敛诊断设计目的一致，**接受**；
 - 文献综述 32 条目与论文定位（D3×D4、verifiability over accuracy）无内部冲突。
@@ -44,7 +50,7 @@
 
 事件研究证明真实对象在闭环混杂下 60 步正确方向占比仅 ~2/3，**冻结的 100% 规则比真实
 对象可观测行为更严**，属标定错误而非模型单独失败。提案（与物理修复批一同激活，不单独
-为现行模型开门——现行模型 0.12–0.19 在新规则下同样失败）：
+为现行模型开门——现行模型 R1 产物口径 0.19–0.34 在新规则下同样失败）：
 
 - 方向判据改为：**均值终端 ΔT < 0 且 bootstrap CI 整体低于 0，且正确方向占比 ≥ 0.60**
   （事件研究参考带下沿留裕量）；H18/H60 两档都报；
@@ -94,16 +100,12 @@
 4. 侧 B 暂缓，等本地侧 A 判决审计通过后单独授权；
 5. 论文目录 `docs/fmts2026/paper/` 冻结，禁止继续编辑直至 §5.1 条件满足。
 
-### 本地侧 A 执行序列（冻结命令，数据到位后按序执行）
+### 执行状态（2026-08-20 下午更新）
 
-```bash
-python -m pytest tests/final_wm/ -q                     # 门禁：110 项全过
-python experiments/final_wm/run_matrix.py --phase dsyn --out artifacts/final_wm
-python experiments/final_wm/run_matrix.py --phase matrix \
-  --record artifacts/final_wm/canonical_sideA.npz --side A [--properties-npz <IAPWS>] \
-  --out artifacts/final_wm
-# 判决审计通过后补证据包（用 T1 closure_cons seed0 权重）：
-python experiments/final_wm/run_matrix.py --phase auditpack \
-  --record artifacts/final_wm/canonical_sideA.npz --side A \
-  --checkpoint artifacts/final_wm/checkpoints/t1_closure_cons_seed0.pt --arm closure_cons --seed 0
-```
+产物已经 git 回传入仓（canonical 双侧 npz + 判决 + ledger + checkpoints），侧 A **无需本地重跑**：
+判决复算审计与 auditpack 均已本地执行完毕（§7）。剩余待办：
+
+1. Linux 下次回传带上 GridThermoProperties 网格 npz（解除模型探针 provisional 标记，
+   重跑：`--phase auditpack --properties-npz <grid>`）；
+2. 侧 B 矩阵：暂缓，待论文方向裁定后单独授权（canonical_sideB.npz 已在仓）；
+3. 论文解冻按 §5.1。

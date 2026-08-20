@@ -1232,7 +1232,7 @@
           "required": true
         }
       },
-      "decision": "ACTIVE / MATRIX v0.2 + EVIDENCE-CHAIN ALIGNMENT AUDIT 2026-08-20；Linux 推送证据链/路线图v1/论文初稿后完成对齐审计（docs/FMTS2026_EVIDENCE_ALIGNMENT_AUDIT_2026-08-20.md）：撤回口径冲突×4 须改、侧A判决数字 UNVERIFIABLE（产物未回传）、R1 100% 规则标定错误→v0.3 提案冻结、物理修复批优先级①-⑤冻结、论文登记 FROZEN-DRAFT；下一步：Linux 回传产物+转正分析脚本，本地侧A判决审计后再授权侧B",
+      "decision": "ACTIVE / SIDE-A v0.2 VERDICTS AUDITED 2026-08-20；产物经 git 回传入仓，判决复算审计 11/11 全过（audit_verdicts.py；O1 learned MIXED/hybrid REJ、T1 closure_cons SUP + steam/latent4 REJ、B1 REJ、J1 SUP 3/3、R1 REJ-方向、D-SYN 3/3）；证据链协议化入仓（analysis.py + auditpack）并本地复现核心机制（再湿消融 0.28→1.00、真实对象 H1≈0/60 步正确 0.68-0.75）；论文 FROZEN-DRAFT（含 O1 写反+撤回数字，解冻条件见审计 §5.1）；剩余：IAPWS 网格 npz 待回传解除 provisional，侧B 暂缓",
       "advisories": [
         "Fan2020-UDE是物理transition候选，不是plant truth；动作通道必须保留constant-action identity、方向与支持域审计",
         "Direct-WM v2只支持direct H18 observer/backbone候选；未验证递归rollout、双阀稳定响应或概率校准",

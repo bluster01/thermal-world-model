@@ -12,7 +12,7 @@
 | 最终 pipeline 架构 | ✓ DESIGN v0.1 | Observer + Boundary + Fan2020-UDE + action-blind closure + Observation + Koopman student |
 | RM3-B1 原始结果 | ✓ AUDITED / CLOSED | 22/22 与 ledger 闭合；不生成 B2、不访问 test |
 | 新模型正式包 | ✓ INTERFACES + MICRO-SMOKE | `src/final_wm/`：observer/boundary/transition/closure/observation/controller/model + 82 项本地测试通过；未授权长训 |
-| 判别实验 O1/B1/T1/R1/J1/K1 | ◉ 侧A 改本地执行 | 大产物不回传；canonical 记录带外拷贝后本地跑 D-SYN→矩阵A→auditpack（分析已协议化入仓 `src/final_wm/analysis.py`，110 项测试）；R1 规则 v0.3 提案冻结；侧B 暂缓 |
+| 判别实验 O1/B1/T1/R1/J1/K1 | ✓ 侧A v0.2 判决已审计 | 产物入仓+复算审计 11/11 全过（O1 MIXED/REJ、T1 closure_cons SUP、steam/latent4 REJ、B1 REJ、J1 SUP、R1 REJ-方向、D-SYN 3/3）；证据链已协议化并本地复现核心机制；R1 v0.3 提案冻结；侧B 暂缓待授权 |
 | FMTS 2026 论文 | ❄ FROZEN-DRAFT | 初稿在仓（6pp+3图）但含已撤回数字；解冻条件见对齐审计 §5.1（证据链齐全前不补全） |
 
 ## 当前主线
@@ -168,7 +168,8 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 42 | 判别矩阵执行代码（D0管道/训练/评估/runner）与本地 smoke | 本地 | ✓ `src/final_wm/{data,training,evaluation,diagnostics}.py` + `experiments/final_wm/run_matrix.py`；95 项专项测试通过；quick dry-run 验证过 |
 | 43 | D0 数据审计整合与双侧桥接 | Linux执行+本地审计 | ✓ 14/14 通道 HIGH 闭合、四项质量门全过（82.6天×2侧）；`import_dual_canonical` 桥接交叉阀位映射 + 冻结 75/15/10 切分；96 项测试通过 |
 | 44 | 首轮执行回传修复与矩阵 v0.2 修正 | 本地 | ✓ 执行侧修复复核接受（GPU搬运/R1 import）；R1 路径另修 2 个潜伏缺陷；runner 断点续跑+增量落盘；T1 预算统一 60/10 + 收敛诊断入 ledger；101 项测试通过 |
-| 45 | 证据链对齐审计（证据链/路线图v1/论文初稿） | 本地 | ✓ 审计闭合：撤回口径×4、判决产物 UNVERIFIABLE、R1 规则 v0.3 提案、修复批①-⑤冻结、论文 FROZEN-DRAFT + 解冻条件 |
+| 45 | 证据链对齐审计（证据链/路线图v1/论文初稿） | 本地 | ✓ 审计闭合：撤回口径×4、R1 规则 v0.3 提案、修复批①-⑤冻结、论文 FROZEN-DRAFT + 解冻条件 |
+| 46 | 侧A v0.2 判决复算审计 + 本地证据包 | 本地 | ✓ 产物入仓后复算 11/11 全过（audit_verdicts.py）；auditpack 协议化分析入仓并复现再湿消融/事件研究/基线；论文 O1 表述写反已记录；IAPWS 网格 npz 待回传解除 provisional |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 
