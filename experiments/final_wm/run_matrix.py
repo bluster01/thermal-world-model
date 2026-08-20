@@ -196,7 +196,10 @@ def run_dsyn(args) -> dict:
         "verdict": "PASS" if sum(r["pass"] for r in results) >= ms.MIN_SEED_PASSES or args.quick else "FAIL",
         "quick": bool(args.quick),
     }
-    _write_json(out / "dsyn_verdict.json", verdict)
+    # Quick smoke runs must not clobber the full-size verdict artifact
+    # (Hermes rerun failure report 2026-08-20 §6).
+    name = "dsyn_verdict_quick.json" if args.quick else "dsyn_verdict.json"
+    _write_json(out / name, verdict)
     return verdict
 
 
@@ -372,7 +375,7 @@ def run_auditpack(args) -> dict:
             model, record, SPLIT_VAL, n_windows=16 if args.quick else 64,
             history_steps=ms.HISTORY_STEPS, seed=120_000 + seed, device=device,
         )
-    name = f"auditpack{('_' + args.side) if args.side else ''}.json"
+    name = f"auditpack{('_' + args.side) if args.side else ''}{'_quick' if args.quick else ''}.json"
     _write_json(out / name, report)
     print(f"[auditpack] written: {out / name}")
     return report
@@ -394,7 +397,11 @@ def run_matrix(args) -> dict:
         "properties": type(properties).__name__,
         "units": {},
     }
+    # Quick smoke runs write a separate summary so they cannot clobber the
+    # audited full-size artifact (Hermes rerun failure report 2026-08-20 §6).
     summary_name = "matrix_summary.json" if not args.side else f"matrix_summary_side{args.side}.json"
+    if quick:
+        summary_name = summary_name.replace(".json", "_quick.json")
 
     def dump_summary() -> None:
         # Incremental verdict persistence: a crash in a later unit must not

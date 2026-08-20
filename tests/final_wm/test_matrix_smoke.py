@@ -31,7 +31,9 @@ def test_dsyn_quick_gate_runs(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(ms, "HISTORY_STEPS", 16)
     args = _args(tmp_path)
     verdict = run_dsyn(args)
-    assert (tmp_path / "out" / "dsyn_verdict.json").exists()
+    # Quick tier writes a *_quick.json sibling (rerun failure report §6).
+    assert (tmp_path / "out" / "dsyn_verdict_quick.json").exists()
+    assert not (tmp_path / "out" / "dsyn_verdict.json").exists()
     assert verdict["quick"] is True
     for entry in verdict["per_seed"]:
         assert np.isfinite(entry["student_val_nll"])
@@ -54,7 +56,8 @@ def test_matrix_rerun_resumes_without_retraining(tmp_path, monkeypatch) -> None:
     summary = run_matrix(args)  # second run: resume everything, no retraining
     assert _ledger_final_count(tmp_path / "out") == n_final
     assert summary["matrix_version"] == ms.MATRIX_VERSION
-    assert (tmp_path / "out" / "matrix_summary.json").exists()
+    assert (tmp_path / "out" / "matrix_summary_quick.json").exists()
+    assert not (tmp_path / "out" / "matrix_summary.json").exists()
 
 
 def test_matrix_rerun_retrains_when_spec_changes(tmp_path, monkeypatch) -> None:
@@ -102,7 +105,7 @@ def test_matrix_quick_o1_and_b1_run(tmp_path, monkeypatch) -> None:
     args = _args(tmp_path, record=str(record_path), units="o1,b1")
     summary = run_matrix(args)
     out = tmp_path / "out"
-    assert (out / "matrix_summary.json").exists()
+    assert (out / "matrix_summary_quick.json").exists()
     ledger_lines = (out / "ledger.jsonl").read_text(encoding="utf-8").strip().splitlines()
     # 3 O1 arms + 1 B1 arm, quick mode = 1 seed
     run_ids = {json.loads(l)["run_id"] for l in ledger_lines}

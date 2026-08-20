@@ -11,7 +11,12 @@ import torch
 from src.final_wm.contracts import FinalWMProtocolError
 from src.final_wm.data import CanonicalRecord
 from src.final_wm.synthetic import synthetic_canonical_arrays
-from src.final_wm.training import TrainSpec, build_world_model, train_arm
+from src.final_wm.training import (
+    TrainSpec,
+    build_world_model,
+    config_fingerprint,
+    train_arm,
+)
 
 
 def _record(tmp_path, n: int = 1500) -> CanonicalRecord:
@@ -28,6 +33,21 @@ def _quick_spec(**kw) -> TrainSpec:
     )
     defaults.update(kw)
     return TrainSpec(**defaults)
+
+
+def test_config_fingerprint_covers_model_structure() -> None:
+    # Regression for the Hermes rerun failure 2026-08-20 §3: a repair batch
+    # that changes model structure (state registry/prior table) must bust the
+    # resume fingerprint even when the TrainSpec is unchanged.
+    from unittest import mock
+
+    from src.final_wm.transition import TRANSITION_PARAM_PRIORS
+
+    spec = _quick_spec()
+    fp_before = config_fingerprint(spec)
+    assert config_fingerprint(spec) == fp_before  # deterministic
+    with mock.patch.dict(TRANSITION_PARAM_PRIORS, {"tau_mix1": 123.0}):
+        assert config_fingerprint(spec) != fp_before
 
 
 def test_spec_validation_fail_closed() -> None:

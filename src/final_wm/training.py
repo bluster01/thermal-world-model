@@ -18,6 +18,10 @@ from pathlib import Path
 import torch
 
 from src.final_wm.contracts import (
+    ACTION_ELEMENTS,
+    BOUNDARY_ELEMENTS,
+    OBSERVATION_ELEMENTS,
+    PHYSICAL_STATE_ELEMENTS,
     BoundaryModelConfig,
     ClosureConfig,
     FinalWMProtocolError,
@@ -209,6 +213,36 @@ def train_arm(
     return final
 
 
+def model_structure_fingerprint() -> str:
+    """Structural fingerprint of the world-model code, independent of TrainSpec.
+
+    Root-cause fix for the 2026-08-20 Hermes rerun failure
+    (results/final_wm/rerun_failure_report_20260820.md §3): the resume
+    fingerprint covered only the TrainSpec fields, so a repair batch that
+    changes the model structure (state layout 9->11, new parameters, prior
+    re-anchoring) silently "RESUMED" onto incompatible v0.2 artifacts and
+    crashed on state-dict load.  Any change to the state/boundary/action/
+    observation registries or to the transition prior table now busts the
+    resume cache automatically.
+    """
+    from src.final_wm.transition import TRANSITION_PARAM_PRIORS
+
+    payload = json.dumps(
+        {
+            "states": PHYSICAL_STATE_ELEMENTS,
+            "boundary": BOUNDARY_ELEMENTS,
+            "actions": ACTION_ELEMENTS,
+            "observations": OBSERVATION_ELEMENTS,
+            "priors": TRANSITION_PARAM_PRIORS,
+        },
+        sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()[:16]
+
+
 def config_fingerprint(spec: TrainSpec) -> str:
-    payload = json.dumps(asdict(spec), sort_keys=True).encode("utf-8")
+    payload = json.dumps(
+        {"spec": asdict(spec), "structure": model_structure_fingerprint()},
+        sort_keys=True,
+    ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()[:16]

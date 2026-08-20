@@ -171,7 +171,8 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 45 | 证据链对齐审计（证据链/路线图v1/论文初稿） | 本地 | ✓ 审计闭合：撤回口径×4、R1 规则 v0.3 提案、修复批①-⑤冻结、论文 FROZEN-DRAFT + 解冻条件 |
 | 46 | 侧A v0.2 判决复算审计 + 本地证据包 | 本地 | ✓ 复算 11/11 全过（audit_verdicts.py）；auditpack 入仓并复现核心机制；IAPWS 网格已回传、provisional 全解除；论文 O1 写反已记录 |
 | 47 | 矩阵修正案 v0.3（R1 规则修订 + 修复批①-⑤ + 架构路线登记） | 本地 | ✓ 已冻结生效；侧B 延至 AE 阶段；②③④ 已实施完毕（见 48），①随后 |
-| 48 | 物理修复批 ②③④ 实施（混合时滞/再湿契约/先验锚定） | 本地 | ✓ 设计冻结+代码+6 项新契约测试；116/116 全过；D-SYN 中等规模探针门禁通过（quick 档为冒烟假象已诊断）；fingerprint 变化将自动触发矩阵重训；待授权 Hermes 重跑 T1+R1 |
+| 48 | 物理修复批 ②③④ 实施（混合时滞/再湿契约/先验锚定） | 本地 | ✓ 设计冻结+代码+契约测试；D-SYN 探针门禁通过；τ_mix 先验锚定 adhoc2 learnlag（80s）并锁可学习性 |
+| 49 | Hermes 重跑失败修复（指纹/容差/quick覆写） | 本地 | ✓ 指纹纳入模型结构指纹（根因）；红项容差 1e-5（裁定A）；quick 档写 `_quick.json` 不覆写已审计产物；118/118 全过；回执 results/final_wm/rerun_failure_response_20260820.md；执行侧可直接重跑 T1+R1 |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 

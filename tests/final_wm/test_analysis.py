@@ -85,9 +85,12 @@ def test_spray_sensitivity_recovers_slopes(tmp_path) -> None:
     arrays["split"] = np.ones(500, dtype=np.int8)
     record = _record(tmp_path, arrays)
     fit = spray_sensitivity(record, 1)
-    assert abs(fit["dW_dv1_tph_per_full"] - 8.0) < 1e-6
-    assert abs(fit["dW_dv2_tph_per_full"] - 30.0) < 1e-6
-    assert abs(fit["dW_dv2_kgs_per_2pct"] - 30.0 * 0.02 * KAPPA_TPH_TO_KGS) < 1e-6
+    # Tolerance 1e-5 (was 1e-6): aarch64/BLAS float differences give relative
+    # error ~4e-8, i.e. 1.14e-6 absolute at slope 30 -- see the Hermes rerun
+    # failure report 2026-08-20 §5 (red item, user ruling A: relax here).
+    assert abs(fit["dW_dv1_tph_per_full"] - 8.0) < 1e-5
+    assert abs(fit["dW_dv2_tph_per_full"] - 30.0) < 1e-5
+    assert abs(fit["dW_dv2_kgs_per_2pct"] - 30.0 * 0.02 * KAPPA_TPH_TO_KGS) < 1e-5
     assert fit["r2"] > 0.999
     assert fit["closed_loop_warning"] is True
 
@@ -145,7 +148,10 @@ def test_auditpack_phase_record_only(tmp_path) -> None:
     args = Namespace(record=str(path), out=str(tmp_path / "out"), side="A", checkpoint=None,
                      properties_npz=None, device="cpu", quick=True, arm="closure_cons", seed=0)
     report = run_auditpack(args)
-    assert (tmp_path / "out" / "auditpack_A.json").exists()
+    # Quick tier must not clobber the audited artifact (rerun failure report
+    # 2026-08-20 §6): quick runs write the *_quick.json sibling instead.
+    assert (tmp_path / "out" / "auditpack_A_quick.json").exists()
+    assert not (tmp_path / "out" / "auditpack_A.json").exists()
     for key in ("spray_sensitivity", "mixing_reference", "persistence_increment_mae",
                 "error_floor", "event_study"):
         assert key in report
