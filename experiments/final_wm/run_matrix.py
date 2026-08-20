@@ -357,7 +357,9 @@ def run_auditpack(args) -> dict:
     if args.checkpoint:
         arm, seed = args.arm, int(args.seed)
         spec = next(s for s in ms.t1_specs((seed,)) if s.arm == arm)
-        model = build_world_model(spec, _properties(args.properties_npz)).to(device)
+        properties = _properties(args.properties_npz)
+        report["properties_probes"] = type(properties).__name__
+        model = build_world_model(spec, properties).to(device)
         model.load_state_dict(
             torch.load(args.checkpoint, map_location=device, weights_only=False)["state_dict"])
         errors = window_abs_errors(

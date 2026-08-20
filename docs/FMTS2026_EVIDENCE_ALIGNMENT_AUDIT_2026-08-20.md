@@ -100,12 +100,56 @@
 4. 侧 B 暂缓，等本地侧 A 判决审计通过后单独授权；
 5. 论文目录 `docs/fmts2026/paper/` 冻结，禁止继续编辑直至 §5.1 条件满足。
 
+## 7. 侧 A 判决复算审计（2026-08-20，全部闭合）
+
+工具：`experiments/final_wm/audit_verdicts.py`（从磁盘原始 metrics 重载 + 冻结 CI 代码复算）；
+产物：`artifacts/final_wm/verdict_audit_sideA.json`。**11/11 检查全过**：
+
+| 单元 | 判决 | 复算一致 | 关键数字（13 个 val 日块 bootstrap） |
+|---|---|---|---|
+| O1 learned | MIXED | ✓ | 2/3 seeds 显著退化 −30.1%/−31.4%（CI<0），1 seed +13.3% |
+| O1 hybrid | REJECTED | ✓ | −0.3%/−1.6%/+3.7%，CI 全跨零 |
+| T1 closure_cons vs physics_only | SUPPORTED | ✓ | +5.7%/+6.9%（CI>0）、+2.6%（跨零） |
+| T1 closure_steam vs closure_cons | REJECTED | ✓ | −6.4%（CI<0）/−2.3%/−3.7% |
+| T1 latent4 vs closure_cons | REJECTED | ✓ | −1.6%/+0.3%/+3.1%，CI 全跨零 |
+| B1 | REJECTED | ✓ | CRPS 差 −1.70/−1.68/−1.96（CI 全<0） |
+| J1 | SUPPORTED | ✓ | +13.5%/+16.4%/+33.3%（CI 全>0） |
+| R1 | REJECTED | ✓ | 方向 0.19/0.34/0.22 < 1.0；盲检 3/3 过；泄漏 3/3 干净 |
+| ledger | 完整 | ✓ | 48 final 条目；T1 重复块=v0.1/v0.2 两轮，以第二次（60ep 预算）为准；无超预算 |
+| D-SYN | PASS 3/3 | ✓ | 改善 99.3/107.0/136.5 |
+| split-sides | 溯源一致 | ✓ | 双侧同一 dual SHA（23a89ea6…）、切分一致、质量门全过 |
+
+**结论：侧 A v0.2 判决可引用、可追溯、可复算。论文 §4 判决数字与产物一致，除 O1（见 §2.5 写反）。**
+
+### 7.1 本地证据包（auditpack_A.json，`properties_probes: GridThermoProperties`，正式口径）
+
+- persistence 增量基线 0.088/0.192/0.246/0.275/0.451 与误差地板快分量锚点 0.86/1.44/1.61/1.66/1.81
+  **与路线图 §5/§2 逐位一致**（交叉验证通过）；
+- 喷水灵敏度本地口径：dW/dv1=27.8、dW/dv2=70.0 t/h/满开度（R²=0.54）→ 稳态混合参考带
+  v1 0.21–0.59、v2 0.53–1.48 °C/+2%（与原报带部分偏移，**以本地口径为准**）；
+- 再湿消融本地复现（t1_closure_cons_seed0，网格物性）：intact 0.27 → aW=0 **1.00**
+  （均值 +0.20→−0.44 °C）——根因机制成立；
+- 分箱（网格物性，512 窗）：final 通道 H1 [0.23,0.19,0.13,0.15,0.13] / H18 [0.35,0.45,0.50,0.46,0.51]，
+  两 horizon 均无负荷依赖（between_ratio 0.069/0.024）✓"负荷偏差为训练假象"成立；
+  sh1_in 维持最大误差源（H1 箱均值 5.3–13.3，H18 5.3–14.7）；
+- 解析物性试跑时 final H18 曾出现中高负荷隆起 [2.1,2.6,5.3,5.7,2.5]——**网格物性重跑后消失**，
+  确为物性口径不匹配假象而非模型现象（已销项）。
+
+### 7.2 剩余口径备注（全部不阻塞判决引用）
+
+- ~~模型探针网格物性口径~~ **已闭合**（0b25e72 入仓 `iapws_surrogate.npz`，auditpack 已重跑）；
+- 路线图 §2 within-bin σ 锚点与本地定义不同（其对模型残差去箱均值，本地对原始观测去箱均值）——
+  定义差异记录在案，引用时需注明口径；
+- per-channel H18 误差表（路线图 §6 的 9.8/2.8/1.7/2.2/1.0）：metrics 仅存通道均值；auditpack
+  分箱总均值（sh1_in≈10.7 / sh1_out≈1.6 / sh2_in≈1.2 / sh2_out≈1.8 / final≈0.45）与路线图
+  同量级、方向一致（sh1_in 主导、final 最小）；数值差来自窗数/种子/聚合口径，引用以
+  auditpack_A.json 为准。
+
 ### 执行状态（2026-08-20 下午更新）
 
 产物已经 git 回传入仓（canonical 双侧 npz + 判决 + ledger + checkpoints），侧 A **无需本地重跑**：
 判决复算审计与 auditpack 均已本地执行完毕（§7）。剩余待办：
 
-1. Linux 下次回传带上 GridThermoProperties 网格 npz（解除模型探针 provisional 标记，
-   重跑：`--phase auditpack --properties-npz <grid>`）；
+1. ~~网格 npz 回传~~ **已完成**（0b25e72），provisional 已全部解除；
 2. 侧 B 矩阵：暂缓，待论文方向裁定后单独授权（canonical_sideB.npz 已在仓）；
 3. 论文解冻按 §5.1。
