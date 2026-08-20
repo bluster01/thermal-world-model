@@ -14,6 +14,8 @@
     latent4 1.345/1.412/1.412
 - **侧 B 暂缓**（用户指示：等本地侧 A 判决审计闭合）
 - artifacts/final_wm 整目录已 commit+push（83MB，含 30 ckpt、ledger、records、判决 json）
+- IAPWS 代理网格 `artifacts/final_wm/iapws_surrogate.npz`（GridThermoProperties 训练用网格，
+  1.56MB）已随 a980cc1 回传 —— 解除对侧模型探针 provisional 标记（审计 §6）
 
 ## 2. 判别矩阵侧 A 判决（v0.2，详见 matrix_summary_sideA.json）
 
