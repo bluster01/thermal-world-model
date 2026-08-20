@@ -26,8 +26,13 @@ d(dsw_lag_i)/dt = (Dsw_i^target − dsw_lag_i) / tau_mix_i      i ∈ {1, 2}
   把瞬时动作响应泄漏进测量（实施中实测确认：仅用 m 时首步响应占稳态 43%，改后为
   一阶滞后量级 ~15%）。稳态下 lag=Dsw 且 m=Dsw·τ_evap，两口径一致，锚定初始化不受影响；
 - 初值（`initial_steady_state`）：稳态恒等 `dsw_lag_i = Dsw_i`；
-- 新参数 `tau_mix1/tau_mix2`，softplus 正参数化，**先验 60 s**（事件研究符号建立带
-  1–3 min 的中性中心；可学习，数据可推翻）；
+- 新参数 `tau_mix1/tau_mix2`：**可学习参数**（`raw` ParameterDict 内 softplus 正参数化，
+  随矩阵训练被 Adam 更新，先验仅定初始化中心，数据可推翻）；先验 **80 s**，锚定 adhoc2
+  学习证据（`fix3_learnlag_summary.json`：tau_sw=73–86 s 由数据学出）；
+- **备选结构（登记在案，本轮不实施）**：adhoc2 同实验还学出 tau_sens=19–24 s，与 tau_sw
+  明确分离——传感湿润通道比混合传输快约 4×。当前 blend 挂在混合 lag 上（80 s）；若重跑后
+  R1/事件研究显示 sh1_out/sh2_out 快分量仍失配，再拆出独立湿润滞后状态（+2 状态，
+  先验 20 s）。拆分时需重新走本设计稿的状态注册流程；
 - 守恒性：滞后是速率状态的低通滤波，稳态 `dsw_lag = Dsw`，boundary 模式 κW 总量
   守恒在稳态保持；瞬态不守恒是物理（管道/混合腔储液），且守恒审计只查 `aux` 中的
   瞬时 target，不受影响。

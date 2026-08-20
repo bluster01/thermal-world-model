@@ -65,7 +65,9 @@ TRANSITION_PARAM_PRIORS: dict[str, float] = {
     "th1d": 7.71, "th2d": 19.45,                        # dry-mode gains (same anchor)
     "dTm0": 1.0, "dTm1": 1.0, "dTm2": 1.0,             # K init correction
     "tau_evap": 15.0,                                   # s droplet evaporation
-    "tau_mix1": 60.0, "tau_mix2": 60.0,                 # s spray->mixing lag (repair ②)
+    # Repair ② lag priors anchored to the adhoc2 learned-lag evidence
+    # (fix3_learnlag: tau_sw = 73-86 s learned from data); learnable params.
+    "tau_mix1": 80.0, "tau_mix2": 80.0,                 # s spray->mixing lag (repair ②)
     "aW1": 150.0, "aW2": 150.0,                         # kW/K wall rewetting
     "m_dry0": 30.0,                                     # kg dry-out threshold
     "gamma1": 1.0, "gamma2": 1.0,                       # valve map exponents

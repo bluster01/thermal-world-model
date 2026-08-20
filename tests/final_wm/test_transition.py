@@ -302,8 +302,24 @@ def test_spray_priors_anchored_to_data_regression() -> None:
     assert model.priors["th1"] == pytest.approx(7.71)
     assert model.priors["th2"] == pytest.approx(19.45)
     assert model.priors["th1d"] == pytest.approx(7.71)
-    assert model.priors["tau_mix1"] == pytest.approx(60.0)
-    assert model.priors["tau_mix2"] == pytest.approx(60.0)
+    assert model.priors["tau_mix1"] == pytest.approx(80.0)
+    assert model.priors["tau_mix2"] == pytest.approx(80.0)
+
+
+def test_tau_mix_is_a_learnable_parameter_with_gradient_flow() -> None:
+    # User directive 2026-08-20: the transport lag is learnable, not a fixed
+    # prior.  It must sit in the trainable raw dict and receive gradients.
+    model = _transition()
+    assert "tau_mix1" in model.raw and model.raw["tau_mix1"].requires_grad
+    batch = _batch(horizon=4)
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    _states, temps = model.integrate(state, batch.future_boundary, batch.future_actions)
+    loss = temps.square().mean()
+    loss.backward()
+    grad = model.raw["tau_mix1"].grad
+    assert grad is not None and bool(torch.isfinite(grad)) and grad.abs().item() > 0.0
 
 
 def test_zero_action_decays_lag_and_shuts_rewetting() -> None:
