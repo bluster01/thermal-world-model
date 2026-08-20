@@ -213,7 +213,11 @@ def train_arm(
                  # Convergence diagnostics (matrix v0.2): stop_reason=cap with a still-
                  # descending val_tail flags undertrained arms; converged = early stop.
                  stop_reason=stop_reason, converged=stop_reason == "patience",
-                 val_tail=val_history[-5:])
+                 val_tail=val_history[-5:],
+                 # Runtime speed flags for audit uniformity: all arms feeding one
+                 # verdict must share the same flag state (2026-08-21).
+                 flags={"compile_substep": compile_substep,
+                        "matmul_precision": torch.get_float32_matmul_precision()})
     with ledger_path.open("a", encoding="utf-8") as ledger:
         ledger.write(json.dumps(final, ensure_ascii=False) + "\n")
     return final

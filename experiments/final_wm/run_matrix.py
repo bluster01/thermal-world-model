@@ -501,6 +501,13 @@ def run_matrix(args) -> dict:
                 joint_metrics[spec.seed] = metrics
         for seed in seeds:
             main_ckpt = out / "checkpoints" / f"j1_staged_main_seed{seed}.pt"
+            if not main_ckpt.exists() and getattr(args, "arm_filter", None) is not None:
+                # Parallel-worker safety: the staged boundary warm-starts from the
+                # joint main checkpoint.  Under --arm-filter that checkpoint may be
+                # owned by another worker; skip instead of crashing on torch.load.
+                # The unfiltered aggregation pass fills the gap via resume.
+                print(f"[j1] staged_boundary seed={seed} SKIPPED (main checkpoint owned by another worker)")
+                continue
             bnd_spec = ms.j1_staged_boundary_spec(seed, str(main_ckpt))
             if quick:
                 bnd_spec = ms.quicken(bnd_spec)
@@ -606,10 +613,19 @@ def main() -> None:
     parser.add_argument("--quick", action="store_true", help="dry-run sizes; no verdicts")
     parser.add_argument("--compile", action="store_true",
                         help="torch.compile the physics substep (launch-bound rollout speed lever; fp32 numerics unchanged)")
+    parser.add_argument("--tf32", action="store_true",
+                        help="tf32 matmul precision (tensor-core fp32; ~10-bit mantissa on GRU/MLP matmuls only, physics elementwise unaffected)")
     parser.add_argument("--checkpoint", default=None, help="auditpack: trained model checkpoint")
     parser.add_argument("--arm", default="closure_cons", help="auditpack: T1 arm of --checkpoint")
     parser.add_argument("--seed", default=0, help="auditpack: seed of --checkpoint")
     args = parser.parse_args()
+
+    if getattr(args, "tf32", False):
+        # Runner-wide speed lever; the exact flag state is recorded in every
+        # ledger entry, and all arms of a verdict unit must share it (audit
+        # checks uniformity).  Physics elementwise ops are not matmuls and
+        # are unaffected.
+        torch.set_float32_matmul_precision("high")
 
     if args.phase == "discover":
         if not args.data_root:

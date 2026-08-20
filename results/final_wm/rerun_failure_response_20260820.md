@@ -68,3 +68,44 @@ python experiments/final_wm/run_matrix.py --phase dsyn --quick --compile \
   对应②、rewetting_ablation 探针对应③、checkpoint 先验读出对应④，一次训练分别读取；
   仅当 T1/R1 相对 v0.2 出现回归时才 git revert 二分；
 - **今后纪律**：修复批严格一次一项一次重跑（修正案 ①→⑤ 顺序不变）。
+
+---
+
+## 追加 2（2026-08-21 03:30）：并行 worker + tf32（Linux `b28bf25` 之上的加速审查）
+
+### 本地侧对该 push 的补强
+
+- **J1 并行防护**：`--arm-filter joint` 时 staged_boundary 的暖启动 checkpoint 属于另一
+  worker，原来会 torch.load 崩溃；现在 fail-skip（聚合 pass 经 resume 补齐）；
+- **`--tf32`**：tensor-core fp32 matmul（GRU/MLP），物理逐元素算子不受影响；
+- **旗标入 ledger**：每条 final 记录 `flags={compile_substep, matmul_precision}`——
+  **同一判决单元的所有臂必须旗标一致**，审计时检查均匀性（数值轨迹属旗标函数）。
+
+### 并行 worker runbook（单 GB10，CPU 20 核空闲 + GPU 41% 有余量）
+
+T1 四臂×3 种子 = 12 次训练，单进程串行 ≈ 15h；4 worker 并行（每 worker 单臂）+
+`--compile --tf32` 预期 **3-5×**：
+
+```bash
+git pull
+# 1) 冒烟（两档各 5 分钟，全过才继续）
+python experiments/final_wm/run_matrix.py --phase dsyn --quick --compile --tf32 \
+  --out artifacts/final_wm/_smoke && rm -rf artifacts/final_wm/_smoke
+# 2) 4 个并行 worker（tmux/后台各一；同一 --out，run_id 互不冲突）
+for ARM in physics_only closure_cons closure_steam latent4; do
+  python experiments/final_wm/run_matrix.py --phase matrix \
+    --record artifacts/final_wm/canonical_sideA.npz --side A \
+    --units t1 --arm-filter $ARM --out artifacts/final_wm \
+    --properties-npz artifacts/final_wm/iapws_surrogate.npz --compile --tf32 &
+done; wait
+# 3) R1 依赖 closure_cons 全部种子，放最后单 worker
+python experiments/final_wm/run_matrix.py --phase matrix \
+  --record artifacts/final_wm/canonical_sideA.npz --side A \
+  --units t1,r1 --out artifacts/final_wm \
+  --properties-npz artifacts/final_wm/iapws_surrogate.npz --compile --tf32
+#    ↑ 聚合 pass：t1 全部 RESUMED，顺带产出判决；r1 全量
+```
+
+- 全程所有 worker 旗标必须一致（`--compile --tf32` 都带或都不带）；
+- GPU 显存：batch32 小模型，4 worker 共存无压力；若 OOM 则降为 2-3 worker；
+- tf32 数值平价门：冒烟时对比 `--tf32` 与不带的学生 val NLL，差 <1% 才放行。
