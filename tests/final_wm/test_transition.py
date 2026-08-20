@@ -29,9 +29,9 @@ def test_step_shapes_and_finiteness() -> None:
     state = model.initial_steady_state(
         batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
     )
-    assert state.shape == (3, 9)
+    assert state.shape == (3, 11)
     result = model.step(state, batch.future_boundary[:, 0], batch.future_actions[:, 0])
-    assert result.state.shape == (3, 9)
+    assert result.state.shape == (3, 11)
     assert bool(torch.isfinite(result.state).all())
     assert set(result.aux) >= {"dsw1", "dsw2", "hm1", "hm2"}
 
@@ -43,7 +43,7 @@ def test_integrate_shapes() -> None:
         batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
     )
     states, temps = model.integrate(state, batch.future_boundary, batch.future_actions)
-    assert states.shape == (3, 10, 9)
+    assert states.shape == (3, 10, 11)
     assert temps.shape == (3, 10, 5)
     assert bool(torch.isfinite(states).all()) and bool(torch.isfinite(temps).all())
 
@@ -179,11 +179,11 @@ def test_latent_block_decays_when_driven_by_zero_residual() -> None:
     state = model.initial_steady_state(
         batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
     )
-    assert state.shape == (3, 11)
-    state[:, 9:] = 1.0
+    assert state.shape == (3, 13)
+    state[:, 11:] = 1.0
     result = model.step(state, batch.future_boundary[:, 0], batch.future_actions[:, 0])
     # rho = tanh(0) = 0 at init -> latent resets toward zero.
-    assert result.state[:, 9:].abs().max().item() < 1e-6
+    assert result.state[:, 11:].abs().max().item() < 1e-6
     assert model.latent_rho.abs().max().item() < 1.0
 
 
@@ -207,6 +207,121 @@ def test_shape_violations_raise() -> None:
         Fan2020UDETransition(TransitionConfig(), AnalyticThermoProperties(), priors={"nope": 1.0})
 
 
+def test_output_equation_is_state_driven_not_action_driven() -> None:
+    # Repair ②: the measurement reads the transport-lagged spray state, so
+    # the current action cannot move the output within the same step.
+    model = _transition()
+    batch = _batch()
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    t_none = model.output_temperatures(state, batch.future_boundary[:, 0], None)
+    t_step = model.output_temperatures(
+        state, batch.future_boundary[:, 0], torch.full((3, 2), 0.9)
+    )
+    assert torch.equal(t_none, t_step)
+
+
+def test_spray_step_response_is_gradual() -> None:
+    # Repair ②: a valve step builds the attemperator-outlet response over
+    # the mixing time constant (prior 60 s), not within one 10 s step.
+    model = _transition()
+    batch = _batch(horizon=60)
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    boundary = batch.future_boundary[:, :1].repeat(1, 60, 1)
+    base_actions = batch.future_actions[:, :1].repeat(1, 60, 1)
+    step_actions = base_actions.clone()
+    step_actions[:, :, 0] = (step_actions[:, :, 0] + 0.05).clamp(max=1.0)
+    _s0, temps_base = model.integrate(state, boundary, base_actions)
+    _s1, temps_step = model.integrate(state, boundary, step_actions)
+    delta = temps_step[:, :, 1] - temps_base[:, :, 1]  # sh1 outlet, degC
+    step1 = delta[:, 0].abs().mean().item()
+    settled = delta[:, -6:].abs().mean().item()
+    assert settled > 0.05  # the step eventually shows up
+    assert step1 < 0.25 * settled  # but not in the first 10 s
+
+
+def test_spray_lag_state_tracks_target_with_first_order_dynamics() -> None:
+    model = _transition()
+    batch = _batch(horizon=12)
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    lag0 = state[:, 9:11].clone()
+    states, _temps = model.integrate(state, batch.future_boundary, batch.future_actions)
+    lag = states[:, :, 9:11]
+    # Steady identity at t=0 and bounded, non-negative lag trajectory.
+    assert torch.allclose(lag0, states[:, 0, 9:11], atol=1.0)
+    assert bool((lag >= 0.0).all())
+    targets = torch.stack([
+        torch.stack(model._spray_rates(
+            batch.future_boundary[:, t, 2], batch.future_actions[:, t, 0],
+            batch.future_actions[:, t, 1], batch.future_boundary[:, t, 6],
+        ), dim=-1)
+        for t in range(batch.future_actions.shape[1])
+    ], dim=1)
+    # The lag never overshoots past the running target band.
+    assert bool((lag <= targets.max() + 1e-5).all())
+
+
+def test_rewetting_contract_caps_and_dry_lockout() -> None:
+    # Repair ③: q_w <= (m/tau_evap) * max(h_pre - h_spray, 0); m=0 -> q_w = 0.
+    model = _transition()
+    batch = _batch()
+    b0 = batch.future_boundary[:, 0]
+    d_flow, _u_b, pm, _tm_sep, tfw, _p_out, _w = model._unpack_boundary(b0)
+    p0, p1, _p2 = model._pressures(pm, _p_out)
+    h_spray = model.properties.liquid_enthalpy(tfw)
+    tm = torch.full((3, 3), 600.0)
+    h_pre = torch.full((3, 2), 3300.0)
+    tau_evap = model.val("tau_evap")
+    m1 = torch.full((3,), 50.0)
+    m2 = torch.full((3,), 50.0)
+    q_w1, q_w2 = model._rewetting_powers(tm, m1, m2, p0, p1, h_pre, h_spray)
+    cap = (50.0 / tau_evap) * (3300.0 - h_spray).clamp(min=0.0)
+    assert bool((q_w1 <= cap + 1e-6).all()) and bool((q_w2 <= cap + 1e-6).all())
+    # Dry-out lockout: zero droplet inventory closes rewetting exactly.
+    q_z1, q_z2 = model._rewetting_powers(
+        tm, torch.zeros(3), torch.zeros(3), p0, p1, h_pre, h_spray
+    )
+    assert q_z1.abs().max().item() == pytest.approx(0.0, abs=1e-8)
+    assert q_z2.abs().max().item() == pytest.approx(0.0, abs=1e-8)
+    # Condensation direction is preserved when the wall is cold.
+    q_c1, _q_c2 = model._rewetting_powers(
+        torch.full((3, 3), 100.0), m1, m2, p0, p1, h_pre, h_spray
+    )
+    assert bool((q_c1 < 0.0).all())
+
+
+def test_spray_priors_anchored_to_data_regression() -> None:
+    # Repair ④: auditpack spray_sensitivity, dW/dv = 27.76 / 70.01 t/h per
+    # full travel -> kg/s per full opening; tau_mix prior = 60 s.
+    model = _transition()
+    assert model.priors["th1"] == pytest.approx(7.71)
+    assert model.priors["th2"] == pytest.approx(19.45)
+    assert model.priors["th1d"] == pytest.approx(7.71)
+    assert model.priors["tau_mix1"] == pytest.approx(60.0)
+    assert model.priors["tau_mix2"] == pytest.approx(60.0)
+
+
+def test_zero_action_decays_lag_and_shuts_rewetting() -> None:
+    # Zero-action identity with repair ②③: from a spraying steady state,
+    # both the lagged mixing rate and the rewetting power decay to zero.
+    model = _transition()
+    batch = _batch(horizon=60)
+    state = model.initial_steady_state(
+        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
+    )
+    assert state[:, 9:11].max().item() > 0.0  # steady state has active spray
+    boundary = batch.future_boundary[:, :1].repeat(1, 60, 1)
+    zero_actions = torch.zeros(3, 60, 2)
+    states, _temps = model.integrate(state, boundary, zero_actions)
+    lag_end = states[:, -1, 9:11]
+    assert lag_end.max().item() < 0.05 * state[:, 9:11].max().item()
+
+
 def test_layout_is_consistent_with_state_width() -> None:
     model = _transition(latent_dim=3)
     assert model.layout == StateLayout(latent_dim=3)
@@ -214,4 +329,4 @@ def test_layout_is_consistent_with_state_width() -> None:
     state = model.initial_steady_state(
         batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
     )
-    assert state.shape[-1] == 12
+    assert state.shape[-1] == 14

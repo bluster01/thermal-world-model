@@ -38,6 +38,7 @@ PHYSICAL_STATE_ELEMENTS = (
     "tm1", "tm2", "tm3",     # metal heat-storage temperatures, degC
     "rb",                    # fuel/mills lag state, t/h
     "m_liq1", "m_liq2",      # attemperator liquid droplet masses, kg
+    "dsw_lag1", "dsw_lag2",  # spray->mixing transport lag states, kg/s (repair ②)
 )
 BOUNDARY_ELEMENTS = (
     "steam_flow",            # D, kg/s
@@ -90,6 +91,7 @@ PHYSICAL_STATE_NORM = (
     (550.0, 150.0), (550.0, 150.0), (550.0, 150.0),         # tm1..tm3 degC
     (250.0, 150.0),                                          # rb t/h
     (60.0, 60.0), (60.0, 60.0),                              # m_liq kg
+    (2.0, 3.0), (2.0, 3.0),                                  # dsw_lag kg/s
 )
 BOUNDARY_NORM = (
     (350.0, 80.0),    # steam_flow kg/s
@@ -176,6 +178,10 @@ class StateLayout:
     @property
     def m_liq_slice(self) -> slice:
         return slice(7, 9)
+
+    @property
+    def dsw_lag_slice(self) -> slice:
+        return slice(9, 11)
 
     @property
     def latent_slice(self) -> slice:

@@ -17,7 +17,7 @@ def test_posterior_shapes_and_validity() -> None:
     observer = _observer()
     batch = synthetic_history(batch=4, history_steps=16, horizon=4, seed=1)
     mu, sigma = observer.posterior(batch.history.obs, batch.history.actions, batch.history.boundary)
-    assert mu.shape == (4, 9) and sigma.shape == (4, 9)
+    assert mu.shape == (4, 11) and sigma.shape == (4, 11)
     assert bool((sigma > 0).all())
     assert bool(torch.isfinite(mu).all()) and bool(torch.isfinite(sigma).all())
 
@@ -35,9 +35,9 @@ def test_observer_with_latent_block() -> None:
     observer = _observer(latent_dim=3)
     batch = synthetic_history(batch=2, history_steps=16, horizon=4, seed=3)
     mu, sigma = observer.posterior(batch.history.obs, batch.history.actions, batch.history.boundary)
-    assert mu.shape == (2, 12)
+    assert mu.shape == (2, 14)
     # Latent block normalization: loc 0, scale 1.
-    assert bool((mu[:, 9:].abs() <= 1.0 + 1e-6).all())
+    assert bool((mu[:, 11:].abs() <= 1.0 + 1e-6).all())
 
 
 def test_observer_history_length_is_contractual() -> None:
@@ -51,8 +51,8 @@ def test_observer_history_length_is_contractual() -> None:
 
 def test_state_continuity_error() -> None:
     observer = _observer()
-    a = torch.zeros(3, 9)
-    b = torch.zeros(3, 9)
+    a = torch.zeros(3, 11)
+    b = torch.zeros(3, 11)
     assert observer.state_continuity_error(a, b).abs().max().item() == 0.0
     b[:, 0] = 500.0  # one normalized unit in h1
     err = observer.state_continuity_error(a, b)
@@ -63,9 +63,9 @@ def test_state_continuity_error() -> None:
 
 def test_sample_uses_reparameterization() -> None:
     observer = _observer()
-    mu = torch.zeros(2, 9)
-    sigma = torch.ones(2, 9)
+    mu = torch.zeros(2, 11)
+    sigma = torch.ones(2, 11)
     torch.manual_seed(0)
     sample = observer.sample(mu, sigma)
-    assert sample.shape == (2, 9)
+    assert sample.shape == (2, 11)
     assert sample.requires_grad is False or sample.grad_fn is not None  # reparam path exists

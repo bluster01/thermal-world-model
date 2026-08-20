@@ -1232,7 +1232,7 @@
           "required": true
         }
       },
-      "decision": "ACTIVE / SIDE-A v0.2 VERDICTS AUDITED 2026-08-20；产物经 git 回传入仓，判决复算审计 11/11 全过（audit_verdicts.py；O1 learned MIXED/hybrid REJ、T1 closure_cons SUP + steam/latent4 REJ、B1 REJ、J1 SUP 3/3、R1 REJ-方向、D-SYN 3/3）；证据链协议化入仓（analysis.py + auditpack）并本地复现核心机制（再湿消融 0.28→1.00、真实对象 H1≈0/60 步正确 0.68-0.75）；论文 FROZEN-DRAFT（含 O1 写反+撤回数字，解冻条件见审计 §5.1）；剩余：IAPWS 网格 npz 待回传解除 provisional，侧B 暂缓",
+      "decision": "ACTIVE / REPAIR-BATCH-234 IMPLEMENTED 2026-08-20；侧A v0.2 判决审计闭合（11/11 复算全过）；矩阵修正案 v0.3 冻结生效（R1 规则修订 CI<0+占比≥0.60、修复批①→⑤、gray-box 时序分工架构、侧B 延至 AE）；②③④ 已实施：混合传输时滞状态+输出方程状态驱动（消 H1 构造过冲）、再湿质量平衡硬契约（闭正反馈）、th 先验锚定数据回归（7.71/19.45 kg/s）；116/116 测试全过、D-SYN 中等规模探针门禁通过；fingerprint 变化将触发矩阵重训——待授权 Hermes 重跑 T1+R1（①全锚定随后）；论文 FROZEN-DRAFT",
       "advisories": [
         "Fan2020-UDE是物理transition候选，不是plant truth；动作通道必须保留constant-action identity、方向与支持域审计",
         "Direct-WM v2只支持direct H18 observer/backbone候选；未验证递归rollout、双阀稳定响应或概率校准",

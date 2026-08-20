@@ -43,8 +43,8 @@ def test_closure_is_action_blind_at_runtime() -> None:
     torch.manual_seed(7)
     out_b = closure(state, boundary)
     assert torch.equal(out_a.steam_power, out_b.steam_power)
-    # Feature dimension: 9 physical + 6 whitelisted boundary channels.
-    assert closure.feature_dim == 9 + len(CLOSURE_BOUNDARY_CHANNELS)
+    # Feature dimension: 11 physical + 6 whitelisted boundary channels.
+    assert closure.feature_dim == 11 + len(CLOSURE_BOUNDARY_CHANNELS)
 
 
 def test_closure_injection_modes() -> None:

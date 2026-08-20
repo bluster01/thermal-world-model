@@ -45,7 +45,7 @@ def test_forecast_oracle_mode_shapes() -> None:
     assert result.mode == "oracle"
     assert result.temps_mu.shape == (2, 8, 5)
     assert result.temps_sigma.shape == (2, 8, 5)
-    assert result.states.shape == (2, 8, 9)
+    assert result.states.shape == (2, 8, 11)
     assert bool(torch.isfinite(result.temps_mu).all())
     assert bool((result.temps_sigma > 0).all())
     assert result.in_support is None

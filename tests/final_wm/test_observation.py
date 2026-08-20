@@ -17,8 +17,8 @@ def _observation(heteroscedastic: bool = True) -> tuple[ObservationModel, StateL
 
 def test_sigma_positive_and_bounded() -> None:
     obs_model, layout = _observation()
-    state = torch.randn(3, layout.dim) * torch.tensor([500.0] * 3 + [150.0] * 3 + [150.0] + [60.0] * 2) \
-        + torch.tensor([3000.0] * 3 + [550.0] * 3 + [250.0] + [60.0] * 2)
+    state = torch.randn(3, layout.dim) * torch.tensor([500.0] * 3 + [150.0] * 3 + [150.0] + [60.0] * 2 + [3.0] * 2) \
+        + torch.tensor([3000.0] * 3 + [550.0] * 3 + [250.0] + [60.0] * 2 + [2.0] * 2)
     sigma = obs_model.sigma(state)
     assert sigma.shape == (3, 5)
     assert bool((sigma >= obs_model.config.min_sigma_c).all())

@@ -25,7 +25,7 @@ from src.final_wm.contracts import (
 
 
 def test_registries_are_unique_and_ordered() -> None:
-    assert len(set(PHYSICAL_STATE_ELEMENTS)) == 9
+    assert len(set(PHYSICAL_STATE_ELEMENTS)) == 11
     assert len(set(BOUNDARY_ELEMENTS)) == 7
     assert len(set(ACTION_ELEMENTS)) == 2
     assert len(set(OBSERVATION_ELEMENTS)) == 5
@@ -36,13 +36,14 @@ def test_registries_are_unique_and_ordered() -> None:
 
 def test_state_layout_slices() -> None:
     layout = StateLayout(latent_dim=4)
-    assert layout.physical_dim == 9
-    assert layout.dim == 13
+    assert layout.physical_dim == 11
+    assert layout.dim == 15
     assert layout.h_slice == slice(0, 3)
     assert layout.tm_slice == slice(3, 6)
     assert layout.rb_index == 6
     assert layout.m_liq_slice == slice(7, 9)
-    assert layout.latent_slice == slice(9, 13)
+    assert layout.dsw_lag_slice == slice(9, 11)
+    assert layout.latent_slice == slice(11, 15)
     assert layout.physical_index("rb") == 6
     with pytest.raises(FinalWMProtocolError):
         layout.physical_index("nope")
@@ -52,7 +53,7 @@ def test_state_layout_slices() -> None:
 
 def test_world_model_config_validates_modules() -> None:
     layout = validate_world_model_config(WorldModelConfig())
-    assert layout.dim == 9
+    assert layout.dim == 11
 
 
 def test_forecast_mode_rejects_measured_spray_mode() -> None:

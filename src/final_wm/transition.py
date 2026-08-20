@@ -5,10 +5,16 @@ This module rewrites the recovered legacy E0/E0Evap dynamics
 `26_fix_evap.py`) as a clean, testable interface.  The scientific content is
 unchanged; the software contract is new:
 
-- packed state vector (`StateLayout`): h[3], Tm[3], rB, m_liq[2], latent[L];
+- packed state vector (`StateLayout`): h[3], Tm[3], rB, m_liq[2],
+  dsw_lag[2], latent[L];
 - exogenous inputs split into boundary (7 channels) and action (2 channels);
 - actions enter *only* through the monotone valve mapping varphi(u); the
   measured total spray flow W is usable solely in oracle diagnostics mode;
+- spray affects measurements through first-order transport-lag states
+  (repair ②, design 2026-08-20): the output equation is state-driven and
+  never responds to the current action instantaneously;
+- rewetting powers are hard-bounded by the evaporation mass-balance
+  contract (repair ③): q_w <= (m/tau_evap) * max(h_pre - h_spray, 0);
 - residual corrections are injected at fixed positions through
   `ResidualInjection`; the transition itself never computes them;
 - stability-relevant parameters are positive by softplus parameterisation.
@@ -53,10 +59,13 @@ TRANSITION_PARAM_PRIORS: dict[str, float] = {
     "k2": 1.2e6, "k2d": 1.2e6,
     "b0": 0.1e6, "b1": 0.1e6, "b2": 0.1e6,             # kJ/t per MPa slope
     "tauB": 120.0,                                      # s fuel lag
-    "th1": 10.0, "th2": 20.0,                           # kg/s per full opening
-    "th1d": 10.0, "th2d": 20.0,                         # dry-mode gains
+    # Repair ④: spray gains anchored to the auditpack data regression
+    # dW/dv1 = 27.76, dW/dv2 = 70.01 t/h per full travel (side A val).
+    "th1": 7.71, "th2": 19.45,                          # kg/s per full opening
+    "th1d": 7.71, "th2d": 19.45,                        # dry-mode gains (same anchor)
     "dTm0": 1.0, "dTm1": 1.0, "dTm2": 1.0,             # K init correction
     "tau_evap": 15.0,                                   # s droplet evaporation
+    "tau_mix1": 60.0, "tau_mix2": 60.0,                 # s spray->mixing lag (repair ②)
     "aW1": 150.0, "aW2": 150.0,                         # kW/K wall rewetting
     "m_dry0": 30.0,                                     # kg dry-out threshold
     "gamma1": 1.0, "gamma2": 1.0,                       # valve map exponents
@@ -239,13 +248,48 @@ class Fan2020UDETransition(nn.Module):
     def _mix_enthalpies(
         self,
         h: torch.Tensor,
-        d_sw: torch.Tensor,
+        d_sw: tuple[torch.Tensor, torch.Tensor],
         d_flow: torch.Tensor,
         h_spray: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         hm1 = (d_flow * h[:, 0] + d_sw[0] * h_spray) / (d_flow + d_sw[0] + _EPS)
         hm2 = (d_flow * h[:, 1] + d_sw[1] * h_spray) / (d_flow + d_sw[1] + _EPS)
         return hm1, hm2
+
+    def _rewetting_powers(
+        self,
+        tm: torch.Tensor,
+        m1: torch.Tensor,
+        m2: torch.Tensor,
+        p0: torch.Tensor,
+        p1: torch.Tensor,
+        h_pre: torch.Tensor,
+        h_spray: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Wall rewetting powers (kW) with the mass-balance hard contract.
+
+        Repair ③ (design 2026-08-20): rewetting heat is carried by the
+        evaporating deposited droplets (mass flux m/tau_evap); each kg of
+        evaporated droplet can transfer at most (h_pre - h_spray) of net
+        enthalpy to the steam phase.  The raw aW*(Tm - Tsat) term is capped
+        by that flux-limited bound, which closes the spray -> m -> (1-dry)
+        -> q_w positive-feedback loop (aW=0 ablation: 0.27 -> 1.00 correct
+        direction) while preserving the condensation direction when the
+        wall is colder than saturation (min() passes negatives through).
+        """
+        a_w1 = self.val("aW1")
+        a_w2 = self.val("aW2")
+        m_dry0 = self.val("m_dry0")
+        tau_evap = self.val("tau_evap")
+        dry1 = torch.sigmoid(3.0 * (m_dry0 - m1) / m_dry0)
+        dry2 = torch.sigmoid(3.0 * (m_dry0 - m2) / m_dry0)
+        tsat0 = self.properties.saturation_temperature(p0)
+        tsat1 = self.properties.saturation_temperature(p1)
+        raw1 = a_w1 * (tm[:, 0] - tsat0) * (1.0 - dry1)
+        raw2 = a_w2 * (tm[:, 1] - tsat1) * (1.0 - dry2)
+        cap1 = (m1 / tau_evap) * (h_pre[:, 0] - h_spray).clamp(min=0.0)
+        cap2 = (m2 / tau_evap) * (h_pre[:, 1] - h_spray).clamp(min=0.0)
+        return torch.minimum(raw1, cap1), torch.minimum(raw2, cap2)
 
     # ------------------------------------------------------------------
     # Public interface
@@ -283,7 +327,11 @@ class Fan2020UDETransition(nn.Module):
         tau_evap = self.val("tau_evap")
         m1 = dsw1 * tau_evap
         m2 = dsw2 * tau_evap
-        parts = [h, tm, rb.unsqueeze(-1), m1.unsqueeze(-1), m2.unsqueeze(-1)]
+        # Repair ②: at steady state the transport-lag state equals the target rate.
+        lag1 = dsw1.clone()
+        lag2 = dsw2.clone()
+        parts = [h, tm, rb.unsqueeze(-1), m1.unsqueeze(-1), m2.unsqueeze(-1),
+                 lag1.unsqueeze(-1), lag2.unsqueeze(-1)]
         if self.layout.latent_dim > 0:
             parts.append(torch.zeros(h.shape[0], self.layout.latent_dim, dtype=h.dtype, device=h.device))
         return torch.cat(parts, dim=-1)
@@ -304,6 +352,8 @@ class Fan2020UDETransition(nn.Module):
         rb = state[..., layout.rb_index]
         m1 = state[..., layout.m_liq_slice.start]
         m2 = state[..., layout.m_liq_slice.stop - 1]
+        lag1 = state[..., layout.dsw_lag_slice.start]
+        lag2 = state[..., layout.dsw_lag_slice.stop - 1]
         latent = state[..., layout.latent_slice] if layout.latent_dim > 0 else None
 
         d_flow, u_b, pm, tm_sep, tfw, p_out, w_total = self._unpack_boundary(boundary)
@@ -316,14 +366,12 @@ class Fan2020UDETransition(nn.Module):
         cm = self.tri("Cm").unsqueeze(0)
         tau_b = self.val("tauB")
         tau_evap = self.val("tau_evap")
-        a_w1 = self.val("aW1")
-        a_w2 = self.val("aW2")
-        m_dry0 = self.val("m_dry0")
+        tau_mix1 = self.val("tau_mix1")
+        tau_mix2 = self.val("tau_mix2")
         k_t = self.k_of(pm)
         h_spray = self.properties.liquid_enthalpy(tfw)
         h_sep = self.properties.separator_enthalpy(pm, tm_sep)
         dsw1, dsw2 = self._spray_rates(pm, v1, v2, w_total)
-        hm1, hm2 = self._mix_enthalpies(h, (dsw1, dsw2), d_flow, h_spray)
 
         steam_power = None
         metal_power = None
@@ -344,13 +392,15 @@ class Fan2020UDETransition(nn.Module):
         h_lo = self.properties.bounds.h_lo
         h_hi = self.properties.bounds.h_hi
         for _ in range(self.config.n_substeps):
+            # Repair ②: spray reaches the mixing chambers through first-order
+            # transport lags; deposition into m_liq still reads the target rate.
+            lag1 = (lag1 + dt_sub * (dsw1 - lag1) / tau_mix1).clamp(min=0.0)
+            lag2 = (lag2 + dt_sub * (dsw2 - lag2) / tau_mix2).clamp(min=0.0)
+            hm1, hm2 = self._mix_enthalpies(h, (lag1, lag2), d_flow, h_spray)
             ts = self.properties.temperature_of_ph(p_stack, h)
-            dry1 = torch.sigmoid(3.0 * (m_dry0 - m1) / m_dry0)
-            dry2 = torch.sigmoid(3.0 * (m_dry0 - m2) / m_dry0)
-            tsat0 = self.properties.saturation_temperature(p0)
-            tsat1 = self.properties.saturation_temperature(p1)
-            q_w1 = a_w1 * (tm[:, 0] - tsat0) * (1.0 - dry1)
-            q_w2 = a_w2 * (tm[:, 1] - tsat1) * (1.0 - dry2)
+            q_w1, q_w2 = self._rewetting_powers(
+                tm, m1, m2, p0, p1, h[:, :2], h_spray
+            )
             q_wall = torch.stack([q_w1, q_w2, torch.zeros_like(q_w1)], dim=-1)
             q = ua * (tm - ts)
             tm_in = (k_t * rb.unsqueeze(-1) / 3600.0 + ua * ts - q_wall) / cm
@@ -367,19 +417,21 @@ class Fan2020UDETransition(nn.Module):
                 h_flux = h_flux + steam_power
             h = (h + dt_sub * h_flux / m_cap) / (1.0 + dt_sub * d_flow.unsqueeze(-1) / m_cap)
             h = ste_clamp(h, h_lo, h_hi)
-            hm1, hm2 = self._mix_enthalpies(h, (dsw1, dsw2), d_flow, h_spray)
             m1 = (m1 + dt_sub * (dsw1 - m1 / tau_evap)).clamp(min=0.0)
             m2 = (m2 + dt_sub * (dsw2 - m2 / tau_evap)).clamp(min=0.0)
             rb = rb + dt_sub * (u_b - rb) / tau_b
 
-        parts = [h, tm, rb.unsqueeze(-1), m1.unsqueeze(-1), m2.unsqueeze(-1)]
+        hm1, hm2 = self._mix_enthalpies(h, (lag1, lag2), d_flow, h_spray)
+        parts = [h, tm, rb.unsqueeze(-1), m1.unsqueeze(-1), m2.unsqueeze(-1),
+                 lag1.unsqueeze(-1), lag2.unsqueeze(-1)]
         if latent is not None:
             increment = latent_step if latent_step is not None else torch.zeros_like(latent)
             latent_next = self.latent_rho.unsqueeze(0) * latent + increment * float(self.config.dt_seconds)
             parts.append(latent_next)
         next_state = torch.cat(parts, dim=-1)
         aux = {
-            "dsw1": dsw1, "dsw2": dsw2,
+            "dsw1": dsw1, "dsw2": dsw2,                    # instantaneous targets
+            "dsw_lag1": lag1, "dsw_lag2": lag2,            # transport-lagged rates
             "hm1": hm1, "hm2": hm2,
             "p0": p0, "p1": p1, "p_out": p2,
         }
@@ -391,34 +443,34 @@ class Fan2020UDETransition(nn.Module):
         boundary: torch.Tensor,
         action: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        """Physical output equation g(x, b, u): five measurement temperatures.
+        """Physical output equation g(x, b): five measurement temperatures.
 
-        The attemperator outlet temperatures depend on the current spray
-        rate, hence on the current action; pass `action=None` to evaluate at
-        zero spray (constant-action identity reference).
+        Repair ② (design 2026-08-20): the attemperator outlet temperatures
+        read the transport-lagged spray rates from the state vector, so the
+        measurement is fully state-driven and never responds to the current
+        action within the same step.  The dry-out blend follows the
+        lagged-rate-equivalent wetness (the sensor sits downstream of the
+        transport path), not the wall droplet inventory.  `action` is
+        accepted for interface compatibility and ignored.
         """
         layout = self.layout
         h = state[..., layout.h_slice]
         tm = state[..., layout.tm_slice]
-        m1 = state[..., layout.m_liq_slice.start]
-        m2 = state[..., layout.m_liq_slice.stop - 1]
-        d_flow, _u_b, pm, _tm_sep, tfw, p_out, w_total = self._unpack_boundary(boundary)
-        if action is None:
-            v1 = torch.zeros_like(d_flow)
-            v2 = torch.zeros_like(d_flow)
-        else:
-            v1, v2 = self._unpack_action(action)
+        lag1 = state[..., layout.dsw_lag_slice.start]
+        lag2 = state[..., layout.dsw_lag_slice.stop - 1]
+        d_flow, _u_b, pm, _tm_sep, tfw, p_out, _w_total = self._unpack_boundary(boundary)
         p0, p1, p2 = self._pressures(pm, p_out)
         h_spray = self.properties.liquid_enthalpy(tfw)
-        dsw1, dsw2 = self._spray_rates(pm, v1, v2, w_total)
-        hm1, hm2 = self._mix_enthalpies(h, (dsw1, dsw2), d_flow, h_spray)
+        hm1, hm2 = self._mix_enthalpies(h, (lag1, lag2), d_flow, h_spray)
+        m1 = state[..., layout.m_liq_slice.start]
+        m2 = state[..., layout.m_liq_slice.stop - 1]
         m_dry0 = self.val("m_dry0")
-        dry1 = torch.sigmoid(3.0 * (m_dry0 - m1) / m_dry0)
-        dry2 = torch.sigmoid(3.0 * (m_dry0 - m2) / m_dry0)
+        tau_evap = self.val("tau_evap")
+        dry1 = torch.sigmoid(3.0 * (m_dry0 - lag1 * tau_evap) / m_dry0)
+        dry2 = torch.sigmoid(3.0 * (m_dry0 - lag2 * tau_evap) / m_dry0)
         tsat0 = self.properties.saturation_temperature(p0)
         tsat1 = self.properties.saturation_temperature(p1)
-        q_w1 = self.val("aW1") * (tm[:, 0] - tsat0) * (1.0 - dry1)
-        q_w2 = self.val("aW2") * (tm[:, 1] - tsat1) * (1.0 - dry2)
+        q_w1, q_w2 = self._rewetting_powers(tm, m1, m2, p0, p1, h[:, :2], h_spray)
         h_o1 = hm1 + q_w1 / (d_flow + _EPS)
         h_o2 = hm2 + q_w2 / (d_flow + _EPS)
         p5 = torch.stack([p0, p0, p1, p1, p2], dim=-1)

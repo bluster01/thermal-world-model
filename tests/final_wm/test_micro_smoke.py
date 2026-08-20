@@ -82,7 +82,7 @@ def test_full_stack_with_latent_and_closure_smoke() -> None:
         batch.history, batch.future_actions,
         boundary_mode="oracle", true_future_boundary=batch.future_boundary,
     )
-    assert result.states.shape == (8, 12, 11)
+    assert result.states.shape == (8, 12, 13)
     assert bool(torch.isfinite(result.states).all())
 
 
