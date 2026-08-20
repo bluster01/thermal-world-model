@@ -426,22 +426,32 @@ class CanonicalRecord:
             raise FinalWMProtocolError("canonical record boundary width mismatch")
         if self.actions.shape[1] != len(ACTION_ELEMENTS) or self.obs.shape[1] != len(OBSERVATION_ELEMENTS):
             raise FinalWMProtocolError("canonical record channel width mismatch")
+        self._split_runs_cache: dict[int, list[tuple[int, int]]] = {}
 
     def split_runs(self, split_id: int) -> list[tuple[int, int]]:
-        """Contiguous [start, end) index runs belonging to a split."""
+        """Contiguous [start, end) index runs belonging to a split.
+
+        Cached (2026-08-21, CPU-bound diagnosis from the Hermes rerun): the
+        uncached version re-scanned the full ~0.7M-step split mask with a
+        Python loop on EVERY sampled batch -- the dominant host-side cost of
+        the whole training loop.  Records are immutable, so caching is exact.
+        """
         if split_id == SPLIT_TEST:
             raise FinalWMProtocolError("test split is locked and cannot be read")
-        mask = (self.split == split_id).numpy()
-        runs: list[tuple[int, int]] = []
-        start = None
-        for i, flag in enumerate(mask):
-            if flag and start is None:
-                start = i
-            elif not flag and start is not None:
-                runs.append((start, i))
-                start = None
-        if start is not None:
-            runs.append((start, len(mask)))
+        runs = self._split_runs_cache.get(split_id)
+        if runs is None:
+            mask = (self.split == split_id).numpy()
+            runs = []
+            start = None
+            for i, flag in enumerate(mask):
+                if flag and start is None:
+                    start = i
+                elif not flag and start is not None:
+                    runs.append((start, i))
+                    start = None
+            if start is not None:
+                runs.append((start, len(mask)))
+            self._split_runs_cache[split_id] = runs
         return runs
 
 

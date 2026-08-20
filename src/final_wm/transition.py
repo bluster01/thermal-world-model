@@ -338,6 +338,60 @@ class Fan2020UDETransition(nn.Module):
             parts.append(torch.zeros(h.shape[0], self.layout.latent_dim, dtype=h.dtype, device=h.device))
         return torch.cat(parts, dim=-1)
 
+    def _substep(
+        self,
+        h: torch.Tensor, tm: torch.Tensor, rb: torch.Tensor,
+        m1: torch.Tensor, m2: torch.Tensor,
+        lag1: torch.Tensor, lag2: torch.Tensor,
+        dsw1: torch.Tensor, dsw2: torch.Tensor,
+        d_flow: torch.Tensor, u_b: torch.Tensor,
+        p_stack: torch.Tensor, p0: torch.Tensor, p1: torch.Tensor,
+        h_spray: torch.Tensor, h_sep: torch.Tensor,
+        m_cap: torch.Tensor, ua: torch.Tensor, cm: torch.Tensor,
+        k_t: torch.Tensor,
+        tau_b: torch.Tensor, tau_evap: torch.Tensor,
+        tau_mix1: torch.Tensor, tau_mix2: torch.Tensor,
+        dt_sub: float, h_lo: float, h_hi: float,
+        steam_power: torch.Tensor | None,
+        metal_power: torch.Tensor | None,
+    ) -> tuple[torch.Tensor, ...]:
+        """One semi-implicit Euler substep.
+
+        Extracted from `step` (2026-08-21) so the runner can wrap it with
+        torch.compile: the rollout is launch-bound (n_substeps x horizon
+        sequential small kernels), fusing this body is the speed lever.
+        Numerics are identical to the pre-extraction inline loop.
+        """
+        # Repair ②: spray reaches the mixing chambers through first-order
+        # transport lags; deposition into m_liq still reads the target rate.
+        lag1 = (lag1 + dt_sub * (dsw1 - lag1) / tau_mix1).clamp(min=0.0)
+        lag2 = (lag2 + dt_sub * (dsw2 - lag2) / tau_mix2).clamp(min=0.0)
+        hm1, hm2 = self._mix_enthalpies(h, (lag1, lag2), d_flow, h_spray)
+        ts = self.properties.temperature_of_ph(p_stack, h)
+        q_w1, q_w2 = self._rewetting_powers(
+            tm, m1, m2, p0, p1, h[:, :2], h_spray
+        )
+        q_wall = torch.stack([q_w1, q_w2, torch.zeros_like(q_w1)], dim=-1)
+        q = ua * (tm - ts)
+        tm_in = (k_t * rb.unsqueeze(-1) / 3600.0 + ua * ts - q_wall) / cm
+        if metal_power is not None:
+            tm_in = tm_in + metal_power / cm
+        tm = (tm + dt_sub * tm_in) / (1.0 + dt_sub * ua / cm)
+        h_in = torch.stack([
+            h_sep,
+            hm1 + q_w1 / (d_flow + _EPS),
+            hm2 + q_w2 / (d_flow + _EPS),
+        ], dim=-1)
+        h_flux = d_flow.unsqueeze(-1) * h_in + q
+        if steam_power is not None:
+            h_flux = h_flux + steam_power
+        h = (h + dt_sub * h_flux / m_cap) / (1.0 + dt_sub * d_flow.unsqueeze(-1) / m_cap)
+        h = ste_clamp(h, h_lo, h_hi)
+        m1 = (m1 + dt_sub * (dsw1 - m1 / tau_evap)).clamp(min=0.0)
+        m2 = (m2 + dt_sub * (dsw2 - m2 / tau_evap)).clamp(min=0.0)
+        rb = rb + dt_sub * (u_b - rb) / tau_b
+        return h, tm, rb, m1, m2, lag1, lag2
+
     def step(
         self,
         state: torch.Tensor,
@@ -394,34 +448,12 @@ class Fan2020UDETransition(nn.Module):
         h_lo = self.properties.bounds.h_lo
         h_hi = self.properties.bounds.h_hi
         for _ in range(self.config.n_substeps):
-            # Repair ②: spray reaches the mixing chambers through first-order
-            # transport lags; deposition into m_liq still reads the target rate.
-            lag1 = (lag1 + dt_sub * (dsw1 - lag1) / tau_mix1).clamp(min=0.0)
-            lag2 = (lag2 + dt_sub * (dsw2 - lag2) / tau_mix2).clamp(min=0.0)
-            hm1, hm2 = self._mix_enthalpies(h, (lag1, lag2), d_flow, h_spray)
-            ts = self.properties.temperature_of_ph(p_stack, h)
-            q_w1, q_w2 = self._rewetting_powers(
-                tm, m1, m2, p0, p1, h[:, :2], h_spray
+            h, tm, rb, m1, m2, lag1, lag2 = self._substep(
+                h, tm, rb, m1, m2, lag1, lag2, dsw1, dsw2, d_flow, u_b,
+                p_stack, p0, p1, h_spray, h_sep, m_cap, ua, cm, k_t,
+                tau_b, tau_evap, tau_mix1, tau_mix2, dt_sub, h_lo, h_hi,
+                steam_power, metal_power,
             )
-            q_wall = torch.stack([q_w1, q_w2, torch.zeros_like(q_w1)], dim=-1)
-            q = ua * (tm - ts)
-            tm_in = (k_t * rb.unsqueeze(-1) / 3600.0 + ua * ts - q_wall) / cm
-            if metal_power is not None:
-                tm_in = tm_in + metal_power / cm
-            tm = (tm + dt_sub * tm_in) / (1.0 + dt_sub * ua / cm)
-            h_in = torch.stack([
-                h_sep,
-                hm1 + q_w1 / (d_flow + _EPS),
-                hm2 + q_w2 / (d_flow + _EPS),
-            ], dim=-1)
-            h_flux = d_flow.unsqueeze(-1) * h_in + q
-            if steam_power is not None:
-                h_flux = h_flux + steam_power
-            h = (h + dt_sub * h_flux / m_cap) / (1.0 + dt_sub * d_flow.unsqueeze(-1) / m_cap)
-            h = ste_clamp(h, h_lo, h_hi)
-            m1 = (m1 + dt_sub * (dsw1 - m1 / tau_evap)).clamp(min=0.0)
-            m2 = (m2 + dt_sub * (dsw2 - m2 / tau_evap)).clamp(min=0.0)
-            rb = rb + dt_sub * (u_b - rb) / tau_b
 
         hm1, hm2 = self._mix_enthalpies(h, (lag1, lag2), d_flow, h_spray)
         parts = [h, tm, rb.unsqueeze(-1), m1.unsqueeze(-1), m2.unsqueeze(-1),

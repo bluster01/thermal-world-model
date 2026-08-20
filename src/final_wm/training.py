@@ -105,6 +105,7 @@ def train_arm(
     *,
     device: str | torch.device = "cpu",
     properties: ThermoProperties | None = None,
+    compile_substep: bool = False,
 ) -> dict:
     """Train one arm; returns the final ledger entry (also appended to JSONL)."""
     spec.validate()
@@ -115,6 +116,11 @@ def train_arm(
 
     torch.manual_seed(spec.seed)
     model = build_world_model(spec, properties).to(device)
+    if compile_substep:
+        # Speed lever for launch-bound rollouts (2026-08-21, user-reported
+        # 15 h T1+R1 estimate): fuse the physics substep.  Numerics unchanged
+        # (fp32, same graph); budgets/protocol untouched.
+        model.transition._substep = torch.compile(model.transition._substep, dynamic=False)
     if spec.init_checkpoint is not None:
         payload = torch.load(spec.init_checkpoint, map_location=device, weights_only=False)
         model.load_state_dict(payload["state_dict"])
@@ -240,9 +246,25 @@ def model_structure_fingerprint() -> str:
     return hashlib.sha256(payload).hexdigest()[:16]
 
 
+def _git_tree_hash(path: str) -> str:
+    """Tree hash of a tracked directory at HEAD (changes iff its content changes)."""
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", f"HEAD:{path}"], capture_output=True, text=True, check=True
+        ).stdout.strip()
+    except Exception:
+        return "unknown"
+
+
 def config_fingerprint(spec: TrainSpec) -> str:
+    # The code tree hashes close the bisection blind spot: a repair that only
+    # changes dynamics (no registry/prior change) still busts the resume cache.
     payload = json.dumps(
-        {"spec": asdict(spec), "structure": model_structure_fingerprint()},
+        {
+            "spec": asdict(spec),
+            "structure": model_structure_fingerprint(),
+            "code": [_git_tree_hash("src/final_wm"), _git_tree_hash("experiments/final_wm")],
+        },
         sort_keys=True,
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()[:16]

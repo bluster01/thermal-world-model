@@ -176,7 +176,7 @@ def run_dsyn(args) -> dict:
         )
         if args.quick:
             student_spec = ms.quicken(student_spec)
-        final = train_arm(student_spec, record, out, device=device, properties=AnalyticThermoProperties())
+        final = train_arm(student_spec, record, out, device=device, properties=AnalyticThermoProperties(), compile_substep=_use_compile(args))
         # Matrix rule: student must cut the skeleton's validation NLL by >=30%
         # of its magnitude (sign-agnostic gap criterion).
         improvement = skeleton_val - final["best_val_nll"]
@@ -276,7 +276,12 @@ def _try_resume(spec, out) -> tuple[dict, WindowMetrics] | None:
     return final, metrics
 
 
-def _train_and_eval(spec, record, out, device, properties, quick):
+def _use_compile(args) -> bool:
+    """CLI flag; test Namespaces may not carry the attribute."""
+    return bool(getattr(args, "compile", False))
+
+
+def _train_and_eval(spec, record, out, device, properties, quick, use_compile=False):
     if quick:
         spec = ms.quicken(spec)
     resumed = _try_resume(spec, out)
@@ -285,10 +290,13 @@ def _train_and_eval(spec, record, out, device, properties, quick):
         print(f"[{spec.unit}] {spec.arm} seed={spec.seed} RESUMED (artifacts match spec) "
               f"eval={horizon_summary(metrics)}")
         return final, metrics
-    final = train_arm(spec, record, out, device=device, properties=properties)
+    final = train_arm(spec, record, out, device=device, properties=properties,
+                      compile_substep=use_compile)
     run_id = final["run_id"]
     ckpt = out / "checkpoints" / f"{run_id}.pt"
     model = build_world_model(spec, properties).to(device)
+    if use_compile:
+        model.transition._substep = torch.compile(model.transition._substep, dynamic=False)
     model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=False)["state_dict"])
     n_eval = 32 if quick else 256
     metrics = evaluate_windows(
@@ -413,7 +421,7 @@ def run_matrix(args) -> dict:
 
     if "o1" in units:
         for spec in ms.o1_specs(seeds):
-            final, metrics = _train_and_eval(spec, record, out, device, properties, quick)
+            final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
             metrics_store[final["run_id"]] = metrics
         if not quick:
             unit_verdicts = {}
@@ -429,7 +437,7 @@ def run_matrix(args) -> dict:
 
     if "t1" in units:
         for spec in ms.t1_specs(seeds):
-            final, metrics = _train_and_eval(spec, record, out, device, properties, quick)
+            final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
             metrics_store[final["run_id"]] = metrics
         if not quick:
             unit_verdicts = {}
@@ -453,7 +461,7 @@ def run_matrix(args) -> dict:
     if "b1" in units:
         b_metrics = {}
         for spec in ms.b1_specs(seeds):
-            final, _ = _train_and_eval(spec, record, out, device, properties, quick)
+            final, _ = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
             model = build_world_model(spec, properties).to(device)
             ckpt = out / "checkpoints" / f"{final['run_id']}.pt"
             model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=False)["state_dict"])
@@ -477,7 +485,7 @@ def run_matrix(args) -> dict:
     if "j1" in units:
         joint_metrics, staged_metrics = {}, {}
         for spec in ms.j1_specs(seeds):
-            final, metrics = _train_and_eval(spec, record, out, device, properties, quick)
+            final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
             metrics_store[final["run_id"]] = metrics
             if spec.arm == "joint":
                 joint_metrics[spec.seed] = metrics
@@ -580,6 +588,8 @@ def main() -> None:
     parser.add_argument("--properties-npz", default=None, help="real IAPWS grid (else analytic fallback)")
     parser.add_argument("--device", default="auto")
     parser.add_argument("--quick", action="store_true", help="dry-run sizes; no verdicts")
+    parser.add_argument("--compile", action="store_true",
+                        help="torch.compile the physics substep (launch-bound rollout speed lever; fp32 numerics unchanged)")
     parser.add_argument("--checkpoint", default=None, help="auditpack: trained model checkpoint")
     parser.add_argument("--arm", default="closure_cons", help="auditpack: T1 arm of --checkpoint")
     parser.add_argument("--seed", default=0, help="auditpack: seed of --checkpoint")
