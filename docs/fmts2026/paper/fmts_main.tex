@@ -1,0 +1,297 @@
+\documentclass{article}
+
+\usepackage[dblblindworkshop]{neurips_2026}
+\workshoptitle{Foundation Models for Temporal Systems (FMTS): From Forecasting to World Modeling}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{siunitx}
+
+\title{Forecasting Is Not World Modeling: Accuracy, Action Fidelity, and an Evaluation Matrix for a Task-Critical Thermal Process}
+
+\author{Anonymous}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Task-critical industrial processes demand more from a temporal model than accurate
+forecasts. A model promoted to the inner loop of a controller must respond to candidate
+actions with the right sign, magnitude, and transient shape, and it must know when it
+cannot. We study this gap on a supercritical once-through boiler, using 82 days of
+dual-side field data. A deep forecasting model attains 0.7--0.9~\si{\degreeCelsius} MAE at
+18 steps yet attenuates valve responses by 25--450$\times$ relative to the unit's energy
+balance, effectively disabling the action channel. A physics-structured world model with
+the same data trades accuracy (about 3.5~\si{\degreeCelsius}) for an action channel
+that responds on scale at one step but inverts sign at 60 steps---an inversion we
+localize to one learned feedback term. We report both findings through a discrimination
+matrix:
+an identifiability gate on same-type synthetic data, per-layer structural ablations with
+budget and convergence diagnostics, and an action-blindness and leakage
+audit. Finally we locate the physics model's accuracy cost: after proper training it
+approaches persistence at the terminal stage (0.16 vs.\ 0.09~\si{\degreeCelsius}
+one-step MAE, beating persistence at 18 steps) while the upstream stage fails
+38$\times$ worse than persistence, and the earlier monotone regime bias collapses to
+$\pm$0.2~\si{\degreeCelsius}---a training artefact, not a parameter-count one. Our
+results support verifiability, not accuracy, as the qualifying property of a world
+model, and a two-tier architecture in which a learned proposer is bounded by a
+certifiable reduced-order model.
+\end{abstract}
+
+\section{Introduction}
+
+A temporal model that forecasts well is not automatically a world model. World models
+must maintain a state, imagine futures under interventions, and support decisions
+\cite{ha2018world, hafner2023dreamerv3, ding2024understanding}. On safety-critical
+plants this qualification question precedes accuracy: a facility can tolerate a
+conservative heuristic because it is bounded; it cannot tolerate a model that predicts
+confidently outside its own validity \cite{ghosh2026rom}. Closed-loop identification
+warned decades ago that passively learned dynamics absorb the confounded structure of
+the controller that generated the data \cite{forssell1999closedloop}. Recent evidence
+that time-series foundation models collapse under feedback \cite{wan2026forecast},
+despite strong open-loop accuracy \cite{ansari2024chronos, das2024timesfm}, suggests
+the failure is general, not anecdotal.
+
+We examine the question on a supercritical once-through boiler, a task-critical thermal
+process: superheated steam temperature must stay inside a narrow band while disturbances
+(load ramps, coal variation, soot blowing) and two spray attemperation valves act on
+it. We train two lines on the same dual-side field data. The first is a deep forecaster
+with multi-step heads; it reaches 0.7--0.9~\si{\degreeCelsius} MAE at 18 steps. The
+second is a physics-structured world model (a lumped-enthalpy state-space with
+thermodynamic property tables and learnable parametric closures). The forecaster wins on
+accuracy; the world model wins on what the forecaster never learned: responding to
+actions. This tension is not a property of our two implementations. It follows from what
+the two objectives optimize, and we measure it with a protocol designed to be reused:
+the discrimination matrix.
+
+Our contributions are (i) an empirical demonstration, on dual-side field data, that
+forecast accuracy does not transfer to world-model qualification; (ii) an evaluation
+matrix for such qualification (identifiability gate, per-layer ablations, action-blind
+and leakage audits); and (iii) a diagnosis of where the physics model's accuracy cost
+comes from, with quantified floors and a convergent agenda.
+
+\section{Testbed and Two Model Lines}
+
+\subsection{The process}
+
+The unit (600~MW class, supercritical, once-through) drives steam through a chain of
+superheater stages interleaved with two spray attemperators: low-temperature
+superheater, first spray, platen superheater, second spray, final superheater. Five
+temperatures along this chain are observed at 10~s resolution, together with boundary
+channels (steam flow, coal command, separator pressure and temperature, feedwater
+temperature, outlet pressure, spray flow) and two valve positions. The valves are
+cross-paired: valve A governs side-B temperatures and vice versa. Data span 82 days per
+side; the windows used here are entirely supercritical dry operation. Fast temperature
+increments are small (0.09--0.45~\si{\degreeCelsius} per step), so the process is
+strongly autoregressive; load-driven swings are orders of magnitude larger.
+
+\subsection{Line 1: a deep forecaster}
+
+Line 1 is a direct multi-step forecaster (sequence model over a history window with
+dedicated heads per horizon step, trained with a Gaussian likelihood). It is
+representative of the pure forecasting line rather than a state of the art: the horizon
+heads are teacher-forced, not recursive. We state this plainly because the comparison
+that follows is about what the forecasting objective rewards, and the literature
+suggests recursive foundation forecasters inherit the same closed-loop failure
+\cite{wan2026forecast}. Its 18-step MAE on held-out windows is 0.712 (side A) and 0.927
+(side B).
+
+\subsection{Line 2: a physics-structured world model}
+
+Line 2 embeds the process structure: three lumped-enthalpy segments whose dynamics obey
+energy conservation with IAPWS-97 property tables, two spray injections with transport
+delays, metal-temperature coupling, and learnable parameters (segment conductances,
+evaporation gains, spray efficiencies), in the universal-differential-equation
+tradition of embedding structure while learning parameters
+\cite{chen2018neuralode, rackauckas2020ude}. An action-blind closure absorbs unmeasured
+disturbances from state and whitelisted boundary channels only. A probabilistic
+observer estimates the initial state. The model rolls out recursively, so any
+counterfactual branch is a consistent trajectory of the same dynamics. Its 18-step MAE
+is about 3.5~\si{\degreeCelsius} (v0.1 protocol); retrained values under the v0.2
+budget are reported in Section 4.
+
+\section{The Tension, Measured Three Ways}
+
+\subsection{Action response: one line is functionally blind}
+
+We probe both models with $\pm$2\% valve steps, holding all else fixed. Line 1 responds
+with $-0.005$ to $-0.015$~\si{\degreeCelsius}, against an energy-balance reference of
+roughly $-0.45$ to $-0.87$~\si{\degreeCelsius} for the same 2\%: an attenuation of
+25--450$\times$ (Fig.~\ref{fig:evidence}a). Line 2's one-step response on the sprayed
+channel follows the energy balance ($-0.2$ to $-0.45$~\si{\degreeCelsius} at 2\%).
+Structural honesty requires the rest of the story. The response is partly a
+construction guarantee: the action enters an instantaneous mixing equation that the
+output map re-evaluates at every step, so the model must respond at step one whether
+or not the learned dynamics agree. And at 60 steps the direction breaks: only 12--34\%
+of windows end negative (R1's direction rule requires 100\%), with a mean terminal
+delta of $+0.09$ to $+0.26$~\si{\degreeCelsius}. An ablation localizes the inversion
+to one named term: the wall-rewetting feedback. More spray raises the droplet mass,
+which lowers the dry-out factor, which raises the rewetting heat flux into the steam;
+the learned rewetting gain over-compensates the direct cooling, and terminal
+temperature rises. Zeroing the rewetting coefficient restores the correct sign on
+94\% of windows (mean $-0.18$~\si{\degreeCelsius}). The closure is not responsible
+(identical probes with and without it). Line 2's action channel therefore exists by
+structure but is not yet faithful by physics: a controller using Line 1 as its
+internal model sees a plant that does not react to its valves; one using Line 2 sees a
+plant that reacts immediately and wrongly at long horizons. Both lines fail the same
+requirement---no mechanism certifies the action's sign---through different paths.
+
+\subsection{Counterfactual coherence}
+
+Beyond steady responses, an internal model must carry physically coherent counterfactual
+branches. Line 1's teacher-forced heads cannot propagate a perturbation through time;
+Line 2's recursive state does so by construction, and its boundary dependence is
+whitelisted so that no action leaks into the disturbance path (Section 4, R1). The
+confounding is measurable in principle with contemporaneous causal discovery on the
+closed-loop data \cite{runge2020pcmci}; our probes below are the model-side equivalent.
+
+\subsection{Accuracy: the cost is real, located, and mostly structural}
+
+Line 2 pays a 3--4$\times$ aggregate accuracy price (H18 MAE
+3.9~\si{\degreeCelsius} vs.\ 0.7--0.9 for Line 1), but the price is not uniform
+across the steam path. At the terminal stage the retrained model is nearly as good
+as persistence one step ahead (0.16 vs.\ 0.09~\si{\degreeCelsius} MAE) and beats it
+at 18 steps (1.05 vs.\ 1.18); at the upstream stage it is 38$\times$ worse than
+persistence (9.4 vs.\ 0.25~\si{\degreeCelsius}), and the model's learned noise scale
+confirms it has written this channel off ($\sigma \approx 8.8$~\si{\degreeCelsius}).
+Binning residuals by load shows that the strong monotone regime bias present under
+the initial training budget (+2.1 to +5.4~\si{\degreeCelsius} across load bins at the
+terminal stage) collapses to $\pm$0.2~\si{\degreeCelsius} after retraining with the
+amended budget: level calibration was a training-sufficiency artefact, not a
+parameter-count artefact. What remains is structural: the upstream channel's
+residual swings $\pm$8.8~\si{\degreeCelsius} across load bins with no monotone
+signature, pointing at the enthalpy--temperature inversion at the first segment
+(pressure partition assumption) and the anchor coverage (two spray-outlet
+temperatures float at initialization), and the first spray-outlet channel retains
+44\% regime-correlated variance, the signature of unresolved spray transients
+(Fig.~\ref{fig:evidence}). The autoregressive diagnosis generalizes: the process
+creeps (0.09--0.45~\si{\degreeCelsius} per step), so large one-step errors are model
+jumps, not noise.
+
+\section{A Discrimination Matrix for World-Model Qualification}
+
+The tension above is only meaningful if the measurements are reproducible. We froze an
+evaluation protocol, run end-to-end by a single runner against a versioned data
+contract, with verdicts computed by paired bootstrap confidence intervals and a 2/3
+seed rule.
+
+\textbf{D-SYN identifiability gate.} The full stack (observer, transition, closure)
+trains on synthetic data generated by the same architecture and must recover the
+teacher: 3/3 seeds pass with NLL reductions of 99--136, well above the 30\% threshold.
+Failures on real data therefore reflect structure or data, not an unidentifiable task.
+
+\textbf{O1 initial-state posterior.} A learned posterior must beat the steady-state
+anchor by at least 5\% with confidence, and not degrade continuity. Side A verdict:
+the learned posterior is MIXED (two seeds improve by 30--31\% with confidence, one
+degrades by 13\%), and the precision-weighted hybrid is REJECTED (no seed reaches a
+significant improvement: $-0.3\%$, $-1.6\%$, $+3.7\%$, all CIs crossing zero). Under
+the v0.2 training budget the steady anchor itself improved enough to erase the
+posterior's advantage; the learned posterior's seed instability remains.
+
+\textbf{T1 transition structure.} Nested arms add closure layers and a latent block
+against the previous layer. Side A verdicts: the conservative closure is SUPPORTED
+(2/3 seeds improve val NLL by 5.7\% and 6.9\% with confidence; seed 3 by 2.6\%,
+CI crossing zero). The steam-only placement is REJECTED against it ($-6.4\%$,
+$-2.3\%$, $-3.7\%$), and the latent block is REJECTED ($-1.6\%$, $+0.3\%$, $+3.1\%$,
+all CIs crossing zero). With the v0.2 budget the latent arm converged to the same
+valley the best seed found before, but not consistently enough to earn its
+parameters.
+
+\textbf{B1 boundary forecast.} The learned boundary forecaster is benchmarked against
+persistence on CRPS. Side A verdict: REJECTED---all three seeds are significantly
+worse than persistence (CRPS gaps of 1.7--2.0, CIs entirely below zero). Boundary
+channels are strongly autoregressive; a learned forecaster needs more than a GRU to
+earn its complexity here.
+
+\textbf{J1 training scheme.} Joint training of transition and observer against staged
+training. Side A verdict: SUPPORTED 3/3 (val NLL improvements of 13.5\%, 16.4\%,
+33.3\%, all CIs above zero).
+
+\textbf{R1 action-blind and leakage audit.} The closure must not respond to valve
+channels (runtime blindness check: 3/3 pass), the boundary whitelist excludes the
+spray-flow channel, and leakage probes must not read future information (3/3 clean;
+action-aware probes do not improve, so no leakage is suspected). The direction probe
+fails: on a 60-step $+5\%$ valve step only 19--34\% of windows end negative (rule
+requires 100\%), with mean terminal deltas of $+0.20$ to $+0.26$~\si{\degreeCelsius}.
+Verdict: REJECTED on direction; blind and leakage clean.
+
+Each verdict is computed by the frozen runner, not by hand; the matrix doubles as the
+artifact we propose as a P5-style honest benchmark for world-model claims
+\cite{ghosh2026rom}. All verdicts above are side A; side B is pending at submission
+time and will be reported in the camera-ready version.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.49\textwidth]{figs/fig1_tension.pdf}
+\caption{The accuracy--action-fidelity plane. The deep forecaster is accurate but its
+valve response is attenuated 25--450$\times$; the physics world model responds on
+scale but pays 3--4$\times$ accuracy and, at 60 steps, its terminal response
+sign-inverts on most windows (R1).}
+\label{fig:tension}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/fig2_system_matrix.pdf}
+\caption{Left: the steam path with five observed temperatures and two cross-paired
+spray valves. Right: the discrimination matrix with side-A verdicts.}
+\label{fig:system}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/fig3_evidence.pdf}
+\caption{(a) Valve-step responses: the physics line responds on the energy-balance
+scale; the deep forecaster is flat. (b) One-step error by channel: the physics line
+is near persistence at the terminal stage and 38$\times$ worse upstream. (c) Residual
+means by load quintile: the terminal-stage bias is flat after retraining, the
+upstream stage swings $\pm$8.8~\si{\degreeCelsius}.}
+\label{fig:evidence}
+\end{figure}
+
+\section{Discussion}
+
+The retrained physics line already reaches near-persistence quality on the terminal
+channel; the remaining cost is concentrated and diagnosable. The upstream channel's
+one-step error points at the initialization and inversion layer, not the dynamics:
+anchoring all five observations at initialization (two spray-outlet temperatures
+currently float) and replacing the fixed pressure-partition assumption with a learned
+or measured one targets most of the 9.4~\si{\degreeCelsius} directly. The action-sign
+failure and the first spray-outlet channel's residual share one lever: the spray
+pathway needs transport and evaporation lag in the mixing term, and the rewetting
+feedback needs a sign-and-magnitude contract (its learned gain over-compensates the
+direct cooling). Regime-dependent parameter maps, the tempting first remedy, lost
+their primary evidence once the training budget was corrected---the monotone load
+bias they were meant to absorb was a training artefact. This ordering illustrates the
+value of the matrix: one convergence diagnostic and one direction probe re-prioritize
+the entire optimization agenda.
+
+For deployment we endorse the convergent architecture the reduced-order-model lineage
+articulates \cite{ghosh2026rom, benner2015survey, sha2001simplicity}: a learned
+proposer bounded by a certifiable reduced-order model that approves, bounds, or rejects
+each proposed action within its certified envelope. Planning with imperfect models is a
+documented failure mode \cite{jafferjee2021hallucinating, wang2022doublecheck}; the
+two-tier architecture is the constructive answer. The discrimination matrix is the
+qualification gate for that proposer. Forecasting remains necessary; it is not
+sufficient.
+
+\textbf{Limitations.} Line 1 is teacher-forced, not a recursive foundation forecaster;
+our claim about recursive forecasters rests on external evidence
+\cite{wan2026forecast} and should be re-measured with one. Data are from a single unit
+in dry supercritical operation; two-phase regimes are unobserved. The action-response
+probe covers valve steps at fixed load; larger interventions and load-coordinated
+moves deserve their own protocol. Matrix verdicts above are single-side (A).
+
+\bibliographystyle{plain}
+\bibliography{fmts_refs}
+
+\end{document}
