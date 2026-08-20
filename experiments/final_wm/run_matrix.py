@@ -397,6 +397,16 @@ def run_matrix(args) -> dict:
     units = args.units.split(",") if args.units else ["o1", "t1", "b1", "j1", "r1"]
     quick = bool(args.quick)
     seeds = (0,) if quick else ms.SEEDS
+    if not quick and getattr(args, "seeds", None):
+        seeds = tuple(int(s) for s in getattr(args, "seeds", None).split(","))
+
+    def _filter_arm(specs):
+        """Execution-side parallel-worker filter: keep only one arm's specs.
+        Verdicts are computed only on the unfiltered aggregation pass."""
+        if getattr(args, "arm_filter", None) is None:
+            return specs
+        return [s for s in specs if getattr(s, "arm", None) == getattr(args, "arm_filter", None)]
+
     summary: dict = {
         "quick": quick,
         "matrix_version": ms.MATRIX_VERSION,
@@ -420,10 +430,10 @@ def run_matrix(args) -> dict:
     metrics_store: dict[str, object] = {}
 
     if "o1" in units:
-        for spec in ms.o1_specs(seeds):
+        for spec in _filter_arm(ms.o1_specs(seeds)):
             final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
             metrics_store[final["run_id"]] = metrics
-        if not quick:
+        if not quick and getattr(args, "arm_filter", None) is None:
             unit_verdicts = {}
             for arm in ("learned", "hybrid"):
                 pairs = [
@@ -436,10 +446,10 @@ def run_matrix(args) -> dict:
         dump_summary()
 
     if "t1" in units:
-        for spec in ms.t1_specs(seeds):
+        for spec in _filter_arm(ms.t1_specs(seeds)):
             final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
             metrics_store[final["run_id"]] = metrics
-        if not quick:
+        if not quick and getattr(args, "arm_filter", None) is None:
             unit_verdicts = {}
             nested = [
                 ("closure_cons", "physics_only"),
@@ -460,7 +470,7 @@ def run_matrix(args) -> dict:
 
     if "b1" in units:
         b_metrics = {}
-        for spec in ms.b1_specs(seeds):
+        for spec in _filter_arm(ms.b1_specs(seeds)):
             final, _ = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
             model = build_world_model(spec, properties).to(device)
             ckpt = out / "checkpoints" / f"{final['run_id']}.pt"
@@ -470,7 +480,7 @@ def run_matrix(args) -> dict:
                 history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON, seed=60_000 + spec.seed, device=device,
             )
             _save_eval_metrics(out, f"{final['run_id']}_boundary", b_metrics[spec.seed])
-        if not quick:
+        if not quick and getattr(args, "arm_filter", None) is None:
             pairs = []
             for s in seeds:
                 base = persistence_boundary_metrics(
@@ -484,7 +494,7 @@ def run_matrix(args) -> dict:
 
     if "j1" in units:
         joint_metrics, staged_metrics = {}, {}
-        for spec in ms.j1_specs(seeds):
+        for spec in _filter_arm(ms.j1_specs(seeds)):
             final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
             metrics_store[final["run_id"]] = metrics
             if spec.arm == "joint":
@@ -514,7 +524,7 @@ def run_matrix(args) -> dict:
                 seed=70_000 + seed, device=device,
             )
             _save_eval_metrics(out, f"j1_staged_seed{seed}", staged_metrics[seed])
-        if not quick:
+        if not quick and getattr(args, "arm_filter", None) is None:
             pairs = [(staged_metrics[s], joint_metrics[s]) for s in seeds]
             passes, details = _seed_passes(pairs, ms.THRESH_J1_NLL)
             summary["units"]["j1"] = {"verdict": _verdict(passes, len(seeds)), "per_seed": details}
@@ -585,6 +595,12 @@ def main() -> None:
                         help="label for per-side matrix runs (recorded in the summary)")
     parser.add_argument("--out", default="artifacts/final_wm")
     parser.add_argument("--units", default=None, help="comma-separated subset: o1,t1,b1,j1,r1")
+    parser.add_argument("--arm-filter", default=None,
+                        help="EXECUTION-SIDE SPEED OPTION: restrict the unit's specs to one arm"
+                             " (workers train disjoint arms in parallel; verdicts are NOT"
+                             " computed with this flag set)")
+    parser.add_argument("--seeds", default=None,
+                        help="EXECUTION-SIDE SPEED OPTION: comma-separated seed subset, e.g. 0,1")
     parser.add_argument("--properties-npz", default=None, help="real IAPWS grid (else analytic fallback)")
     parser.add_argument("--device", default="auto")
     parser.add_argument("--quick", action="store_true", help="dry-run sizes; no verdicts")
