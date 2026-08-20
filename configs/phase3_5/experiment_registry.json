@@ -1232,7 +1232,7 @@
           "required": true
         }
       },
-      "decision": "ACTIVE / MATRIX v0.2 RERUN AUTHORIZED；首轮执行：D-SYN PASS 3/3、split-sides 双侧过门（SHA 一致）、侧A O1/T1/B1/J1 完成、R1 崩溃；执行侧修复（GPU搬运/R1 import）经复核接受并补回归测试，R1 路径另修 2 潜伏缺陷；v0.2 修正案：T1 预算统一 60/10 + 收敛诊断 + runner 断点续跑/增量落盘（101 项测试通过）；授权 Linux 侧A重跑（O1/B1/J1 自动复用）后接侧B，产物回传本地审计",
+      "decision": "ACTIVE / MATRIX v0.2 + EVIDENCE-CHAIN ALIGNMENT AUDIT 2026-08-20；Linux 推送证据链/路线图v1/论文初稿后完成对齐审计（docs/FMTS2026_EVIDENCE_ALIGNMENT_AUDIT_2026-08-20.md）：撤回口径冲突×4 须改、侧A判决数字 UNVERIFIABLE（产物未回传）、R1 100% 规则标定错误→v0.3 提案冻结、物理修复批优先级①-⑤冻结、论文登记 FROZEN-DRAFT；下一步：Linux 回传产物+转正分析脚本，本地侧A判决审计后再授权侧B",
       "advisories": [
         "Fan2020-UDE是物理transition候选，不是plant truth；动作通道必须保留constant-action identity、方向与支持域审计",
         "Direct-WM v2只支持direct H18 observer/backbone候选；未验证递归rollout、双阀稳定响应或概率校准",
