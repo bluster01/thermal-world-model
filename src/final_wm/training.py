@@ -185,7 +185,7 @@ def train_arm(
                 torch.nn.utils.clip_grad_norm_(params, 10.0)
                 opt.step()
                 train_loss += float(loss)
-                if torch.cuda.is_available() and device.type != "cpu":
+                if torch.cuda.is_available() and "cuda" in str(device):
                     torch.cuda.synchronize()
                 t_step += time.time() - _t
             train_loss /= spec.batches_per_epoch
@@ -199,7 +199,7 @@ def train_arm(
             )
             val_nll = float(val.nll.mean())
             val_history.append(val_nll)
-            if torch.cuda.is_available() and device.type != "cpu":
+            if torch.cuda.is_available() and "cuda" in str(device):
                 torch.cuda.synchronize()
             t_eval += time.time() - _t
             entry = dict(base_entry, epoch=epoch, train_loss=train_loss, val_nll=val_nll,
