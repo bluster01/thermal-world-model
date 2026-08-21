@@ -424,7 +424,7 @@ def position_binned_gain(
         _s, temps_base = model.transition.integrate(state0, boundary_seq, base)
         _s, temps_step = model.transition.integrate(state0, boundary_seq, step)
         gains = ((temps_step[:, -10:, obs_index].mean(dim=1)
-                  - temps_base[:, -10:, obs_index].mean(dim=1)) / delta_v).cpu().numpy()
+                  - temps_base[:, -10:, obs_index].mean(dim=1)) / delta_v).detach().cpu().numpy()
         for i, (opening, gain) in enumerate(zip(v_abs, gains)):
             bi = min(max(int(np.searchsorted(edges, float(opening), side="right")) - 1, 0), n_bins - 1)
             cell = bins[bi]
