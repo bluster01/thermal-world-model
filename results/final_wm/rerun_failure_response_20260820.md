@@ -135,3 +135,33 @@ python experiments/final_wm/run_matrix.py --phase matrix \
 
 - **T1 减臂**：接受"只训 closure_cons×3 seeds"（~4-5h，R1 链够用；T1 嵌套问题 v0.2 已判，
   修复批下的 T1 复判随修复批①再议）？还是四臂全保（~15h）？
+
+---
+
+## 追加 4（2026-08-21 11:05）：用户裁定 + 阀门非线性修正判读
+
+### 裁定
+
+**T1 减臂批准**：只训 `closure_cons`×3 seeds。执行命令（单进程串行，一次出 R1 三 seed 判决）：
+
+```bash
+python experiments/final_wm/run_matrix.py --phase matrix \
+  --record artifacts/final_wm/canonical_sideA.npz --side A \
+  --units t1,r1 --arm-filter closure_cons --out artifacts/final_wm \
+  --properties-npz artifacts/final_wm/iapws_surrogate.npz --compile --tf32
+```
+
+预计 4.5-5.5h。arm-filter 下 T1 判决自动跳过（v0.2 已判），R1 判决正常产出。
+
+### 增益缺口的判读修正（用户指出，phase1 证据支持）
+
+1. mixing_reference 是**名义线性增益上界**（零延迟 + 阀位→流量线性 + 固定 Δh/cp 假设）；
+2. 真实阀门非线性（等百分比特性），局部增益随开度点变化；phase1 执行机构证据
+   （`actuator_identity_conclusion.json` D1：|Δcmd|>0.1% 仅 0.89% 步、>3% 零出现、
+   自相关 0.998）表明真实数据只有窄区间微调激励——模型可辨识的是**工作点局部增益**；
+3. 绝对阀位承载工作点信息（模型动作编码本就用绝对阀位 dsw=v×th）；
+   `th2` 学到 0.44× 先验，可解读为拟合局部增益，而非单纯"学弱"。
+
+**修正结论**：稳态 2.7–7.6× 缺口是对名义线性上界的距离，不等于对真实对象的失真。
+R1 判决门维持三项（方向/leakage/blindness），量级不入判据。阀门非线性假设的可检验化
+（按绝对开度分箱的局部增益曲线探针）列入可辨识性主线待办，不在本期。
