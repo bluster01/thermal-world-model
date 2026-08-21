@@ -553,6 +553,16 @@ def run_matrix(args) -> dict:
                 model, record, SPLIT_VAL, n_windows=16 if quick else 32,
                 history_steps=ms.HISTORY_STEPS, seed=80_000 + seed, device=device,
             )
+            # Steady-state gain evidence (2026-08-21 audit): the 60-step gate
+            # reads the transient; with learned tau_mix ~470s the 600s window
+            # only reaches ~72% of steady state.  A 240-step (40 min) probe
+            # approaches steady state for a fair comparison against the
+            # zero-lag mixing reference.  Evidence-only, not part of the gate.
+            direction_steady = step_response_direction(
+                model, record, SPLIT_VAL, n_windows=16 if quick else 32,
+                history_steps=ms.HISTORY_STEPS, rollout_steps=24 if quick else 240,
+                seed=85_000 + seed, device=device,
+            )
             leak = leakage_probe(
                 model, record, n_windows=64 if quick else 512,
                 history_steps=ms.HISTORY_STEPS, epochs=3 if quick else 20,
@@ -566,6 +576,7 @@ def run_matrix(args) -> dict:
                 "seed": seed,
                 "runtime_blind_ok": blind_ok,
                 "direction": direction_on,
+                "direction_steady": direction_steady,
                 "leakage": leak,
                 "residual_quantiles": quant,
             })

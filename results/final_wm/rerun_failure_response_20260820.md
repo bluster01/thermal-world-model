@@ -109,3 +109,29 @@ python experiments/final_wm/run_matrix.py --phase matrix \
 - 全程所有 worker 旗标必须一致（`--compile --tf32` 都带或都不带）；
 - GPU 显存：batch32 小模型，4 worker 共存无压力；若 OOM 则降为 2-3 worker；
 - tf32 数值平价门：冒烟时对比 `--tf32` 与不带的学生 val NLL，差 <1% 才放行。
+
+---
+
+## 追加 3（2026-08-21 10:50）：seed0 重跑审计（action_signal_analysis_20260821.md）
+
+### 审计裁定
+
+1. **leakage 门伪影说：接受**。打乱对照设计正确、数值自洽（r1_report blind 0.907 与报告
+   §2.2 一致）。已协议化进 `leakage_probe`：新增 `aware_shuffled` 臂，判据改为
+   **`leakage_delta = improvement(真) − improvement(打乱) > 5%`**。按新规则 seed0
+   Δ=0.64% < 5% → 三门全过，R1 seed0 **暂定 PASS**（正式判决仍需 seed1/2）。
+2. **时滞 caveat：部分接受**。本地用回传 checkpoint 直接复算：240 步（≈稳态）
+   −0.194°C/2% vs 混合参考 −0.53~−1.48 → **稳态差距 2.7–7.6×**（报告瞬态口径 6–16×
+   减半但未闭合）。R1 探针新增 `direction_steady`（240 步，证据位，不入判决门）。
+3. **物理参数漂移记录**（closure_cons seed0）：tau_mix1 474s（5.9×锚定）、tau_mix2 183s、
+   **th2 0.44×**（喷水增益被学弱）、M 3.5–7.4×、UA2 0.39×、tau_evap 0.55×。
+   动作增益缺口与 th2 下调互相印证；可辨识性问题移交 roadmap §1（参数 MLP/锚定修订）。
+4. **并行撤回**：4 路实测 0.9× 串行（19.4ks/臂争用），恢复单进程串行 runbook。
+   `train_arm` 新增分段计时（data/step/eval 入 ledger `timing`）——下一跑直接定位
+   19.4ks 的去向，不再猜。
+5. 旗标均匀性已核：seed0 四臂 `compile_substep+tf32` 一致 ✓。
+
+### 待用户裁定
+
+- **T1 减臂**：接受"只训 closure_cons×3 seeds"（~4-5h，R1 链够用；T1 嵌套问题 v0.2 已判，
+  修复批下的 T1 复判随修复批①再议）？还是四臂全保（~15h）？

@@ -146,14 +146,19 @@ def train_arm(
     val_history: list[float] = []
     stop_reason = "cap"
     t0 = time.time()
+    # Per-phase wall-clock accounting (2026-08-21: the 19.4ks seed0 arms made
+    # clear we must stop guessing where training time goes).
+    t_data = t_step = t_eval = 0.0
     with ledger_path.open("a", encoding="utf-8") as ledger:
         for epoch in range(spec.epochs):
             model.train()
             train_loss = 0.0
             for _ in range(spec.batches_per_epoch):
+                _t = time.time()
                 batch = sample_windows(
                     record, SPLIT_TRAIN, spec.batch_size, spec.history_steps, spec.horizon, gen
                 )
+                t_data += time.time() - _t
                 history = batch.history.__class__(
                     obs=batch.history.obs.to(device),
                     actions=batch.history.actions.to(device),
@@ -174,13 +179,18 @@ def train_arm(
                     loss = model.observation_nll(result.temps_mu, result.temps_sigma, future_obs)
                     if spec.train_boundary:
                         loss = loss + boundary_nll(model, history.boundary, history.actions, future_boundary)
+                _t = time.time()
                 opt.zero_grad()
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(params, 10.0)
                 opt.step()
                 train_loss += float(loss)
+                if torch.cuda.is_available() and device.type != "cpu":
+                    torch.cuda.synchronize()
+                t_step += time.time() - _t
             train_loss /= spec.batches_per_epoch
 
+            _t = time.time()
             val = evaluate_windows(
                 model, record, 1,
                 n_windows=spec.eval_windows, batch_size=spec.eval_batch,
@@ -189,6 +199,9 @@ def train_arm(
             )
             val_nll = float(val.nll.mean())
             val_history.append(val_nll)
+            if torch.cuda.is_available() and device.type != "cpu":
+                torch.cuda.synchronize()
+            t_eval += time.time() - _t
             entry = dict(base_entry, epoch=epoch, train_loss=train_loss, val_nll=val_nll,
                          wall_seconds=time.time() - t0)
             ledger.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -217,7 +230,9 @@ def train_arm(
                  # Runtime speed flags for audit uniformity: all arms feeding one
                  # verdict must share the same flag state (2026-08-21).
                  flags={"compile_substep": compile_substep,
-                        "matmul_precision": torch.get_float32_matmul_precision()})
+                        "matmul_precision": torch.get_float32_matmul_precision()},
+                 timing={"data_s": round(t_data, 1), "step_s": round(t_step, 1),
+                         "eval_s": round(t_eval, 1)})
     with ledger_path.open("a", encoding="utf-8") as ledger:
         ledger.write(json.dumps(final, ensure_ascii=False) + "\n")
     return final

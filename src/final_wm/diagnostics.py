@@ -94,10 +94,21 @@ def leakage_probe(
         model, record, SPLIT_VAL, n_windows=n_windows // 4, history_steps=history_steps, seed=seed + 1, device=device
     )
 
+    # Shuffle control (protocol fix 2026-08-21, Hermes artifact finding in
+    # results/final_wm/action_signal_analysis_20260821.md §2): at the frozen
+    # probe budget the blind probe is underfit, so ANY added input dimension
+    # -- even information-free shuffled valves -- improves val fit by changing
+    # the optimization trajectory (true 23.9% vs shuffled 23.2%).  The suspect
+    # criterion is therefore the DELTA over the shuffled null, not the raw
+    # aware-over-blind improvement.
+    g = torch.Generator().manual_seed(seed + 2)
+    perm = torch.randperm(act_tr.shape[0], generator=g)
+    act_tr_shuf = act_tr[perm]
     results = {}
     for name, x_tr, x_va in (
         ("blind", feat_tr, feat_va),
         ("aware", torch.cat([feat_tr, act_tr], dim=-1), torch.cat([feat_va, act_va], dim=-1)),
+        ("aware_shuffled", torch.cat([feat_tr, act_tr_shuf], dim=-1), torch.cat([feat_va, act_va], dim=-1)),
     ):
         torch.manual_seed(seed)
         probe = ResidualLeakageProbe(x_tr.shape[-1]).to(device)
@@ -115,11 +126,16 @@ def leakage_probe(
             val_mse = float(((probe(x_va.to(device)) - y_va) ** 2).mean())
         base_mse = float((y_va**2).mean())
         results[name] = {"val_mse_norm": val_mse, "base_mse_norm": base_mse}
-    blind, aware = results["blind"], results["aware"]
+    blind, aware, shuffled = results["blind"], results["aware"], results["aware_shuffled"]
     improvement = (blind["val_mse_norm"] - aware["val_mse_norm"]) / max(blind["val_mse_norm"], 1e-12)
+    improvement_shuf = (blind["val_mse_norm"] - shuffled["val_mse_norm"]) / max(blind["val_mse_norm"], 1e-12)
+    delta = improvement - improvement_shuf
     return {
         "blind": blind,
         "aware": aware,
+        "aware_shuffled": shuffled,
         "aware_relative_improvement": improvement,
-        "leakage_suspected": bool(improvement > 0.05),
+        "shuffled_relative_improvement": improvement_shuf,
+        "leakage_delta": delta,
+        "leakage_suspected": bool(delta > 0.05),
     }
