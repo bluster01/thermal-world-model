@@ -16,37 +16,49 @@ def _observer(history_steps: int = 16, latent_dim: int = 0) -> ProbabilisticObse
 def test_posterior_shapes_and_validity() -> None:
     observer = _observer()
     batch = synthetic_history(batch=4, history_steps=16, horizon=4, seed=1)
-    mu, sigma = observer.posterior(batch.history.obs, batch.history.actions, batch.history.boundary)
+    anchor = torch.zeros(4, 11)
+    mu, sigma = observer.posterior(batch.history.obs, batch.history.actions, batch.history.boundary, anchor)
     assert mu.shape == (4, 11) and sigma.shape == (4, 11)
     assert bool((sigma > 0).all())
     assert bool(torch.isfinite(mu).all()) and bool(torch.isfinite(sigma).all())
+    # Repair 1-B: zero-initialised heads return the anchor exactly.
+    assert bool((mu == anchor).all())
+    with torch.no_grad():
+        observer.mu_head.bias.add_(0.01)
+    mu2, _ = observer.posterior(batch.history.obs, batch.history.actions, batch.history.boundary, anchor)
+    assert not bool((mu2 == anchor).all())
 
 
-def test_posterior_bounded_by_physical_support() -> None:
+def test_posterior_bounded_correction_around_anchor() -> None:
     observer = _observer()
     batch = synthetic_history(batch=4, history_steps=16, horizon=4, seed=2)
-    mu, _sigma = observer.posterior(batch.history.obs, batch.history.actions, batch.history.boundary)
-    loc = observer.state_loc
-    scale = observer.state_scale
-    assert bool((mu >= loc - scale - 1e-5).all()) and bool((mu <= loc + scale + 1e-5).all())
+    anchor = torch.randn(4, 11) * observer.state_scale + observer.state_loc
+    with torch.no_grad():
+        observer.mu_head.bias.uniform_(-0.5, 0.5)  # arbitrary non-zero heads
+    mu, _sigma = observer.posterior(batch.history.obs, batch.history.actions, batch.history.boundary, anchor)
+    # Repair 1-B: correction bounded by 0.1 x state scale around the anchor.
+    assert bool(((mu - anchor).abs() <= 0.1 * observer.state_scale + 1e-5).all())
 
 
 def test_observer_with_latent_block() -> None:
     observer = _observer(latent_dim=3)
     batch = synthetic_history(batch=2, history_steps=16, horizon=4, seed=3)
-    mu, sigma = observer.posterior(batch.history.obs, batch.history.actions, batch.history.boundary)
+    anchor = torch.zeros(2, 14)
+    mu, sigma = observer.posterior(batch.history.obs, batch.history.actions, batch.history.boundary, anchor)
     assert mu.shape == (2, 14)
-    # Latent block normalization: loc 0, scale 1.
-    assert bool((mu[:, 11:].abs() <= 1.0 + 1e-6).all())
+    assert bool(((mu - anchor).abs() <= 0.1 * observer.state_scale + 1e-6).all())
 
 
 def test_observer_history_length_is_contractual() -> None:
     observer = _observer(history_steps=16)
     batch = synthetic_history(batch=2, history_steps=16, horizon=4, seed=4)
+    anchor = torch.zeros(2, 11)
     with pytest.raises(FinalWMProtocolError):
-        observer.posterior(batch.history.obs[:, :8], batch.history.actions, batch.history.boundary)
+        observer.posterior(batch.history.obs[:, :8], batch.history.actions, batch.history.boundary, anchor)
     with pytest.raises(FinalWMProtocolError):
-        observer.posterior(batch.history.obs, batch.history.actions[:, :, :1], batch.history.boundary)
+        observer.posterior(batch.history.obs, batch.history.actions[:, :, :1], batch.history.boundary, anchor)
+    with pytest.raises(FinalWMProtocolError):
+        observer.posterior(batch.history.obs, batch.history.actions, batch.history.boundary, anchor[:, :8])
 
 
 def test_state_continuity_error() -> None:

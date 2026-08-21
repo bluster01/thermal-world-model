@@ -303,11 +303,16 @@ class Fan2020UDETransition(nn.Module):
         action_0: torch.Tensor,
         obs_0: torch.Tensor,
     ) -> torch.Tensor:
-        """Observation-anchored steady initial state (the O1 'steady' arm).
+        """Five-point observation-anchored steady initial state.
 
-        h is anchored to the three downstream observed temperatures; metal
-        temperatures sit at the steady heat-balance offset; droplet masses
-        start at the spray feed-rate equilibrium m = Dsw * tau_evap.
+        h is anchored to the three directly-measured temperatures (channels
+        0/2/4); metal temperatures sit at the steady heat-balance offset.
+        Repair batch 1-A (design 2026-08-21): the spray-side states are
+        INVERTED from the two attemperator-outlet measurements (channels
+        1/3) by bracketed bisection on the monotone map lag -> outlet
+        temperature, so the anchored state reproduces all five observations
+        at t=0 (previously the instantaneous-equilibrium init missed the
+        outlet channels by -18.1/-6.3 degC bias).
         """
         if obs_0.shape[-1] != len(OBSERVATION_ELEMENTS):
             raise FinalWMProtocolError("obs_0 last dim must be 5 (OBSERVATION_ELEMENTS order)")
@@ -325,18 +330,62 @@ class Fan2020UDETransition(nn.Module):
         tm = ts + self.k_of(pm) * rb.unsqueeze(-1) / 3600.0 / self.tri("UA").unsqueeze(0)
         if self.config.init_metal_offset:
             tm = tm + self.tri("dTm").unsqueeze(0)
-        dsw1, dsw2 = self._spray_rates(pm, v1, v2, w_total)
         tau_evap = self.val("tau_evap")
-        m1 = dsw1 * tau_evap
-        m2 = dsw2 * tau_evap
-        # Repair ②: at steady state the transport-lag state equals the target rate.
-        lag1 = dsw1.clone()
-        lag2 = dsw2.clone()
+        lag1, lag2 = self._invert_spray_anchor(h, tm, rb, boundary_0, obs_0)
+        m1 = lag1 * tau_evap
+        m2 = lag2 * tau_evap
         parts = [h, tm, rb.unsqueeze(-1), m1.unsqueeze(-1), m2.unsqueeze(-1),
                  lag1.unsqueeze(-1), lag2.unsqueeze(-1)]
         if self.layout.latent_dim > 0:
             parts.append(torch.zeros(h.shape[0], self.layout.latent_dim, dtype=h.dtype, device=h.device))
         return torch.cat(parts, dim=-1)
+
+    @torch.no_grad()
+    def _invert_spray_anchor(
+        self,
+        h: torch.Tensor,
+        tm: torch.Tensor,
+        rb: torch.Tensor,
+        boundary_0: torch.Tensor,
+        obs_0: torch.Tensor,
+        *,
+        l_max: float = 100.0,
+        iters: int = 24,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Batched bisection for the spray-side steady states (repair 1-A).
+
+        Solves lag_i so the attemperator-outlet channels of
+        `output_temperatures` equal obs_0[..., 1] / obs_0[..., 3], with
+        m_liq = lag * tau_evap (equilibrium inventory, repair-2 contract).
+        The outlet temperature is non-increasing in the lagged spray rate, so
+        the [0, l_max] bracket converges unconditionally; observations beyond
+        the reachable range clamp to the nearest endpoint (the residual
+        mismatch is then a diagnostic of model-plant mismatch, not a solver
+        failure).  Runs under no_grad: spray-path parameters receive gradients
+        through the dynamics steps; the initial lag is data-inverted by
+        design.
+        """
+        tau_evap = self.val("tau_evap")
+        batch = h.shape[0]
+        lo = torch.zeros(batch, 2, dtype=h.dtype, device=h.device)
+        hi = torch.full((batch, 2), l_max, dtype=h.dtype, device=h.device)
+        target = torch.stack([obs_0[..., 1], obs_0[..., 3]], dim=-1)
+        for _ in range(iters):
+            mid = 0.5 * (lo + hi)
+            parts = [h, tm, rb.unsqueeze(-1),
+                     (mid[:, 0] * tau_evap).unsqueeze(-1),
+                     (mid[:, 1] * tau_evap).unsqueeze(-1),
+                     mid[:, 0].unsqueeze(-1), mid[:, 1].unsqueeze(-1)]
+            if self.layout.latent_dim > 0:
+                parts.append(torch.zeros(batch, self.layout.latent_dim, dtype=h.dtype, device=h.device))
+            state = torch.cat(parts, dim=-1)
+            t_all = self.output_temperatures(state, boundary_0)
+            t_out = torch.stack([t_all[:, 1], t_all[:, 3]], dim=-1)
+            need_more = t_out > target  # T_out non-increasing in lag
+            lo = torch.where(need_more, mid, lo)
+            hi = torch.where(need_more, hi, mid)
+        lag = 0.5 * (lo + hi)
+        return lag[:, 0], lag[:, 1]
 
     def _substep(
         self,
@@ -500,8 +549,14 @@ class Fan2020UDETransition(nn.Module):
         m2 = state[..., layout.m_liq_slice.stop - 1]
         m_dry0 = self.val("m_dry0")
         tau_evap = self.val("tau_evap")
-        dry1 = torch.sigmoid(3.0 * (m_dry0 - lag1 * tau_evap) / m_dry0)
-        dry2 = torch.sigmoid(3.0 * (m_dry0 - lag2 * tau_evap) / m_dry0)
+        # Repair 1-A addendum (2026-08-21, measured): the blend must saturate
+        # at the endpoints -- the previous sigmoid(3*(m_dry0 - w)/m_dry0) left
+        # a 4.76% wet leak at ZERO spray (~-6 degC at typical superheat),
+        # which put the true zero-spray outlet below the model floor and made
+        # the five-point anchor unreachable.  Pinned: dry(0)=sigmoid(6)~0.998,
+        # dry(m_dry0)=sigmoid(-5)~0.007, monotone between.
+        dry1 = torch.sigmoid(6.0 - 11.0 * (lag1 * tau_evap) / m_dry0)
+        dry2 = torch.sigmoid(6.0 - 11.0 * (lag2 * tau_evap) / m_dry0)
         tsat0 = self.properties.saturation_temperature(p0)
         tsat1 = self.properties.saturation_temperature(p1)
         q_w1, q_w2 = self._rewetting_powers(tm, m1, m2, p0, p1, h[:, :2], h_spray)

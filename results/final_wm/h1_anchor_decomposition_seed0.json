@@ -1,0 +1,47 @@
+{
+ "checkpoint": "artifacts/final_wm/checkpoints/t1_closure_cons_seed0.pt",
+ "n_windows": 512,
+ "init_mode": "hybrid",
+ "channels": {
+  "sh1_in": {
+   "anchor_mae_c": 0.0012763738632202148,
+   "anchor_bias_c": 0.0007669925689697266,
+   "h1_mae_c": 3.6972124576568604,
+   "h1_bias_c": 2.6772994995117188,
+   "persistence_mae_c": 0.25528836250305176,
+   "h1_over_persistence": 14.482495307922363
+  },
+  "sh1_out": {
+   "anchor_mae_c": 18.811153411865234,
+   "anchor_bias_c": -18.078468322753906,
+   "h1_mae_c": 1.3650020360946655,
+   "h1_bias_c": -0.5028651356697083,
+   "persistence_mae_c": 0.45070773363113403,
+   "h1_over_persistence": 3.0285747051239014
+  },
+  "sh2_in": {
+   "anchor_mae_c": 0.001102149486541748,
+   "anchor_bias_c": 0.000972449779510498,
+   "h1_mae_c": 3.914313793182373,
+   "h1_bias_c": 1.4564661979675293,
+   "persistence_mae_c": 0.1853155493736267,
+   "h1_over_persistence": 21.122425079345703
+  },
+  "sh2_out": {
+   "anchor_mae_c": 6.446845054626465,
+   "anchor_bias_c": -6.337824821472168,
+   "h1_mae_c": 0.8075795769691467,
+   "h1_bias_c": 0.3350387215614319,
+   "persistence_mae_c": 0.2968364357948303,
+   "h1_over_persistence": 2.720621347427368
+  },
+  "final": {
+   "anchor_mae_c": 0.0008041858673095703,
+   "anchor_bias_c": 0.0007624626159667969,
+   "h1_mae_c": 0.15353000164031982,
+   "h1_bias_c": 0.036182522773742676,
+   "persistence_mae_c": 0.08947169780731201,
+   "h1_over_persistence": 1.7159616947174072
+  }
+ }
+}

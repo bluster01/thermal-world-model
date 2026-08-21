@@ -178,6 +178,7 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 52 | 世界模型声明证件清单 + CF 评测梯批准 | 本地 | ✓ 清单入档 results/final_wm/world_model_credential_checklist_20260821.md（A-G 七组 20 证，L0-L4 分级声明）；**修正口述错误：v0.2 真值 O1 hybrid REJECTED、B1 REJECTED、T1 closure SUPPORTED**；CF-2 待 R1 后立项 |
 | 53 | FMTS 排期 + CF/D1 探针实施 | 本地 | ✓ CFP 核实（8/30 23:59 UTC=北京 8/31 07:59，4 页正文，欢迎负结果）；CF-1/3/4 + D1 探针落地（evaluation-only，无指纹影响），CF-1 接 dsyn、CF-3/4/D1 接 auditpack；倒排计划 docs/plans/2026-08-21-fmts-schedule-and-protocol-plan.md |
 | 54 | R1 三 seed 判决审计：seed1 leakage 边际案 | 本地+Hermes | ✓ **案结：REJECTED 成立，不修门**。16 重 shuffle 零分布（std 0.2-0.3pp）证实 seed1 delta_vs_mean 5.15pp > 5pp 为真实泄漏（~17σ），非统计噪声；三 seed percentile 全 1.00（伪影地板之上普遍有真信号，仅 seed1 过门）；k=1 复现逐位一致。闭合审计 results/final_wm/leakage_marginal_case_closure_20260821.md；泄漏根因修复列入 AE 阶段 |
+| 55 | 修复批①实施（五点锚定+观测器锚定相对化+干湿端点固定） | 本地 | ✓ H1 分解诊断定位双根因（出口锚不定 −18.1/−6.3°C；hybrid 融合拖偏 h 锚 +2.7/+1.5°C）；①-A 二分反演喷水侧状态 + **干湿混合零喷水湿漏 4.76% 端点修复**（实施中实测发现，~−6°C 偏差的真根因）；①-B 观测器改锚定相对修正（零初始化=精确锚，hybrid 仅慢状态，压力分段 22.064 MPa 软指示）；契约测试含反演往返/掩码/湿带阶跃；全套 128/128 + D-SYN quick 门禁过（59% > 30%）；残余登记 sh1_out −3.6°C 结构性（AE 候选）。重跑 runbook：results/final_wm/repair1_rerun_runbook_20260821.md |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 

@@ -70,33 +70,55 @@ class FinalWorldModel(nn.Module):
     # ------------------------------------------------------------------
 
     def initial_state_posterior(self, history: HistoryWindow) -> tuple[torch.Tensor, torch.Tensor]:
-        return self.observer.posterior(history.obs, history.actions, history.boundary)
+        anchor = self._steady_initial_state(history)
+        return self.observer.posterior(history.obs, history.actions, history.boundary, anchor)
 
     def _steady_initial_state(self, history: HistoryWindow) -> torch.Tensor:
-        """Observation-anchored steady init (legacy Step 8 pattern); latent
-        block is zero, so this mode ignores learned latent content."""
+        """Five-point observation-anchored steady init (repair batch 1-A);
+        latent block is zero, so this mode ignores learned latent content."""
         return self.transition.initial_steady_state(
             history.boundary[:, -1], history.actions[:, -1], history.obs[:, -1]
         )
 
-    def _initial_state(self, history: HistoryWindow, sample_posterior: bool = False) -> torch.Tensor:
-        """Dispatch on the declared initial_state_mode (O1 arms)."""
-        mode = self.config.initial_state_mode
-        if mode == "steady":
-            return self._steady_initial_state(history)
-        mu, sigma = self.initial_state_posterior(history)
+    def _correction_mask(self, mode: str, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
+        """Per-dim multiplier on the observer's anchor-relative correction.
+
+        Repair batch 1-B (amendment v0.3 route registration): the anchor is
+        exact on the observed degrees (h via three enthalpy inversions; spray
+        states via the outlet-temperature inversion), so `hybrid` restricts
+        corrections to the slow unanchored states (metal temperatures tm,
+        fuel/burnout offset rb, latent).  `learned` keeps the full-dim
+        correction as the contrast arm.
+        """
+        layout = self.layout
+        mask = torch.zeros(layout.dim, device=device, dtype=dtype)
         if mode == "learned":
-            return self.observer.sample(mu, sigma) if sample_posterior else mu
-        # hybrid: precision-weighted fusion of the steady anchor (fixed
-        # sigma = 0.3 x state scale) with the learned posterior.
-        steady = self._steady_initial_state(history)
-        steady_sigma = 0.3 * self.observer.state_scale
-        w_steady = 1.0 / steady_sigma**2
-        w_learned = 1.0 / sigma**2
-        fused = (steady * w_steady + mu * w_learned) / (w_steady + w_learned)
+            mask.fill_(1.0)
+            return mask
+        mask[layout.tm_slice] = 1.0
+        mask[layout.rb_index] = 1.0
+        if layout.latent_dim > 0:
+            mask[layout.latent_slice] = 1.0
+        return mask
+
+    def _initial_state(self, history: HistoryWindow, sample_posterior: bool = False) -> torch.Tensor:
+        """Dispatch on the declared initial_state_mode (O1 arms).
+
+        Repair batch 1-B: anchor-relative corrections replace both the
+        absolute posterior and the precision-weighted fusion (the fusion let
+        the posterior drag exact enthalpy anchors off; O1 rejected it).
+        """
+        mode = self.config.initial_state_mode
+        anchor = self._steady_initial_state(history)
+        if mode == "steady":
+            return anchor
+        mu, sigma = self.observer.posterior(
+            history.obs, history.actions, history.boundary, anchor
+        )
+        mask = self._correction_mask(mode, mu.device, mu.dtype)
+        fused = anchor + (mu - anchor) * mask
         if sample_posterior:
-            fused_sigma = (w_steady + w_learned).rsqrt()
-            fused = fused + fused_sigma * torch.randn_like(fused)
+            fused = fused + sigma * mask * torch.randn_like(fused)
         return fused
 
     def _check_history(self, history: HistoryWindow) -> None:

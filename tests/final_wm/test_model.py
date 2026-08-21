@@ -9,6 +9,7 @@ from src.final_wm.contracts import (
     ControllerConfig,
     FinalWMProtocolError,
     ObserverConfig,
+    StateLayout,
     WorldModelConfig,
 )
 from src.final_wm.controller import CascadePIController
@@ -33,6 +34,33 @@ def _model(**kwargs) -> FinalWorldModel:
 
 def _history(seed: int = 0, horizon: int = 8):
     return synthetic_history(batch=2, history_steps=16, horizon=horizon, seed=seed)
+
+
+def test_hybrid_correction_mask_slow_states_only() -> None:
+    """Repair 1-B contract: with randomised observer heads, hybrid mode moves
+    only tm/rb/latent off the five-point anchor; learned mode may move all
+    dims; both return the anchor exactly at zero-init."""
+    layout = StateLayout(latent_dim=0)
+    for mode, moved in (("hybrid", False), ("learned", True)):
+        model = _model()
+        object.__setattr__(model.config, "initial_state_mode", mode)  # frozen dataclass
+        batch = _history(seed=5)
+        anchor = model._steady_initial_state(batch.history)
+        x0 = model._initial_state(batch.history)
+        assert bool((x0 == anchor).all())  # zero-init observer
+        with torch.no_grad():
+            model.observer.mu_head.bias.uniform_(-0.5, 0.5)
+        x1 = model._initial_state(batch.history)
+        delta = (x1 - anchor).abs() > 1e-9
+        h = torch.zeros(layout.dim, dtype=torch.bool)
+        h[layout.h_slice] = True
+        h[layout.m_liq_slice] = True
+        h[layout.dsw_lag_slice] = True
+        if moved:
+            assert bool((x1 != anchor).any())
+        else:
+            assert not bool((delta & h).any())  # anchored dims untouched
+            assert bool((delta & ~h).any())    # slow dims did move
 
 
 def test_forecast_oracle_mode_shapes() -> None:

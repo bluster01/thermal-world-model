@@ -227,16 +227,40 @@ def test_spray_step_response_is_gradual() -> None:
     # the mixing time constant (prior 60 s), not within one 10 s step.
     model = _transition()
     batch = _batch(horizon=60)
-    state = model.initial_steady_state(
-        batch.future_boundary[:, 0], batch.future_actions[:, 0], batch.history.obs[:, -1]
-    )
-    boundary = batch.future_boundary[:, :1].repeat(1, 60, 1)
-    base_actions = batch.future_actions[:, :1].repeat(1, 60, 1)
+    b0 = batch.future_boundary[:, 0]
+    obs0 = batch.history.obs[:, -1]
+    # Work at a WET settled equilibrium: at saturation extra spray physically
+    # cannot cool further (dry blend ~ 0), making the step invisible, and the
+    # transient must start from the model's own equilibrium or the base
+    # trajectory itself migrates.  Settle with a constant moderate valve, then
+    # verify the dry-blend state is mid-range.
+    state = None
+    wet_mask = None
+    m_dry0 = float(model.val("m_dry0"))
+    tau_evap = float(model.val("tau_evap"))
+    # The wet band is narrow: with endpoint-pinned blending dry crosses
+    # (0.15, 0.9) over lag in ~[0.78, 1.39] kg/s, i.e. v1 ~ 0.08-0.18.
+    for v_open in (0.08, 0.12, 0.16, 0.20, 0.26):
+        a_const = torch.full((b0.shape[0], 2), v_open)
+        s0 = model.initial_steady_state(b0, a_const, obs0)
+        settle_b = b0.unsqueeze(1).repeat(1, 120, 1)
+        settle_a = a_const.unsqueeze(1).repeat(1, 120, 1)
+        settled_states, _t = model.integrate(s0, settle_b, settle_a)
+        cand = settled_states[:, -1]
+        dry1 = torch.sigmoid(6.0 - 11.0 * (cand[:, 9] * tau_evap) / m_dry0)
+        mask = (dry1 > 0.15) & (dry1 < 0.9)
+        if int(mask.sum()) >= max(1, b0.shape[0] // 3):
+            state, wet_mask = cand, mask
+            break
+    assert state is not None, "no wet settled equilibrium found"
+    horizon = batch.future_actions.shape[1]
+    boundary = b0.unsqueeze(1).repeat(1, horizon, 1)
+    base_actions = a_const.unsqueeze(1).repeat(1, horizon, 1)
     step_actions = base_actions.clone()
     step_actions[:, :, 0] = (step_actions[:, :, 0] + 0.05).clamp(max=1.0)
     _s0, temps_base = model.integrate(state, boundary, base_actions)
     _s1, temps_step = model.integrate(state, boundary, step_actions)
-    delta = temps_step[:, :, 1] - temps_base[:, :, 1]  # sh1 outlet, degC
+    delta = (temps_step[:, :, 1] - temps_base[:, :, 1])[wet_mask]  # sh1 outlet, wet elements
     step1 = delta[:, 0].abs().mean().item()
     settled = delta[:, -6:].abs().mean().item()
     assert settled > 0.05  # the step eventually shows up
@@ -252,8 +276,10 @@ def test_spray_lag_state_tracks_target_with_first_order_dynamics() -> None:
     lag0 = state[:, 9:11].clone()
     states, _temps = model.integrate(state, batch.future_boundary, batch.future_actions)
     lag = states[:, :, 9:11]
-    # Steady identity at t=0 and bounded, non-negative lag trajectory.
-    assert torch.allclose(lag0, states[:, 0, 9:11], atol=1.0)
+    # Repair 1-A supersedes the steady identity: the initial lag is inverted
+    # from the outlet measurements and need not equal the parametric spray
+    # target.  What must hold is non-negativity and monotone contraction
+    # toward the (constant) target -- first-order dynamics, no overshoot.
     assert bool((lag >= 0.0).all())
     targets = torch.stack([
         torch.stack(model._spray_rates(
@@ -262,8 +288,35 @@ def test_spray_lag_state_tracks_target_with_first_order_dynamics() -> None:
         ), dim=-1)
         for t in range(batch.future_actions.shape[1])
     ], dim=1)
-    # The lag never overshoots past the running target band.
-    assert bool((lag <= targets.max() + 1e-5).all())
+    gap0 = (lag0 - targets[:, 0]).abs()
+    gap1 = (lag[:, -1] - targets[:, -1]).abs()
+    same_target = (targets - targets[:, :1]).abs().max() < 1e-6
+    if bool(same_target):
+        assert bool((gap1 <= gap0 + 1e-5).all())
+
+
+def test_five_point_anchor_reproduces_all_channels() -> None:
+    """Repair 1-A contract: for a physically reachable observation the
+    anchored state reproduces all five channels at t=0 (solver tolerance),
+    and unreachable observations clamp without NaN."""
+    model = _transition()
+    batch = _batch(horizon=4)
+    b0 = batch.future_boundary[:, 0]
+    a0 = batch.future_actions[:, 0]
+    obs0 = batch.history.obs[:, -1]
+    # Reachable reference: the fixed point of anchoring (anchor -> g -> re-anchor).
+    x_ref = model.initial_steady_state(b0, a0, obs0)
+    obs_consistent = model.output_temperatures(x_ref, b0)
+    x1 = model.initial_steady_state(b0, a0, obs_consistent)
+    g1 = model.output_temperatures(x1, b0)
+    assert bool(((g1 - obs_consistent).abs() < 0.05).all())
+    # Wildly unreachable observations: clamped, finite, non-negative lags.
+    crazy = obs0.clone()
+    crazy[:, 1] = 700.0   # above the dry pass-through: lag must clamp to 0
+    crazy[:, 3] = 100.0   # below saturation: lag must clamp to l_max
+    xc = model.initial_steady_state(b0, a0, crazy)
+    assert bool(torch.isfinite(xc).all())
+    assert bool((xc[:, 9:11] >= 0.0).all())
 
 
 def test_rewetting_contract_caps_and_dry_lockout() -> None:

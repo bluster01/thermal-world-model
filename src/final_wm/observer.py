@@ -1,14 +1,16 @@
-"""Probabilistic initial-state observer q(x0 | H).
+"""Probabilistic initial-state observer q(x0 | H) — anchor-relative.
 
-The observer maps a history window H = {y, u, b} (past measurements, past
-actions, past boundary) to a diagonal Gaussian posterior over the packed
-physical+latent state.  Contractual properties:
+Repair batch 1-B (design 2026-08-21, amendment v0.3 item 1): the observer no
+longer learns an absolute posterior.  It outputs a bounded CORRECTION delta to
+the five-point steady anchor, conditioned on pressure-regime features
+(sub/supercritical soft indicators at 22.064 MPa).  Zero-initialised heads
+make an untrained observer return the anchor exactly, removing the O1
+degradation channel (learned posterior dragging exact enthalpy anchors off
+by +2.7/+1.5 degC at H1).  Contractual properties:
 
 - it never reads future information: the signature accepts history tensors
   only, and the window length is fixed by `ObserverConfig.history_steps`;
-- posterior support is bounded by construction (tanh-squashed normalized
-  mean mapped through fixed physical loc/scale constants), so an untrained
-  observer cannot produce physically absurd states;
+- corrections are bounded by construction (0.1 x state scale, tanh-squashed);
 - adjacent-window state continuity is evaluated with
   `state_continuity_error`, in normalized units.
 """
@@ -68,8 +70,12 @@ class ProbabilisticObserver(nn.Module):
 
         in_dim = len(OBSERVATION_ELEMENTS) + len(ACTION_ELEMENTS) + len(BOUNDARY_ELEMENTS)
         self.encoder = nn.GRU(input_size=in_dim, hidden_size=config.d_hidden, batch_first=True)
-        self.mu_head = nn.Linear(config.d_hidden, layout.dim)
-        self.logvar_head = nn.Linear(config.d_hidden, layout.dim)
+        # Repair 1-B: pressure-segmented inversion.  The T<->h sensitivity and
+        # the spray dynamics differ across the critical point, so the
+        # correction heads condition on soft sub/supercritical indicators of
+        # the last separator pressure plus the normalized pressure itself.
+        self.mu_head = nn.Linear(config.d_hidden + 3, layout.dim)
+        self.logvar_head = nn.Linear(config.d_hidden + 3, layout.dim)
         nn.init.zeros_(self.mu_head.weight)
         nn.init.zeros_(self.mu_head.bias)
         nn.init.zeros_(self.logvar_head.weight)
@@ -106,19 +112,42 @@ class ProbabilisticObserver(nn.Module):
         _output, hidden = self.encoder(features)
         return hidden[-1]
 
+    # Critical pressure of water/steam in the boundary's MPa units.
+    _PC_MPA = 22.064
+
+    def _pressure_features(self, history_boundary: torch.Tensor) -> torch.Tensor:
+        pm_idx = BOUNDARY_ELEMENTS.index("separator_pressure")
+        pm = history_boundary[:, -1, pm_idx]
+        pm_loc = self.boundary_loc[pm_idx]
+        pm_scale = self.boundary_scale[pm_idx]
+        return torch.stack([
+            F.softplus(pm - self._PC_MPA),
+            F.softplus(self._PC_MPA - pm),
+            (pm - pm_loc) / pm_scale,
+        ], dim=-1)
+
     def posterior(
         self,
         history_obs: torch.Tensor,
         history_actions: torch.Tensor,
         history_boundary: torch.Tensor,
+        anchor: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Return (mu, sigma) in physical units, shapes (B, dim)."""
+        """Return (mu, sigma) in physical units, shapes (B, dim).
+
+        mu = anchor + delta, delta bounded by 0.1 x state scale (tanh-squared
+        head, zero-initialised: an untrained observer returns the anchor).
+        The mode-specific mask (which dims may move) is applied by the caller
+        (`FinalWorldModel._initial_state`).
+        """
+        if anchor.shape[-1] != self.layout.dim:
+            raise FinalWMProtocolError("anchor last dim must match the state layout")
         hidden = self.encode(history_obs, history_actions, history_boundary)
-        mu_norm = torch.tanh(self.mu_head(hidden))
-        sigma_norm = F.softplus(self.logvar_head(hidden)) + 1e-3
-        mu = self.state_loc + self.state_scale * mu_norm
+        feats = torch.cat([hidden, self._pressure_features(history_boundary)], dim=-1)
+        delta = 0.1 * self.state_scale * torch.tanh(self.mu_head(feats))
+        sigma_norm = F.softplus(self.logvar_head(feats)) + 1e-3
         sigma = self.state_scale * sigma_norm
-        return mu, sigma
+        return anchor + delta, sigma
 
     def sample(self, mu: torch.Tensor, sigma: torch.Tensor) -> torch.Tensor:
         return mu + sigma * torch.randn_like(mu)
