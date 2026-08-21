@@ -174,7 +174,9 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 48 | 物理修复批 ②③④ 实施（混合时滞/再湿契约/先验锚定） | 本地 | ✓ 设计冻结+代码+契约测试；D-SYN 探针门禁通过；τ_mix 先验锚定 adhoc2 learnlag（80s）并锁可学习性 |
 | 49 | Hermes 重跑失败修复（指纹/容差/quick覆写） | 本地 | ✓ 指纹纳入模型结构指纹（根因）；红项容差 1e-5（裁定A）；quick 档写 `_quick.json` 不覆写已审计产物；回执 results/final_wm/rerun_failure_response_20260820.md |
 | 50 | 训练提速与归因纪律（用户反馈 15h + 改动捆绑） | 本地 | ✓ 子步抽取 `_substep` + runner `--compile`（aot_eager 逐位一致已验）；指纹加 git tree hash；split_runs 缓存（采样 59×）；并行实测 0.9× 撤回，分段计时入 ledger |
-| 51 | seed0 重跑审计与 R1 门修复 | 本地+Hermes | ✓ leakage 伪影说接受并协议化（shuffle 对照，delta>5% 判据）；R1 seed0 暂定 PASS（待 seed1/2）；**已裁定 T1 减臂 closure_cons×3**（runbook 在回执追加4）；增益缺口重判：对名义线性上界 2.7-7.6×，阀门非线性+窄激励（phase1 D1 证据）下真实局部增益本就低，量级不入 R1 判据；分箱增益探针列入可辨识性待办 |
+| 51 | seed0 重跑审计与 R1 门修复 | 本地+Hermes | ✓ leakage 伪影说接受并协议化（shuffle 对照，delta>5% 判据）；R1 seed0 暂定 PASS（待 seed1/2）；**已裁定 T1 减臂 closure_cons×3**（runbook 在回执追加4）；增益缺口重判：对名义线性上界 2.7-7.6×，阀门非线性+窄激励（phase1 D1 证据）下真实局部增益本就低，量级不入 R1 判据 |
+| 52 | 世界模型声明证件清单 + CF 评测梯批准 | 本地 | ✓ 清单入档 results/final_wm/world_model_credential_checklist_20260821.md（A-G 七组 20 证，L0-L4 分级声明）；**修正口述错误：v0.2 真值 O1 hybrid REJECTED、B1 REJECTED、T1 closure SUPPORTED**；CF-2 待 R1 后立项 |
+| 53 | FMTS 排期 + CF/D1 探针实施 | 本地 | ✓ CFP 核实（8/30 23:59 UTC=北京 8/31 07:59，4 页正文，欢迎负结果）；CF-1/3/4 + D1 探针落地（evaluation-only，无指纹影响），CF-1 接 dsyn、CF-3/4/D1 接 auditpack；7 项新测试，全套 125/125；倒排计划 docs/plans/2026-08-21-fmts-schedule-and-protocol-plan.md；**8/22 执行侧：R1 三 seed + auditpack 带新探针重跑；8/23 决策点：R1 全过？修复①是否激活** |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 
