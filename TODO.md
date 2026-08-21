@@ -173,7 +173,8 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 47 | 矩阵修正案 v0.3（R1 规则修订 + 修复批①-⑤ + 架构路线登记） | 本地 | ✓ 已冻结生效；侧B 延至 AE 阶段；②③④ 已实施完毕（见 48），①随后 |
 | 48 | 物理修复批 ②③④ 实施（混合时滞/再湿契约/先验锚定） | 本地 | ✓ 设计冻结+代码+契约测试；D-SYN 探针门禁通过；τ_mix 先验锚定 adhoc2 learnlag（80s）并锁可学习性 |
 | 49 | Hermes 重跑失败修复（指纹/容差/quick覆写） | 本地 | ✓ 指纹纳入模型结构指纹（根因）；红项容差 1e-5（裁定A）；quick 档写 `_quick.json` 不覆写已审计产物；回执 results/final_wm/rerun_failure_response_20260820.md |
-| 50 | 训练提速与归因纪律（用户反馈 15h + 改动捆绑） | 本地 | ✓ 子步抽取 `_substep` + runner `--compile`（aot_eager 逐位一致已验，inductor 待 Hermes 冒烟）；指纹再加 git tree hash（revert 二分安全）；归因靠矩阵自带逐机制诊断，今后单改单跑；118/118 全过 |
+| 50 | 训练提速与归因纪律（用户反馈 15h + 改动捆绑） | 本地 | ✓ 子步抽取 `_substep` + runner `--compile`（aot_eager 逐位一致已验）；指纹加 git tree hash；split_runs 缓存（采样 59×）；并行实测 0.9× 撤回，分段计时入 ledger |
+| 51 | seed0 重跑审计与 R1 门修复 | 本地+Hermes | ✓ leakage 伪影说接受并协议化（shuffle 对照，delta>5% 判据）；R1 seed0 暂定 PASS（待 seed1/2）；稳态探针证实增益缺口 2.7-7.6×；th2 学弱 0.44× 记录在案；**待裁定：T1 减臂 closure_cons×3** |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 
