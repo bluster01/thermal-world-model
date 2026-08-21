@@ -97,9 +97,17 @@ def _properties(path: str | None):
     return AnalyticThermoProperties()
 
 
+def _np_default(o):
+    """JSON default hook: convert numpy scalars (additive, no behavior change for serializable payloads)."""
+    import numpy as np
+    if isinstance(o, np.generic):
+        return o.item()
+    raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
+
+
 def _write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, default=_np_default), encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
