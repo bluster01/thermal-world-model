@@ -36,8 +36,8 @@ seed0）。本文不转述二手叙述。
 
 | # | 证件 | 证明 | 证据仪器 | 现状 | 补齐成本 |
 |---|---|---|---|---|---|
-| B1 | 方向稳定 | do(valve) 符号正确且跨窗一致 | R1 direction（60步） | 🟡 修复批 seed0 PASS，待 3-seed | 在跑 ~5h |
-| B2 | 结构权限 | closure 动作盲 + 无泄漏 | R1 blindness + leakage（shuffle 对照） | 🟡 同 B1 | 同上 |
+| B1 | 方向稳定 | do(valve) 符号正确且跨窗一致 | R1 direction（60步+240步稳态双探针） | ✅ 修复批 3/3 PASS，一致率 100% | — |
+| B2 | 结构权限 | closure 动作盲 + 无泄漏 | R1 blindness + leakage（shuffle 对照 + k=16 零分布） | ❌ blindness ✅ / leakage 2/3（seed1 delta_vs_mean 5.15pp 过 5pp 门，零分布确认非噪声）→ 负结果 | AE 阶段根因修复 |
 | B3 | 量级保真（局部增益） | 增益-开度曲线对得上数据局部线性估计 | CF-3 分箱增益探针（已批准） | ⬜ 待实施 | ~半天 |
 | B4 | 反事实轨迹精度 | 合成孪生 abduction-action-prediction 全链误差 | CF-1（已批准） | ⬜ 待实施 | ~半天 |
 | B5 | 真实近反事实 | A/B 双侧匹配窗互预测 | CF-2（已批准，R1 判决后立项） | ⬜ | 1-2 天 |
@@ -86,9 +86,11 @@ seed0）。本文不转述二手叙述。
 "物理结构模型在判别矩阵下可辨识（A1）、保守闭合挣得参数（T1 SUPPORTED）、联合训练
 优于分段（J1 SUPPORTED）、判决全部可重放（G1）。"
 
-**L1 R1 三 seed 全过后**（约 5h 执行）：
-+ "动作条件响应方向稳定、closure 动作盲、无泄漏（B1/B2）"——论文摘要可恢复
-"directionally stable action channel" 措辞。
+**L1 R1 判决落档后**（✅ 2026-08-21 已落档，方向 PASS / leakage REJECTED）：
++ "动作条件响应方向稳定、closure 运行时动作盲（B1 ✅）"——摘要可恢复
+"directionally stable action channel" 措辞；
+- leakage 证件未过（B2 ❌ 2/3）：论文按负结果写，摘要**不得**出现
+"no leakage"类措辞，改为"泄漏审计检出 seed 条件性残差动作信息"并引零分布证据。
 
 **L2 CF-1/3/4 批落地后**（~1 天）：
 + "反事实轨迹精度在合成孪生上验证（B4）、局部增益曲线与数据一致（B3）、物理约束
