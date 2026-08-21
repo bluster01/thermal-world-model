@@ -172,3 +172,30 @@ def test_cf3_too_few_events(tmp_path):
     out = position_binned_gain(CanonicalRecord(path), SPLIT_VAL, 1, n_bins=4)
     assert out["bins"] == []
     assert "too few" in out["note"]
+
+
+# ---------------------------------------------------------------------------
+# Multi-shuffle leakage null (seed1 marginal-case audit instrument)
+# ---------------------------------------------------------------------------
+
+def test_leakage_multishuffle_schema_and_compat(syn_record, student_model):
+    from src.final_wm.diagnostics import leakage_probe
+
+    args = dict(n_windows=32, history_steps=96, epochs=2, seed=0)
+    single = leakage_probe(student_model, syn_record, **args)
+    assert "shuffle_null" not in single
+    assert single["n_shuffles"] == 1
+    multi = leakage_probe(student_model, syn_record, n_shuffles=4, **args)
+    null = multi["shuffle_null"]
+    assert len(null["improvements"]) == 4
+    # Backward compat: shuffle 0 of the multi run IS the frozen single shuffle
+    # (same permutation seed), and blind/aware are identical across runs.
+    assert multi["shuffled_relative_improvement"] == single["shuffled_relative_improvement"]
+    assert multi["aware_relative_improvement"] == single["aware_relative_improvement"]
+    assert multi["blind"]["val_mse_norm"] == single["blind"]["val_mse_norm"]
+    assert multi["leakage_delta"] == single["leakage_delta"]
+    assert null["improvements"][0] == single["shuffled_relative_improvement"]
+    assert null["std"] >= 0.0
+    assert 0.0 <= null["aware_percentile"] <= 1.0
+    again = leakage_probe(student_model, syn_record, n_shuffles=4, **args)
+    assert again["shuffle_null"]["improvements"] == null["improvements"]

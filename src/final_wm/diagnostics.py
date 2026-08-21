@@ -81,10 +81,18 @@ def leakage_probe(
     n_windows: int = 512,
     history_steps: int = 96,
     epochs: int = 20,
+    n_shuffles: int = 1,
     seed: int = 0,
     device: str | torch.device = "cpu",
 ) -> dict:
-    """Train blind vs action-aware probes; report val-MSE improvement."""
+    """Train blind vs action-aware probes; report val-MSE improvement.
+
+    n_shuffles=1 reproduces the frozen single-shuffle protocol exactly
+    (permutation seed seed+2, probe init seed `seed`).  n_shuffles=k>1 adds
+    k-1 further permutations (seeds seed+2+i) at the SAME probe budget and
+    init, yielding the shuffle-null distribution for the marginal-case audit
+    (seed1 delta 5.75% vs 5% gate, 2026-08-21 rerun).
+    """
     if model.config.closure.injection_mode == "none":
         raise FinalWMProtocolError("leakage probe needs a closure-bearing model")
     feat_tr, act_tr, res_tr = _one_step_residuals(
@@ -101,20 +109,15 @@ def leakage_probe(
     # the optimization trajectory (true 23.9% vs shuffled 23.2%).  The suspect
     # criterion is therefore the DELTA over the shuffled null, not the raw
     # aware-over-blind improvement.
-    g = torch.Generator().manual_seed(seed + 2)
-    perm = torch.randperm(act_tr.shape[0], generator=g)
-    act_tr_shuf = act_tr[perm]
-    results = {}
-    for name, x_tr, x_va in (
-        ("blind", feat_tr, feat_va),
-        ("aware", torch.cat([feat_tr, act_tr], dim=-1), torch.cat([feat_va, act_va], dim=-1)),
-        ("aware_shuffled", torch.cat([feat_tr, act_tr_shuf], dim=-1), torch.cat([feat_va, act_va], dim=-1)),
-    ):
-        torch.manual_seed(seed)
+    obs_scale = torch.tensor([s for _l, s in OBSERVATION_NORM], dtype=torch.float32)
+    y_tr = (res_tr / obs_scale).to(device)
+    y_va = (res_va / obs_scale).to(device)
+    base_mse = float((y_va**2).mean())
+
+    def _train_probe(x_tr: torch.Tensor, x_va: torch.Tensor) -> float:
+        torch.manual_seed(seed)  # same init for every arm: paired comparison
         probe = ResidualLeakageProbe(x_tr.shape[-1]).to(device)
         opt = torch.optim.Adam(probe.parameters(), lr=1e-3)
-        y_tr = (res_tr / probe.obs_scale.cpu()).to(device)
-        y_va = (res_va / probe.obs_scale.cpu()).to(device)
         for _ in range(epochs):
             probe.train()
             opt.zero_grad()
@@ -123,19 +126,47 @@ def leakage_probe(
             opt.step()
         probe.eval()
         with torch.no_grad():
-            val_mse = float(((probe(x_va.to(device)) - y_va) ** 2).mean())
-        base_mse = float((y_va**2).mean())
-        results[name] = {"val_mse_norm": val_mse, "base_mse_norm": base_mse}
-    blind, aware, shuffled = results["blind"], results["aware"], results["aware_shuffled"]
-    improvement = (blind["val_mse_norm"] - aware["val_mse_norm"]) / max(blind["val_mse_norm"], 1e-12)
-    improvement_shuf = (blind["val_mse_norm"] - shuffled["val_mse_norm"]) / max(blind["val_mse_norm"], 1e-12)
-    delta = improvement - improvement_shuf
-    return {
+            return float(((probe(x_va.to(device)) - y_va) ** 2).mean())
+
+    blind_mse = _train_probe(feat_tr, feat_va)
+    aware_mse = _train_probe(
+        torch.cat([feat_tr, act_tr], dim=-1), torch.cat([feat_va, act_va], dim=-1)
+    )
+    shuf_mses = []
+    for i in range(n_shuffles):
+        g = torch.Generator().manual_seed(seed + 2 + i)
+        perm = torch.randperm(act_tr.shape[0], generator=g)
+        shuf_mses.append(_train_probe(
+            torch.cat([feat_tr, act_tr[perm]], dim=-1),
+            torch.cat([feat_va, act_va], dim=-1),
+        ))
+
+    blind = {"val_mse_norm": blind_mse, "base_mse_norm": base_mse}
+    aware = {"val_mse_norm": aware_mse, "base_mse_norm": base_mse}
+    shuffled = {"val_mse_norm": shuf_mses[0], "base_mse_norm": base_mse}
+    improvement = (blind_mse - aware_mse) / max(blind_mse, 1e-12)
+    improvements_shuf = [(blind_mse - m) / max(blind_mse, 1e-12) for m in shuf_mses]
+    mean_shuf = sum(improvements_shuf) / len(improvements_shuf)
+    delta = improvement - improvements_shuf[0]  # frozen single-shuffle delta
+    delta_vs_mean = improvement - mean_shuf
+    out = {
         "blind": blind,
         "aware": aware,
         "aware_shuffled": shuffled,
         "aware_relative_improvement": improvement,
-        "shuffled_relative_improvement": improvement_shuf,
+        "shuffled_relative_improvement": improvements_shuf[0],
         "leakage_delta": delta,
         "leakage_suspected": bool(delta > 0.05),
+        "n_shuffles": n_shuffles,
     }
+    if n_shuffles > 1:
+        var = sum((m - mean_shuf) ** 2 for m in improvements_shuf) / max(len(improvements_shuf) - 1, 1)
+        below = sum(1 for m in improvements_shuf if m < improvement)
+        out["shuffle_null"] = {
+            "improvements": improvements_shuf,
+            "mean": mean_shuf,
+            "std": var ** 0.5,
+            "leakage_delta_vs_mean": delta_vs_mean,
+            "aware_percentile": below / len(improvements_shuf),
+        }
+    return out

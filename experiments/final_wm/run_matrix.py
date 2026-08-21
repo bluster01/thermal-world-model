@@ -430,6 +430,36 @@ def run_auditpack(args) -> dict:
     return report
 
 
+def run_leakdist(args) -> dict:
+    """Multi-shuffle leakage-null distribution for one trained arm (2026-08-21,
+    seed1 marginal case: single-shuffle delta 5.75% vs the 5% gate).
+
+    Diagnostic only: the frozen single-shuffle verdict stands on record; this
+    distribution is the evidence base for a possible v0.4 gate amendment.
+    """
+    device = _device(args.device)
+    record = CanonicalRecord(args.record)
+    out = Path(args.out)
+    seed = int(args.seed)
+    spec = next(s for s in ms.t1_specs((seed,)) if s.arm == args.arm)
+    model = build_world_model(spec, _properties(args.properties_npz)).to(device)
+    model.load_state_dict(
+        torch.load(args.checkpoint, map_location=device, weights_only=False)["state_dict"])
+    report = leakage_probe(
+        model, record,
+        n_windows=64 if args.quick else 512,
+        history_steps=ms.HISTORY_STEPS,
+        epochs=3 if args.quick else 20,
+        n_shuffles=4 if args.quick else 16,
+        seed=90_000 + seed, device=device,
+    )
+    report.update({"arm": args.arm, "seed": seed, "checkpoint": str(args.checkpoint)})
+    name = f"leakdist_{args.arm}_seed{seed}{'_quick' if args.quick else ''}.json"
+    _write_json(out / name, report)
+    print(f"[leakdist] written: {out / name}")
+    return report
+
+
 def run_matrix(args) -> dict:
     device = _device(args.device)
     properties = _properties(args.properties_npz)
@@ -646,7 +676,8 @@ def run_matrix(args) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--phase", required=True,
-                        choices=["discover", "build", "split-sides", "dsyn", "matrix", "auditpack"])
+                        choices=["discover", "build", "split-sides", "dsyn", "matrix", "auditpack",
+                                 "leakdist"])
     parser.add_argument("--data-root", default=None)
     parser.add_argument("--mapping", default=None)
     parser.add_argument("--record", default=None)
@@ -699,6 +730,10 @@ def main() -> None:
         if not args.record:
             raise FinalWMProtocolError("--record required for auditpack")
         run_auditpack(args)
+    elif args.phase == "leakdist":
+        if not args.record or not args.checkpoint:
+            raise FinalWMProtocolError("leakdist needs --record and --checkpoint")
+        run_leakdist(args)
 
 
 if __name__ == "__main__":
