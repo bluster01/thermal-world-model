@@ -35,9 +35,6 @@ from src.final_wm.diagnostics import leakage_probe
 from src.final_wm.evaluation import (
     WindowMetrics,
     boundary_forecast_metrics,
-    calibration_coverage,
-    constraint_checks,
-    counterfactual_fidelity_synthetic,
     evaluate_windows,
     horizon_summary,
     persistence_boundary_metrics,
@@ -184,25 +181,12 @@ def run_dsyn(args) -> dict:
         # of its magnitude (sign-agnostic gap criterion).
         improvement = skeleton_val - final["best_val_nll"]
         passed = bool(improvement >= 0.3 * abs(skeleton_val))
-        # CF-1 (checklist credential B4): counterfactual delta-trajectory
-        # fidelity vs the known teacher, evidence-only for now.
-        student = build_world_model(student_spec, AnalyticThermoProperties()).to(device)
-        student.load_state_dict(torch.load(
-            out / "checkpoints" / f"{final['run_id']}.pt",
-            map_location=device, weights_only=False)["state_dict"])
-        cf1 = counterfactual_fidelity_synthetic(
-            student, teacher.transition, record, SPLIT_VAL,
-            n_windows=16 if args.quick else 64,
-            history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON,
-            seed=95_000 + seed, device=device,
-        )
         results.append({
             "seed": seed,
             "skeleton_val_nll": skeleton_val,
             "student_val_nll": final["best_val_nll"],
             "improvement": improvement,
             "pass": passed,
-            "cf1": cf1,
         })
         print(f"[dsyn] seed={seed} skeleton={skeleton_val:.3f} student={final['best_val_nll']:.3f} pass={passed}")
     verdict = {
@@ -359,7 +343,6 @@ def run_auditpack(args) -> dict:
         event_study_summary,
         mixing_cooling_reference,
         persistence_increment_mae,
-        position_binned_gain,
         rewetting_ablation,
         spray_sensitivity,
         valve_step_events,
@@ -400,30 +383,6 @@ def run_auditpack(args) -> dict:
             model, record, SPLIT_VAL, n_windows=16 if args.quick else 64,
             history_steps=ms.HISTORY_STEPS, seed=120_000 + seed, device=device,
         )
-        # CF/D1 credentials (checklist 2026-08-21): constraint consistency,
-        # position-binned local gain, calibration coverage.  Evidence-only.
-        report["constraint_checks"] = constraint_checks(
-            model, record, SPLIT_VAL, n_windows=8 if args.quick else 32,
-            history_steps=ms.HISTORY_STEPS,
-            rollout_steps=30 if args.quick else 120,
-            seed=130_000 + seed, device=device,
-        )
-        report["calibration_coverage"] = calibration_coverage(
-            model, record, SPLIT_VAL,
-            n_windows=32 if args.quick else 256, batch_size=32,
-            history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON,
-            seed=140_000 + seed, device=device,
-        )
-        report["position_binned_gain"] = {
-            f"v{v + 1}": position_binned_gain(
-                record, SPLIT_VAL, v, model=model,
-                history_steps=ms.HISTORY_STEPS,
-                rollout_steps=60,
-                n_windows=32 if args.quick else 256,
-                seed=150_000 + seed + v, device=device,
-            )
-            for v in (0, 1)
-        }
     name = f"auditpack{('_' + args.side) if args.side else ''}{'_quick' if args.quick else ''}.json"
     _write_json(out / name, report)
     print(f"[auditpack] written: {out / name}")
