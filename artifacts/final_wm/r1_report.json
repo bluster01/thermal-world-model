@@ -5,111 +5,114 @@
       "seed": 0,
       "runtime_blind_ok": true,
       "direction": {
-        "mean_delta_c": -0.22821368277072906,
-        "frac_negative": 1.0,
+        "mean_delta_c": -0.031099509447813034,
+        "frac_negative": 0.875,
         "n_windows": 32
       },
       "direction_steady": {
-        "mean_delta_c": -0.2488035261631012,
+        "mean_delta_c": -0.21960659325122833,
         "frac_negative": 1.0,
         "n_windows": 32
       },
       "leakage": {
         "blind": {
-          "val_mse_norm": 0.0038360252510756254,
-          "base_mse_norm": 0.004228868521749973
+          "val_mse_norm": 0.003692462807521224,
+          "base_mse_norm": 0.0025333736557513475
         },
         "aware": {
-          "val_mse_norm": 0.0029202839359641075,
-          "base_mse_norm": 0.004228868521749973
+          "val_mse_norm": 0.0021871470380574465,
+          "base_mse_norm": 0.0025333736557513475
         },
         "aware_shuffled": {
-          "val_mse_norm": 0.003040931886062026,
-          "base_mse_norm": 0.004228868521749973
+          "val_mse_norm": 0.0022272381465882063,
+          "base_mse_norm": 0.0025333736557513475
         },
-        "aware_relative_improvement": 0.2387213991500038,
-        "shuffled_relative_improvement": 0.20727010720032524,
-        "leakage_delta": 0.03145129194967855,
-        "leakage_suspected": false
+        "aware_relative_improvement": 0.4076725610878411,
+        "shuffled_relative_improvement": 0.3968150086572255,
+        "leakage_delta": 0.010857552430615591,
+        "leakage_suspected": false,
+        "n_shuffles": 1
       },
       "residual_quantiles": {
-        "p50_kw": 24276.642578125,
-        "p90_kw": 27314.583984375,
-        "max_kw": 28587.173828125
+        "p50_kw": 9431.8203125,
+        "p90_kw": 19825.517578125,
+        "max_kw": 27029.486328125
       }
     },
     {
       "seed": 1,
       "runtime_blind_ok": true,
       "direction": {
-        "mean_delta_c": -0.20672398805618286,
+        "mean_delta_c": -0.057869721204042435,
         "frac_negative": 1.0,
         "n_windows": 32
       },
       "direction_steady": {
-        "mean_delta_c": -0.37959176301956177,
+        "mean_delta_c": -0.3708450496196747,
         "frac_negative": 1.0,
         "n_windows": 32
       },
       "leakage": {
         "blind": {
-          "val_mse_norm": 0.004561401903629303,
-          "base_mse_norm": 0.0063290223479270935
+          "val_mse_norm": 0.004407031927257776,
+          "base_mse_norm": 0.0032125182915478945
         },
         "aware": {
-          "val_mse_norm": 0.003997362684458494,
-          "base_mse_norm": 0.0063290223479270935
+          "val_mse_norm": 0.0028637840878218412,
+          "base_mse_norm": 0.0032125182915478945
         },
         "aware_shuffled": {
-          "val_mse_norm": 0.004259825684130192,
-          "base_mse_norm": 0.0063290223479270935
+          "val_mse_norm": 0.002901942003518343,
+          "base_mse_norm": 0.0032125182915478945
         },
-        "aware_relative_improvement": 0.12365479540884745,
-        "shuffled_relative_improvement": 0.06611480984807774,
-        "leakage_delta": 0.05753998556076971,
-        "leakage_suspected": true
+        "aware_relative_improvement": 0.3501785022002786,
+        "shuffled_relative_improvement": 0.3415200862127536,
+        "leakage_delta": 0.008658415987524981,
+        "leakage_suspected": false,
+        "n_shuffles": 1
       },
       "residual_quantiles": {
-        "p50_kw": 25587.78515625,
-        "p90_kw": 28253.8359375,
-        "max_kw": 29030.873046875
+        "p50_kw": 9891.5380859375,
+        "p90_kw": 19764.109375,
+        "max_kw": 27492.3125
       }
     },
     {
       "seed": 2,
       "runtime_blind_ok": true,
       "direction": {
-        "mean_delta_c": -0.22135810554027557,
+        "mean_delta_c": -0.07086067646741867,
         "frac_negative": 1.0,
         "n_windows": 32
       },
       "direction_steady": {
-        "mean_delta_c": -0.5361831784248352,
+        "mean_delta_c": -0.4548463821411133,
         "frac_negative": 1.0,
         "n_windows": 32
       },
       "leakage": {
         "blind": {
-          "val_mse_norm": 0.0036479164846241474,
-          "base_mse_norm": 0.003666721284389496
+          "val_mse_norm": 0.0042212726548314095,
+          "base_mse_norm": 0.001934771309606731
         },
         "aware": {
-          "val_mse_norm": 0.0034631986636668444,
-          "base_mse_norm": 0.003666721284389496
+          "val_mse_norm": 0.00410876888781786,
+          "base_mse_norm": 0.001934771309606731
         },
         "aware_shuffled": {
-          "val_mse_norm": 0.0035479820799082518,
-          "base_mse_norm": 0.003666721284389496
+          "val_mse_norm": 0.004131916910409927,
+          "base_mse_norm": 0.001934771309606731
         },
-        "aware_relative_improvement": 0.05063652683275037,
-        "shuffled_relative_improvement": 0.02739492670326089,
-        "leakage_delta": 0.02324160012948948,
-        "leakage_suspected": false
+        "aware_relative_improvement": 0.026651622913953427,
+        "shuffled_relative_improvement": 0.02116796324900051,
+        "leakage_delta": 0.0054836596649529175,
+        "leakage_suspected": false,
+        "n_shuffles": 1
       },
       "residual_quantiles": {
-        "p50_kw": 25536.9609375,
-        "p90_kw": 28343.181640625,
-        "max_kw": 29137.501953125
+        "p50_kw": 8958.8935546875,
+        "p90_kw": 18599.8828125,
+        "max_kw": 26164.615234375
       }
     }
   ]
