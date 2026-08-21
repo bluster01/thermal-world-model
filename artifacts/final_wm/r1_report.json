@@ -5,78 +5,26 @@
       "seed": 0,
       "runtime_blind_ok": true,
       "direction": {
-        "mean_delta_c": 0.26427555084228516,
-        "frac_negative": 0.1875,
+        "mean_delta_c": -0.22821368277072906,
+        "frac_negative": 1.0,
         "n_windows": 32
       },
       "leakage": {
         "blind": {
-          "val_mse_norm": 0.010423342697322369,
-          "base_mse_norm": 0.010942275635898113
+          "val_mse_norm": 0.0038360252510756254,
+          "base_mse_norm": 0.004228868521749973
         },
         "aware": {
-          "val_mse_norm": 0.011497064493596554,
-          "base_mse_norm": 0.010942275635898113
+          "val_mse_norm": 0.0029202839359641075,
+          "base_mse_norm": 0.004228868521749973
         },
-        "aware_relative_improvement": -0.10301127262658373,
-        "leakage_suspected": false
+        "aware_relative_improvement": 0.2387213991500038,
+        "leakage_suspected": true
       },
       "residual_quantiles": {
-        "p50_kw": 26317.45703125,
-        "p90_kw": 29061.77734375,
-        "max_kw": 29908.74609375
-      }
-    },
-    {
-      "seed": 1,
-      "runtime_blind_ok": true,
-      "direction": {
-        "mean_delta_c": 0.19801178574562073,
-        "frac_negative": 0.34375,
-        "n_windows": 32
-      },
-      "leakage": {
-        "blind": {
-          "val_mse_norm": 0.0090513676404953,
-          "base_mse_norm": 0.011080610565841198
-        },
-        "aware": {
-          "val_mse_norm": 0.00965238269418478,
-          "base_mse_norm": 0.011080610565841198
-        },
-        "aware_relative_improvement": -0.06640046869829626,
-        "leakage_suspected": false
-      },
-      "residual_quantiles": {
-        "p50_kw": 26896.53125,
-        "p90_kw": 29260.091796875,
-        "max_kw": 29940.6328125
-      }
-    },
-    {
-      "seed": 2,
-      "runtime_blind_ok": true,
-      "direction": {
-        "mean_delta_c": 0.26130086183547974,
-        "frac_negative": 0.21875,
-        "n_windows": 32
-      },
-      "leakage": {
-        "blind": {
-          "val_mse_norm": 0.009543071500957012,
-          "base_mse_norm": 0.008598524145781994
-        },
-        "aware": {
-          "val_mse_norm": 0.009928746148943901,
-          "base_mse_norm": 0.008598524145781994
-        },
-        "aware_relative_improvement": -0.04041410021377416,
-        "leakage_suspected": false
-      },
-      "residual_quantiles": {
-        "p50_kw": 26736.4609375,
-        "p90_kw": 29451.544921875,
-        "max_kw": 29967.1484375
+        "p50_kw": 24276.642578125,
+        "p90_kw": 27314.583984375,
+        "max_kw": 28587.173828125
       }
     }
   ]
