@@ -1,0 +1,46 @@
+{
+  "blind": {
+    "val_mse_norm": 0.004606245085597038,
+    "base_mse_norm": 0.0034613818861544132
+  },
+  "aware": {
+    "val_mse_norm": 0.0027249292470514774,
+    "base_mse_norm": 0.0034613818861544132
+  },
+  "aware_shuffled": {
+    "val_mse_norm": 0.002751764375716448,
+    "base_mse_norm": 0.0034613818861544132
+  },
+  "aware_relative_improvement": 0.4084272120969252,
+  "shuffled_relative_improvement": 0.4026013977587174,
+  "leakage_delta": 0.00582581433820778,
+  "leakage_suspected": false,
+  "n_shuffles": 16,
+  "shuffle_null": {
+    "improvements": [
+      0.4026013977587174,
+      0.40316064682026675,
+      0.40284841964626183,
+      0.4033722354474943,
+      0.4021208499615238,
+      0.40333791421531856,
+      0.4034963782254376,
+      0.40256470083005824,
+      0.4028226913588135,
+      0.4027730039195959,
+      0.40254817204814153,
+      0.4037348577149884,
+      0.40400149173520467,
+      0.40299080979506735,
+      0.403740468402428,
+      0.4029413245427846
+    ],
+    "mean": 0.4030659601513814,
+    "std": 0.0005152034540225821,
+    "leakage_delta_vs_mean": 0.005361251945543766,
+    "aware_percentile": 1.0
+  },
+  "arm": "closure_cons_norew",
+  "seed": 1,
+  "checkpoint": "artifacts/final_wm/checkpoints/t1_closure_cons_norew_seed1.pt"
+}
