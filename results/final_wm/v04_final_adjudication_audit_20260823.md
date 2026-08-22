@@ -33,10 +33,13 @@
 论文口径：「最小闭包 SUPPORTED；再湿机制侧A不可辨识（v1 冻结下混合冷却与
 再湿加热不可分；消融后控制相关视界方向恢复正确）」——负结果声明，FMTS 欢迎。
 
-## 待用户裁定
+## 用户裁定（2026-08-23 00:4x）
 
-- **A**：正式切换侧A生产臂 = closure_cons_norew（后续 O1/T5/J1 等以 norew 栈为基准）。
-- **B**：T1 比较判决（closure vs physics_only）在新栈缺位——physics_only 自 v0.2 旧栈
-  后未重训。选项：B1 补跑 physics_only×3（~1.5h，closure 远好于它的 v0.2 结论
-  大概率维持）以重发 T1 verdict；B2 论文引用 v0.2 历史判决 + 新栈绝对值，
-  不重跑。
+- **裁定 A ✓ 采纳**：侧A生产臂正式切换为 `closure_cons_norew`。后续 O1/T5/J1
+  及论文数字均以 norew 栈为基准；intact 栈全档产物留档作对照。
+  runner 的冻结 T1 默认嵌套对（`closure_cons` vs `physics_only`）不改代码、
+  不追溯改写——生产口径由本裁定承载。
+- **裁定 B = B1**：补跑 `physics_only ×3`（当前栈 e95bb88e4），随后以 runner 的
+  `_seed_passes`/THRESH_T1_NLL 对 metrics 文件计算 `closure_cons_norew` vs
+  `physics_only` 嵌套判决并重发 T1 verdict（判决计算留痕本地审计，不改 runner
+  冻结路径）。若通过且需把 norew 设为 runner 默认比较臂，另起 v0.5 修正案。
