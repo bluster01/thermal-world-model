@@ -1,0 +1,58 @@
+{
+  "budget": {
+    "epochs": 10,
+    "patience": 4,
+    "eval_windows": 64
+  },
+  "nll_slack": 0.05,
+  "criteria": {
+    "i_falsification_reproduced": true,
+    "ii_v2_not_degraded": true,
+    "iii_parsimony": true
+  },
+  "adopt_norew": true,
+  "arms": {
+    "closure_cons": {
+      "best_val_nll": 3.5450351238250732,
+      "eval_h18_mae": 5.520191192626953,
+      "v1_step_60s_per_channel": {
+        "sh1_in": -0.2846813201904297,
+        "sh1_out": -20.171642303466797,
+        "sh2_in": 4.634637832641602,
+        "sh2_out": 4.532442092895508,
+        "final": 2.3067092895507812
+      },
+      "v1_direction_600s": {
+        "mean_delta_c": -0.11269731819629669,
+        "frac_negative": 1.0,
+        "n_windows": 64
+      },
+      "v2_direction_600s": {
+        "mean_delta_c": -0.230597123503685,
+        "frac_negative": 1.0,
+        "n_windows": 64
+      }
+    },
+    "closure_cons_norew": {
+      "best_val_nll": 3.4941084384918213,
+      "eval_h18_mae": 5.626803874969482,
+      "v1_step_60s_per_channel": {
+        "sh1_in": 0.0,
+        "sh1_out": -22.902393341064453,
+        "sh2_in": -1.7828559875488281,
+        "sh2_out": -1.7458438873291016,
+        "final": -0.637664794921875
+      },
+      "v1_direction_600s": {
+        "mean_delta_c": -0.411287784576416,
+        "frac_negative": 1.0,
+        "n_windows": 64
+      },
+      "v2_direction_600s": {
+        "mean_delta_c": -0.45383498072624207,
+        "frac_negative": 1.0,
+        "n_windows": 64
+      }
+    }
+  }
+}

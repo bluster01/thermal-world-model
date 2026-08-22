@@ -136,6 +136,26 @@ def test_summary_merges_across_invocations(tmp_path, monkeypatch) -> None:
     assert merged["units"]["t1"] == {"marker": "from-another-invocation"}
 
 
+def test_r1_arm_targets_norew_stack_without_clobbering(tmp_path, monkeypatch) -> None:
+    """Amendment v0.4 regression: --r1-arm closure_cons_norew probes the norew
+    checkpoints and writes r1_closure_cons_norew / r1_report_<arm>.json; the
+    frozen 'r1' block and r1_report.json are untouched."""
+    monkeypatch.setattr(ms, "HISTORY_STEPS", 16)
+    record_path = tmp_path / "record.npz"
+    np.savez_compressed(record_path, **synthetic_canonical_arrays(total_steps=1200, seed=3))
+    out = tmp_path / "out"
+    args = _args(tmp_path, record=str(record_path), units="r1", seeds="0",
+                 r1_arm="closure_cons_norew")
+    summary = run_matrix(args)
+    block = summary["units"]["r1_closure_cons_norew"]
+    assert block["arm"] == "closure_cons_norew"
+    assert block["verdict"] == "MIXED"  # no checkpoints in the smoke out dir
+    assert "norew" in block["reports"][0]["error"]
+    assert "r1" not in summary["units"]
+    assert (out / "r1_report_closure_cons_norew.json").exists()
+    assert not (out / "r1_report.json").exists()
+
+
 def test_matrix_quick_o1_and_b1_run(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(ms, "HISTORY_STEPS", 16)
     arrays = synthetic_canonical_arrays(total_steps=1500, seed=5)

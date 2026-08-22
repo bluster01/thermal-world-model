@@ -204,6 +204,10 @@ class TransitionConfig:
     spray_total_mode: str = "action"        # canonical: spray via varphi(u)
     init_metal_offset: bool = True          # steady-state dTm correction
     latent_dim: int = 0
+    # Amendment v0.4 (audit F3, 2026-08-22): first-class ablation arm that
+    # freezes the rewetting gains at softplus(raw) ~= 0 and removes them from
+    # the trainable set.  Default preserves the frozen batch-3 contract.
+    rewet_ablate: bool = False
 
     @property
     def n_substeps(self) -> int:

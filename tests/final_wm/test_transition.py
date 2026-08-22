@@ -319,6 +319,29 @@ def test_five_point_anchor_reproduces_all_channels() -> None:
     assert bool((xc[:, 9:11] >= 0.0).all())
 
 
+def test_rewet_ablate_arm_freezes_gains() -> None:
+    """Amendment v0.4 (audit F3): the `_norew` arm pins aW at ~0, removes it
+    from the trainable set, and leaves the closure mode intact."""
+    from src.final_wm.training import TrainSpec, build_world_model
+
+    spec = TrainSpec(unit="t1", arm="closure_cons_norew", seed=0,
+                     closure_mode="conservative_norew")
+    model = build_world_model(spec)
+    tr = model.transition
+    assert tr.config.rewet_ablate is True
+    for name in ("aW1", "aW2"):
+        assert float(tr.val(name)) < 1e-9
+        assert tr.raw[name].requires_grad is False
+    assert model.config.closure.injection_mode == "conservative"
+    n_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    spec_ref = TrainSpec(unit="t1", arm="closure_cons", seed=0,
+                         closure_mode="conservative")
+    model_ref = build_world_model(spec_ref)
+    assert model_ref.transition.config.rewet_ablate is False
+    n_ref = sum(p.numel() for p in model_ref.parameters() if p.requires_grad)
+    assert n_trainable == n_ref - 2  # only aW1/aW2 leave the trainable set
+
+
 def test_rewetting_contract_caps_and_dry_lockout() -> None:
     # Repair ③: q_w <= (m/tau_evap) * max(h_pre - h_spray, 0); m=0 -> q_w = 0.
     model = _transition()

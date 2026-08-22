@@ -50,6 +50,10 @@ def t1_specs(seeds: tuple[int, ...] = SEEDS) -> list[TrainSpec]:
         ("closure_cons", "conservative", 0),
         ("closure_steam", "steam_only", 0),
         ("latent4", "conservative", 4),
+        # Amendment v0.4 (audit F3): first-class rewetting ablation arm.
+        # Evidence arm only -- it is NOT in the frozen T1 verdict `nested`
+        # pairs; its adjudication is the v0.4 pre-registered decision rule.
+        ("closure_cons_norew", "conservative_norew", 0),
     )
     return [
         _base("t1", arm, seed, boundary_mode="oracle", initial_state_mode="hybrid",

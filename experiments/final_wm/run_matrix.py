@@ -358,7 +358,8 @@ def run_auditpack(args) -> dict:
     device = _device(args.device)
     record = CanonicalRecord(args.record)
     out = Path(args.out)
-    report: dict = {"record": str(args.record), "matrix_version": ms.MATRIX_VERSION}
+    report: dict = {"record": str(args.record), "matrix_version": ms.MATRIX_VERSION,
+                    "arm": args.arm}
     sensitivity = spray_sensitivity(record, SPLIT_VAL)
     report["spray_sensitivity"] = sensitivity
     report["mixing_reference"] = {
@@ -413,7 +414,10 @@ def run_auditpack(args) -> dict:
             )
             for v in (0, 1)
         }
-    name = f"auditpack{('_' + args.side) if args.side else ''}{'_quick' if args.quick else ''}.json"
+    # Non-default arms (v0.4 norew stack) get their own file: the frozen
+    # closure_cons auditpack artifact must not be clobbered.
+    arm_suffix = "" if args.arm == "closure_cons" else f"_{args.arm}"
+    name = f"auditpack{('_' + args.side) if args.side else ''}{arm_suffix}{'_quick' if args.quick else ''}.json"
     _write_json(out / name, report)
     print(f"[auditpack] written: {out / name}")
     return report
@@ -610,14 +614,17 @@ def run_matrix(args) -> dict:
         dump_summary()
 
     if "r1" in units:
+        # --r1-arm (v0.4): the frozen gate defaults to closure_cons; the norew
+        # ablation stack gets its own evidence block, never clobbering 'r1'.
+        r1_arm = getattr(args, "r1_arm", "closure_cons")
+        r1_key = "r1" if r1_arm == "closure_cons" else f"r1_{r1_arm}"
         r1_reports = []
         for seed in seeds:
-            ckpt = out / "checkpoints" / f"t1_closure_cons_seed{seed}.pt"
+            ckpt = out / "checkpoints" / f"t1_{r1_arm}_seed{seed}.pt"
             if not ckpt.exists():
-                r1_reports.append({"seed": seed, "error": "missing t1 closure_cons checkpoint"})
+                r1_reports.append({"seed": seed, "error": f"missing t1 {r1_arm} checkpoint"})
                 continue
-            spec = ms._base("t1", "closure_cons", seed, boundary_mode="oracle",
-                            initial_state_mode="hybrid", closure_mode="conservative")
+            spec = next(s for s in ms.t1_specs((seed,)) if s.arm == r1_arm)
             model = build_world_model(spec, properties).to(device)
             model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=False)["state_dict"])
             blind_ok = closure_blindness_check(model, device)["runtime_blind_ok"]
@@ -661,8 +668,9 @@ def run_matrix(args) -> dict:
                 verdict = "REJECTED"
             if rep["direction"]["frac_negative"] < 1.0:
                 verdict = "REJECTED"
-        summary["units"]["r1"] = {"verdict": verdict, "reports": r1_reports}
-        _write_json(out / "r1_report.json", summary["units"]["r1"])
+        summary["units"][r1_key] = {"verdict": verdict, "arm": r1_arm, "reports": r1_reports}
+        r1_file = "r1_report.json" if r1_arm == "closure_cons" else f"r1_report_{r1_arm}.json"
+        _write_json(out / r1_file, summary["units"][r1_key])
         dump_summary()
 
     dump_summary()
@@ -700,7 +708,9 @@ def main() -> None:
     parser.add_argument("--tf32", action="store_true",
                         help="tf32 matmul precision (tensor-core fp32; ~10-bit mantissa on GRU/MLP matmuls only, physics elementwise unaffected)")
     parser.add_argument("--checkpoint", default=None, help="auditpack: trained model checkpoint")
-    parser.add_argument("--arm", default="closure_cons", help="auditpack: T1 arm of --checkpoint")
+    parser.add_argument("--arm", default="closure_cons", help="auditpack/leakdist: T1 arm of --checkpoint")
+    parser.add_argument("--r1-arm", dest="r1_arm", default="closure_cons",
+                        help="r1: T1 arm whose checkpoints the gate probes (v0.4 norew stack)")
     parser.add_argument("--seed", default=0, help="auditpack: seed of --checkpoint")
     args = parser.parse_args()
 

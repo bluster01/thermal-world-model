@@ -70,9 +70,14 @@ class TrainSpec:
 
 def build_world_model(spec: TrainSpec, properties: ThermoProperties | None = None) -> FinalWorldModel:
     spec.validate()
+    # Amendment v0.4: the `_norew` suffix selects the first-class rewetting
+    # ablation arm (aW frozen ~0, audit F3).  The closure injection mode
+    # itself is unchanged; the suffix only toggles the transition config.
+    closure_mode = spec.closure_mode.removesuffix("_norew")
+    norew = closure_mode != spec.closure_mode
     config = WorldModelConfig(
-        transition=TransitionConfig(latent_dim=spec.latent_dim),
-        closure=ClosureConfig(injection_mode=spec.closure_mode),
+        transition=TransitionConfig(latent_dim=spec.latent_dim, rewet_ablate=bool(norew)),
+        closure=ClosureConfig(injection_mode=closure_mode),
         observer=ObserverConfig(history_steps=spec.history_steps, latent_dim=spec.latent_dim),
         boundary=BoundaryModelConfig(history_steps=spec.history_steps),
         boundary_mode=spec.boundary_mode,

@@ -143,6 +143,15 @@ class Fan2020UDETransition(nn.Module):
         })
         if self.layout.latent_dim > 0:
             self.latent_rho_raw = nn.Parameter(torch.zeros(self.layout.latent_dim))
+        if config.rewet_ablate:
+            # Amendment v0.4 ablation arm: pin the rewetting gains to
+            # softplus(-30) ~= 0 and exclude them from training, so the only
+            # spray pathway is direct mixing.  Same falsification setting as
+            # the 2026-08-22 audit probe (aW raws filled with -30).
+            for name in ("aW1", "aW2"):
+                if name in self.raw:
+                    self.raw[name].data.fill_(-30.0)
+                    self.raw[name].requires_grad_(False)
 
     # executor-side fix (2026-08-18, per user instruction; Supervisor review
     # required): move injected thermo properties together with the module for
