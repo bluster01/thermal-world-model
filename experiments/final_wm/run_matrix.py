@@ -256,46 +256,27 @@ def _save_eval_metrics(out: Path, run_id: str, metrics) -> Path:
     return path
 
 
-def _spec_matches_ledger(out: Path, run_id: str, spec) -> bool:
-    """Legacy-resume check: the ledger's final entry for run_id (last occurrence
-    wins, per the duplicate-block convention) must carry the identical spec."""
-    from dataclasses import asdict
-
-    ledger = Path(out) / "ledger.jsonl"
-    if not ledger.exists():
-        return False
-    want = asdict(spec)
-    found = None
-    for line in ledger.read_text(encoding="utf-8").splitlines():
-        try:
-            entry = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if entry.get("run_id") == run_id and entry.get("final"):
-            found = entry.get("spec")
-    return found == want
-
-
 def _try_resume(spec, out) -> tuple[dict, WindowMetrics] | None:
     """Skip-if-artifacts-exist resume: a run is reused iff its checkpoint and
-    metrics exist AND the stored fingerprint matches (new format) or the
-    ledger's final-entry spec matches (legacy artifacts from the first run)."""
+    metrics exist AND the stored code fingerprint matches.
+
+    2026-08-22 audit fix: the legacy flat metrics format (no fingerprint)
+    used to authorize resume via a spec-only ledger match; a code-only
+    repair (batch 1 changed the observer architecture, not any spec field)
+    then silently re-emitted pre-repair O1 verdicts as fresh.  Legacy blobs
+    therefore never resume -- they retrain."""
     run_id = f"{spec.unit}_{spec.arm}_seed{spec.seed}"
     ckpt = Path(out) / "checkpoints" / f"{run_id}.pt"
     mpath = Path(out) / "metrics" / f"{run_id}.pt"
     if not (ckpt.exists() and mpath.exists()):
         return None
     blob = torch.load(mpath, map_location="cpu", weights_only=False)
-    if "metrics" in blob:  # new format
-        if blob.get("fingerprint") != config_fingerprint(spec):
-            return None
-        m, final = blob["metrics"], blob.get("final") or {}
-    else:  # legacy flat format from the first Linux run
-        if not _spec_matches_ledger(out, run_id, spec):
-            return None
-        m, final = blob, {}
-    metrics = WindowMetrics(**m)
-    final = dict(final, run_id=run_id, resumed=True)
+    if "metrics" not in blob:  # legacy flat format: no fingerprint, no resume
+        return None
+    if blob.get("fingerprint") != config_fingerprint(spec):
+        return None
+    metrics = WindowMetrics(**blob["metrics"])
+    final = dict(blob.get("final") or {}, run_id=run_id, resumed=True)
     final.setdefault("best_val_nll", float("nan"))
     return final, metrics
 
@@ -504,7 +485,21 @@ def run_matrix(args) -> dict:
         # Incremental verdict persistence: a crash in a later unit must not
         # lose verdicts already computed (the first Linux run lost O1..J1 to
         # the R1 crash).  Rewritten after every unit.
-        _write_json(out / summary_name, summary)
+        # 2026-08-22 audit fix: merge with the on-file summary per unit key --
+        # separate invocations (e.g. `--units t1,r1` then `--units o1`) must
+        # not clobber each other's verdicts.  Fresh unit blocks overwrite any
+        # stale block for the SAME unit.
+        path = out / summary_name
+        merged = summary
+        if path.exists():
+            try:
+                prior = json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                prior = {}
+            if isinstance(prior.get("units"), dict):
+                merged = {**prior, **{k: v for k, v in summary.items() if k != "units"}}
+                merged["units"] = {**prior["units"], **summary["units"]}
+        _write_json(path, merged)
 
     metrics_store: dict[str, object] = {}
 
@@ -590,13 +585,11 @@ def run_matrix(args) -> dict:
             bnd_spec = ms.j1_staged_boundary_spec(seed, str(main_ckpt))
             if quick:
                 bnd_spec = ms.quicken(bnd_spec)
-            bnd_run_id = f"{bnd_spec.unit}_{bnd_spec.arm}_seed{bnd_spec.seed}"
-            bnd_ckpt = out / "checkpoints" / f"{bnd_run_id}.pt"
-            if bnd_ckpt.exists() and _spec_matches_ledger(out, bnd_run_id, bnd_spec):
-                print(f"[j1] staged_boundary seed={seed} RESUMED (artifacts match spec)")
-            else:
-                final = train_arm(bnd_spec, record, out, device=device, properties=properties)
-                bnd_run_id = final["run_id"]
+            # 2026-08-22 audit fix: the ledger spec-match resume carried no
+            # code fingerprint (same hole class as the _try_resume legacy
+            # path); the staged boundary head is cheap, so it always retrains.
+            final = train_arm(bnd_spec, record, out, device=device, properties=properties)
+            bnd_run_id = final["run_id"]
             model = build_world_model(
                 ms._base("j1", "staged", seed, boundary_mode="forecast", train_boundary=True,
                          initial_state_mode="hybrid", closure_mode="conservative"),

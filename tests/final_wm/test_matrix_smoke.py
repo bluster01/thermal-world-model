@@ -97,6 +97,45 @@ def test_closure_blindness_check_passes(tmp_path) -> None:
     assert report["runtime_blind_ok"] is True
 
 
+def test_legacy_metrics_blob_never_resumes(tmp_path, monkeypatch) -> None:
+    """2026-08-22 audit regression: the legacy flat metrics format carries no
+    code fingerprint; resuming from it re-emitted pre-repair verdicts after
+    the batch-1 observer change (spec fields unchanged).  Legacy blobs must
+    always retrain."""
+    from experiments.final_wm.run_matrix import _try_resume
+
+    monkeypatch.setattr(ms, "HISTORY_STEPS", 16)
+    record_path = tmp_path / "record.npz"
+    np.savez_compressed(record_path, **synthetic_canonical_arrays(total_steps=1200, seed=3))
+    args = _args(tmp_path, record=str(record_path), units="o1")
+    run_matrix(args)
+    n_final = _ledger_final_count(tmp_path / "out")
+    # Downgrade one metrics blob to the legacy flat format (drop the
+    # fingerprint/final wrapper); the identical rerun must RETRAIN that arm.
+    mpath = tmp_path / "out" / "metrics" / "o1_steady_seed0.pt"
+    blob = torch.load(mpath, map_location="cpu", weights_only=False)
+    torch.save(blob["metrics"], mpath)
+    run_matrix(args)
+    assert _ledger_final_count(tmp_path / "out") == n_final + 1
+
+
+def test_summary_merges_across_invocations(tmp_path, monkeypatch) -> None:
+    """2026-08-22 audit regression: separate invocations (`--units t1,r1`
+    then `--units o1`) must not clobber each other's summary blocks."""
+    monkeypatch.setattr(ms, "HISTORY_STEPS", 16)
+    record_path = tmp_path / "record.npz"
+    np.savez_compressed(record_path, **synthetic_canonical_arrays(total_steps=1200, seed=3))
+    run_matrix(_args(tmp_path, record=str(record_path), units="o1"))
+    summary_path = tmp_path / "out" / "matrix_summary_quick.json"
+    first = json.loads(summary_path.read_text(encoding="utf-8"))
+    # Forge a foreign unit block, then rerun: the block must survive.
+    first.setdefault("units", {})["t1"] = {"marker": "from-another-invocation"}
+    summary_path.write_text(json.dumps(first), encoding="utf-8")
+    run_matrix(_args(tmp_path, record=str(record_path), units="o1"))
+    merged = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert merged["units"]["t1"] == {"marker": "from-another-invocation"}
+
+
 def test_matrix_quick_o1_and_b1_run(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(ms, "HISTORY_STEPS", 16)
     arrays = synthetic_canonical_arrays(total_steps=1500, seed=5)

@@ -179,6 +179,7 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 53 | FMTS 排期 + CF/D1 探针实施 | 本地 | ✓ CFP 核实（8/30 23:59 UTC=北京 8/31 07:59，4 页正文，欢迎负结果）；CF-1/3/4 + D1 探针落地（evaluation-only，无指纹影响），CF-1 接 dsyn、CF-3/4/D1 接 auditpack；倒排计划 docs/plans/2026-08-21-fmts-schedule-and-protocol-plan.md |
 | 54 | R1 三 seed 判决审计：seed1 leakage 边际案 | 本地+Hermes | ✓ **案结：REJECTED 成立，不修门**。16 重 shuffle 零分布（std 0.2-0.3pp）证实 seed1 delta_vs_mean 5.15pp > 5pp 为真实泄漏（~17σ），非统计噪声；三 seed percentile 全 1.00（伪影地板之上普遍有真信号，仅 seed1 过门）；k=1 复现逐位一致。闭合审计 results/final_wm/leakage_marginal_case_closure_20260821.md；泄漏根因修复列入 AE 阶段 |
 | 55 | 修复批①实施（五点锚定+观测器锚定相对化+干湿端点固定） | 本地 | ✓ H1 分解诊断定位双根因（出口锚不定 −18.1/−6.3°C；hybrid 融合拖偏 h 锚 +2.7/+1.5°C）；①-A 二分反演喷水侧状态 + **干湿混合零喷水湿漏 4.76% 端点修复**（实施中实测发现，~−6°C 偏差的真根因）；①-B 观测器改锚定相对修正（零初始化=精确锚，hybrid 仅慢状态，压力分段 22.064 MPa 软指示）；契约测试含反演往返/掩码/湿带阶跃；全套 128/128 + D-SYN quick 门禁过（59% > 30%）；残余登记 sh1_out −3.6°C 结构性（AE 候选）。重跑 runbook：results/final_wm/repair1_rerun_runbook_20260821.md |
+| 56 | 修复批①重跑审计 + runner 完整性修复 + ③bis 提案 | 本地 | ✓ 审计 results/final_wm/repair1_rerun_audit_20260822.md：D-SYN 全量 PASS×3、T1 closure_cons×3 重训（H1 箱均值 5.3-13.3→0.35-1.15°C，①达标）、R1 REJECTED（seed0 28/32<1.0 门，**泄漏三 seed 全清白 0.55-1.09pp**——①消除泄漏签名）、**O1 陈旧无效**（legacy 无指纹续跑洞复陈 v0.2 判决，已修+回归测试，summary 冲撞同修）；**F3 再湿项幅值使 v1 下游反号**（aW 消融证伪：sh2_in +2.7→−0.3），③bis 消融臂提案待批；执行侧两笔热修复审通过；130/130。O1 重跑 runbook 已发 |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 
