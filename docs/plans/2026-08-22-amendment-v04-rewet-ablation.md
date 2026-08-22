@@ -78,3 +78,14 @@ aW→0 消融（③探针同款）后全部转负（sh2_in −0.3、final −0.0
 （金属冷却最终主导），反号限于 60s 下游瞬态——控制相关视界（30-180s）
 恰在此区间。终审（全档三 seed 双栈探针）runbook：
 `results/final_wm/v04_full_tier_runbook_20260822.md`。
+
+## 执行侧终审回传（2026-08-22 20:xx，execution-side）
+
+`results/final_wm/v04_full_tier_result_20260822.md`：全档链完成，预注册
+终审判据两条件均满足——(1) 方向全对：R1 三 seed frac_negative=1.0、
+auditpack v1 探针下游无反号、rewet 消融恒等自检过；(2) val NLL 中位
+1.272 vs intact **1.228**（**+0.044** ≤ +0.05；勘误：初版误引 intact
+中位 1.260）。**生产臂切换生效**：closure_cons_norew 为侧A生产臂。
+回传 commit `07d6d91`；对侧独立审计 cf1ecb2 复核通过、裁定 9f6ea68
+（A 生产臂切换 + B1 physics_only×3 重发 T1 判决，runbook 另发）。
+O1 基准切 `conservative_norew` 悬置（§4）。
