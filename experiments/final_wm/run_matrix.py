@@ -642,15 +642,28 @@ def run_matrix(args) -> dict:
                 history_steps=ms.HISTORY_STEPS, rollout_steps=24 if quick else 240,
                 seed=85_000 + seed, device=device,
             )
-            leak = leakage_probe(
-                model, record, n_windows=64 if quick else 512,
-                history_steps=ms.HISTORY_STEPS, epochs=3 if quick else 20,
-                seed=90_000 + seed, device=device,
-            )
-            quant = residual_quantiles(
-                model, record, SPLIT_VAL, n_windows=16 if quick else 64,
-                history_steps=ms.HISTORY_STEPS, seed=seed, device=device,
-            )
+            if spec.closure_mode == "none":
+                # 2026-08-23 physics_only R1 probe: no closure head exists, so
+                # the leakage question (does the action-aware component leak
+                # future information) is vacuous.  Mark it skipped; the
+                # direction/blindness evidence still stands on its own.
+                leak = {"skipped": True,
+                        "reason": "no closure-bearing head; probe vacuous",
+                        "leakage_suspected": False}
+            else:
+                leak = leakage_probe(
+                    model, record, n_windows=64 if quick else 512,
+                    history_steps=ms.HISTORY_STEPS, epochs=3 if quick else 20,
+                    seed=90_000 + seed, device=device,
+                )
+            if spec.closure_mode == "none":
+                quant = {"skipped": True,
+                         "reason": "no closure; residual quantiles undefined"}
+            else:
+                quant = residual_quantiles(
+                    model, record, SPLIT_VAL, n_windows=16 if quick else 64,
+                    history_steps=ms.HISTORY_STEPS, seed=seed, device=device,
+                )
             r1_reports.append({
                 "seed": seed,
                 "runtime_blind_ok": blind_ok,
