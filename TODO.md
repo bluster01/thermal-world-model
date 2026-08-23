@@ -189,6 +189,8 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 
 | 62 | 黑箱基线包（canonical 协议下最终精度对比） | 本地 | 进行中：跨协议数字不可比（phase1 最优 M7 step17=0.50°C vs norew 0.95-1.38°C 口径不同：test/val 切分、500/256 窗、M7 疑含未来 SP 前馈）；v05_blackbox_baselines.py 实施 lstm/gru/dlinear/itransformer/n4sid_ridge ×3 seed（同 canonical 记录、同 256 val 窗集 seed=50_000、同 oracle 未来信息集、目标=主汽温 H18，实例归一化）+ **R1 式阶跃方向探针移植黑箱**（18 步短视界保守版）；训练慢根因=sample_windows 每步全扫 53 万行 CPU 瓶颈→改 20k 窗池一次性物化。**中间读数：LSTM seed0/1 step17=0.742/0.759°C 优于 norew 0.95-1.38——"精度超黑箱"暂不被支持，若终盘如此，论文口径应为"精度平价+干预响应独占持证"**；v04_comparison_report 扩展全通道×H1/3/6/12/18+step 曲线（主汽温最易 0.5-0.6°C@H18 均值口径，sh1_in 最难 4.3-5.1°C）；**勘误：此前口述"60s瞬态"实为 60 步=10 分钟（每步 10s），240 步=40 分钟** |
 
+| 63 | v0.6 通道扩充修正案（backlog，8/30 后 CF/AE 窗口） | 本地+现场 | **已批准登记，冻结期内不启动**。诊断依据：sh1_in H18 MAE 4.5-5.1°C 已近信息集可预测性极限（within_bin_sigma 15.7°C、T0 一致性 1.25×，波动主源=未观测炉膛侧吸热：coal_command 是指令非实际热输入、无烟气侧通道——contracts.py BOUNDARY_ELEMENTS 无 flue/reheat/per-valve flow）；sh1_out 有 −3.6°C 结构性偏差（AE 候选，纯模型侧可修）。**优先级排序：① 再热进出口汽温作边界输入（炉膛出口烟温场代理，直击 sh1_in）；② 分级减温水流量测点（直接监督喷水混合项→闭包可辨识性升级，CF 因果声称前提）；③ sh1_out AE 偏差校正（零新数据）；④ 烟气温度/氧量；⑤ 再热作联合目标（新物理模块，最后做）。触发条件=canonical 记录 v2 + 双侧全臂重训重判，论文局限性节可引"聚合精度代价主因=未观测炉膛侧驱动，已识别补点方案"** |
+
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 
 ## 不可提前声称
