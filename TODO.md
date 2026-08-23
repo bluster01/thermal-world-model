@@ -187,6 +187,8 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 
 | 61 | 侧B完整复现矩阵（做实结论） | 本地+Hermes | 设计+发单：数据侦察确认侧B=同时段镜像侧、v1 活跃（均值 0.221，76%>10%）——再湿辨识性问题成立；runbook results/final_wm/sideB_matrix_runbook_20260823.md（D-SYN 门禁→T1 三臂×3→R1 三臂对照→O1×3→leakdist/双 auditpack，~20-24h 串行，停损点=D-SYN 不过门即停）；本地 quick 冒烟全过（D-SYN seed0 270 vs 骨架 662 pass；t1 五臂、r1 物理/norew 双路径无崩溃；冒烟产物 artifacts/sideB_smoke 不入库）；**复现判据（预注册）：F3 反号是否复现、T1 平价是否复现、norew 方向排他是否复现** |
 
+| 62 | 黑箱基线包（canonical 协议下最终精度对比） | 本地 | 进行中：跨协议数字不可比（phase1 最优 M7 step17=0.50°C vs norew 0.95-1.38°C 口径不同：test/val 切分、500/256 窗、M7 疑含未来 SP 前馈）；v05_blackbox_baselines.py 实施 lstm/gru/dlinear/itransformer/n4sid_ridge ×3 seed（同 canonical 记录、同 256 val 窗集 seed=50_000、同 oracle 未来信息集、目标=主汽温 H18，实例归一化）+ **R1 式阶跃方向探针移植黑箱**（18 步短视界保守版）；训练慢根因=sample_windows 每步全扫 53 万行 CPU 瓶颈→改 20k 窗池一次性物化。**中间读数：LSTM seed0/1 step17=0.742/0.759°C 优于 norew 0.95-1.38——"精度超黑箱"暂不被支持，若终盘如此，论文口径应为"精度平价+干预响应独占持证"**；v04_comparison_report 扩展全通道×H1/3/6/12/18+step 曲线（主汽温最易 0.5-0.6°C@H18 均值口径，sh1_in 最难 4.3-5.1°C）；**勘误：此前口述"60s瞬态"实为 60 步=10 分钟（每步 10s），240 步=40 分钟** |
+
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 
 ## 不可提前声称

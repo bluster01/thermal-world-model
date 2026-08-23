@@ -64,7 +64,7 @@ def per_channel_mae(model, record, spec, seed, device):
     err = torch.cat(abs_err)       # (N, H, 5)
     tgt = torch.cat(targets)       # (N, H, 5)
     out = {}
-    for h in (1, 6, 18):
+    for h in (1, 3, 6, 12, 18):
         e = err[:, :h, MAIN_STEAM_CH]
         t = tgt[:, :h, MAIN_STEAM_CH]
         out[f"H{h}"] = {
@@ -73,6 +73,11 @@ def per_channel_mae(model, record, spec, seed, device):
             "mean_target_c": float(t.mean()),
         }
         out[f"H{h}_allch_mae_c"] = float(err[:, :h, :].mean())
+        out[f"H{h}_per_channel_mae_c"] = [float(err[:, :h, c].mean()) for c in range(err.shape[2])]
+    # per-step main-steam curve (phase1 baselines report step-17 point MAE)
+    e_last = err[:, :, MAIN_STEAM_CH]  # (N, H)
+    out["main_steam_step_curve_mae"] = [float(e_last[:, i].mean()) for i in range(e_last.shape[1])]
+    out["main_steam_step17_mae"] = float(e_last[:, -1].mean())
     return out
 
 
