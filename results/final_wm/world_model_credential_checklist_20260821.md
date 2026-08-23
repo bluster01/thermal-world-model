@@ -13,7 +13,7 @@ seed0）。本文不转述二手叙述。
 |---|---|---|
 | O1 learned | MIXED（2/3 seed 显著退化 30%，1 seed +13.3%） | — |
 | O1 hybrid | REJECTED（无 seed 显著改善） | "hybrid SUPPORTED" ✗ |
-| T1 closure_cons vs physics_only | **SUPPORTED**（2/3 seed 改善 5.7%/6.9%） | "closure 零增益" ✗ |
+| T1 closure_cons vs physics_only | **SUPPORTED**（2/3 seed 改善 5.7%/6.9%）——**⚠ 修复①栈重发判决推翻：norew MIXED 1/3、intact REJECTED 0/3（t1_verdict_reissue_20260823.md）；锚定修复强化物理基线后闭包无显著精度增益** | "closure 零增益" ✗ |
 | T1 closure_steam / latent4 | REJECTED / REJECTED | ✓ |
 | B1 | **REJECTED**（3/3 CRPS 差于 persistence 1.7-2.0） | "CRPS −9.4% SUPPORTED" ✗ |
 | J1 | SUPPORTED 3/3 | ✓ |
