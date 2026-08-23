@@ -1,0 +1,36 @@
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] Graph break from `Tensor.item()`, consider setting:
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]     torch._dynamo.config.capture_scalar_outputs = True
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] or:
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]     env TORCHDYNAMO_CAPTURE_SCALAR_OUTPUTS=1
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] to include these operations in the captured graph.
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] 
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] Graph break: from user code at:
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]   File "/home/bluster/projectA/thermal-world-model/src/final_wm/transition.py", line 428, in _substep
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]     ts = self.properties.temperature_of_ph(p_stack, h)
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]   File "/home/bluster/projectA/thermal-world-model/src/final_wm/properties.py", line 193, in temperature_of_ph
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]     b = self.bounds
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]   File "/home/bluster/projectA/thermal-world-model/src/final_wm/properties.py", line 187, in bounds
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]     p_lo=float(self._p[0]), p_hi=float(self._p[-1]),
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] 
+W0823 13:40:16.880000 2280088 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] 
+/home/bluster/anaconda3/envs/Alloftime/lib/python3.11/site-packages/torch/_dynamo/variables/functions.py:2082: UserWarning: Dynamo does not know how to trace the builtin `<unknown module>.Tensor.clamp.` This function is either a Python builtin (e.g. _warnings.warn) or a third-party C/C++ Python extension (perhaps created with pybind).
+If it is a Python builtin, please file an issue on GitHub so the PyTorch team can add support for it and see the next case for a workaround.
+If it is a third-party C/C++ Python extension, please either wrap it into a PyTorch-understood custom operator (see https://pytorch.org/tutorials/advanced/custom_ops_landing_page.html for more details) or, if it is traceable, use `torch.compiler.allow_in_graph`.
+  torch._dynamo.utils.warn_once(explanation + "\n" + "\n".join(hints))
+W0823 13:40:19.090000 2280088 site-packages/torch/_dynamo/convert_frame.py:1743] [13/8] torch._dynamo hit config.recompile_limit (8)
+W0823 13:40:19.090000 2280088 site-packages/torch/_dynamo/convert_frame.py:1743] [13/8]    function: 'torch_dynamo_resume_in_saturation_temperature_at_205' (/home/bluster/projectA/thermal-world-model/src/final_wm/properties.py:205)
+W0823 13:40:19.090000 2280088 site-packages/torch/_dynamo/convert_frame.py:1743] [13/8]    last reason: 13/0: Cache line invalidated because L['___stack2'] got deallocated
+W0823 13:40:19.090000 2280088 site-packages/torch/_dynamo/convert_frame.py:1743] [13/8] To log all recompilation reasons, use TORCH_LOGS="recompiles".
+W0823 13:40:19.090000 2280088 site-packages/torch/_dynamo/convert_frame.py:1743] [13/8] To diagnose recompilation issues, see https://docs.pytorch.org/docs/main/user_guide/torch_compiler/compile/programming_model.recompilation.html
+W0823 13:40:19.381000 2280088 site-packages/torch/_dynamo/convert_frame.py:1743] [4/8] torch._dynamo hit config.recompile_limit (8)
+W0823 13:40:19.381000 2280088 site-packages/torch/_dynamo/convert_frame.py:1743] [4/8]    function: 'torch_dynamo_resume_in_interp2d_at_110' (/home/bluster/projectA/thermal-world-model/src/final_wm/properties.py:110)
+W0823 13:40:19.381000 2280088 site-packages/torch/_dynamo/convert_frame.py:1743] [4/8]    last reason: 4/0: Cache line invalidated because L['___stack0'] got deallocated
+W0823 13:40:19.381000 2280088 site-packages/torch/_dynamo/convert_frame.py:1743] [4/8] To log all recompilation reasons, use TORCH_LOGS="recompiles".
+W0823 13:40:19.381000 2280088 site-packages/torch/_dynamo/convert_frame.py:1743] [4/8] To diagnose recompilation issues, see https://docs.pytorch.org/docs/main/user_guide/torch_compiler/compile/programming_model.recompilation.html
+/home/bluster/projectA/thermal-world-model/src/final_wm/training.py:192: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)
+  train_loss += float(loss)
+[t1] physics_only seed=0 best_val=1.562 eval={'H1': {'nll': 1.1988162994384766, 'mae': 2.232842206954956, 'crps': 1.959629774093628}, 'H6': {'nll': 1.3098524808883667, 'mae': 2.6316945552825928, 'crps': 2.060236692428589}, 'H18': {'nll': 1.6513220071792603, 'mae': 3.208441734313965, 'crps': 2.389676809310913}}
+[t1] physics_only seed=1 best_val=1.561 eval={'H1': {'nll': 1.2332773208618164, 'mae': 2.2779698371887207, 'crps': 2.0456254482269287}, 'H6': {'nll': 1.332265853881836, 'mae': 2.6613528728485107, 'crps': 2.1371161937713623}, 'H18': {'nll': 1.7154728174209595, 'mae': 3.2778825759887695, 'crps': 2.491537570953369}}
+[t1] physics_only seed=2 best_val=1.570 eval={'H1': {'nll': 1.2654876708984375, 'mae': 2.465153217315674, 'crps': 2.1690735816955566}, 'H6': {'nll': 1.348910927772522, 'mae': 2.844146490097046, 'crps': 2.2430481910705566}, 'H18': {'nll': 1.6483204364776611, 'mae': 3.4611337184906006, 'crps': 2.5839807987213135}}
+[matrix] summary written: artifacts/final_wm_sideB/matrix_summary_sideB.json
