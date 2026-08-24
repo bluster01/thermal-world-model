@@ -174,6 +174,7 @@ def evaluate(model, record, mean, std, device, n, seed):
         pred = InstanceNorm.restore(mu_c, model(hist_n, fut))
         errs.append((pred - tgt).abs().cpu())
         done += errs[-1].shape[0]
+    model.train()  # execution-side fix: cudnn RNN backward requires train mode
     return float(torch.cat(errs).mean())
 
 
