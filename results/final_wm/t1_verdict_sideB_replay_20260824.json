@@ -1,0 +1,88 @@
+{
+  "side": "B",
+  "threshold": 0.02,
+  "min_seed_passes": 2,
+  "comparisons": {
+    "closure_cons_vs_physics_only": {
+      "verdict": "SUPPORTED",
+      "passes": 3,
+      "per_seed": [
+        {
+          "point": 0.07308642566204071,
+          "ci_lo": 0.042195096611976624,
+          "ci_hi": 0.10671334713697433,
+          "n_days": 13,
+          "pass": true
+        },
+        {
+          "point": 0.06836950033903122,
+          "ci_lo": 0.040400706231594086,
+          "ci_hi": 0.09666424989700317,
+          "n_days": 13,
+          "pass": true
+        },
+        {
+          "point": 0.0982770249247551,
+          "ci_lo": 0.0640830248594284,
+          "ci_hi": 0.12712202966213226,
+          "n_days": 13,
+          "pass": true
+        }
+      ]
+    },
+    "closure_cons_norew_vs_physics_only": {
+      "verdict": "SUPPORTED",
+      "passes": 3,
+      "per_seed": [
+        {
+          "point": 0.1029026061296463,
+          "ci_lo": 0.05148058012127876,
+          "ci_hi": 0.14834246039390564,
+          "n_days": 13,
+          "pass": true
+        },
+        {
+          "point": 0.08820591866970062,
+          "ci_lo": 0.058818839490413666,
+          "ci_hi": 0.11630930006504059,
+          "n_days": 13,
+          "pass": true
+        },
+        {
+          "point": 0.11122982949018478,
+          "ci_lo": 0.08088093996047974,
+          "ci_hi": 0.13816924393177032,
+          "n_days": 13,
+          "pass": true
+        }
+      ]
+    },
+    "closure_cons_norew_vs_closure_cons": {
+      "verdict": "MIXED",
+      "passes": 1,
+      "per_seed": [
+        {
+          "point": 0.03264903277158737,
+          "ci_lo": 0.0025696181692183018,
+          "ci_hi": 0.06737442314624786,
+          "n_days": 13,
+          "pass": true
+        },
+        {
+          "point": 0.020497994497418404,
+          "ci_lo": -0.0010863906936720014,
+          "ci_hi": 0.04298750311136246,
+          "n_days": 13,
+          "pass": false
+        },
+        {
+          "point": 0.012967115268111229,
+          "ci_lo": -0.009644543752074242,
+          "ci_hi": 0.04055135324597359,
+          "n_days": 13,
+          "pass": false
+        }
+      ]
+    }
+  }
+}
