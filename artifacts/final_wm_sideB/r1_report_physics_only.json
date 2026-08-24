@@ -1,0 +1,75 @@
+{
+  "verdict": "REJECTED",
+  "arm": "physics_only",
+  "reports": [
+    {
+      "seed": 0,
+      "runtime_blind_ok": true,
+      "direction": {
+        "mean_delta_c": 0.04693946987390518,
+        "frac_negative": 0.40625,
+        "n_windows": 32
+      },
+      "direction_steady": {
+        "mean_delta_c": -0.2508169114589691,
+        "frac_negative": 1.0,
+        "n_windows": 32
+      },
+      "leakage": {
+        "skipped": true,
+        "reason": "no closure-bearing head; probe vacuous",
+        "leakage_suspected": false
+      },
+      "residual_quantiles": {
+        "skipped": true,
+        "reason": "no closure; residual quantiles undefined"
+      }
+    },
+    {
+      "seed": 1,
+      "runtime_blind_ok": true,
+      "direction": {
+        "mean_delta_c": 0.04070587456226349,
+        "frac_negative": 0.40625,
+        "n_windows": 32
+      },
+      "direction_steady": {
+        "mean_delta_c": -0.22906646132469177,
+        "frac_negative": 1.0,
+        "n_windows": 32
+      },
+      "leakage": {
+        "skipped": true,
+        "reason": "no closure-bearing head; probe vacuous",
+        "leakage_suspected": false
+      },
+      "residual_quantiles": {
+        "skipped": true,
+        "reason": "no closure; residual quantiles undefined"
+      }
+    },
+    {
+      "seed": 2,
+      "runtime_blind_ok": true,
+      "direction": {
+        "mean_delta_c": 0.03426189720630646,
+        "frac_negative": 0.53125,
+        "n_windows": 32
+      },
+      "direction_steady": {
+        "mean_delta_c": -0.3473413586616516,
+        "frac_negative": 1.0,
+        "n_windows": 32
+      },
+      "leakage": {
+        "skipped": true,
+        "reason": "no closure-bearing head; probe vacuous",
+        "leakage_suspected": false
+      },
+      "residual_quantiles": {
+        "skipped": true,
+        "reason": "no closure; residual quantiles undefined"
+      }
+    }
+  ]
+}

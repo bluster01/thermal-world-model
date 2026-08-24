@@ -4,5 +4,375 @@
   "side": "B",
   "record": "artifacts/final_wm/canonical_sideB.npz",
   "properties": "GridThermoProperties",
-  "units": {}
+  "units": {
+    "r1_physics_only": {
+      "verdict": "REJECTED",
+      "arm": "physics_only",
+      "reports": [
+        {
+          "seed": 0,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": 0.04693946987390518,
+            "frac_negative": 0.40625,
+            "n_windows": 32
+          },
+          "direction_steady": {
+            "mean_delta_c": -0.2508169114589691,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "leakage": {
+            "skipped": true,
+            "reason": "no closure-bearing head; probe vacuous",
+            "leakage_suspected": false
+          },
+          "residual_quantiles": {
+            "skipped": true,
+            "reason": "no closure; residual quantiles undefined"
+          }
+        },
+        {
+          "seed": 1,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": 0.04070587456226349,
+            "frac_negative": 0.40625,
+            "n_windows": 32
+          },
+          "direction_steady": {
+            "mean_delta_c": -0.22906646132469177,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "leakage": {
+            "skipped": true,
+            "reason": "no closure-bearing head; probe vacuous",
+            "leakage_suspected": false
+          },
+          "residual_quantiles": {
+            "skipped": true,
+            "reason": "no closure; residual quantiles undefined"
+          }
+        },
+        {
+          "seed": 2,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": 0.03426189720630646,
+            "frac_negative": 0.53125,
+            "n_windows": 32
+          },
+          "direction_steady": {
+            "mean_delta_c": -0.3473413586616516,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "leakage": {
+            "skipped": true,
+            "reason": "no closure-bearing head; probe vacuous",
+            "leakage_suspected": false
+          },
+          "residual_quantiles": {
+            "skipped": true,
+            "reason": "no closure; residual quantiles undefined"
+          }
+        }
+      ]
+    },
+    "r1": {
+      "verdict": "REJECTED",
+      "arm": "closure_cons",
+      "reports": [
+        {
+          "seed": 0,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": 0.05982666090130806,
+            "frac_negative": 0.03125,
+            "n_windows": 32
+          },
+          "direction_steady": {
+            "mean_delta_c": -0.3414278030395508,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "leakage": {
+            "blind": {
+              "val_mse_norm": 0.009190335869789124,
+              "base_mse_norm": 0.012413623742759228
+            },
+            "aware": {
+              "val_mse_norm": 0.004742342513054609,
+              "base_mse_norm": 0.012413623742759228
+            },
+            "aware_shuffled": {
+              "val_mse_norm": 0.004800811409950256,
+              "base_mse_norm": 0.012413623742759228
+            },
+            "aware_relative_improvement": 0.48398594129254335,
+            "shuffled_relative_improvement": 0.4776239434587266,
+            "leakage_delta": 0.006361997833816746,
+            "leakage_suspected": false,
+            "n_shuffles": 1
+          },
+          "residual_quantiles": {
+            "p50_kw": 8986.521484375,
+            "p90_kw": 19813.259765625,
+            "max_kw": 25639.720703125
+          }
+        },
+        {
+          "seed": 1,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": 0.06404285132884979,
+            "frac_negative": 0.21875,
+            "n_windows": 32
+          },
+          "direction_steady": {
+            "mean_delta_c": -0.4355188310146332,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "leakage": {
+            "blind": {
+              "val_mse_norm": 0.007058152463287115,
+              "base_mse_norm": 0.01169164665043354
+            },
+            "aware": {
+              "val_mse_norm": 0.0044202543795108795,
+              "base_mse_norm": 0.01169164665043354
+            },
+            "aware_shuffled": {
+              "val_mse_norm": 0.004478535149246454,
+              "base_mse_norm": 0.01169164665043354
+            },
+            "aware_relative_improvement": 0.3737377589244816,
+            "shuffled_relative_improvement": 0.36548053154965204,
+            "leakage_delta": 0.008257227374829534,
+            "leakage_suspected": false,
+            "n_shuffles": 1
+          },
+          "residual_quantiles": {
+            "p50_kw": 7805.71533203125,
+            "p90_kw": 17929.666015625,
+            "max_kw": 28910.923828125
+          }
+        },
+        {
+          "seed": 2,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": 0.043831635266542435,
+            "frac_negative": 0.125,
+            "n_windows": 32
+          },
+          "direction_steady": {
+            "mean_delta_c": -0.40544262528419495,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "leakage": {
+            "blind": {
+              "val_mse_norm": 0.005238659214228392,
+              "base_mse_norm": 0.013793564401566982
+            },
+            "aware": {
+              "val_mse_norm": 0.007012094836682081,
+              "base_mse_norm": 0.013793564401566982
+            },
+            "aware_shuffled": {
+              "val_mse_norm": 0.007102492731064558,
+              "base_mse_norm": 0.013793564401566982
+            },
+            "aware_relative_improvement": -0.338528533720417,
+            "shuffled_relative_improvement": -0.3557844556435215,
+            "leakage_delta": 0.01725592192310449,
+            "leakage_suspected": false,
+            "n_shuffles": 1
+          },
+          "residual_quantiles": {
+            "p50_kw": 8499.28125,
+            "p90_kw": 17594.58984375,
+            "max_kw": 28728.71484375
+          }
+        }
+      ]
+    },
+    "r1_closure_cons_norew": {
+      "verdict": "SUPPORTED",
+      "arm": "closure_cons_norew",
+      "reports": [
+        {
+          "seed": 0,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": -0.3920120596885681,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "direction_steady": {
+            "mean_delta_c": -0.540479302406311,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "leakage": {
+            "blind": {
+              "val_mse_norm": 0.009017130360007286,
+              "base_mse_norm": 0.011829065158963203
+            },
+            "aware": {
+              "val_mse_norm": 0.004552464000880718,
+              "base_mse_norm": 0.011829065158963203
+            },
+            "aware_shuffled": {
+              "val_mse_norm": 0.004623058717697859,
+              "base_mse_norm": 0.011829065158963203
+            },
+            "aware_relative_improvement": 0.4951316195813499,
+            "shuffled_relative_improvement": 0.487302663583304,
+            "leakage_delta": 0.007828955998045894,
+            "leakage_suspected": false,
+            "n_shuffles": 1
+          },
+          "residual_quantiles": {
+            "p50_kw": 9440.0234375,
+            "p90_kw": 18968.38671875,
+            "max_kw": 28665.53515625
+          }
+        },
+        {
+          "seed": 1,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": -0.5244894027709961,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "direction_steady": {
+            "mean_delta_c": -0.7611846923828125,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "leakage": {
+            "blind": {
+              "val_mse_norm": 0.0069274986162781715,
+              "base_mse_norm": 0.011852795258164406
+            },
+            "aware": {
+              "val_mse_norm": 0.0043092453852295876,
+              "base_mse_norm": 0.011852795258164406
+            },
+            "aware_shuffled": {
+              "val_mse_norm": 0.004360094666481018,
+              "base_mse_norm": 0.011852795258164406
+            },
+            "aware_relative_improvement": 0.37795074038647036,
+            "shuffled_relative_improvement": 0.37061053231599234,
+            "leakage_delta": 0.007340208070478027,
+            "leakage_suspected": false,
+            "n_shuffles": 1
+          },
+          "residual_quantiles": {
+            "p50_kw": 6861.87255859375,
+            "p90_kw": 17178.05078125,
+            "max_kw": 29423.201171875
+          }
+        },
+        {
+          "seed": 2,
+          "runtime_blind_ok": true,
+          "direction": {
+            "mean_delta_c": -0.4896564483642578,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "direction_steady": {
+            "mean_delta_c": -0.8749364614486694,
+            "frac_negative": 1.0,
+            "n_windows": 32
+          },
+          "leakage": {
+            "blind": {
+              "val_mse_norm": 0.005316185764968395,
+              "base_mse_norm": 0.0141332121565938
+            },
+            "aware": {
+              "val_mse_norm": 0.0066742063499987125,
+              "base_mse_norm": 0.0141332121565938
+            },
+            "aware_shuffled": {
+              "val_mse_norm": 0.006749922875314951,
+              "base_mse_norm": 0.0141332121565938
+            },
+            "aware_relative_improvement": -0.2554501751949954,
+            "shuffled_relative_improvement": -0.2696928161905718,
+            "leakage_delta": 0.014242640995576372,
+            "leakage_suspected": false,
+            "n_shuffles": 1
+          },
+          "residual_quantiles": {
+            "p50_kw": 7179.0546875,
+            "p90_kw": 17250.033203125,
+            "max_kw": 28212.9296875
+          }
+        }
+      ]
+    },
+    "o1": {
+      "learned": {
+        "verdict": "SUPPORTED",
+        "per_seed": [
+          {
+            "point": 0.25897955894470215,
+            "ci_lo": 0.22233954071998596,
+            "ci_hi": 0.29802462458610535,
+            "n_days": 13,
+            "pass": true
+          },
+          {
+            "point": 0.24421946704387665,
+            "ci_lo": 0.21444958448410034,
+            "ci_hi": 0.2748136818408966,
+            "n_days": 13,
+            "pass": true
+          },
+          {
+            "point": 0.25905975699424744,
+            "ci_lo": 0.2246023416519165,
+            "ci_hi": 0.30081963539123535,
+            "n_days": 13,
+            "pass": true
+          }
+        ]
+      },
+      "hybrid": {
+        "verdict": "SUPPORTED",
+        "per_seed": [
+          {
+            "point": 0.11250071972608566,
+            "ci_lo": 0.08646032214164734,
+            "ci_hi": 0.1428084522485733,
+            "n_days": 13,
+            "pass": true
+          },
+          {
+            "point": 0.11787807196378708,
+            "ci_lo": 0.09059778600931168,
+            "ci_hi": 0.14367440342903137,
+            "n_days": 13,
+            "pass": true
+          },
+          {
+            "point": 0.12204769253730774,
+            "ci_lo": 0.10039425641298294,
+            "ci_hi": 0.14712153375148773,
+            "n_days": 13,
+            "pass": true
+          }
+        ]
+      }
+    }
+  }
 }

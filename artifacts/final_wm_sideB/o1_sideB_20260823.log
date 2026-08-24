@@ -1,0 +1,42 @@
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] Graph break from `Tensor.item()`, consider setting:
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]     torch._dynamo.config.capture_scalar_outputs = True
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] or:
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]     env TORCHDYNAMO_CAPTURE_SCALAR_OUTPUTS=1
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] to include these operations in the captured graph.
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] 
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] Graph break: from user code at:
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]   File "/home/bluster/projectA/tww-sideB-1b4f874/src/final_wm/transition.py", line 428, in _substep
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]     ts = self.properties.temperature_of_ph(p_stack, h)
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]   File "/home/bluster/projectA/tww-sideB-1b4f874/src/final_wm/properties.py", line 193, in temperature_of_ph
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]     b = self.bounds
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]   File "/home/bluster/projectA/tww-sideB-1b4f874/src/final_wm/properties.py", line 187, in bounds
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0]     p_lo=float(self._p[0]), p_hi=float(self._p[-1]),
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] 
+W0824 03:17:18.844000 2990021 site-packages/torch/_dynamo/variables/tensor.py:1379] [0/0] 
+/home/bluster/anaconda3/envs/Alloftime/lib/python3.11/site-packages/torch/_dynamo/variables/functions.py:2082: UserWarning: Dynamo does not know how to trace the builtin `<unknown module>.Tensor.clamp.` This function is either a Python builtin (e.g. _warnings.warn) or a third-party C/C++ Python extension (perhaps created with pybind).
+If it is a Python builtin, please file an issue on GitHub so the PyTorch team can add support for it and see the next case for a workaround.
+If it is a third-party C/C++ Python extension, please either wrap it into a PyTorch-understood custom operator (see https://pytorch.org/tutorials/advanced/custom_ops_landing_page.html for more details) or, if it is traceable, use `torch.compiler.allow_in_graph`.
+  torch._dynamo.utils.warn_once(explanation + "\n" + "\n".join(hints))
+W0824 03:17:21.003000 2990021 site-packages/torch/_dynamo/convert_frame.py:1743] [13/8] torch._dynamo hit config.recompile_limit (8)
+W0824 03:17:21.003000 2990021 site-packages/torch/_dynamo/convert_frame.py:1743] [13/8]    function: 'torch_dynamo_resume_in_saturation_temperature_at_205' (/home/bluster/projectA/tww-sideB-1b4f874/src/final_wm/properties.py:205)
+W0824 03:17:21.003000 2990021 site-packages/torch/_dynamo/convert_frame.py:1743] [13/8]    last reason: 13/0: Cache line invalidated because L['___stack2'] got deallocated
+W0824 03:17:21.003000 2990021 site-packages/torch/_dynamo/convert_frame.py:1743] [13/8] To log all recompilation reasons, use TORCH_LOGS="recompiles".
+W0824 03:17:21.003000 2990021 site-packages/torch/_dynamo/convert_frame.py:1743] [13/8] To diagnose recompilation issues, see https://docs.pytorch.org/docs/main/user_guide/torch_compiler/compile/programming_model.recompilation.html
+W0824 03:17:21.295000 2990021 site-packages/torch/_dynamo/convert_frame.py:1743] [4/8] torch._dynamo hit config.recompile_limit (8)
+W0824 03:17:21.295000 2990021 site-packages/torch/_dynamo/convert_frame.py:1743] [4/8]    function: 'torch_dynamo_resume_in_interp2d_at_110' (/home/bluster/projectA/tww-sideB-1b4f874/src/final_wm/properties.py:110)
+W0824 03:17:21.295000 2990021 site-packages/torch/_dynamo/convert_frame.py:1743] [4/8]    last reason: 4/0: Cache line invalidated because L['___stack0'] got deallocated
+W0824 03:17:21.295000 2990021 site-packages/torch/_dynamo/convert_frame.py:1743] [4/8] To log all recompilation reasons, use TORCH_LOGS="recompiles".
+W0824 03:17:21.295000 2990021 site-packages/torch/_dynamo/convert_frame.py:1743] [4/8] To diagnose recompilation issues, see https://docs.pytorch.org/docs/main/user_guide/torch_compiler/compile/programming_model.recompilation.html
+/home/bluster/projectA/tww-sideB-1b4f874/src/final_wm/training.py:192: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)
+  train_loss += float(loss)
+[o1] steady seed=0 best_val=2.425 eval={'H1': {'nll': 2.0979111194610596, 'mae': 2.9361770153045654, 'crps': 2.797882556915283}, 'H6': {'nll': 2.2132585048675537, 'mae': 4.313574314117432, 'crps': 3.288363456726074}, 'H18': {'nll': 2.4911551475524902, 'mae': 5.720029830932617, 'crps': 4.165922164916992}}
+[o1] learned seed=0 best_val=1.790 eval={'H1': {'nll': 1.7802650928497314, 'mae': 3.5236477851867676, 'crps': 2.5005664825439453}, 'H6': {'nll': 1.623704433441162, 'mae': 3.114377737045288, 'crps': 2.248352289199829}, 'H18': {'nll': 1.8546063899993896, 'mae': 3.635928153991699, 'crps': 2.6081838607788086}}
+[o1] hybrid seed=0 best_val=2.147 eval={'H1': {'nll': 1.770903468132019, 'mae': 2.629795789718628, 'crps': 2.403982162475586}, 'H6': {'nll': 1.8811734914779663, 'mae': 3.5238265991210938, 'crps': 2.6938321590423584}, 'H18': {'nll': 2.2215492725372314, 'mae': 4.716936111450195, 'crps': 3.435917377471924}}
+[o1] steady seed=1 best_val=2.431 eval={'H1': {'nll': 2.1361215114593506, 'mae': 2.999051094055176, 'crps': 2.907386302947998}, 'H6': {'nll': 2.2371103763580322, 'mae': 4.368810176849365, 'crps': 3.364802360534668}, 'H18': {'nll': 2.4896535873413086, 'mae': 5.745821952819824, 'crps': 4.187991619110107}}
+[o1] learned seed=1 best_val=1.787 eval={'H1': {'nll': 1.744849681854248, 'mae': 3.4330575466156006, 'crps': 2.4607222080230713}, 'H6': {'nll': 1.6322005987167358, 'mae': 3.149036169052124, 'crps': 2.2827985286712646}, 'H18': {'nll': 1.8848294019699097, 'mae': 3.7023582458496094, 'crps': 2.6677753925323486}}
+[o1] hybrid seed=1 best_val=2.137 eval={'H1': {'nll': 1.785265326499939, 'mae': 2.7239608764648438, 'crps': 2.491204261779785}, 'H6': {'nll': 1.893430233001709, 'mae': 3.58504581451416, 'crps': 2.76080584526062}, 'H18': {'nll': 2.201369285583496, 'mae': 4.6455841064453125, 'crps': 3.4097177982330322}}
+[o1] steady seed=2 best_val=2.440 eval={'H1': {'nll': 2.1536993980407715, 'mae': 3.1982522010803223, 'crps': 3.0124049186706543}, 'H6': {'nll': 2.23872447013855, 'mae': 4.525782108306885, 'crps': 3.419865846633911}, 'H18': {'nll': 2.4669995307922363, 'mae': 5.841664791107178, 'crps': 4.20413064956665}}
+[o1] learned seed=2 best_val=1.800 eval={'H1': {'nll': 1.751144289970398, 'mae': 3.5757052898406982, 'crps': 2.566969871520996}, 'H6': {'nll': 1.6500691175460815, 'mae': 3.266439437866211, 'crps': 2.3689281940460205}, 'H18': {'nll': 1.833662509918213, 'mae': 3.8046891689300537, 'crps': 2.7144579887390137}}
+[o1] hybrid seed=2 best_val=2.151 eval={'H1': {'nll': 1.814224123954773, 'mae': 2.8720550537109375, 'crps': 2.5958287715911865}, 'H6': {'nll': 1.8915103673934937, 'mae': 3.6611146926879883, 'crps': 2.7925329208374023}, 'H18': {'nll': 2.159937620162964, 'mae': 4.736345291137695, 'crps': 3.4314756393432617}}
+[matrix] summary written: /home/bluster/projectA/thermal-world-model/artifacts/final_wm_sideB/matrix_summary_sideB.json

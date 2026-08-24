@@ -1,0 +1,46 @@
+{
+  "blind": {
+    "val_mse_norm": 0.005316185764968395,
+    "base_mse_norm": 0.0141332121565938
+  },
+  "aware": {
+    "val_mse_norm": 0.0066742063499987125,
+    "base_mse_norm": 0.0141332121565938
+  },
+  "aware_shuffled": {
+    "val_mse_norm": 0.006749922875314951,
+    "base_mse_norm": 0.0141332121565938
+  },
+  "aware_relative_improvement": -0.2554501751949954,
+  "shuffled_relative_improvement": -0.2696928161905718,
+  "leakage_delta": 0.014242640995576372,
+  "leakage_suspected": false,
+  "n_shuffles": 16,
+  "shuffle_null": {
+    "improvements": [
+      -0.2696928161905718,
+      -0.27145028451120673,
+      -0.269764554954258,
+      -0.27038909388598287,
+      -0.27176404306007607,
+      -0.2720331291187379,
+      -0.27237623136215533,
+      -0.2699768806724208,
+      -0.2722278486201719,
+      -0.27114686195026777,
+      -0.2701697607183757,
+      -0.27072273607265046,
+      -0.2690597807263957,
+      -0.2704633728500926,
+      -0.27164877051671704,
+      -0.27012964307030696
+    ],
+    "mean": -0.27081348801752425,
+    "std": 0.0010123414933439871,
+    "leakage_delta_vs_mean": 0.01536331282252884,
+    "aware_percentile": 1.0
+  },
+  "arm": "closure_cons_norew",
+  "seed": 2,
+  "checkpoint": "/home/bluster/projectA/thermal-world-model/artifacts/final_wm_sideB/checkpoints/t1_closure_cons_norew_seed2.pt"
+}
