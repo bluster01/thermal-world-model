@@ -1,0 +1,62 @@
+{
+  "_provenance": "v0.6 canonical v2 mapping DRAFT 2026-08-25 (spec: docs/plans/2026-08-25-v06-canonical-v2-spec.md). Freezes on first successful dual-side build. Source: all_merged_10s.csv (boiler-level, covers both sides).",
+  "version": 2,
+  "source": {
+    "file": "merged_all_data/all_merged_10s.csv",
+    "time_column": "time"
+  },
+  "boundary_ext": {
+    "fuel_corrected":      {"column": "校正后总燃料量", "clip": [0.0, 600.0], "range": [0.0, 600.0], "stuck_max": 0.05},
+    "mill_count_on":       {"derived": "mill_on_count", "range": [0.0, 8.0], "stuck_max": null},
+    "mill_gas_temp_wavg":  {"derived": "mill_gas_wavg", "clip": [0.0, 900.0], "range": [0.0, 900.0], "stuck_max": 0.05},
+    "flue_o2":             {"column": "烟气含氧量", "clip": [0.0, 15.0], "range": [0.0, 15.0], "stuck_max": 0.05},
+    "secondary_air_total": {"column": "总二次风量", "clip": [0.0, 2000.0], "range": [0.0, 2000.0], "stuck_max": 0.05},
+    "rh_gas_in_temp_a":    {"column": "立式低温再热器入口烟气温度(A)", "clip": [0.0, 900.0], "range": [0.0, 900.0], "stuck_max": 0.05},
+    "rh_gas_in_temp_b":    {"column": "立式低温再热器入口烟气温度(B)", "clip": [0.0, 900.0], "range": [0.0, 900.0], "stuck_max": 0.05}
+  },
+  "aux": {
+    "att1_in_temp_l":      {"column": "选择后左侧一过喷水减温器入口", "range": [0.0, 800.0], "stuck_max": 0.05},
+    "att1_in_temp_r":      {"column": "选择后右侧一过喷水减温器入口", "range": [0.0, 800.0], "stuck_max": 0.05},
+    "att1_out_temp_l":     {"column": "选择后左侧一过喷水减温器出口", "range": [0.0, 800.0], "stuck_max": 0.05},
+    "att1_out_temp_r":     {"column": "选择后右侧一过喷水减温器出口", "range": [0.0, 800.0], "stuck_max": 0.05},
+    "att2_in_temp_l":      {"column": "选择后二级减温器左侧入口蒸汽", "range": [0.0, 800.0], "stuck_max": 0.05},
+    "att2_in_temp_r":      {"column": "选择后二级减温器右侧入口蒸汽", "range": [0.0, 800.0], "stuck_max": 0.05},
+    "att2_out_temp_l":     {"column": "选择后左侧二过喷水减温器出口", "range": [0.0, 800.0], "stuck_max": 0.05},
+    "att2_out_temp_r":     {"column": "选择后右侧二过喷水减温器出口", "range": [0.0, 800.0], "stuck_max": 0.05},
+    "spray_flow_sh_total": {"column": "过热器减温水总流量", "clip": [0.0, 400.0], "range": [0.0, 400.0], "stuck_max": 0.05},
+    "spray_flow_rh_total": {"column": "再热器减温水总流量", "clip": [0.0, 400.0], "range": [0.0, 400.0], "stuck_max": 0.05},
+    "superheat_sep":       {"column": "汽水分离器出口过热度", "range": [-60.0, 200.0], "stuck_max": 0.05},
+    "rh_steam_in_temp_l":  {"column": "选择后左侧再热器入口蒸汽温度", "range": [0.0, 800.0], "stuck_max": 0.05},
+    "rh_steam_in_temp_r":  {"column": "选择后右侧再热器入口蒸汽温度", "range": [0.0, 800.0], "stuck_max": 0.05},
+    "rh_steam_out_temp_l": {"column": "选择后左侧再热出口汽温", "range": [0.0, 800.0], "stuck_max": 0.05},
+    "rh_steam_out_temp_r": {"column": "选择后右侧再热出口汽温", "range": [0.0, 800.0], "stuck_max": 0.05}
+  },
+  "mill_on": {
+    "threshold_tph": 2.0,
+    "feeder_columns": [
+      "1号给煤机瞬时煤量", "2号给煤机瞬时煤量", "3号给煤机瞬时煤量", "4号给煤机瞬时煤量",
+      "5号给煤机瞬时煤量", "6号给煤机瞬时煤量", "7号给煤机瞬时煤量", "8号给煤机瞬时煤量"
+    ],
+    "mill_gas_temp_columns": [
+      "1号磨煤机高温炉烟温度(选择后）", "2号磨煤机高温炉烟温度(选择后）",
+      "3号磨煤机高温炉烟温度(选择后）", "4号磨煤机高温炉烟温度(选择后）",
+      "5号磨煤机高温炉烟温度(选择后）", "6号磨煤机高温炉烟温度(选择后）",
+      "7号磨煤机高温炉烟温度(选择后）", "8号磨煤机高温炉烟温度(选择后）"
+    ],
+    "mill_gas_flow_columns": [
+      "1号磨煤机高温炉烟流量(选择后）", "2号磨煤机高温炉烟流量(选择后）",
+      "3号磨煤机高温炉烟流量(选择后）", "4号磨煤机高温炉烟流量(选择后）",
+      "5号磨煤机高温炉烟流量(选择后）", "6号磨煤机高温炉烟流量(选择后）",
+      "7号磨煤机高温炉烟流量(选择后）", "8号磨煤机高温炉烟流量(选择后）"
+    ]
+  },
+  "alignment_checks": {
+    "steam_flow":            {"column": "主蒸汽流量_60BKAO0312", "unit_scale": 0.2777777777777778, "min_corr": 0.999, "max_mae": 2.0},
+    "separator_pressure":    {"column": "选择后分离器最终出口压力", "min_corr": 0.999, "max_mae": 0.10},
+    "separator_temperature": {"column": "分离器最终出口温度", "min_corr": 0.990, "max_mae": 3.0},
+    "feedwater_temperature": {"column": "选择后省煤器出口给水温度", "min_corr": 0.990, "max_mae": 3.0},
+    "outlet_pressure":       {"candidates": ["选择后末级过热器左侧出口压力", "选择后末级过热器右侧出口压力"], "min_corr": 0.999, "max_mae": 0.10},
+    "final_outlet_temp":     {"candidates": ["选择后左侧末级过热器出口汽温", "选择后右侧末级过热器出口汽温"], "min_corr": 0.995, "max_mae": 2.0},
+    "spray_flow_total":      {"column": "过热器减温水总流量", "min_corr": 0.980, "max_mae": 3.0}
+  }
+}
