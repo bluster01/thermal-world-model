@@ -247,21 +247,31 @@ def bb_step_response(predict_fn, record, device, valve_index, seed, n=32):
             "frac_negative": float((delta < 0).float().mean()), "n_windows": n}
 
 
+def save(out):
+    OUT_JSON.write_text(json.dumps(out, indent=2), encoding="utf-8")
+
+
 def main() -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.backends.cuda.matmul.allow_tf32 = True
     record = CanonicalRecord(RECORD)
     mean, std = channel_stats(record)
     bank = build_train_bank(record, device)
-    out = {"record": RECORD, "protocol": "canonical sideA val, 256 windows (seed 50_000), "
-           "inputs=hist(obs+bnd+act)+future act+bnd (oracle parity with t1 eval), "
-           "target=main-steam ch4 H18", "baselines": {}}
+    if OUT_JSON.exists():  # resume: skip completed model x seed entries
+        out = json.loads(OUT_JSON.read_text(encoding="utf-8"))
+    else:
+        out = {"record": RECORD, "protocol": "canonical sideA val, 256 windows (seed 50_000), "
+               "inputs=hist(obs+bnd+act)+future act+bnd (oracle parity with t1 eval), "
+               "target=main-steam ch4 H18", "baselines": {}}
 
     for name, ctor in (("lstm", lambda: LSTMForecaster("lstm")),
                        ("gru", lambda: LSTMForecaster("gru")),
                        ("dlinear", DLinearForecaster),
                        ("itransformer", ITransformerForecaster)):
         for seed in SEEDS:
+            if f"seed{seed}" in out["baselines"].get(name, {}):
+                print(f"  [{name} seed{seed}] resume-skip")
+                continue
             model = train_one(name, ctor(), bank, record, mean, std, device, seed)
             hist_scale = lambda hist: (hist - mean.to(device)) / std.to(device)
             def pf(hist, fut, m=model, hs=hist_scale):
@@ -276,16 +286,21 @@ def main() -> None:
             print(f"  [{name} seed{seed}] step17={acc['step17_mae']:.3f}C H18={acc['H18_mae']:.3f}C "
                   f"v1_fracneg={entry['v1_18step']['frac_negative']:.3f} "
                   f"v2_fracneg={entry['v2_18step']['frac_negative']:.3f}")
+            save(out)
             del model
             torch.cuda.empty_cache()
 
     for seed in (0,):
+        if f"seed{seed}" in out["baselines"].get("n4sid_ridge", {}):
+            print(f"  [n4sid seed{seed}] resume-skip")
+            continue
         pf = n4sid_ridge(record, device, seed)
         out["baselines"].setdefault("n4sid_ridge", {})[f"seed{seed}"] = {
             "accuracy": full_eval(pf, record, mean, std, device)}
+        save(out)
         print(f"  [n4sid seed{seed}] step17={out['baselines']['n4sid_ridge'][f'seed{seed}']['accuracy']['step17_mae']:.3f}C")
 
-    OUT_JSON.write_text(json.dumps(out, indent=2), encoding="utf-8")
+    save(out)
     print(f"[report] written {OUT_JSON}")
 
 
