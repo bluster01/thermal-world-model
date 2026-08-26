@@ -3,13 +3,13 @@
   "side": "A",
   "actions_continuity": {
     "valve1": {
-      "corr_with_v1": 0.7843322933121819,
+      "corr_with_v1": 0.7843322933121823,
       "mae_vs_v1": 0.09759118303846681,
       "source_column": "过热器一级减温器A侧喷水调节门阀位反馈"
     },
     "valve2": {
-      "corr_with_v1": 0.9999981750954668,
-      "mae_vs_v1": 2.713044195023103e-05,
+      "corr_with_v1": 0.9999981750954726,
+      "mae_vs_v1": 2.7130441950231036e-05,
       "source_column": "过热器二级减温器B侧喷水调节门阀位反馈"
     }
   },
@@ -168,57 +168,57 @@
     {
       "channel": "steam_flow",
       "column": "主蒸汽流量_60BKAO0312",
-      "corr": 0.999985518912764,
-      "mae": 0.2562008308352457,
+      "corr": 0.9999855189127664,
+      "mae": 0.2562008308352458,
       "passed": true
     },
     {
       "channel": "separator_pressure",
       "column": "选择后分离器最终出口压力",
-      "corr": 0.999999999690973,
-      "mae": 1.425133532769386e-06,
+      "corr": 0.99999999969097,
+      "mae": 1.425133532769381e-06,
       "passed": true
     },
     {
       "channel": "separator_temperature",
       "column": "分离器最终出口温度",
-      "corr": 0.9999999998048225,
-      "mae": 9.579060172889008e-06,
+      "corr": 0.9999999998048236,
+      "mae": 9.579060172888927e-06,
       "passed": true
     },
     {
       "channel": "feedwater_temperature",
       "column": "选择后省煤器出口给水温度",
-      "corr": 0.9999999988343176,
-      "mae": 8.138696557978896e-06,
+      "corr": 0.999999998834324,
+      "mae": 8.138696557978735e-06,
       "passed": true
     },
     {
       "channel": "outlet_pressure",
       "column": "选择后末级过热器左侧出口压力",
-      "corr": 0.9999999982683706,
-      "mae": 2.8419692625486937e-06,
+      "corr": 0.9999999982683739,
+      "mae": 2.841969262548686e-06,
       "passed": true
     },
     {
       "channel": "final_outlet_temp",
       "column": "选择后左侧末级过热器出口汽温",
-      "corr": 0.9999999879746015,
-      "mae": 1.3521561077851777e-05,
+      "corr": 0.9999999879746028,
+      "mae": 1.3521561077851457e-05,
       "passed": true
     },
     {
       "channel": "spray_flow_total",
       "column": "过热器减温水总流量",
-      "corr": 0.9999998729436166,
-      "mae": 4.8255039896995875e-05,
+      "corr": 0.9999998729436139,
+      "mae": 4.8255039896995895e-05,
       "passed": true
     }
   ],
   "provenance": {
-    "v1_record_path": "artifacts\\final_wm\\canonical_sideA.npz",
+    "v1_record_path": "artifacts/final_wm/canonical_sideA.npz",
     "v1_record_sha256": "3905cc83876f178333ab3563dc664418be024e863f0cc77190663a89967f0392",
-    "source_path": "C:\\Users\\14020\\Desktop\\时间预测模型\\AA数据中心\\伊敏12.10\\merged_all_data\\all_merged_10s.csv",
+    "source_path": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/merged_all_data/all_merged_10s.csv",
     "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
     "mapping_path": "configs/final_wm/channel_mapping_v2.json",
     "mapping_sha256": "7c66f46595e3e0d9309cc553498359176c99bb174d54a0378fe369a2fa943422",

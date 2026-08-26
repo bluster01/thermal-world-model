@@ -135,9 +135,14 @@ def build_with_variant(spec, variant: str) -> FinalWorldModel:
 # Training loop (verbatim replica of train_arm essentials)
 # ---------------------------------------------------------------------------
 
-def train_variant(spec, variant: str, out_dir: Path, max_epochs: int | None = None):
+def train_variant(spec, variant: str, out_dir: Path, max_epochs: int | None = None,
+                  anchor_path: Path | None = None):
     torch.manual_seed(spec.seed)
     model = build_with_variant(spec, variant).to(DEVICE)
+    if anchor_path is not None:
+        payload = torch.load(anchor_path, map_location=DEVICE, weights_only=False)
+        model.load_state_dict(payload["state_dict"], strict=False)
+        print(f"  [{variant}] anchored from {anchor_path.name} (strict=False)", flush=True)
     params = [p for p in model.parameters() if p.requires_grad]
     opt = torch.optim.Adam(params, lr=spec.lr)
     gen = torch.Generator().manual_seed(spec.seed)
