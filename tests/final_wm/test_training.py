@@ -13,6 +13,7 @@ from src.final_wm.data import CanonicalRecord
 from src.final_wm.synthetic import synthetic_canonical_arrays
 from src.final_wm.training import (
     TrainSpec,
+    apply_anchor_constants,
     build_world_model,
     config_fingerprint,
     train_arm,
@@ -116,6 +117,52 @@ def test_train_arm_learns_on_teacher_record(tmp_path) -> None:
     # slightly before improving.  The loop-regression guard is a 2% band, not
     # strict monotone descent.
     assert epoch_vals[-1] <= epoch_vals[0] * 1.02
+
+
+def test_anchor_constants_warm_start(tmp_path) -> None:
+    """Amendment v0.6-B: only transition.raw constants are copied from the
+    reference checkpoint; every network parameter stays at its fresh init."""
+    src_spec = _quick_spec()
+    src_model = build_world_model(src_spec)
+    with torch.no_grad():
+        for name, p in src_model.transition.raw.items():
+            p.fill_(float(hash(name) % 7) + 0.5)  # recognisable constant values
+        for p in src_model.observer.parameters():
+            p.fill_(9.0)
+    ref_path = tmp_path / "ref.pt"
+    torch.save({"state_dict": src_model.state_dict()}, ref_path)
+
+    torch.manual_seed(1234)
+    fresh = build_world_model(_quick_spec(seed=99))
+    fresh_obs = [p.detach().clone() for p in fresh.observer.parameters()]
+    assert all((p != 9.0).any() for p in fresh_obs)  # fresh, not yet anchored
+
+    apply_anchor_constants(fresh, ref_path)
+    for name, p in fresh.transition.raw.items():
+        expected = float(hash(name) % 7) + 0.5
+        assert p.item() == pytest.approx(expected)
+    for p_new, p_old in zip(fresh.observer.parameters(), fresh_obs):
+        torch.testing.assert_close(p_new, p_old)  # networks untouched
+
+
+def test_anchor_constants_fail_closed_on_missing_keys(tmp_path) -> None:
+    model = build_world_model(_quick_spec())
+    bad = tmp_path / "bad.pt"
+    torch.save({"state_dict": {"observer.net.weight": torch.zeros(3, 3)}}, bad)
+    with pytest.raises(FinalWMProtocolError, match="lacks transition constants"):
+        apply_anchor_constants(model, bad)
+
+
+def test_anchor_constants_validation_exclusions() -> None:
+    with pytest.raises(FinalWMProtocolError, match="fresh-network"):
+        _quick_spec(init_checkpoint="a.pt", anchor_constants_checkpoint="b.pt").validate()
+    with pytest.raises(FinalWMProtocolError, match="not composable"):
+        _quick_spec(closure_mode="conservative_norew",
+                    anchor_constants_checkpoint="b.pt").validate()
+    # fingerprint must change when the anchor source is set (asdict covers it)
+    fp_plain = config_fingerprint(_quick_spec())
+    fp_anchor = config_fingerprint(_quick_spec(anchor_constants_checkpoint="b.pt"))
+    assert fp_plain != fp_anchor
 
 
 def test_boundary_only_training(tmp_path) -> None:

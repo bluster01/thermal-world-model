@@ -8,8 +8,9 @@
 ## 1. 设计原则
 
 1. **v1 证据链零扰动**：contracts.py 的注册表（boundary 7 / action 2 / obs 5）不增不改；
-   v2 记录中 `boundary/actions/obs/valid/timestamps/split` 六个键**逐位搬运**自 v1 npz
-   （不重采样、不重切分）。
+   v2 记录中 `boundary/obs/valid/timestamps/split` 五个键**逐位搬运**自 v1 npz
+   （不重采样、不重切分）。`actions` 自 v2.1 起例外——按修正接线从 all_merged
+   重建（known-defect 修复，见 §9）。
 2. **扩展即附加**：新信号存 `boundary_ext`（7 列）、`aux`（15 列）、`mill_on`（8 列
    二值）三个新键；v2 记录仍可被 v1 加载器原样打开（宽度契约不破）。
 3. **fail-closed**：对齐门不过 → 构建中止；新通道质量门不过 → 构建中止。
@@ -111,3 +112,25 @@
   逐字节核验；npz 不入 git（执行侧确定性重建），meta json 入库。
 - 测试：`tests/final_wm/test_data_v2.py` 9 项（含裁边/越界/失配 fail-closed
   与逐位一致性），全套 141/141。
+- **SUPERSEDED（2026-08-26）**：本次 v2.0 首建继承 v1 错侧 valve1，制品标记
+  SUPERSEDED 不删除；有效制品以 v2.1 重建为准。
+
+## 9. v2.1 修订：actions 按修正接线重建（2026-08-26 批准）
+
+依据：`results/final_wm/known_defect_v1_valve1_20260826.md`。物理接线
+（用户 2026-08-25 现场确认一级同侧 + 滞后差分复核）：
+
+| 记录侧 | obs 温度侧 | actions[0]=valve1 | actions[1]=valve2 |
+|---|---|---|---|
+| A | 左 | 过热器一级减温器A侧喷水调节门阀位反馈 ÷100 | 过热器二级减温器B侧喷水调节门阀位反馈 ÷100 |
+| B | 右 | 过热器一级减温器B侧喷水调节门阀位反馈 ÷100 | 过热器二级减温器A侧喷水调节门阀位反馈 ÷100 |
+
+- 映射新增 `actions` 段（按侧给出两列 + 连续性门）；`build_canonical_v2` 增
+  `--side` 参数（A/B）。量程容忍带 [-0.02, 1.0]：阀位反馈存在传感器负零漂
+  （一级B 6.2%、二级A 17.9%、二级B 5.0%，界内 ≥-1%，DCS 画面实测可见
+  "一减B位置 -0.9%"），终端 clip≥0，与 aux spray 通道同清洗规则。
+- **连续性门（fail-closed）**：新 valve2 与 v1 旧 valve2 corr≥0.999 且
+  mae≤0.02（v1 二级本就配得对，必须逐位等价）；新 valve1 与 v1 旧 valve1 的
+  corr 记录入 meta.provenance（不设门，预计 ≈0.8）。
+- 元数据：version=2.1；provenance 增 known_defect 引用与旧 actions 指纹。
+- 加载器不变（键集合不变）；`CanonicalV2Record` 行为不变。

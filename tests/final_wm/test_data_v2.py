@@ -33,7 +33,13 @@ def _fixture(tmp_path, n: int = 400, time_offset_s: int = 0):
     times = np.datetime64("2024-01-01") + t_sec.astype("timedelta64[s]")
 
     steam_kgs = 350.0 + 50.0 * np.sin(np.arange(n) / 40.0)
+    valve_v1a = 40.0 + 15.0 * np.sin(np.arange(n) / 22.0)
+    valve_v1b = 45.0 + 15.0 * np.cos(np.arange(n) / 22.0)
+    valve_v2a = 30.0 + 10.0 * np.sin(np.arange(n) / 17.0)
+    valve_v2b = 35.0 + 10.0 * np.cos(np.arange(n) / 17.0)
     cols: dict[str, np.ndarray] = {
+        "v1a_col": valve_v1a, "v1b_col": valve_v1b,
+        "v2a_col": valve_v2a, "v2b_col": valve_v2b,
         "time": times,
         "fuel_col": 250.0 + rng.normal(0, 20, n).cumsum() * 0.01 + 10 * np.sin(np.arange(n) / 30.0),
         "o2_col": 4.0 + 0.5 * np.sin(np.arange(n) / 25.0),
@@ -57,6 +63,8 @@ def _fixture(tmp_path, n: int = 400, time_offset_s: int = 0):
     boundary[:, 0] = steam_kgs  # steam_flow kg/s
     boundary[:, 2] = cols["sep_p_col"]  # separator_pressure MPa
     actions = np.full((n, len(ACTION_ELEMENTS)), 0.5, dtype=np.float32)
+    actions[:, 0] = valve_v1a / 100.0          # side-A wiring: valve1 = stage-1 A
+    actions[:, 1] = valve_v2b / 100.0          # side-A wiring: valve2 = stage-2 B
     obs = np.zeros((n, len(OBSERVATION_ELEMENTS)), dtype=np.float32)
     obs[:, 1] = cols["att1_out_l"]  # sh1_outlet_temp
     obs += np.arange(n, dtype=np.float32)[:, None] * 0.001  # de-stuck all channels
@@ -85,6 +93,13 @@ def _fixture(tmp_path, n: int = 400, time_offset_s: int = 0):
             "rh_gas_in_temp_b": {"column": "rh_gas_b", "range": [0.0, 900.0], "stuck_max": 0.05},
         },
         "aux": {},
+        "actions": {
+            "A": {"valve1": {"column": "v1a_col", "unit_scale": 0.01, "range": [0.0, 1.0]},
+                  "valve2": {"column": "v2b_col", "unit_scale": 0.01, "range": [0.0, 1.0]}},
+            "B": {"valve1": {"column": "v1b_col", "unit_scale": 0.01, "range": [0.0, 1.0]},
+                  "valve2": {"column": "v2a_col", "unit_scale": 0.01, "range": [0.0, 1.0]}},
+            "continuity": {"valve2_min_corr": 0.999, "valve2_max_mae": 0.02},
+        },
         "mill_on": {
             "threshold_tph": 2.0,
             "feeder_columns": [f"feeder{k}" for k in range(1, N_MILLS + 1)],
@@ -135,16 +150,34 @@ def test_mapping_v2_fail_closed(tmp_path) -> None:
     with pytest.raises(FinalWMProtocolError, match="alignment"):
         load_channel_mapping_v2(bad)
 
+    mapping = json.loads(mpath.read_text(encoding="utf-8"))
+    del mapping["actions"]
+    bad.write_text(json.dumps(mapping), encoding="utf-8")
+    with pytest.raises(FinalWMProtocolError, match="actions"):
+        load_channel_mapping_v2(bad)
+
+    mapping = json.loads(mpath.read_text(encoding="utf-8"))
+    del mapping["actions"]["B"]["valve1"]
+    bad.write_text(json.dumps(mapping), encoding="utf-8")
+    with pytest.raises(FinalWMProtocolError, match="actions.B"):
+        load_channel_mapping_v2(bad)
+
 
 def test_build_happy_path(tmp_path) -> None:
     v1, mpath = _fixture(tmp_path)
     out = tmp_path / "canonical_sideX_v2.npz"
-    meta = build_canonical_v2(v1, tmp_path, mpath, out)
-
+    meta = build_canonical_v2(v1, tmp_path, mpath, out, side="A")
     v1_arrays = np.load(v1)
     v2_arrays = np.load(out)
-    for key in ("boundary", "actions", "obs", "valid", "timestamps", "split"):
+    for key in ("boundary", "obs", "valid", "timestamps", "split"):
         np.testing.assert_array_equal(v2_arrays[key], v1_arrays[key])
+    # v2.1: actions rebuilt per corrected wiring; side-A fixture wiring matches,
+    # so actions are still byte-equal here, and valve2 continuity must be perfect.
+    np.testing.assert_array_equal(v2_arrays["actions"], v1_arrays["actions"])
+    assert meta["version"] == "2.1"
+    assert meta["side"] == "A"
+    assert meta["actions_continuity"]["valve2"]["corr_with_v1"] == pytest.approx(1.0)
+    assert meta["actions_continuity"]["valve2"]["mae_vs_v1"] == pytest.approx(0.0, abs=1e-4)
     n = v1_arrays["boundary"].shape[0]
     assert v2_arrays["boundary_ext"].shape == (n, len(BOUNDARY_EXT_ELEMENTS))
     assert v2_arrays["aux"].shape == (n, len(AUX_ELEMENTS))
@@ -170,10 +203,42 @@ def test_build_happy_path(tmp_path) -> None:
     assert record.aux_index("superheat_sep") == AUX_ELEMENTS.index("superheat_sep")
 
 
+def test_side_b_wiring(tmp_path) -> None:
+    v1, mpath = _fixture(tmp_path)
+    out = tmp_path / "out_b.npz"
+    # side B rewires both valves; valve2 continuity against v1 (built with the
+    # side-A pattern) must therefore FAIL -- proving the gate actually bites.
+    with pytest.raises(FinalWMProtocolError, match="continuity gate"):
+        build_canonical_v2(v1, tmp_path, mpath, out, side="B")
+
+
+def test_actions_continuity_fail_closed(tmp_path) -> None:
+    import pandas as pd
+
+    v1, mpath = _fixture(tmp_path)
+    frame = pd.read_csv(tmp_path / "all_merged.csv")
+    rng = np.random.default_rng(2)
+    frame["v2b_col"] = rng.uniform(20, 50, len(frame))
+    frame.to_csv(tmp_path / "all_merged.csv", index=False)
+    with pytest.raises(FinalWMProtocolError, match="continuity gate"):
+        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz", side="A")
+
+
+def test_actions_range_gate(tmp_path) -> None:
+    import pandas as pd
+
+    v1, mpath = _fixture(tmp_path)
+    frame = pd.read_csv(tmp_path / "all_merged.csv")
+    frame["v1a_col"] = 150.0  # 1.5 fraction after scale -> out of [0,1]
+    frame.to_csv(tmp_path / "all_merged.csv", index=False)
+    with pytest.raises(FinalWMProtocolError, match="actions.valve1 range_violation"):
+        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz", side="A")
+
+
 def test_grid_containment_breach(tmp_path) -> None:
     v1, mpath = _fixture(tmp_path, time_offset_s=5)
     with pytest.raises(FinalWMProtocolError, match="containment"):
-        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz")
+        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz", side="A")
 
 
 def test_alignment_breach_fail_closed(tmp_path) -> None:
@@ -188,7 +253,7 @@ def test_alignment_breach_fail_closed(tmp_path) -> None:
     frame["steam_col_th"] = rng.normal(1200, 300, len(frame))
     frame.to_csv(tmp_path / "all_merged.csv", index=False)
     with pytest.raises(FinalWMProtocolError, match="alignment check failed"):
-        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz")
+        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz", side="A")
 
 
 def test_quality_gates_fail_closed(tmp_path) -> None:
@@ -200,7 +265,7 @@ def test_quality_gates_fail_closed(tmp_path) -> None:
     frame["att1_out_l"] = 900.0 + np.arange(len(frame)) * 0.001
     frame.to_csv(tmp_path / "all_merged.csv", index=False)
     with pytest.raises(FinalWMProtocolError, match="range_violation|alignment"):
-        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz")
+        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz", side="A")
 
     # stuck breach on a dynamic ext channel (alignment cols restored by fresh fixture)
     v1, mpath = _fixture(tmp_path)
@@ -208,7 +273,7 @@ def test_quality_gates_fail_closed(tmp_path) -> None:
     frame["o2_col"] = 4.0
     frame.to_csv(tmp_path / "all_merged.csv", index=False)
     with pytest.raises(FinalWMProtocolError, match="stuck_ratio"):
-        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz")
+        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz", side="A")
 
 
 def _prepend_rows(v1_path, n_pre: int):
@@ -228,7 +293,7 @@ def test_edge_trim_within_bound(tmp_path) -> None:
     padded = tmp_path / "v1_pad.npz"
     np.savez_compressed(padded, **_prepend_rows(v1, 12))
     out = tmp_path / "out.npz"
-    meta = build_canonical_v2(padded, tmp_path, mpath, out)
+    meta = build_canonical_v2(padded, tmp_path, mpath, out, side="A")
     assert meta["edge_trim"] == {"leading": 12, "trailing": 0}
     v1_arrays = np.load(v1)
     v2_arrays = np.load(out)
@@ -241,7 +306,7 @@ def test_edge_trim_beyond_bound_fails(tmp_path) -> None:
     padded = tmp_path / "v1_pad.npz"
     np.savez_compressed(padded, **_prepend_rows(v1, 100))
     with pytest.raises(FinalWMProtocolError, match="edge trim"):
-        build_canonical_v2(padded, tmp_path, mpath, tmp_path / "out.npz")
+        build_canonical_v2(padded, tmp_path, mpath, tmp_path / "out.npz", side="A")
 
 
 def test_loader_refuses_v1(tmp_path) -> None:

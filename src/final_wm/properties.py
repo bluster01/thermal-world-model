@@ -120,11 +120,16 @@ def interp2d(
     return (top + wr * (bottom - top)).view(shape)
 
 
-def _polyval(coef: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
-    """Horner evaluation; coef in descending powers."""
-    y = torch.full_like(x, float(coef[0]))
+def _polyval(coef: tuple[float, ...], x: torch.Tensor) -> torch.Tensor:
+    """Horner evaluation; coef in descending powers, pre-hoisted to Python floats.
+
+    Coefficients are fixed grid constants; hoisting them once at construction
+    removes one DtoH scalar sync per coefficient per call (the dominant CPU cost
+    of anchored forecasts) without changing any computed value.
+    """
+    y = torch.full_like(x, coef[0])
     for c in coef[1:]:
-        y = y * x + float(c)
+        y = y * x + c
     return y
 
 
@@ -171,6 +176,8 @@ class GridThermoProperties:
         self._tliq = _t("t_liq")
         self._hliq = _t("hliq_grid")
         self._tsat_coef = _t("tsat_coef")
+        self._tsat_coef_floats = tuple(float(v) for v in np.asarray(arrays["tsat_coef"]).astype(np.float32).tolist())
+        self._psub_lo = float(np.asarray(arrays["Psub"]).astype(np.float32).ravel()[0])
         self._p_crit = float(np.asarray(arrays["p_crit"]))
         if self._tph.shape != (self._p.numel(), self._h.numel()):
             raise FinalWMProtocolError("Tph grid shape mismatch")
@@ -202,7 +209,7 @@ class GridThermoProperties:
         return interp2d(self._p, self._tg, self._hpt, p, temperature)
 
     def saturation_temperature(self, p: torch.Tensor) -> torch.Tensor:
-        return _polyval(self._tsat_coef, p.clamp(float(self._psub[0]), self._p_crit))
+        return _polyval(self._tsat_coef_floats, p.clamp(self._psub_lo, self._p_crit))
 
     def saturated_vapor_enthalpy(self, p: torch.Tensor) -> torch.Tensor:
         return interp1d(self._psub, self._hsatv, p)

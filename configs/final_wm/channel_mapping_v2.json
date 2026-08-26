@@ -31,6 +31,18 @@
     "rh_steam_out_temp_l": {"column": "选择后左侧再热出口汽温", "range": [0.0, 800.0], "stuck_max": 0.05},
     "rh_steam_out_temp_r": {"column": "选择后右侧再热出口汽温", "range": [0.0, 800.0], "stuck_max": 0.05}
   },
+  "actions": {
+    "_note": "v2.1 (2026-08-26): rebuilt per corrected wiring -- stage-1 same-side, stage-2 cross. See results/final_wm/known_defect_v1_valve1_20260826.md",
+    "A": {
+      "valve1": {"column": "过热器一级减温器A侧喷水调节门阀位反馈", "unit_scale": 0.01, "range": [-0.02, 1.0]},
+      "valve2": {"column": "过热器二级减温器B侧喷水调节门阀位反馈", "unit_scale": 0.01, "range": [-0.02, 1.0]}
+    },
+    "B": {
+      "valve1": {"column": "过热器一级减温器B侧喷水调节门阀位反馈", "unit_scale": 0.01, "range": [-0.02, 1.0]},
+      "valve2": {"column": "过热器二级减温器A侧喷水调节门阀位反馈", "unit_scale": 0.01, "range": [-0.02, 1.0]}
+    },
+    "continuity": {"valve2_min_corr": 0.999, "valve2_max_mae": 0.02}
+  },
   "mill_on": {
     "threshold_tph": 2.0,
     "feeder_columns": [

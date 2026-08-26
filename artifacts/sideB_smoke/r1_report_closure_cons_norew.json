@@ -1,0 +1,44 @@
+{
+  "verdict": "SUPPORTED",
+  "arm": "closure_cons_norew",
+  "reports": [
+    {
+      "seed": 0,
+      "runtime_blind_ok": true,
+      "direction": {
+        "mean_delta_c": -1.9639410972595215,
+        "frac_negative": 1.0,
+        "n_windows": 16
+      },
+      "direction_steady": {
+        "mean_delta_c": -1.2804954051971436,
+        "frac_negative": 1.0,
+        "n_windows": 16
+      },
+      "leakage": {
+        "blind": {
+          "val_mse_norm": 0.307317316532135,
+          "base_mse_norm": 0.5931473970413208
+        },
+        "aware": {
+          "val_mse_norm": 0.3439674973487854,
+          "base_mse_norm": 0.5931473970413208
+        },
+        "aware_shuffled": {
+          "val_mse_norm": 0.3440213203430176,
+          "base_mse_norm": 0.5931473970413208
+        },
+        "aware_relative_improvement": -0.11925843043998473,
+        "shuffled_relative_improvement": -0.11943356861585953,
+        "leakage_delta": 0.00017513817587480607,
+        "leakage_suspected": false,
+        "n_shuffles": 1
+      },
+      "residual_quantiles": {
+        "p50_kw": 1246.55224609375,
+        "p90_kw": 1899.1192626953125,
+        "max_kw": 2022.69921875
+      }
+    }
+  ]
+}

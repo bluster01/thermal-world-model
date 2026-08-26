@@ -36,6 +36,7 @@ from src.final_wm.contracts import (
 from src.final_wm.data import CanonicalRecord
 
 CANONICAL_V2_VERSION = 2
+CANONICAL_V2_REVISION = "2.1"  # 2.1 = actions rebuilt per corrected valve wiring
 
 # Registry order is contractual; the mapping must match these exactly.
 BOUNDARY_EXT_ELEMENTS = (
@@ -106,6 +107,23 @@ def load_channel_mapping_v2(path: str | Path) -> dict:
             raise FinalWMProtocolError(f"alignment.{name}: exactly one of column/candidates")
         if float(spec.get("min_corr", 0.0)) <= 0.0 or float(spec.get("max_mae", 0.0)) <= 0.0:
             raise FinalWMProtocolError(f"alignment.{name} lacks min_corr/max_mae")
+    actions = mapping.get("actions")
+    if not isinstance(actions, dict):
+        raise FinalWMProtocolError("v2.1 mapping must carry an actions section")
+    for side in ("A", "B"):
+        block = actions.get(side)
+        if not isinstance(block, dict):
+            raise FinalWMProtocolError(f"actions.{side} missing")
+        for valve in ("valve1", "valve2"):
+            spec = block.get(valve, {})
+            if "column" not in spec or float(spec.get("unit_scale", 0.0)) <= 0.0:
+                raise FinalWMProtocolError(f"actions.{side}.{valve} lacks column/unit_scale")
+            rng = spec.get("range")
+            if rng is None or float(rng[0]) >= float(rng[1]):
+                raise FinalWMProtocolError(f"actions.{side}.{valve} lacks a valid range")
+    cont = actions.get("continuity", {})
+    if float(cont.get("valve2_min_corr", 0.0)) <= 0.0 or float(cont.get("valve2_max_mae", 0.0)) <= 0.0:
+        raise FinalWMProtocolError("actions.continuity lacks valve2_min_corr/valve2_max_mae")
     return mapping
 
 
@@ -158,6 +176,9 @@ def _required_columns(mapping: dict) -> list[str]:
     cols.update(mill["feeder_columns"])
     cols.update(mill["mill_gas_temp_columns"])
     cols.update(mill["mill_gas_flow_columns"])
+    for side in ("A", "B"):
+        for valve in ("valve1", "valve2"):
+            cols.add(mapping["actions"][side][valve]["column"])
     for spec in mapping["alignment_checks"].values():
         if "column" in spec:
             cols.add(spec["column"])
@@ -183,11 +204,14 @@ def build_canonical_v2(
     mapping_path: str | Path,
     out_path: str | Path,
     *,
+    side: str,
     gates: V2QualityGateConfig = V2QualityGateConfig(),
 ) -> dict:
     """Build one side's canonical v2 record; raises (fail-closed) on any breach."""
     import pandas as pd
 
+    if side not in ("A", "B"):
+        raise FinalWMProtocolError(f"side must be A or B, got: {side!r}")
     v1_path = Path(v1_path)
     data_root = Path(data_root)
     mapping = load_channel_mapping_v2(mapping_path)
@@ -305,11 +329,46 @@ def build_canonical_v2(
         return col(spec["column"])
 
     # Assemble ext/aux, apply clip, then Gate 3: quality gates.
+    min_run = int(gates.stuck_minutes * 60.0 / gates.dt_seconds)
+    quality: dict[str, dict] = {}
     ext = np.stack([channel_values(mapping["boundary_ext"][k]) for k in BOUNDARY_EXT_ELEMENTS], axis=1)
     aux = np.stack([channel_values(mapping["aux"][k]) for k in AUX_ELEMENTS], axis=1)
 
-    min_run = int(gates.stuck_minutes * 60.0 / gates.dt_seconds)
-    quality: dict[str, dict] = {}
+    # v2.1: actions rebuilt per corrected wiring (stage-1 same-side, stage-2
+    # cross).  Continuity gate: new valve2 must reproduce the old v1 valve2
+    # (v1 stage-2 wiring was already correct); new valve1 differs by design
+    # and its correlation with the old (mis-wired) channel is provenance only.
+    act_map = mapping["actions"][side]
+    cont = mapping["actions"]["continuity"]
+    new_actions = np.stack(
+        [col(act_map[v]["column"]) * float(act_map[v]["unit_scale"]) for v in ("valve1", "valve2")],
+        axis=1,
+    )
+    v1_actions = v1["actions"][sl].astype(np.float64)
+    continuity: dict[str, dict] = {}
+    for j, valve in enumerate(("valve1", "valve2")):
+        mask = np.isfinite(new_actions[:, j]) & np.isfinite(v1_actions[:, j])
+        if mask.mean() < gates.min_coverage:
+            raise FinalWMProtocolError(f"actions.{valve} coverage {mask.mean():.4f} < {gates.min_coverage}")
+        c = _corr(new_actions[mask, j], v1_actions[mask, j])
+        mae = float(np.abs(new_actions[mask, j] - v1_actions[mask, j]).mean())
+        continuity[valve] = {"corr_with_v1": c, "mae_vs_v1": mae,
+                             "source_column": act_map[valve]["column"]}
+    if not (continuity["valve2"]["corr_with_v1"] >= float(cont["valve2_min_corr"])
+            and continuity["valve2"]["mae_vs_v1"] <= float(cont["valve2_max_mae"])):
+        raise FinalWMProtocolError(
+            "actions continuity gate breached on valve2: "
+            f"corr={continuity['valve2']['corr_with_v1']:.4f} mae={continuity['valve2']['mae_vs_v1']:.5f}")
+    for j, valve in enumerate(("valve1", "valve2")):
+        lo, hi = float(act_map[valve]["range"][0]), float(act_map[valve]["range"][1])
+        finite = np.isfinite(new_actions[:, j])
+        viol = float(((new_actions[finite, j] < lo) | (new_actions[finite, j] > hi)).mean())
+        quality[f"actions.{valve}"] = {"coverage": float(finite.mean()),
+                                       "range_violation": viol, "stuck_ratio": None}
+        if viol > gates.max_range_violation:
+            raise FinalWMProtocolError(f"actions.{valve} range_violation {viol:.5f}")
+    new_actions = np.clip(np.nan_to_num(new_actions, nan=0.0), 0.0, 1.0).astype(np.float32)
+
     breaches: list[str] = []
     for block_name, registry, arr in (("boundary_ext", BOUNDARY_EXT_ELEMENTS, ext),
                                       ("aux", AUX_ELEMENTS, aux)):
@@ -347,12 +406,15 @@ def build_canonical_v2(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
         out_path,
-        boundary=v1["boundary"][sl], actions=v1["actions"][sl], obs=v1["obs"][sl],
+        boundary=v1["boundary"][sl], actions=new_actions, obs=v1["obs"][sl],
         valid=v1["valid"][sl], timestamps=v1["timestamps"][sl], split=v1["split"][sl],
         boundary_ext=ext, aux=aux, mill_on=mill_on,
     )
     meta = {
-        "version": CANONICAL_V2_VERSION,
+        "version": CANONICAL_V2_REVISION,
+        "side": side,
+        "actions_continuity": continuity,
+        "known_defect_fix": "results/final_wm/known_defect_v1_valve1_20260826.md",
         "n_samples": n,
         "boundary_ext_elements": list(BOUNDARY_EXT_ELEMENTS),
         "aux_elements": list(AUX_ELEMENTS),
@@ -368,7 +430,8 @@ def build_canonical_v2(
             "mapping_sha256": _sha256(Path(mapping_path)),
             "mill_on_threshold_tph": thresh,
         },
-        "v1_keys_verbatim": True,
+        "v1_keys_verbatim": ["boundary", "obs", "valid", "timestamps", "split"],
+        "v1_actions_replaced": True,
         "edge_trim": {"leading": trim_lo, "trailing": trim_hi},
     }
     (out_path.parent / (out_path.stem + "_meta.json")).write_text(

@@ -29,7 +29,7 @@ def main() -> None:
     parser.add_argument("--mapping", default="configs/final_wm/channel_mapping_v2.json")
     args = parser.parse_args()
 
-    meta = build_canonical_v2(args.v1, args.data_root, args.mapping, args.out)
+    meta = build_canonical_v2(args.v1, args.data_root, args.mapping, args.out, side=args.side)
     print(f"[v2 side {args.side}] built {args.out}")
     print(f"  n={meta['n_samples']} alignment checks: "
           + ", ".join(f"{r['channel']}->{r['column']} corr={r['corr']:.4f}"

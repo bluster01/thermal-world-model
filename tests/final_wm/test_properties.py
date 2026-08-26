@@ -153,3 +153,25 @@ def test_grid_properties_reject_missing_keys() -> None:
     del arrays["Tph"]
     with pytest.raises(FinalWMProtocolError):
         GridThermoProperties(arrays)
+
+
+def test_saturation_temperature_bit_identical_to_legacy_scalar_sync_path() -> None:
+    """P1 hoist regression: pre-hoisted float coefficients must reproduce the
+    legacy per-call float(tensor_scalar) evaluation exactly (zero DtoH syncs,
+    same bits)."""
+    arrays = _fake_surrogate()
+    # non-trivial coefficients so every Horner term is exercised
+    arrays["tsat_coef"] = np.array([0.5, -2.0, 1.5, 0.0, 0.25, 0.0, 0.0, 300.0],
+                                   dtype=np.float32)
+    props = GridThermoProperties(arrays)
+    p = torch.linspace(8.0, 28.0, 257)
+
+    def legacy(coef: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+        y = torch.full_like(x, float(coef[0]))
+        for c in coef[1:]:
+            y = y * x + float(c)
+        return y
+
+    legacy_val = legacy(props._tsat_coef, p.clamp(float(props._psub[0]), props._p_crit))
+    new_val = props.saturation_temperature(p)
+    torch.testing.assert_close(new_val, legacy_val, rtol=0.0, atol=0.0)

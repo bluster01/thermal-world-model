@@ -1,0 +1,29 @@
+{
+  "verdict": "SUPPORTED",
+  "arm": "physics_only",
+  "reports": [
+    {
+      "seed": 0,
+      "runtime_blind_ok": true,
+      "direction": {
+        "mean_delta_c": -1.6769163608551025,
+        "frac_negative": 1.0,
+        "n_windows": 16
+      },
+      "direction_steady": {
+        "mean_delta_c": -0.5104694366455078,
+        "frac_negative": 1.0,
+        "n_windows": 16
+      },
+      "leakage": {
+        "skipped": true,
+        "reason": "no closure-bearing head; probe vacuous",
+        "leakage_suspected": false
+      },
+      "residual_quantiles": {
+        "skipped": true,
+        "reason": "no closure; residual quantiles undefined"
+      }
+    }
+  ]
+}

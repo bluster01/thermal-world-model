@@ -1,5 +1,19 @@
 {
-  "version": 2,
+  "version": "2.1",
+  "side": "A",
+  "actions_continuity": {
+    "valve1": {
+      "corr_with_v1": 0.7843322933121819,
+      "mae_vs_v1": 0.09759118303846681,
+      "source_column": "过热器一级减温器A侧喷水调节门阀位反馈"
+    },
+    "valve2": {
+      "corr_with_v1": 0.9999981750954668,
+      "mae_vs_v1": 2.713044195023103e-05,
+      "source_column": "过热器二级减温器B侧喷水调节门阀位反馈"
+    }
+  },
+  "known_defect_fix": "results/final_wm/known_defect_v1_valve1_20260826.md",
   "n_samples": 707709,
   "boundary_ext_elements": [
     "fuel_corrected",
@@ -29,6 +43,16 @@
   ],
   "n_mills": 8,
   "quality": {
+    "actions.valve1": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "stuck_ratio": null
+    },
+    "actions.valve2": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "stuck_ratio": null
+    },
     "boundary_ext.fuel_corrected": {
       "coverage": 0.9999858698985035,
       "range_violation": 0.0,
@@ -197,10 +221,17 @@
     "source_path": "C:\\Users\\14020\\Desktop\\时间预测模型\\AA数据中心\\伊敏12.10\\merged_all_data\\all_merged_10s.csv",
     "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
     "mapping_path": "configs/final_wm/channel_mapping_v2.json",
-    "mapping_sha256": "8262caa743504ab4ada9c5c3bb0f77ebc6260f41c42814b68876a4550372db4c",
+    "mapping_sha256": "7c66f46595e3e0d9309cc553498359176c99bb174d54a0378fe369a2fa943422",
     "mill_on_threshold_tph": 2.0
   },
-  "v1_keys_verbatim": true,
+  "v1_keys_verbatim": [
+    "boundary",
+    "obs",
+    "valid",
+    "timestamps",
+    "split"
+  ],
+  "v1_actions_replaced": true,
   "edge_trim": {
     "leading": 12,
     "trailing": 0

@@ -51,6 +51,10 @@ class TrainSpec:
     train_boundary: bool = False    # add boundary-forecast NLL to the loss
     boundary_loss_only: bool = False  # train the boundary model alone (B1, J1 stage B)
     init_checkpoint: str | None = None  # warm start from a previous arm's checkpoint
+    # Amendment v0.6-B (2026-08-26, anchor evidence pack): warm-start ONLY the
+    # transition physics constants (transition.raw) from a reference checkpoint;
+    # all networks init fresh.  Basin-rescue protocol for multi-seed runs.
+    anchor_constants_checkpoint: str | None = None
     initial_state_mode: str = "steady"
     closure_mode: str = "none"
     latent_dim: int = 0
@@ -66,6 +70,14 @@ class TrainSpec:
             raise FinalWMProtocolError("boundary_loss_only requires forecast boundary mode")
         if self.epochs < 1 or self.batch_size < 1 or self.batches_per_epoch < 1:
             raise FinalWMProtocolError("training sizes must be positive")
+        if self.init_checkpoint is not None and self.anchor_constants_checkpoint is not None:
+            raise FinalWMProtocolError(
+                "init_checkpoint already carries the physics constants; "
+                "anchor_constants_checkpoint is for fresh-network constant anchoring only")
+        if self.anchor_constants_checkpoint is not None and self.closure_mode.endswith("_norew"):
+            raise FinalWMProtocolError(
+                "anchor_constants_checkpoint would clobber the pinned rewetting-ablation "
+                "constants (aW raw = -30); anchoring is not composable with _norew arms")
 
 
 def build_world_model(spec: TrainSpec, properties: ThermoProperties | None = None) -> FinalWorldModel:
@@ -84,6 +96,27 @@ def build_world_model(spec: TrainSpec, properties: ThermoProperties | None = Non
         initial_state_mode=spec.initial_state_mode,
     )
     return FinalWorldModel(config, properties or AnalyticThermoProperties())
+
+
+def apply_anchor_constants(model: FinalWorldModel, checkpoint_path: str | Path) -> None:
+    """Warm-start ONLY the transition physics constants from a reference
+    checkpoint (amendment v0.6-B).  Fail-closed: every raw parameter must be
+    present in the reference state dict with a matching shape; nothing else
+    (observer/closure/boundary/observation networks, latent_rho_raw) is
+    touched, so multi-seed runs share the identified-constant basin while
+    network noise stays seed-fresh."""
+    payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    state = payload["state_dict"]
+    missing: list[str] = []
+    for name, param in model.transition.raw.items():
+        key = f"transition.raw.{name}"
+        if key not in state or state[key].shape != param.shape:
+            missing.append(key)
+    if missing:
+        raise FinalWMProtocolError(f"anchor checkpoint lacks transition constants: {missing}")
+    with torch.no_grad():
+        for name, param in model.transition.raw.items():
+            param.copy_(state[f"transition.raw.{name}"])
 
 
 def _git_commit() -> str:
@@ -129,6 +162,8 @@ def train_arm(
     if spec.init_checkpoint is not None:
         payload = torch.load(spec.init_checkpoint, map_location=device, weights_only=False)
         model.load_state_dict(payload["state_dict"])
+    if spec.anchor_constants_checkpoint is not None:
+        apply_anchor_constants(model, spec.anchor_constants_checkpoint)
     if spec.boundary_loss_only:
         params = list(model.boundary_model.parameters())
     else:

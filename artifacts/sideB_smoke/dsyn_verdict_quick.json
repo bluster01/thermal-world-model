@@ -1,0 +1,52 @@
+{
+  "unit": "dsyn",
+  "per_seed": [
+    {
+      "seed": 0,
+      "skeleton_val_nll": 662.586181640625,
+      "student_val_nll": 270.05908203125,
+      "improvement": 392.527099609375,
+      "pass": true,
+      "cf1": {
+        "abduction": "replay",
+        "valve_index": 1,
+        "delta_v": 0.05,
+        "horizon": 18,
+        "n_windows": 16,
+        "delta_mae_per_channel": [
+          0.0,
+          0.0,
+          0.0009317398071289062,
+          0.0,
+          0.00126828090287745
+        ],
+        "delta_mae": 0.00044000413618050516,
+        "delta_magnitude_ratio_per_channel": [
+          0.0,
+          0.0,
+          0.9983291625976562,
+          0.0,
+          0.9988597631454468
+        ],
+        "terminal_sign_agreement": 1.0,
+        "teacher_delta_terminal": [
+          0.0,
+          0.0,
+          -0.8457279205322266,
+          0.0,
+          -0.4229545593261719
+        ],
+        "student_delta_terminal": [
+          0.0,
+          0.0,
+          -0.8459396362304688,
+          0.0,
+          -0.42177581787109375
+        ]
+      }
+    }
+  ],
+  "passes": 1,
+  "verdict": "PASS",
+  "quick": true
+}
