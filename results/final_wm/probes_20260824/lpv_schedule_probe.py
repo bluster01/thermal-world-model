@@ -84,9 +84,14 @@ class FlowScheduledTransition(Fan2020UDETransition):
             s = (d_flow / FLOW_REF).clamp(min=0.1, max=3.0)
             # transport lags shrink with flow (mass conservation)
             inv = s.pow(-a_tau)
-            tau_b = tau_b * inv
-            tau_mix1 = tau_mix1 * inv
-            tau_mix2 = tau_mix2 * inv
+            # Stability guard: the explicit lag update is stable for
+            # tau > dt_sub/2 (= 1 s here). Worst case with alpha=2.5 at max flow
+            # gives tau_mix 80 -> 17.5 s (17x margin), so this floor should never
+            # bind -- it is cheap insurance against a pathological alpha/flow.
+            floor = 3.0 * dt_sub
+            tau_b = (tau_b * inv).clamp(min=floor)
+            tau_mix1 = (tau_mix1 * inv).clamp(min=floor)
+            tau_mix2 = (tau_mix2 * inv).clamp(min=floor)
             # convective UA grows with flow (Dittus-Boelter)
             ua = ua * s.pow(a_ua).unsqueeze(-1)
         return super()._substep(h, tm, rb, m1, m2, lag1, lag2, dsw1, dsw2,
