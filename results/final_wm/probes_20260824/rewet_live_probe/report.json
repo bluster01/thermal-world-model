@@ -1,0 +1,36 @@
+{
+  "train": {
+    "best_val_nll": 1.3986154794692993,
+    "best_epoch": 84,
+    "epochs_run": 105,
+    "stop_reason": "patience"
+  },
+  "eval": {
+    "overall_h18_mae": 4.112869834899902,
+    "bins_q1q5": [
+      1.8926026821136475,
+      2.4268219470977783,
+      4.902588844299316,
+      6.6163530349731445,
+      4.725982666015625
+    ]
+  },
+  "rewet": {
+    "aW1_kW_per_K": 1.4036434341224702e-11,
+    "aW2_kW_per_K": 1.4036434341224702e-11,
+    "raw_init": -2.0,
+    "raw_final": -30.0
+  },
+  "direction": {
+    "v1": {
+      "mean_delta_c": -0.0052391053177416325,
+      "frac_negative": 1.0,
+      "n_windows": 32
+    },
+    "v2": {
+      "mean_delta_c": -0.04890327528119087,
+      "frac_negative": 1.0,
+      "n_windows": 32
+    }
+  }
+}

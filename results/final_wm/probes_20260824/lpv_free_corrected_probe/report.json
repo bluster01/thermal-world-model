@@ -1,0 +1,24 @@
+{
+  "arm": "lpv_free_corrected",
+  "pin_prior": false,
+  "train": {
+    "best_val_nll": 1.0955543518066406,
+    "best_epoch": 86,
+    "epochs_run": 107,
+    "stop_reason": "patience"
+  },
+  "eval": {
+    "overall_h18_mae": 0.46662601828575134,
+    "bins_q1q5": [
+      0.44009581208229065,
+      0.41615939140319824,
+      0.5680989623069763,
+      0.4611654281616211,
+      0.4476104974746704
+    ]
+  },
+  "alphas": {
+    "alpha_tau": 1.350556492805481,
+    "alpha_ua": 0.04647223278880119
+  }
+}

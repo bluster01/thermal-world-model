@@ -125,13 +125,89 @@ def build(spec, props, alpha_scale: float):
     return _promote(model, alpha_scale)
 
 
+def pin_tau_to_prior(model):
+    """Freeze the transport lags at their PHYSICAL prior so the flow schedule
+    carries ALL load dependence.
+
+    Arm 1 (free tau + schedule) failed at H18 7.788 vs the 0.723 baseline. The
+    diagnosis: the baseline's learned tau (tau_mix1 365-757 s vs an 80 s prior)
+    is ALREADY a load-averaged compensation for the missing schedule, so
+    multiplying it by s^-alpha double-counts (alpha_tau grew to 1.421, s spans
+    0.52-1.83 -> a 5.5x tau swing) and the high-load bins blew up (Q4/Q5
+    15.6/13.3). Pinning raw at softplus_inverse(1) makes val(name) == prior
+    exactly, leaving the delay structure with just two free parameters.
+    """
+    from src.final_wm.transition import _softplus_inverse
+    raw = model.transition.raw
+    pinned = {}
+    for name in ("tau_mix1", "tau_mix2", "tauB"):
+        raw[name].data.fill_(_softplus_inverse(1.0))
+        raw[name].requires_grad_(False)
+        pinned[name] = float(model.transition.val(name))
+    print(f"[pin] tau frozen at physical prior: {pinned} "
+          f"(only alpha_tau/alpha_ua remain learnable for the delay structure)",
+          flush=True)
+    return model
+
+
+def fix_alphas_to_physics(model, a_tau: float = 0.0, a_ua: float = 0.8):
+    """Freeze the schedule exponents at the physics values (no free parameters).
+
+    Motivation (tau_dependence_diag.py): the MEASURED Q1/Q5 lag ratio 2.33 is
+    reproduced to 3% by metal thermal inertia Cm/UA with UA ~ mdot^0.8
+    (Dittus-Boelter, predicts 2.26), while plug-flow transport rho/mdot predicts
+    only 1.21 (48% off) because density rises 32 -> 74 kg/m3 with load and nearly
+    cancels the flow effect. So the load-dependent lag is likely a heat-transfer
+    effect, and the learned alpha_tau = 1.35 is a PROXY for it. This arm removes
+    the proxy: alpha_tau = 0 (no transport scheduling at all) and alpha_ua = 0.8
+    (pure Dittus-Boelter), both frozen.
+    """
+    tr = model.transition
+    # invert alpha = alpha_max * sigmoid(raw) -> raw = logit(alpha / alpha_max)
+    def inv(alpha, amax):
+        r = min(max(alpha / amax, 1e-6), 1 - 1e-6)
+        return float(np.log(r / (1 - r)))
+    tr.alpha_tau_raw.data.fill_(inv(1e-6, ALPHA_TAU_MAX) if a_tau == 0 else inv(a_tau, ALPHA_TAU_MAX))
+    tr.alpha_ua_raw.data.fill_(inv(a_ua, ALPHA_UA_MAX))
+    tr.alpha_tau_raw.requires_grad_(False)
+    tr.alpha_ua_raw.requires_grad_(False)
+    got_tau, got_ua = tr._alphas()
+    print(f"[physics] alphas FROZEN: alpha_tau={got_tau.item():.4f} (target {a_tau}), "
+          f"alpha_ua={got_ua.item():.4f} (target {a_ua}); "
+          f"grad_tau={tr.alpha_tau_raw.requires_grad} grad_ua={tr.alpha_ua_raw.requires_grad}",
+          flush=True)
+    return model
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sanity", action="store_true")
     ap.add_argument("--train", action="store_true")
+    ap.add_argument("--pin-prior", action="store_true",
+                    help="freeze tau_mix1/tau_mix2/tauB at their PHYSICAL PRIOR "
+                         "and let the flow schedule carry ALL load dependence "
+                         "(fixes the double-compensation failure of arm 1)")
+    ap.add_argument("--record", choices=("old", "corrected"), default="corrected",
+                    help="old = canonical_sideA.npz (baseline 0.723); corrected = "
+                         "v2.1 wiring (baseline 0.484, already flat load bins)")
+    ap.add_argument("--ua-physics", action="store_true",
+                    help="discriminating arm: FIX alpha_tau=0 and alpha_ua=0.8 "
+                         "(Dittus-Boelter), zero free schedule parameters. Tests "
+                         "whether the measured load-dependent lag is metal thermal "
+                         "inertia Cm/UA (predicts the Q1/Q5 ratio to 3%) rather "
+                         "than plug-flow transport (rho/mdot is off by 48%).")
     args = ap.parse_args()
 
-    record = CanonicalRecord(ROOT / "artifacts/final_wm/canonical_sideA.npz")
+    if args.record == "corrected":
+        rec_path = OUT.parent / "v1fix_probe/canonical_sideA_v1fixed.npz"
+        baseline = 0.484
+    else:
+        rec_path = ROOT / "artifacts/final_wm/canonical_sideA.npz"
+        baseline = 0.723
+    print(f"[record] {args.record} -> {rec_path.name} (unscheduled baseline "
+          f"H18 {baseline})", flush=True)
+
+    record = CanonicalRecord(rec_path)
     props = load_grid_properties(ROOT / "artifacts/final_wm/iapws_surrogate.npz",
                                  device=DEVICE)
     spec = ms._base("t1", "closure_cons_norew", 0, boundary_mode="oracle",
@@ -176,19 +252,36 @@ def main():
         return
 
     if args.train:
-        print("[lpv_scheduled] training (compile_substep disabled: subclass hook)",
-              flush=True)
+        tag = f"lpv_{'uaphys' if args.ua_physics else ('pinned' if args.pin_prior else 'free')}_{args.record}"
+        out_dir = OUT.parent / f"{tag}_probe"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        print(f"[{tag}] training (compile_substep disabled: subclass hook; "
+              f"pin_prior={args.pin_prior})", flush=True)
+        sys.path.insert(0, str(Path(__file__).parent))
+        from probe_guard import assert_grid, verify_ledger_properties
+        assert_grid(props)
         # train_arm builds the model internally; patch the builder so the arm
         # gets the scheduled transition.
         import src.final_wm.training as T
         orig = T.build_world_model
-        T.build_world_model = lambda sp, pr, **kw: _promote(orig(sp, pr, **kw), 1.0)
+
+        def builder(sp, pr, **kw):
+            m = _promote(orig(sp, pr, **kw), 1.0)
+            if args.pin_prior:
+                pin_tau_to_prior(m)
+            if args.ua_physics:
+                fix_alphas_to_physics(m, a_tau=0.0, a_ua=0.8)
+            return m
+
+        T.build_world_model = builder
         try:
-            final = train_arm(spec, record, OUT, device=DEVICE, compile_substep=False)
+            final = train_arm(spec, record, out_dir, device=DEVICE, properties=props,
+                              compile_substep=False)
         finally:
             T.build_world_model = orig
+        verify_ledger_properties(out_dir)
         model = build(spec, props, 1.0).to(DEVICE)
-        model.load_state_dict(torch.load(OUT / "checkpoints" / f"{final['run_id']}.pt",
+        model.load_state_dict(torch.load(out_dir / "checkpoints" / f"{final['run_id']}.pt",
                                          map_location=DEVICE,
                                          weights_only=False)["state_dict"], strict=False)
         model.eval()
@@ -211,13 +304,14 @@ def main():
                           day_ids=torch.zeros(done, dtype=torch.long))
         ch4 = binning_stats(we)["H18"]["final_outlet_temp"]
         a_tau, a_ua = model.transition._alphas()
-        print(f"[lpv_scheduled] H18 ch4 overall={np.mean(ch4['bin_means']):.3f} "
+        print(f"[{tag}] H18 ch4 overall={np.mean(ch4['bin_means']):.3f} "
               f"bins={[round(x, 3) for x in ch4['bin_means']]} | "
               f"best_val={final['best_val_nll']:.3f}@{final['best_epoch']} | "
               f"learned alpha_tau={a_tau.item():.3f} alpha_ua={a_ua.item():.3f}",
               flush=True)
-        (OUT / "report.json").write_text(json.dumps(
-            {"train": {k: final[k] for k in ("best_val_nll", "best_epoch",
+        (out_dir / "report.json").write_text(json.dumps(
+            {"arm": tag, "pin_prior": bool(args.pin_prior),
+             "train": {k: final[k] for k in ("best_val_nll", "best_epoch",
                                              "epochs_run", "stop_reason")},
              "eval": {"overall_h18_mae": float(np.mean(ch4["bin_means"])),
                       "bins_q1q5": ch4["bin_means"]},

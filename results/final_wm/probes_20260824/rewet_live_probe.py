@@ -75,23 +75,34 @@ if __name__ == "__main__":
                     init_checkpoint=str(ANCHOR))
     import src.final_wm.training as T
     orig = T.build_world_model
-    # train_arm builds, then loads the anchor; revive AFTER the load by wrapping
-    # the builder and re-reviving through a forward pre-hook on the first call.
-    state = {"revived": False}
+    # train_arm loads the anchor at training.py:164 via model.load_state_dict and
+    # runs rollouts via model.forecast(...) -- NOT model(...) -- so a
+    # forward_pre_hook never fires (that is why the first attempt still ended at
+    # raw=-30). Wrap load_state_dict instead and revive exactly once, right after
+    # the anchor load, so the later best-checkpoint restore is not clobbered.
+    state = {"loads": 0}
 
     def builder(sp, pr, **kw):
         m = orig(sp, pr, **kw)
+        real_load = m.load_state_dict
 
-        def pre_hook(module, args):
-            if not state["revived"]:
+        def patched(sd, strict=True, *a, **k):
+            out = real_load(sd, strict=strict, *a, **k)
+            state["loads"] += 1
+            if state["loads"] == 1:
                 revive_rewet(m)
-                state["revived"] = True
-        m.register_forward_pre_hook(pre_hook)
+            else:
+                print(f"[revive] skipped on load #{state['loads']} "
+                      f"(preserving trained aW)", flush=True)
+            return out
+
+        m.load_state_dict = patched
         return m
 
     T.build_world_model = builder
     try:
-        final = train_arm(spec, record, OUT, device=DEVICE, compile_substep=False)
+        final = train_arm(spec, record, OUT, device=DEVICE, properties=props,
+                          compile_substep=False)
     finally:
         T.build_world_model = orig
 

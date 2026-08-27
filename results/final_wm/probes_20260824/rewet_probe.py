@@ -79,7 +79,8 @@ if __name__ == "__main__":
                     init_checkpoint=str(ANCHOR))
     print(f"[rewet_intact_corrected] training (anchor={ANCHOR.name}, "
           f"compile_substep=True)", flush=True)
-    final = train_arm(spec, record, OUT, device=DEVICE, compile_substep=True)
+    final = train_arm(spec, record, OUT, device=DEVICE, properties=props,
+                      compile_substep=True)
     model = build_world_model(spec, props).to(DEVICE)
     model.load_state_dict(torch.load(OUT / "checkpoints" / f"{final['run_id']}.pt",
                                      map_location=DEVICE, weights_only=False)["state_dict"])

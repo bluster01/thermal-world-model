@@ -99,6 +99,12 @@ if __name__ == "__main__":
                    closure_mode="conservative_norew", epochs=120, patience=20,
                    batch_size=32, batches_per_epoch=200)
     report = {}
+    # NOTE 2026-08-26: props MUST be loaded before train_arm and passed in.
+    # Omitting properties= made train_arm fall back to AnalyticThermoProperties
+    # while evaluation used the IAPWS grid -> train/eval physics mismatch and
+    # garbage MAE (this arm's 6.313 is void).
+    props = load_grid_properties(ROOT / "artifacts/final_wm/iapws_surrogate.npz",
+                                 device=DEVICE)
     for tag, anchor in (("v1fix_unanchored", None),
                         ("v1fix_anchored", ROOT / "results/final_wm/probes_20260824/retrain_probe"
                          "/anchor_assets/anchor_init_s1constants_seed0.pt")):
@@ -109,11 +115,14 @@ if __name__ == "__main__":
         arm_dir = OUT / tag
         arm_dir.mkdir(parents=True, exist_ok=True)
         print(f"[{tag}] training (init_checkpoint={kw.get('init_checkpoint')})", flush=True)
-        final = train_arm(spec, record, OUT, device=DEVICE)
-        props = load_grid_properties(ROOT / "artifacts/final_wm/iapws_surrogate.npz", device=DEVICE)
+        sys.path.insert(0, str(Path(__file__).parent))
+        from probe_guard import assert_grid, verify_ledger_properties
+        assert_grid(props)
+        final = train_arm(spec, record, arm_dir, device=DEVICE, properties=props)
+        verify_ledger_properties(arm_dir)
         model = build_world_model(spec, props).to(DEVICE)
         model.load_state_dict(torch.load(
-            OUT / "checkpoints" / f"{final['run_id']}.pt", map_location=DEVICE,
+            arm_dir / "checkpoints" / f"{final['run_id']}.pt", map_location=DEVICE,
             weights_only=False)["state_dict"])
         ev = eval_probe_set(model, tag)
         print(f"[{tag}] H18 ch4 overall={ev['overall_h18_mae']:.3f} "

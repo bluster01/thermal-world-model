@@ -1,0 +1,22 @@
+{
+  "train": {
+    "best_val_nll": 1.5584180355072021,
+    "best_epoch": 52,
+    "epochs_run": 73,
+    "stop_reason": "patience",
+    "flags": {
+      "compile_substep": true,
+      "matmul_precision": "high"
+    }
+  },
+  "eval": {
+    "overall_h18_mae": 3.9528975248336793,
+    "bins_q1q5": [
+      1.7723764181137085,
+      2.623626470565796,
+      5.251766681671143,
+      6.423654079437256,
+      3.693063974380493
+    ]
+  }
+}
