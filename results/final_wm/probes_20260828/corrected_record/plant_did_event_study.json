@@ -1,0 +1,364 @@
+{
+  "record": "/home/bluster/projectA/thermal-world-model/results/final_wm/probes_20260824/v1fix_probe/canonical_sideA_v1fixed.npz",
+  "split": "val",
+  "horizons_steps": [
+    1,
+    6,
+    18,
+    60
+  ],
+  "horizons_seconds": [
+    10,
+    60,
+    180,
+    600
+  ],
+  "judged_horizons": [
+    "H18",
+    "H60"
+  ],
+  "protocol": {
+    "min_step": 0.04,
+    "contamination_horizon": 60,
+    "trend_steps": 30,
+    "k_controls": 5,
+    "n_placebo": 200,
+    "inference": "one-sided score test (directional); Wilson CI descriptive only"
+  },
+  "valves": {
+    "v2": {
+      "n_controls": 75211,
+      "upstream_reference": {
+        "up": {
+          "n": 22,
+          "frac_correct": [
+            0.45454545454545453,
+            0.45454545454545453,
+            0.6818181818181818,
+            0.6818181818181818
+          ]
+        },
+        "down": {
+          "n": 47,
+          "frac_correct": [
+            0.3404255319148936,
+            0.425531914893617,
+            0.5531914893617021,
+            0.7446808510638298
+          ]
+        }
+      },
+      "up": {
+        "n": 22,
+        "pre_trend_c_per_min": {
+          "mean": 0.24553333222866058,
+          "median": 0.91033935546875,
+          "frac_positive": 0.5454545454545454
+        },
+        "before_after": {
+          "mean_delta_c": [
+            0.038116455078125,
+            0.02780706249177456,
+            -0.6089394092559814,
+            -1.1006220579147339
+          ],
+          "frac_correct": [
+            0.45454545454545453,
+            0.45454545454545453,
+            0.6818181818181818,
+            0.6818181818181818
+          ]
+        },
+        "did_full": {
+          "mean_delta_c": [
+            0.026467619463801384,
+            -0.07886409014463425,
+            -0.7109208703041077,
+            -1.416190505027771
+          ],
+          "frac_correct": [
+            0.36363636363636365,
+            0.7272727272727273,
+            0.7272727272727273,
+            0.7272727272727273
+          ],
+          "mean_match_distance": 0.17176717519760132
+        },
+        "did_trend_only": {
+          "mean_delta_c": [
+            0.021781224757432938,
+            -0.02216464839875698,
+            -0.6866409778594971,
+            -0.7495506405830383
+          ],
+          "frac_correct": [
+            0.5,
+            0.5454545454545454,
+            0.5909090909090909,
+            0.5909090909090909
+          ],
+          "mean_match_distance": 0.0
+        },
+        "inference": {
+          "H18": {
+            "mean_delta_c": -0.7109208703041077,
+            "frac_correct": 0.7272727272727273,
+            "wilson_ci_descriptive": [
+              0.5184787630099802,
+              0.8684941798418556
+            ],
+            "wilson_excludes_half": true,
+            "one_sided_z": 2.1320071635561044,
+            "one_sided_p": 0.01650312883061627,
+            "placebo_mean": {
+              "null_mean": 0.0016144239343702793,
+              "null_sd": 0.1883704960346222,
+              "p_one_sided": 0.0
+            },
+            "placebo_frac": {
+              "null_mean": 0.4963636363636364,
+              "null_sd": 0.09495105307124742,
+              "p_one_sided": 0.02
+            }
+          },
+          "H60": {
+            "mean_delta_c": -1.416190505027771,
+            "frac_correct": 0.7272727272727273,
+            "wilson_ci_descriptive": [
+              0.5184787630099802,
+              0.8684941798418556
+            ],
+            "wilson_excludes_half": true,
+            "one_sided_z": 2.1320071635561044,
+            "one_sided_p": 0.01650312883061627,
+            "placebo_mean": {
+              "null_mean": 0.002506162039935589,
+              "null_sd": 0.26315170526504517,
+              "p_one_sided": 0.0
+            },
+            "placebo_frac": {
+              "null_mean": 0.4943181818181818,
+              "null_sd": 0.11262619185122566,
+              "p_one_sided": 0.04
+            }
+          }
+        }
+      },
+      "down": {
+        "n": 47,
+        "pre_trend_c_per_min": {
+          "mean": -0.23721638321876526,
+          "median": 0.574951171875,
+          "frac_positive": 0.5319148936170213
+        },
+        "before_after": {
+          "mean_delta_c": [
+            -0.04296485334634781,
+            -0.1692401021718979,
+            0.5378496050834656,
+            1.2985904216766357
+          ],
+          "frac_correct": [
+            0.3404255319148936,
+            0.425531914893617,
+            0.5531914893617021,
+            0.7446808510638298
+          ]
+        },
+        "did_full": {
+          "mean_delta_c": [
+            -0.045611437410116196,
+            -0.20797069370746613,
+            0.25979992747306824,
+            1.1905732154846191
+          ],
+          "frac_correct": [
+            0.44680851063829785,
+            0.3829787234042553,
+            0.6170212765957447,
+            0.723404255319149
+          ],
+          "mean_match_distance": 0.14344362914562225
+        },
+        "did_trend_only": {
+          "mean_delta_c": [
+            -0.043725065886974335,
+            -0.2007550448179245,
+            0.4819191098213196,
+            1.2907006740570068
+          ],
+          "frac_correct": [
+            0.3829787234042553,
+            0.3829787234042553,
+            0.5106382978723404,
+            0.7446808510638298
+          ],
+          "mean_match_distance": 0.0004908218397758901
+        },
+        "inference": {
+          "H18": {
+            "mean_delta_c": 0.25979992747306824,
+            "frac_correct": 0.6170212765957447,
+            "wilson_ci_descriptive": [
+              0.47426308443976317,
+              0.7420951733648692
+            ],
+            "wilson_excludes_half": false,
+            "one_sided_z": 1.60451490647684,
+            "one_sided_p": 0.05430030069110989,
+            "placebo_mean": {
+              "null_mean": -0.03188228979706764,
+              "null_sd": 0.1490102857351303,
+              "p_one_sided": 0.015
+            },
+            "placebo_frac": {
+              "null_mean": 0.49223404255319153,
+              "null_sd": 0.07282930861784169,
+              "p_one_sided": 0.05
+            }
+          },
+          "H60": {
+            "mean_delta_c": 1.1905732154846191,
+            "frac_correct": 0.723404255319149,
+            "wilson_ci_descriptive": [
+              0.5824116429931004,
+              0.8306359400884707
+            ],
+            "wilson_excludes_half": true,
+            "one_sided_z": 3.063164821455786,
+            "one_sided_p": 0.001095046982464492,
+            "placebo_mean": {
+              "null_mean": -0.02011861279606819,
+              "null_sd": 0.19010764360427856,
+              "p_one_sided": 0.0
+            },
+            "placebo_frac": {
+              "null_mean": 0.5031914893617021,
+              "null_sd": 0.06916530084590519,
+              "p_one_sided": 0.0
+            }
+          }
+        }
+      }
+    },
+    "v1": {
+      "n_controls": 75211,
+      "upstream_reference": {
+        "up": {
+          "n": 0,
+          "frac_correct": [
+            NaN,
+            NaN,
+            NaN,
+            NaN
+          ]
+        },
+        "down": {
+          "n": 4,
+          "frac_correct": [
+            0.0,
+            0.5,
+            0.5,
+            0.5
+          ]
+        }
+      },
+      "down": {
+        "n": 4,
+        "pre_trend_c_per_min": {
+          "mean": -0.0599365234375,
+          "median": 0.1436767578125,
+          "frac_positive": 0.5
+        },
+        "before_after": {
+          "mean_delta_c": [
+            -0.0478973388671875,
+            -0.14373779296875,
+            -0.5270233154296875,
+            -0.1077728271484375
+          ],
+          "frac_correct": [
+            0.0,
+            0.5,
+            0.5,
+            0.5
+          ]
+        },
+        "did_full": {
+          "mean_delta_c": [
+            -0.06107178330421448,
+            -0.1173706129193306,
+            -0.7183654308319092,
+            -0.8368805050849915
+          ],
+          "frac_correct": [
+            0.0,
+            0.25,
+            0.5,
+            0.25
+          ],
+          "mean_match_distance": 0.06089239567518234
+        },
+        "did_trend_only": {
+          "mean_delta_c": [
+            -0.09462891519069672,
+            -0.33478090167045593,
+            -0.683636486530304,
+            -0.074249267578125
+          ],
+          "frac_correct": [
+            0.0,
+            0.25,
+            0.5,
+            0.5
+          ],
+          "mean_match_distance": 0.0
+        },
+        "inference": {
+          "H18": {
+            "mean_delta_c": -0.7183654308319092,
+            "frac_correct": 0.5,
+            "wilson_ci_descriptive": [
+              0.15003570882017148,
+              0.8499642911798285
+            ],
+            "wilson_excludes_half": false,
+            "one_sided_z": 0.0,
+            "one_sided_p": 0.5,
+            "placebo_mean": {
+              "null_mean": -0.01706826128065586,
+              "null_sd": 0.5177692770957947,
+              "p_one_sided": 0.92
+            },
+            "placebo_frac": {
+              "null_mean": 0.4575,
+              "null_sd": 0.23333184523335002,
+              "p_one_sided": 0.655
+            }
+          },
+          "H60": {
+            "mean_delta_c": -0.8368805050849915,
+            "frac_correct": 0.25,
+            "wilson_ci_descriptive": [
+              0.045586062644636216,
+              0.6993639475573634
+            ],
+            "wilson_excludes_half": false,
+            "one_sided_z": -1.0,
+            "one_sided_p": 0.8413447460685429,
+            "placebo_mean": {
+              "null_mean": -0.03589959070086479,
+              "null_sd": 0.681270182132721,
+              "p_one_sided": 0.915
+            },
+            "placebo_frac": {
+              "null_mean": 0.50625,
+              "null_sd": 0.24423029603224902,
+              "p_one_sided": 0.965
+            }
+          }
+        }
+      }
+    }
+  }
+}

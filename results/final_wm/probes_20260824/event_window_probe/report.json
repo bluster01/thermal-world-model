@@ -1,0 +1,92 @@
+{
+  "record": "/home/bluster/projectA/thermal-world-model/results/final_wm/probes_20260824/v1fix_probe/canonical_sideA_v1fixed.npz",
+  "events": {
+    "up_n": 22,
+    "down_n": 47
+  },
+  "plant_did_reference": {
+    "up_h60_mean_c": -1.416,
+    "up_frac": 0.727,
+    "down_h60_mean_c": 1.191,
+    "down_frac": 0.723,
+    "note": "observational DiD, probes_20260828/corrected_record; parallel-trends assumption untestable"
+  },
+  "arms": {
+    "baseline_unsched": {
+      "up_h60": {
+        "name": "baseline_unsched up H60",
+        "n": 22,
+        "mean_delta_c": -0.13828485873951155,
+        "median": -0.05658264271914959,
+        "min": -0.9454284906387329,
+        "max": 0.08012695610523224,
+        "frac_negative": 0.7727272727272727
+      },
+      "up_h18": {
+        "name": "baseline_unsched up H18",
+        "n": 22,
+        "mean_delta_c": -0.04595854895358736,
+        "median": -0.0460001640021801,
+        "min": -0.0952555388212204,
+        "max": 0.0179239921271801,
+        "frac_negative": 0.9090909090909091
+      },
+      "down_h60": {
+        "name": "baseline_unsched down H60",
+        "n": 47,
+        "mean_delta_c": 0.13562804118710312,
+        "median": 0.07985839992761612,
+        "min": -0.11806030571460724,
+        "max": 0.802716076374054,
+        "frac_negative": 0.2765957446808511
+      },
+      "down_h18": {
+        "name": "baseline_unsched down H18",
+        "n": 47,
+        "mean_delta_c": 0.05014536030989319,
+        "median": 0.0442098006606102,
+        "min": -0.0038248698692768812,
+        "max": 0.1494954526424408,
+        "frac_negative": 0.02127659574468085
+      }
+    },
+    "norew_oldrecord": {
+      "up_h60": {
+        "name": "norew_oldrecord up H60",
+        "n": 22,
+        "mean_delta_c": -0.29127558742369397,
+        "median": -0.10486144945025444,
+        "min": -2.314929246902466,
+        "max": 0.22310180962085724,
+        "frac_negative": 0.6818181818181818
+      },
+      "up_h18": {
+        "name": "norew_oldrecord up H18",
+        "n": 22,
+        "mean_delta_c": -0.16484394009140405,
+        "median": -0.1884053573012352,
+        "min": -0.2965494990348816,
+        "max": 0.07928466796875,
+        "frac_negative": 0.9090909090909091
+      },
+      "down_h60": {
+        "name": "norew_oldrecord down H60",
+        "n": 47,
+        "mean_delta_c": 0.2467637096254274,
+        "median": 0.13492432236671448,
+        "min": -0.49968263506889343,
+        "max": 2.0472412109375,
+        "frac_negative": 0.2978723404255319
+      },
+      "down_h18": {
+        "name": "norew_oldrecord down H18",
+        "n": 47,
+        "mean_delta_c": 0.1975469997628255,
+        "median": 0.1642252653837204,
+        "min": -0.0482177734375,
+        "max": 0.7005411982536316,
+        "frac_negative": 0.0851063829787234
+      }
+    }
+  }
+}

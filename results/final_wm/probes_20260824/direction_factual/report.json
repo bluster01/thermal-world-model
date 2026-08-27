@@ -1,0 +1,396 @@
+{
+  "design": "counterfactual vs FACTUAL trajectory, TRUE boundary path",
+  "note": "interventional quantity; plant 0.68/0.75 is observational and NOT comparable",
+  "arms": {
+    "baseline_unsched": {
+      "v1_H18": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.008035819046199322,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.008046790957450867,
+            "ci_lo": -0.008372310549020767,
+            "ci_hi": -0.0077100698836147785,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 248,
+          "mean_delta_c": -0.008061480708420277,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.008069937117397785,
+            "ci_lo": -0.00839623250067234,
+            "ci_hi": -0.0077375867404043674,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.96875,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 4.2761640548706055
+      },
+      "v1_H60": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.07559433579444885,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.0748911201953888,
+            "ci_lo": -0.0804109126329422,
+            "ci_hi": -0.06988782435655594,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 249,
+          "mean_delta_c": -0.0754782035946846,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.07479134202003479,
+            "ci_lo": -0.08039973676204681,
+            "ci_hi": -0.06983727216720581,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.97265625,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 8.418447494506836
+      },
+      "v2_H18": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.043192945420742035,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.04335280880331993,
+            "ci_lo": -0.04871185123920441,
+            "ci_hi": -0.03928089514374733,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 250,
+          "mean_delta_c": -0.043157633394002914,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.0432313047349453,
+            "ci_lo": -0.04864020273089409,
+            "ci_hi": -0.03909313306212425,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.9765625,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 4.2761640548706055
+      },
+      "v2_H60": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.1612355262041092,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.16111692786216736,
+            "ci_lo": -0.19226746261119843,
+            "ci_hi": -0.13599103689193726,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 241,
+          "mean_delta_c": -0.16181480884552002,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.1608615666627884,
+            "ci_lo": -0.19247739017009735,
+            "ci_hi": -0.13533775508403778,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.94140625,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 8.418447494506836
+      }
+    },
+    "lpv_free": {
+      "v1_H18": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.011994361877441406,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.012190032750368118,
+            "ci_lo": -0.01486023049801588,
+            "ci_hi": -0.009573272429406643,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 248,
+          "mean_delta_c": -0.012076841667294502,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.012279118411242962,
+            "ci_lo": -0.014976412057876587,
+            "ci_hi": -0.009593253023922443,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.96875,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 3.7967917919158936
+      },
+      "v1_H60": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.09270079433917999,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.09190177917480469,
+            "ci_lo": -0.10264220088720322,
+            "ci_hi": -0.08100835233926773,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 249,
+          "mean_delta_c": -0.09310782700777054,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.0919850617647171,
+            "ci_lo": -0.10277428478002548,
+            "ci_hi": -0.08118399232625961,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.97265625,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 7.3970465660095215
+      },
+      "v2_H18": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.057709693908691406,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.05780450254678726,
+            "ci_lo": -0.06174599006772041,
+            "ci_hi": -0.053083404898643494,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 250,
+          "mean_delta_c": -0.05743269994854927,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.057635776698589325,
+            "ci_lo": -0.06151242181658745,
+            "ci_hi": -0.05296177789568901,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.9765625,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 3.7967917919158936
+      },
+      "v2_H60": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.1823197901248932,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.18351174890995026,
+            "ci_lo": -0.20179851353168488,
+            "ci_hi": -0.16778990626335144,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 241,
+          "mean_delta_c": -0.18269728124141693,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.1833830624818802,
+            "ci_lo": -0.20211976766586304,
+            "ci_hi": -0.16686555743217468,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.94140625,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 7.3970465660095215
+      }
+    },
+    "a1_uaphys": {
+      "v1_H18": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.010711511597037315,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.010728975757956505,
+            "ci_lo": -0.011140681803226471,
+            "ci_hi": -0.010363250970840454,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 248,
+          "mean_delta_c": -0.010748586617410183,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.010758232325315475,
+            "ci_lo": -0.011175583116710186,
+            "ci_hi": -0.010393038392066956,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.96875,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 3.07393741607666
+      },
+      "v1_H60": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.09845030307769775,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.09725093096494675,
+            "ci_lo": -0.10726957023143768,
+            "ci_hi": -0.0883185863494873,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 249,
+          "mean_delta_c": -0.0982443243265152,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.09709261357784271,
+            "ci_lo": -0.1071053147315979,
+            "ci_hi": -0.08837059140205383,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.97265625,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 7.840659141540527
+      },
+      "v2_H18": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.06518006324768066,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.0652187392115593,
+            "ci_lo": -0.073011115193367,
+            "ci_hi": -0.05874720215797424,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 250,
+          "mean_delta_c": -0.0651734247803688,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.0650651678442955,
+            "ci_lo": -0.0729975476861,
+            "ci_hi": -0.05864987149834633,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.9765625,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 3.07393741607666
+      },
+      "v2_H60": {
+        "all": {
+          "label": "all windows",
+          "n": 256,
+          "mean_delta_c": -0.23167526721954346,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.23108595609664917,
+            "ci_lo": -0.27971339225769043,
+            "ci_hi": -0.19216230511665344,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "usable": {
+          "label": "in-support AND effective step",
+          "n": 241,
+          "mean_delta_c": -0.23246729373931885,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.2304164469242096,
+            "ci_lo": -0.27857667207717896,
+            "ci_hi": -0.1908562034368515,
+            "n_days": 13
+          },
+          "gate_pass_v03": true
+        },
+        "in_support_frac": 0.94140625,
+        "effective_step_mean": 0.050000011920928955,
+        "clamped_out_frac": 0.0,
+        "factual_fidelity_mae_c": 7.840659141540527
+      }
+    }
+  }
+}
