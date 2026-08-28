@@ -43,7 +43,9 @@ from experiments.final_wm import matrix_spec as ms
 
 DEVICE = "cuda"
 P = ROOT / "results/final_wm/probes_20260824"
-OUT = P / "rewet_live_probe"
+OUT = P / "rewet_live_grid_probe"   # fresh dir: the sibling rewet_live_probe ledger
+                                    # is Analytic-properties VOID (08-26 defect) and
+                                    # would collide on the same run_id fingerprint
 OUT.mkdir(parents=True, exist_ok=True)
 CH = OBSERVATION_ELEMENTS.index("final_outlet_temp")
 REC = P / "v1fix_probe/canonical_sideA_v1fixed.npz"

@@ -1,0 +1,25 @@
+{
+  "arm": "lpv_mixonly_corrected",
+  "pin_prior": false,
+  "mix_only": true,
+  "train": {
+    "best_val_nll": 1.2290023565292358,
+    "best_epoch": 51,
+    "epochs_run": 72,
+    "stop_reason": "patience"
+  },
+  "eval": {
+    "overall_h18_mae": 0.5926260352134705,
+    "bins_q1q5": [
+      0.43859249353408813,
+      0.554283618927002,
+      0.7361674904823303,
+      0.7327419519424438,
+      0.501344621181488
+    ]
+  },
+  "alphas": {
+    "alpha_tau": 1.1631525754928589,
+    "alpha_ua": 0.04493553563952446
+  }
+}

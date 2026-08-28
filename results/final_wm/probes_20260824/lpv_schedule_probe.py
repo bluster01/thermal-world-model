@@ -59,11 +59,20 @@ class FlowScheduledTransition(Fan2020UDETransition):
 
     Schedule sign is pinned by physics; only the magnitude is learnable.
     alpha_scale=0.0 reproduces the parent exactly (sanity gate).
+
+    schedule_tau_b=False gives arm A9 (PREREG s5): the pulverizer lag tau_b
+    is a MILL-dynamics quantity (depends on mill load/coal inventory), NOT a
+    steam-transport quantity -- Fan2021 keeps it in a separate equation
+    dx1/dt = -x1/c0 + e^(-tau s) u1/c0 decoupled from the steam side.  The
+    free-tau arm scheduled it together with tau_mix1/2 (s5 defect), so A9
+    removes that conflation and leaves everything else identical.
     """
 
-    def __init__(self, *args, alpha_scale: float = 1.0, **kwargs):
+    def __init__(self, *args, alpha_scale: float = 1.0,
+                 schedule_tau_b: bool = True, **kwargs):
         super().__init__(*args, **kwargs)
         self.alpha_scale = float(alpha_scale)
+        self.schedule_tau_b = bool(schedule_tau_b)
         # Nested-model init: raw=-4 -> sigmoid~0.018 -> alpha~0.045, i.e. the
         # schedule starts essentially OFF so the arm begins at the global-constant
         # baseline and can only grow the schedule if the data pays for it.
@@ -89,7 +98,8 @@ class FlowScheduledTransition(Fan2020UDETransition):
             # gives tau_mix 80 -> 17.5 s (17x margin), so this floor should never
             # bind -- it is cheap insurance against a pathological alpha/flow.
             floor = 3.0 * dt_sub
-            tau_b = (tau_b * inv).clamp(min=floor)
+            if self.schedule_tau_b:
+                tau_b = (tau_b * inv).clamp(min=floor)
             tau_mix1 = (tau_mix1 * inv).clamp(min=floor)
             tau_mix2 = (tau_mix2 * inv).clamp(min=floor)
             # convective UA grows with flow (Dittus-Boelter)
@@ -101,7 +111,7 @@ class FlowScheduledTransition(Fan2020UDETransition):
                                 steam_power, metal_power)
 
 
-def _promote(model, alpha_scale: float):
+def _promote(model, alpha_scale: float, schedule_tau_b: bool = True):
     """Swap the transition module in-place for the scheduled subclass.
 
     Rebinds __class__ so the subclass _substep hook takes effect without
@@ -112,6 +122,7 @@ def _promote(model, alpha_scale: float):
     dev = next(tr.parameters()).device
     tr.__class__ = FlowScheduledTransition
     tr.alpha_scale = float(alpha_scale)
+    tr.schedule_tau_b = bool(schedule_tau_b)
     if "alpha_tau_raw" not in tr._parameters:
         tr.register_parameter("alpha_tau_raw",
                               nn.Parameter(torch.tensor(-4.0, device=dev)))
@@ -120,9 +131,9 @@ def _promote(model, alpha_scale: float):
     return model
 
 
-def build(spec, props, alpha_scale: float):
+def build(spec, props, alpha_scale: float, schedule_tau_b: bool = True):
     model = build_world_model(spec, props)
-    return _promote(model, alpha_scale)
+    return _promote(model, alpha_scale, schedule_tau_b)
 
 
 def pin_tau_to_prior(model):
@@ -196,6 +207,10 @@ def main():
                          "whether the measured load-dependent lag is metal thermal "
                          "inertia Cm/UA (predicts the Q1/Q5 ratio to 3%) rather "
                          "than plug-flow transport (rho/mdot is off by 48%).")
+    ap.add_argument("--mix-only", action="store_true",
+                    help="arm A9 (PREREG s5): schedule tau_mix1/2 ONLY, leave the "
+                         "pulverizer lag tau_b unscheduled (the free-tau arm "
+                         "conflated mill dynamics with steam transport).")
     args = ap.parse_args()
 
     if args.record == "corrected":
@@ -252,11 +267,14 @@ def main():
         return
 
     if args.train:
-        tag = f"lpv_{'uaphys' if args.ua_physics else ('pinned' if args.pin_prior else 'free')}_{args.record}"
+        variant = ("uaphys" if args.ua_physics
+                   else ("pinned" if args.pin_prior
+                         else ("mixonly" if args.mix_only else "free")))
+        tag = f"lpv_{variant}_{args.record}"
         out_dir = OUT.parent / f"{tag}_probe"
         out_dir.mkdir(parents=True, exist_ok=True)
         print(f"[{tag}] training (compile_substep disabled: subclass hook; "
-              f"pin_prior={args.pin_prior})", flush=True)
+              f"pin_prior={args.pin_prior} mix_only={args.mix_only})", flush=True)
         sys.path.insert(0, str(Path(__file__).parent))
         from probe_guard import assert_grid, verify_ledger_properties
         assert_grid(props)
@@ -266,7 +284,7 @@ def main():
         orig = T.build_world_model
 
         def builder(sp, pr, **kw):
-            m = _promote(orig(sp, pr, **kw), 1.0)
+            m = _promote(orig(sp, pr, **kw), 1.0, schedule_tau_b=not args.mix_only)
             if args.pin_prior:
                 pin_tau_to_prior(m)
             if args.ua_physics:
@@ -280,7 +298,7 @@ def main():
         finally:
             T.build_world_model = orig
         verify_ledger_properties(out_dir)
-        model = build(spec, props, 1.0).to(DEVICE)
+        model = build(spec, props, 1.0, schedule_tau_b=not args.mix_only).to(DEVICE)
         model.load_state_dict(torch.load(out_dir / "checkpoints" / f"{final['run_id']}.pt",
                                          map_location=DEVICE,
                                          weights_only=False)["state_dict"], strict=False)
@@ -311,6 +329,7 @@ def main():
               flush=True)
         (out_dir / "report.json").write_text(json.dumps(
             {"arm": tag, "pin_prior": bool(args.pin_prior),
+             "mix_only": bool(args.mix_only),
              "train": {k: final[k] for k in ("best_val_nll", "best_epoch",
                                              "epochs_run", "stop_reason")},
              "eval": {"overall_h18_mae": float(np.mean(ch4["bin_means"])),
