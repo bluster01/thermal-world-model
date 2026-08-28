@@ -1,0 +1,43 @@
+{
+  "arm": "a2_steady_init",
+  "train": {
+    "best_val_nll": 1.3758668899536133,
+    "best_epoch": 98,
+    "epochs_run": 119,
+    "stop_reason": "patience"
+  },
+  "eval": {
+    "overall_h18_mae": 0.7777988731861114,
+    "bins_q1q5": [
+      0.43381085991859436,
+      0.650906503200531,
+      0.887364387512207,
+      0.9402487277984619,
+      0.9766638875007629
+    ]
+  },
+  "direction": {
+    "v1": {
+      "mean_delta_c": -0.03204973042011261,
+      "ci_lo_c": -0.04085201770067215,
+      "ci_hi_c": -0.02329077571630478,
+      "n_days": 11,
+      "ci_identifiable": true,
+      "frac_negative": 1.0,
+      "n_windows": 32,
+      "rollout_steps": 60,
+      "valve_index": 0
+    },
+    "v2": {
+      "mean_delta_c": -0.06500068306922913,
+      "ci_lo_c": -0.07552789896726608,
+      "ci_hi_c": -0.05589677765965462,
+      "n_days": 11,
+      "ci_identifiable": true,
+      "frac_negative": 1.0,
+      "n_windows": 32,
+      "rollout_steps": 60,
+      "valve_index": 1
+    }
+  }
+}
