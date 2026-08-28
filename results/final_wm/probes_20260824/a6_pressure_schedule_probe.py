@@ -1,0 +1,223 @@
+"""A6 — pressure as second scheduling variable (2026-08-28, user-ordered).
+
+PREREG s2-A6: pure flow scheduling mis-specifies when pressure and flow
+decouple. Prior evidence: partial corr +0.954/+0.956 of pressure on a
+residence-time proxy after controlling flow; at fixed load pressure still
+spans 14.0-19.5 MPa (Q3 box 12.9-22.5 MPa, 10.9% spread); the free-tau arm's
+ONLY degraded bin is Q3 (0.503->0.568), matching the predicted spot.
+
+Implementation: the tau schedule factor becomes
+    inv = s_m^(-alpha_tau) * (p/p_ref)^(-beta_tau)
+with beta = beta_max * sigmoid(beta_raw) >= 0 (sign pinned: higher pressure ->
+higher density -> longer residence). beta_max=1.5 (headroom over ideal-gas 1.0).
+alpha_tau/alpha_ua remain learnable as in the free arm; tau_b is scheduled
+together with tau_mix1/2 (free-arm parity -- A9 showed removing it costs 27%).
+p = p0 (stage-1 pressure, monotone in pm at fixed p_out), p_ref = 18.0 MPa.
+
+Adjudication note (PREREG s2-A6): this arm additionally requires Q3 NOT to
+degrade (its target); otherwise INCONCLUSIVE even if overall reaches -5%.
+
+Injection: _substep override; identity gate at alpha_scale=0. No src change.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+import numpy as np
+import torch
+import torch.nn as nn
+
+ROOT = Path("/home/bluster/projectA/thermal-world-model")
+sys.path.insert(0, str(ROOT))
+
+from src.final_wm.analysis import STEAM_FLOW_INDEX, WindowErrors, binning_stats
+from src.final_wm.contracts import OBSERVATION_ELEMENTS
+from src.final_wm.data import SPLIT_TRAIN, SPLIT_VAL, CanonicalRecord, sample_windows
+from src.final_wm.properties import load_grid_properties
+from src.final_wm.training import build_world_model, train_arm
+from src.final_wm.transition import Fan2020UDETransition
+from experiments.final_wm import matrix_spec as ms
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+P = ROOT / "results/final_wm/probes_20260824"
+OUT = P / "a6_pressure_schedule_probe"
+OUT.mkdir(parents=True, exist_ok=True)
+CH = OBSERVATION_ELEMENTS.index("final_outlet_temp")
+N_WIN, EVAL_SEED = 256, 50_000
+FLOW_REF = 300.0
+P_REF_MPA = 18.0
+ALPHA_TAU_MAX = 2.5
+ALPHA_UA_MAX = 1.2
+BETA_TAU_MAX = 1.5
+torch.backends.cuda.matmul.allow_tf32 = True
+
+
+class FlowPressureScheduledTransition(Fan2020UDETransition):
+    """tau schedule with flow AND pressure: inv = s^-a_tau * (p/p_ref)^-b_tau."""
+
+    def __init__(self, *args, alpha_scale: float = 1.0, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.alpha_scale = float(alpha_scale)
+        self.alpha_tau_raw = nn.Parameter(torch.tensor(-4.0))
+        self.alpha_ua_raw = nn.Parameter(torch.tensor(-4.0))
+        self.beta_tau_raw = nn.Parameter(torch.tensor(-4.0))
+
+    def _alphas(self):
+        a_tau = ALPHA_TAU_MAX * torch.sigmoid(self.alpha_tau_raw) * self.alpha_scale
+        a_ua = ALPHA_UA_MAX * torch.sigmoid(self.alpha_ua_raw) * self.alpha_scale
+        b_tau = BETA_TAU_MAX * torch.sigmoid(self.beta_tau_raw) * self.alpha_scale
+        return a_tau, a_ua, b_tau
+
+    def _substep(self, h, tm, rb, m1, m2, lag1, lag2, dsw1, dsw2, d_flow, u_b,
+                 p_stack, p0, p1, h_spray, h_sep, m_cap, ua, cm, k_t,
+                 tau_b, tau_evap, tau_mix1, tau_mix2, dt_sub, h_lo, h_hi,
+                 steam_power, metal_power):
+        if self.alpha_scale != 0.0:
+            a_tau, a_ua, b_tau = self._alphas()
+            s = (d_flow / FLOW_REF).clamp(min=0.1, max=3.0)
+            p_ratio = (p0 / P_REF_MPA).clamp(min=0.5, max=2.0)
+            inv = s.pow(-a_tau) * p_ratio.pow(-b_tau)
+            floor = 3.0 * dt_sub
+            tau_b = (tau_b * inv).clamp(min=floor)
+            tau_mix1 = (tau_mix1 * inv).clamp(min=floor)
+            tau_mix2 = (tau_mix2 * inv).clamp(min=floor)
+            ua = ua * s.pow(a_ua).unsqueeze(-1)
+        return super()._substep(h, tm, rb, m1, m2, lag1, lag2, dsw1, dsw2,
+                                d_flow, u_b, p_stack, p0, p1, h_spray, h_sep,
+                                m_cap, ua, cm, k_t, tau_b, tau_evap, tau_mix1,
+                                tau_mix2, dt_sub, h_lo, h_hi,
+                                steam_power, metal_power)
+
+
+def _promote(model, alpha_scale: float = 1.0):
+    tr = model.transition
+    dev = next(tr.parameters()).device
+    tr.__class__ = FlowPressureScheduledTransition
+    tr.alpha_scale = float(alpha_scale)
+    if "alpha_tau_raw" not in tr._parameters:
+        tr.register_parameter("alpha_tau_raw",
+                              nn.Parameter(torch.tensor(-4.0, device=dev)))
+        tr.register_parameter("alpha_ua_raw",
+                              nn.Parameter(torch.tensor(-4.0, device=dev)))
+        tr.register_parameter("beta_tau_raw",
+                              nn.Parameter(torch.tensor(-4.0, device=dev)))
+    return model
+
+
+def build(spec, props, alpha_scale: float = 1.0):
+    return _promote(build_world_model(spec, props), alpha_scale)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--sanity", action="store_true")
+    ap.add_argument("--train", action="store_true")
+    args = ap.parse_args()
+
+    rec_path = P / "v1fix_probe/canonical_sideA_v1fixed.npz"
+    record = CanonicalRecord(rec_path)
+    props = load_grid_properties(ROOT / "artifacts/final_wm/iapws_surrogate.npz",
+                                 device=DEVICE)
+    spec = ms._base("t1", "closure_cons_norew", 0, boundary_mode="oracle",
+                    initial_state_mode="hybrid", closure_mode="conservative_norew",
+                    epochs=120, patience=20, batch_size=32, batches_per_epoch=200)
+
+    if args.sanity:
+        torch.manual_seed(0)
+        base = build_world_model(spec, props).to(DEVICE).eval()
+        sd = {k: v.clone() for k, v in base.state_dict().items()}
+        sched = build(spec, props, alpha_scale=0.0).to(DEVICE).eval()
+        sched.load_state_dict(sd, strict=False)
+        gen = torch.Generator().manual_seed(7)
+        b = sample_windows(record, SPLIT_TRAIN, 8, 96, 18, gen)
+        hist = b.history.__class__(obs=b.history.obs.to(DEVICE),
+                                   actions=b.history.actions.to(DEVICE),
+                                   boundary=b.history.boundary.to(DEVICE))
+        fa, fb = b.future_actions.to(DEVICE), b.future_boundary.to(DEVICE)
+        with torch.no_grad():
+            r0 = base.forecast(hist, fa, boundary_mode="oracle",
+                               true_future_boundary=fb)
+            r1 = sched.forecast(hist, fa, boundary_mode="oracle",
+                                true_future_boundary=fb)
+        d01 = (r0.temps_mu - r1.temps_mu).abs().max().item()
+        print(f"[sanity alpha=0] max_abs_diff = {d01:.3e} -> "
+              f"{'IDENTICAL' if d01 == 0.0 else 'MISMATCH'}")
+        sched2 = build(spec, props, alpha_scale=1.0).to(DEVICE).eval()
+        sched2.load_state_dict(sd, strict=False)
+        tr = sched2.transition
+        tr.alpha_tau_raw.data.fill_(float(np.log(1.35 / 2.5) - np.log(1 - 1.35 / 2.5)))
+        tr.beta_tau_raw.data.fill_(float(np.log(0.8 / 1.5) - np.log(1 - 0.8 / 1.5)))
+        with torch.no_grad():
+            r2 = sched2.forecast(hist, fa, boundary_mode="oracle",
+                                true_future_boundary=fb)
+        print(f"[active] max_abs_diff vs base = "
+              f"{(r0.temps_mu - r2.temps_mu).abs().max().item():.3f} degC (must be > 0)")
+        a_tau, a_ua, b_tau = tr._alphas()
+        flows = b.future_boundary[:, :, STEAM_FLOW_INDEX]
+        print(f"  alphas: a_tau={a_tau.item():.3f} a_ua={a_ua.item():.3f} "
+              f"b_tau={b_tau.item():.3f}")
+        return
+
+    if args.train:
+        sys.path.insert(0, str(P))
+        from probe_guard import assert_grid, verify_ledger_properties
+        assert_grid(props)
+        import src.final_wm.training as T
+        orig = T.build_world_model
+
+        def builder(sp, pr, **kw):
+            return _promote(orig(sp, pr, **kw), 1.0)
+
+        T.build_world_model = builder
+        try:
+            final = train_arm(spec, record, OUT, device=DEVICE, properties=props,
+                              compile_substep=False)
+        finally:
+            T.build_world_model = orig
+        verify_ledger_properties(OUT)
+        model = build(spec, props).to(DEVICE)
+        model.load_state_dict(torch.load(
+            OUT / "checkpoints" / f"{final['run_id']}.pt", map_location=DEVICE,
+            weights_only=False)["state_dict"], strict=False)
+        model.eval()
+        gen = torch.Generator().manual_seed(EVAL_SEED)
+        errs, loads, done = [], [], 0
+        with torch.no_grad():
+            while done < N_WIN:
+                bsz = min(32, N_WIN - done)
+                b = sample_windows(record, SPLIT_VAL, bsz, 96, 18, gen)
+                hist = b.history.__class__(obs=b.history.obs.to(DEVICE),
+                                           actions=b.history.actions.to(DEVICE),
+                                           boundary=b.history.boundary.to(DEVICE))
+                r = model.forecast(hist, b.future_actions.to(DEVICE),
+                                   boundary_mode="oracle",
+                                   true_future_boundary=b.future_boundary.to(DEVICE))
+                errs.append((b.future_obs.to(DEVICE) - r.temps_mu).abs().cpu())
+                loads.append(b.future_boundary[:, 0, STEAM_FLOW_INDEX])
+                done += bsz
+        we = WindowErrors(abs_err=torch.cat(errs), load=torch.cat(loads),
+                          day_ids=torch.zeros(done, dtype=torch.long))
+        ch4 = binning_stats(we)["H18"]["final_outlet_temp"]
+        a_tau, a_ua, b_tau = model.transition._alphas()
+        print(f"[a6_p] H18 ch4 overall={np.mean(ch4['bin_means']):.3f} "
+              f"bins={[round(x, 3) for x in ch4['bin_means']]} | "
+              f"best_val={final['best_val_nll']:.3f}@{final['best_epoch']} | "
+              f"a_tau={a_tau.item():.3f} a_ua={a_ua.item():.3f} "
+              f"b_tau={b_tau.item():.3f}", flush=True)
+        (OUT / "report.json").write_text(json.dumps(
+            {"arm": "a6_pressure_schedule",
+             "train": {k: final[k] for k in ("best_val_nll", "best_epoch",
+                                             "epochs_run", "stop_reason")},
+             "eval": {"overall_h18_mae": float(np.mean(ch4["bin_means"])),
+                      "bins_q1q5": ch4["bin_means"]},
+             "alphas": {"alpha_tau": float(a_tau.item()),
+                        "alpha_ua": float(a_ua.item()),
+                        "beta_tau": float(b_tau.item())}}, indent=2))
+        print("done")
+
+
+if __name__ == "__main__":
+    main()
