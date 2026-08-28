@@ -1246,6 +1246,10 @@
         "task2_nll_statistics_20260828": {
           "path": "docs/FINAL_WM_TASK2_NLL_STATISTICS_2026-08-28.md",
           "required": true
+        },
+        "jepa_xp_phys_note_20260828": {
+          "path": "results/final_wm/probes_20260824/jepa_architecture_note_20260826.md",
+          "required": false
         }
       },
       "protocol_state": {
@@ -1267,7 +1271,8 @@
         "test继续锁定；当前只允许本地接口、单元测试与micro-smoke",
         "2026-08-27 审计发现 runner 未执行 O1/T1/B1/J1/R1 全部冻结门禁，正式 verdict 在 v0.7 重发前一律降级为历史证据",
         "修复范围只覆盖可改变科学判决或破坏证据绑定的根因；模型架构、LPV 调参及一般工程化事项保持冻结",
-        "2026-08-28 探针复审：DiD 的 200 次置换不得报告 p=0，factual counterfactual 必须逐步检查支持域；在 factual rollout 误差明显大于反事实效应时只作模型内部方向诊断"
+        "2026-08-28 探针复审：DiD 的 200 次置换不得报告 p=0，factual counterfactual 必须逐步检查支持域；在 factual rollout 误差明显大于反事实效应时只作模型内部方向诊断",
+        "2026-08-28 JEPA 文献增补（XP-JEPA 2608.24044 / Phys-JEPA 2606.16076 / LeJEPA SIGReg）：动机=未观测炉膛侧驱动是 sh1_in 逼近信息极限的主因（v0.6 诊断），XP-JEPA 特权物理分支（训练期富通道交叉预测、部署丢弃、接口不变）与 Phys-JEPA 物理-残差分解（static/dynamic 双一致性）提供了比 CVAE 潜变量更直接的机制；B 系列重排：B3 改 XP-JEPA 式特权分支、新增 B4 Phys-JEPA 式分解，判定沿用 A 系列三条件+方向门并增报 H36/H60 漂移与段级偏置；优先级不变（排在 A 系列四合一与 v0.6 ①之后）；两篇均为初始验证性质（机器人/气象域、单种子、弱 descriptor），引作机制与术语来源不作证据背书"
       ]
     },
     "ms4": {
