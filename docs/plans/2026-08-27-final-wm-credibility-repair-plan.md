@@ -10,14 +10,15 @@
 
 ---
 
-> 状态：`TASK 1 LOCAL VERIFIED / TASK 2 NOT STARTED / HOLD / TEST LOCKED`
+> 状态：`TASK 1 POST-AUDIT LOCAL VERIFIED / TASK 2 NOT STARTED / HOLD / TEST LOCKED`
 > 依据：`docs/FINAL_WM_CREDIBILITY_AUDIT_2026-08-27.md`
 > 执行原则：一次只完成一个任务；测试通过、人工核对 diff 后再进入下一项；不自动启动 Linux、test 或论文改写。
 
 ## Task 1: 冻结 v0.7 可执行判决合同并 fail-closed
 
 > 完成记录（2026-08-28）：v0.7 required-evidence 合同、协议指标和 fail-closed tier 已落地；
-> 定向回归 `17 passed`。未启动训练、Linux 或 test split。
+> 复审修正了条件稳定性初态/工况口径与 pandas 兼容点，全量回归 `154 passed`。
+> 未启动训练、Linux 或 test split。复审稿见 `docs/FINAL_WM_TASK1_POST_AUDIT_2026-08-28.md`。
 
 **Files:**
 

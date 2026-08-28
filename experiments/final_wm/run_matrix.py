@@ -45,7 +45,6 @@ from src.final_wm.evaluation import (
     persistence_boundary_metrics,
     relative_improvement_ci,
     residual_quantiles,
-    rollout_stability,
     state_continuity_metrics,
     step_response_direction,
 )
@@ -803,15 +802,15 @@ def run_matrix(args) -> dict:
             stability_details = []
             combined_passes = 0
             for i, seed in enumerate(seeds):
-                staged_stability = rollout_stability(
+                staged_stability = constant_condition_stability(
                     staged_models[seed], record, SPLIT_VAL,
-                    n_windows=128, history_steps=ms.HISTORY_STEPS, horizon=36,
-                    boundary_mode="forecast", seed=72_000 + seed, device=device,
+                    n_windows=128, history_steps=ms.HISTORY_STEPS, rollout_steps=36,
+                    seed=72_000 + seed, device=device,
                 )
-                joint_stability = rollout_stability(
+                joint_stability = constant_condition_stability(
                     joint_models[seed], record, SPLIT_VAL,
-                    n_windows=128, history_steps=ms.HISTORY_STEPS, horizon=36,
-                    boundary_mode="forecast", seed=72_000 + seed, device=device,
+                    n_windows=128, history_steps=ms.HISTORY_STEPS, rollout_steps=36,
+                    seed=72_000 + seed, device=device,
                 )
                 stability_ok = bool(
                     joint_stability["bounded"]

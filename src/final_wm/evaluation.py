@@ -167,54 +167,17 @@ def constant_condition_stability(
     model.eval()
     gen = torch.Generator().manual_seed(seed)
     batch = sample_windows(record, split_id, n_windows, history_steps, 1, gen)
-    history = batch.history.__class__(
-        obs=batch.history.obs.to(device),
-        actions=batch.history.actions.to(device),
-        boundary=batch.history.boundary.to(device),
-    )
-    state = model._initial_state(history)
     boundary_values = batch.future_boundary[:, :1].to(device).repeat(1, rollout_steps, 1)
     actions = batch.future_actions[:, :1].to(device).repeat(1, rollout_steps, 1)
+    state = model.transition.initial_steady_state(
+        boundary_values[:, 0], actions[:, 0], batch.history.obs[:, -1].to(device)
+    )
     result = model._rollout(
         state, model.boundary_model.oracle(boundary_values), actions, mode="oracle"
     )
     report = _stability_summary(result.states, result.temps_mu, rollout_steps)
     report["rollout_steps"] = int(rollout_steps)
     report["n_windows"] = int(n_windows)
-    return report
-
-
-@torch.no_grad()
-def rollout_stability(
-    model: FinalWorldModel,
-    record: CanonicalRecord,
-    split_id: int,
-    *,
-    n_windows: int,
-    history_steps: int,
-    horizon: int,
-    boundary_mode: str,
-    seed: int = 0,
-    device: str | torch.device = "cpu",
-) -> dict:
-    """Observed-action rollout stability for J1 long-horizon reporting."""
-    model.eval()
-    gen = torch.Generator().manual_seed(seed)
-    batch = sample_windows(record, split_id, n_windows, history_steps, horizon, gen)
-    history = batch.history.__class__(
-        obs=batch.history.obs.to(device),
-        actions=batch.history.actions.to(device),
-        boundary=batch.history.boundary.to(device),
-    )
-    result = model.forecast(
-        history,
-        batch.future_actions.to(device),
-        boundary_mode=boundary_mode,
-        true_future_boundary=batch.future_boundary.to(device) if boundary_mode == "oracle" else None,
-    )
-    report = _stability_summary(result.states, result.temps_mu, horizon)
-    report["n_windows"] = int(n_windows)
-    report["boundary_mode"] = boundary_mode
     return report
 
 

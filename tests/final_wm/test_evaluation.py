@@ -17,7 +17,6 @@ from src.final_wm.evaluation import (
     gaussian_crps,
     relative_improvement_ci,
     residual_quantiles,
-    rollout_stability,
     state_continuity_metrics,
     step_response_direction,
 )
@@ -94,12 +93,24 @@ def test_protocol_continuity_and_stability_metrics_run(tmp_path) -> None:
     assert constant["all_finite"] is True
     assert constant["max_abs_drift_c"] >= 0.0
 
-    rollout = rollout_stability(
-        model, record, 1, n_windows=4, history_steps=16, horizon=12,
-        boundary_mode="oracle", seed=4,
+def test_constant_condition_stability_uses_condition_anchored_state(tmp_path, monkeypatch) -> None:
+    record = CanonicalRecord(_record(tmp_path))
+    model = FinalWorldModel(
+        WorldModelConfig(
+            observer=ObserverConfig(history_steps=16),
+            closure=ClosureConfig(injection_mode="conservative"),
+        ),
+        AnalyticThermoProperties(),
     )
-    assert rollout["horizon"] == 12
-    assert rollout["all_finite"] is True
+
+    def fail_history_initialization(*_args, **_kwargs):
+        raise AssertionError("constant-condition audit must not inherit a history transient")
+
+    monkeypatch.setattr(model, "_initial_state", fail_history_initialization)
+    report = constant_condition_stability(
+        model, record, 1, n_windows=4, history_steps=16, rollout_steps=12, seed=3,
+    )
+    assert report["all_finite"] is True
 
 
 def test_step_response_direction_and_residual_quantiles(tmp_path) -> None:

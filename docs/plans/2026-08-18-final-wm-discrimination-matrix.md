@@ -207,7 +207,7 @@ D0 必须产出**点位映射审计表**（DCS 点名 → 注册表通道 → �
 | O1 | H6/H18 NLL、相邻窗口 state continuity、v0.7 paired-NLL 统计 |
 | T1 | H1/H6/H18 NLL、60 步定常 drift/settle、v0.7 paired-NLL 统计 |
 | B1 | 7 通道 H6/H18/H36、forecast-vs-oracle 下游 H18 NLL 退化 |
-| J1 | H1/H6/H18 全指标、H18 NLL、H36 稳定性、v0.7 paired-NLL 统计 |
+| J1 | H1/H6/H18 全指标、H18 NLL、H36 定常条件稳定性、v0.7 paired-NLL 统计 |
 | R1 | runtime blindness、残差功率、双阀 H18/H60 方向+day-block CI、修正后的 leakage 与支持域证据 |
 
 执行纪律：
@@ -220,7 +220,7 @@ D0 必须产出**点位映射审计表**（DCS 点名 → 注册表通道 → �
 4. T1 定常稳定性沿用本地合同：全有限、终端最大漂移 ≤60 °C、末 6 步 settle ≤5 °C；
 5. B1 H6/H18/H36 共用相同验证抽样；下游退化用同模型、同窗口的
    `NLL_forecast - NLL_oracle` day-block CI，仅报告不设门；
-6. J1 H36 同报 joint/staged，全有限且满足 drift/settle 合同；“不劣”操作化为 joint 的
+6. J1 H36 在相同冻结边界/动作、条件锚定初态下同报 joint/staged，全有限且满足 drift/settle 合同；“不劣”操作化为 joint 的
    terminal drift p95 不高于 staged；
 7. R1 对 valve1/valve2 分别报告 H18/H60 的均值、95% day-block CI 与正确方向占比，判据沿用
    v0.3（均值<0、CI 上界<0、占比≥0.60）。

@@ -242,7 +242,7 @@ def build_canonical_v2(
     full_grid = pd.date_range(frame.index.min(), frame.index.max(), freq=dt)
     aligned = frame.reindex(frame.index.union(full_grid)).sort_index()
     aligned = aligned.interpolate(method="time", limit=gates.interp_limit).reindex(full_grid)
-    epoch = (full_grid.as_unit("ns").asi8 // 10**9).astype(np.int64)
+    epoch = (full_grid.asi8 // 10**9).astype(np.int64)
     lookup = pd.Series(np.arange(len(full_grid)), index=epoch)
     pos = lookup.reindex(v1_timestamps)
     trim_lo = trim_hi = 0
