@@ -1,0 +1,227 @@
+{
+  "arm": "a5_true_water_coal_ratio",
+  "status": "REJECT_EXPLORATORY_SEED0",
+  "single_seed_exploratory": true,
+  "record": "/home/bluster/projectA/thermal-world-model/artifacts/final_wm/canonical_sideA_v2.npz",
+  "reference_train_only": {
+    "coefficients": [
+      3.6778579038093047,
+      0.12547084086832033,
+      0.03759452679774954
+    ],
+    "load_center": 370.3015855615857,
+    "load_scale": 138.67708147163486,
+    "residual_scale": 0.13455927738120618,
+    "n_train": 530769
+  },
+  "reference_diagnostics": {
+    "train_r2": 0.5263253628434417,
+    "train_residual_mean": -2.622917954899064e-14,
+    "operating_fraction": 0.9999858736991882,
+    "n_total": 707709,
+    "n_operating": 707699
+  },
+  "identity_gate": {
+    "exact": true,
+    "max_abs_temp_diff_c": 0.0
+  },
+  "train": {
+    "matched_filtered_control": {
+      "run_id": "t1_a5_filtered_control_seed0",
+      "commit": "97780cd2755267671d3ec30f75cd766bb3f18524",
+      "best_val_nll": 1.1137727499008179,
+      "best_epoch": 98,
+      "epochs_run": 119,
+      "stop_reason": "patience",
+      "converged": true,
+      "flags": {
+        "compile_substep": false,
+        "matmul_precision": "highest"
+      },
+      "timing": {
+        "data_s": 54.7,
+        "step_s": 3734.9,
+        "eval_s": 111.0
+      }
+    },
+    "a5": {
+      "run_id": "t1_a5_water_coal_seed0",
+      "commit": "d4aa9fe284a41aaa41f739daff13984a0cd14dac",
+      "best_val_nll": 1.169961929321289,
+      "best_epoch": 106,
+      "epochs_run": 120,
+      "stop_reason": "cap",
+      "converged": false,
+      "flags": {
+        "compile_substep": false,
+        "matmul_precision": "highest"
+      },
+      "timing": {
+        "data_s": 52.8,
+        "step_s": 3728.0,
+        "eval_s": 107.7
+      }
+    }
+  },
+  "evaluation": {
+    "a5": {
+      "overall_h18_mae": 0.4719364643096924,
+      "bins_q1q5": [
+        0.3218553960323334,
+        0.5045466423034668,
+        0.6024965047836304,
+        0.49655207991600037,
+        0.434231698513031
+      ],
+      "spread_ratio": 1.87194781324438
+    },
+    "matched_filtered_control": {
+      "overall_h18_mae": 0.4261806488037109,
+      "bins_q1q5": [
+        0.3430060148239136,
+        0.4306655526161194,
+        0.5040490031242371,
+        0.4789524972438812,
+        0.37423017621040344
+      ],
+      "spread_ratio": 1.469504852219565
+    },
+    "relative_h18_change": 0.10736248967290755,
+    "spread_change": 0.2738629684801369,
+    "a5_change_vs_old_0p484_anchor": -0.02492466051716447
+  },
+  "water_coal_power": {
+    "w_raw": -0.13017049431800842,
+    "w_bounded": -0.12944023311138153,
+    "abs_power_kw_p50": 2827.4345703125,
+    "abs_power_kw_p95": 9174.4970703125,
+    "abs_power_kw_max": 17694.904296875,
+    "hard_bound_kw": 30000.0
+  },
+  "direction_v03": {
+    "valve1": {
+      "H18": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.005412181373685598,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.005404517985880375,
+            "ci_lo": -0.0055776615627110004,
+            "ci_hi": -0.0052184476517140865,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.0054123676382005215,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.00539389718323946,
+            "ci_lo": -0.005572641268372536,
+            "ci_hi": -0.005215778481215239,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      },
+      "H60": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.058147452771663666,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.057980976998806,
+            "ci_lo": -0.06203698366880417,
+            "ci_hi": -0.05407673493027687,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.057901378720998764,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.05789372697472572,
+            "ci_lo": -0.062177255749702454,
+            "ci_hi": -0.05413517728447914,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      }
+    },
+    "valve2": {
+      "H18": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.04172508046030998,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.041855696588754654,
+            "ci_lo": -0.04658373445272446,
+            "ci_hi": -0.03785683959722519,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.04173312336206436,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.04167209193110466,
+            "ci_lo": -0.04647820070385933,
+            "ci_hi": -0.03768473118543625,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      },
+      "H60": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.16191715002059937,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.1625068485736847,
+            "ci_lo": -0.19029557704925537,
+            "ci_hi": -0.13966630399227142,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.16240046918392181,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.16184677183628082,
+            "ci_lo": -0.1892315298318863,
+            "ci_hi": -0.1392313539981842,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      }
+    }
+  },
+  "preregistered_gates": {
+    "accuracy_at_least_5pct": false,
+    "spread_no_more_than_10pct_worse": false,
+    "both_valves_h18_h60_direction": true,
+    "all_pass": false
+  },
+  "baseline": {
+    "old_unfiltered_h18_mae": 0.484,
+    "old_unfiltered_spread_ratio": 1.13,
+    "source": "PREREG_load_scheduling_20260826.md",
+    "decision_comparator": "matched_filtered_control"
+  }
+}
