@@ -35,6 +35,189 @@ class WindowMetrics(NamedTuple):
     day_ids: torch.Tensor    # (N,)
 
 
+class ScalarMetrics(NamedTuple):
+    values: torch.Tensor     # (N,)
+    day_ids: torch.Tensor    # (N,)
+
+
+def day_block_mean_ci(
+    values: torch.Tensor,
+    day_ids: torch.Tensor,
+    *,
+    n_boot: int = 1000,
+    seed: int = 0,
+) -> dict:
+    """Equal-day mean and UTC-day block bootstrap CI.
+
+    A one-day smoke sample is reported but explicitly non-identifiable; it
+    can never satisfy a formal evidence gate.
+    """
+    values = torch.as_tensor(values, dtype=torch.float32).flatten().cpu()
+    day_ids = torch.as_tensor(day_ids).flatten().cpu()
+    if values.numel() == 0 or values.shape != day_ids.shape:
+        raise FinalWMProtocolError("values/day_ids must be non-empty aligned vectors")
+    if not bool(torch.isfinite(values).all()):
+        return {
+            "point": None,
+            "ci_lo": None,
+            "ci_hi": None,
+            "n_days": int(torch.unique(day_ids).numel()),
+            "identifiable": False,
+        }
+    days = torch.unique(day_ids)
+    day_means = torch.stack([values[day_ids == day].mean() for day in days])
+    point = float(day_means.mean())
+    if len(days) < 2:
+        return {
+            "point": point,
+            "ci_lo": None,
+            "ci_hi": None,
+            "n_days": int(len(days)),
+            "identifiable": False,
+        }
+    gen = torch.Generator().manual_seed(seed)
+    idx = torch.randint(len(days), (n_boot, len(days)), generator=gen)
+    boot = day_means[idx].mean(dim=1)
+    return {
+        "point": point,
+        "ci_lo": float(torch.quantile(boot, 0.025)),
+        "ci_hi": float(torch.quantile(boot, 0.975)),
+        "n_days": int(len(days)),
+        "identifiable": True,
+    }
+
+
+@torch.no_grad()
+def state_continuity_metrics(
+    model: FinalWorldModel,
+    record: CanonicalRecord,
+    split_id: int,
+    *,
+    n_windows: int,
+    history_steps: int,
+    gap_steps: int = 18,
+    seed: int = 0,
+    device: str | torch.device = "cpu",
+) -> ScalarMetrics:
+    """Arm-specific adjacent-window normalized state-continuity errors."""
+    if gap_steps < 1 or gap_steps > history_steps:
+        raise FinalWMProtocolError("gap_steps must be in [1, history_steps]")
+    model.eval()
+    gen = torch.Generator().manual_seed(seed)
+    batch = sample_windows(record, split_id, n_windows, history_steps, gap_steps, gen)
+    history = batch.history.__class__(
+        obs=batch.history.obs.to(device),
+        actions=batch.history.actions.to(device),
+        boundary=batch.history.boundary.to(device),
+    )
+    next_history = batch.history.__class__(
+        obs=torch.cat([history.obs[:, gap_steps:], batch.future_obs.to(device)], dim=1),
+        actions=torch.cat([history.actions[:, gap_steps:], batch.future_actions.to(device)], dim=1),
+        boundary=torch.cat([history.boundary[:, gap_steps:], batch.future_boundary.to(device)], dim=1),
+    )
+    state = model._initial_state(history)
+    boundary = model.boundary_model.oracle(batch.future_boundary.to(device))
+    rolled = model._rollout(
+        state, boundary, batch.future_actions.to(device), mode="oracle"
+    ).states[:, -1]
+    next_state = model._initial_state(next_history)
+    values = model.observer.state_continuity_error(rolled, next_state)
+    return ScalarMetrics(values=values.cpu(), day_ids=batch.day_ids)
+
+
+def _stability_summary(states: torch.Tensor, temps: torch.Tensor, horizon: int) -> dict:
+    finite = torch.isfinite(states).all() and torch.isfinite(temps).all()
+    if not bool(finite):
+        return {
+            "horizon": int(horizon),
+            "all_finite": False,
+            "max_abs_drift_c": None,
+            "p95_abs_drift_c": None,
+            "max_settle_c": None,
+            "bounded": False,
+        }
+    drift = (temps[:, -1, -1] - temps[:, 0, -1]).abs()
+    settle_lag = min(6, horizon)
+    settle = (temps[:, -1, -1] - temps[:, -settle_lag, -1]).abs()
+    max_drift = float(drift.max())
+    max_settle = float(settle.max())
+    return {
+        "horizon": int(horizon),
+        "all_finite": True,
+        "max_abs_drift_c": max_drift,
+        "p95_abs_drift_c": float(torch.quantile(drift, 0.95)),
+        "max_settle_c": max_settle,
+        "bounded": bool(max_drift <= 60.0 and max_settle <= 5.0),
+    }
+
+
+@torch.no_grad()
+def constant_condition_stability(
+    model: FinalWorldModel,
+    record: CanonicalRecord,
+    split_id: int,
+    *,
+    n_windows: int,
+    history_steps: int,
+    rollout_steps: int = 60,
+    seed: int = 0,
+    device: str | torch.device = "cpu",
+) -> dict:
+    """Frozen-boundary/action rollout using the local drift/settle contract."""
+    model.eval()
+    gen = torch.Generator().manual_seed(seed)
+    batch = sample_windows(record, split_id, n_windows, history_steps, 1, gen)
+    history = batch.history.__class__(
+        obs=batch.history.obs.to(device),
+        actions=batch.history.actions.to(device),
+        boundary=batch.history.boundary.to(device),
+    )
+    state = model._initial_state(history)
+    boundary_values = batch.future_boundary[:, :1].to(device).repeat(1, rollout_steps, 1)
+    actions = batch.future_actions[:, :1].to(device).repeat(1, rollout_steps, 1)
+    result = model._rollout(
+        state, model.boundary_model.oracle(boundary_values), actions, mode="oracle"
+    )
+    report = _stability_summary(result.states, result.temps_mu, rollout_steps)
+    report["rollout_steps"] = int(rollout_steps)
+    report["n_windows"] = int(n_windows)
+    return report
+
+
+@torch.no_grad()
+def rollout_stability(
+    model: FinalWorldModel,
+    record: CanonicalRecord,
+    split_id: int,
+    *,
+    n_windows: int,
+    history_steps: int,
+    horizon: int,
+    boundary_mode: str,
+    seed: int = 0,
+    device: str | torch.device = "cpu",
+) -> dict:
+    """Observed-action rollout stability for J1 long-horizon reporting."""
+    model.eval()
+    gen = torch.Generator().manual_seed(seed)
+    batch = sample_windows(record, split_id, n_windows, history_steps, horizon, gen)
+    history = batch.history.__class__(
+        obs=batch.history.obs.to(device),
+        actions=batch.history.actions.to(device),
+        boundary=batch.history.boundary.to(device),
+    )
+    result = model.forecast(
+        history,
+        batch.future_actions.to(device),
+        boundary_mode=boundary_mode,
+        true_future_boundary=batch.future_boundary.to(device) if boundary_mode == "oracle" else None,
+    )
+    report = _stability_summary(result.states, result.temps_mu, horizon)
+    report["n_windows"] = int(n_windows)
+    report["boundary_mode"] = boundary_mode
+    return report
+
+
 @torch.no_grad()
 def evaluate_windows(
     model: FinalWorldModel,
@@ -224,6 +407,7 @@ def step_response_direction(
     rollout_steps: int = 60,
     valve_index: int = 1,
     delta_v: float = 0.05,
+    n_boot: int = 1000,
     seed: int = 0,
     device: str | torch.device = "cpu",
 ) -> dict:
@@ -244,10 +428,17 @@ def step_response_direction(
     _s0, temps_base = model.transition.integrate(state_0, boundary_seq, base_actions)
     _s1, temps_step = model.transition.integrate(state_0, boundary_seq, step_actions)
     delta = (temps_step[:, -10:, 4] - temps_base[:, -10:, 4]).mean(dim=1)
+    ci = day_block_mean_ci(delta.cpu(), batch.day_ids, n_boot=n_boot, seed=seed + 1)
     return {
-        "mean_delta_c": float(delta.mean()),
+        "mean_delta_c": ci["point"],
+        "ci_lo_c": ci["ci_lo"],
+        "ci_hi_c": ci["ci_hi"],
+        "n_days": ci["n_days"],
+        "ci_identifiable": ci["identifiable"],
         "frac_negative": float((delta < 0).float().mean()),
         "n_windows": int(n_windows),
+        "rollout_steps": int(rollout_steps),
+        "valve_index": int(valve_index),
     }
 
 

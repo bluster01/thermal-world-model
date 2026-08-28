@@ -13,10 +13,30 @@ from dataclasses import replace
 
 from src.final_wm.training import TrainSpec
 
-MATRIX_VERSION = "0.2"  # v0.2: uniform T1 training budget amendment (see matrix doc §5)
+MATRIX_VERSION = "0.7"
 SEEDS = (0, 1, 2)
 HISTORY_STEPS = 96
 HORIZON = 18
+
+# A directional verdict is legal only when every named evidence item is
+# present.  The runner records missing items and emits INCOMPLETE rather than
+# silently applying a subset of the frozen protocol.
+REQUIRED_EVIDENCE = {
+    "o1": ("nll_h6", "nll_h18", "state_continuity", "paired_nll_v07"),
+    "t1": ("nll_h1", "nll_h6", "nll_h18", "constant_h60_stability", "paired_nll_v07"),
+    "b1": ("boundary_h6", "boundary_h18", "boundary_h36", "downstream_h18"),
+    "j1": ("h1_h6_h18_metrics", "nll_h18", "h36_stability", "paired_nll_v07"),
+    "r1": (
+        "runtime_blindness",
+        "residual_power",
+        "valve1_h18",
+        "valve1_h60",
+        "valve2_h18",
+        "valve2_h60",
+        "leakage_v07",
+        "support_domain_v07",
+    ),
+}
 
 # Frozen verdict thresholds (matrix document §2/§3).
 THRESH_O1_NLL = 0.05        # learned/hybrid vs steady, H18 NLL relative improvement

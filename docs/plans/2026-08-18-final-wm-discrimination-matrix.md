@@ -1,6 +1,7 @@
 # 最终世界模型判别实验矩阵 v0.2（冻结稿）
 
-> 状态：**FROZEN MATRIX v0.2 / 重跑授权中**。本文件冻结 O1/B1/T1/R1/J1 判别实验与前置 D0/D-SYN
+> 状态：**HOLD / v0.7 CREDIBILITY REPAIR / NO LINUX AUTHORIZATION**。原冻结稿 v0.2 及后续修正案
+> 保留为历史；本文件冻结 O1/B1/T1/R1/J1 判别实验与前置 D0/D-SYN
 > 门禁的假设、数据合同、预算、判决规则与禁止事项。K1 为条件实验，母模型未过门禁前保持 HOLD。
 > v0.1 → v0.2 修正案见 §5（首轮执行回传后生效）。
 >
@@ -195,6 +196,37 @@ D0 必须产出**点位映射审计表**（DCS 点名 → 注册表通道 → �
 5. **评测协议增强**：skill score vs persistence（10s 增量 MAE 基线 0.088/0.192/0.246/
    0.275/0.451，auditpack 口径）列入标准报告量；事件研究脚本已转正为 R1 参考带生成器
    （入仓、带测试，`--phase auditpack`）。
+
+### v0.7（2026-08-28，可信度审计后的可执行合同修订）
+
+触发：`docs/FINAL_WM_CREDIBILITY_AUDIT_2026-08-27.md` C1。v0.2 runner 只执行了各单元
+部分指标，却仍写出方向性 verdict。v0.7 不改模型结构，先把文档中的必需证据变成机器可读合同：
+
+| 单元 | 正式 verdict 的必需证据 |
+|---|---|
+| O1 | H6/H18 NLL、相邻窗口 state continuity、v0.7 paired-NLL 统计 |
+| T1 | H1/H6/H18 NLL、60 步定常 drift/settle、v0.7 paired-NLL 统计 |
+| B1 | 7 通道 H6/H18/H36、forecast-vs-oracle 下游 H18 NLL 退化 |
+| J1 | H1/H6/H18 全指标、H18 NLL、H36 稳定性、v0.7 paired-NLL 统计 |
+| R1 | runtime blindness、残差功率、双阀 H18/H60 方向+day-block CI、修正后的 leakage 与支持域证据 |
+
+执行纪律：
+
+1. 任一必需键缺失时只写 `INCOMPLETE`；quick 只写 `SMOKE`；partial seeds 或 `--arm-filter`
+   只写 `INCOMPLETE`，不得暴露 `SUPPORTED/MIXED/REJECTED`；
+2. summary 必须携带 `matrix_version` 与完整 `required_evidence`；只允许合并同版本、同 tier、同侧的
+   增量 summary，禁止把 v0.2–v0.6 单元块带入 v0.7；
+3. O1 continuity 使用相隔 18 步的相邻历史窗，候选臂 day-block CI 上界不高于 steady 点估计；
+4. T1 定常稳定性沿用本地合同：全有限、终端最大漂移 ≤60 °C、末 6 步 settle ≤5 °C；
+5. B1 H6/H18/H36 共用相同验证抽样；下游退化用同模型、同窗口的
+   `NLL_forecast - NLL_oracle` day-block CI，仅报告不设门；
+6. J1 H36 同报 joint/staged，全有限且满足 drift/settle 合同；“不劣”操作化为 joint 的
+   terminal drift p95 不高于 staged；
+7. R1 对 valve1/valve2 分别报告 H18/H60 的均值、95% day-block CI 与正确方向占比，判据沿用
+   v0.3（均值<0、CI 上界<0、占比≥0.60）。
+
+阶段护栏：Task 1 只闭合 C1。`paired_nll_v07`、`leakage_v07`、`support_domain_v07` 在对应修复
+完成前保持缺失，因此相关单元仍为 `INCOMPLETE`；当前不授权 Linux 或正式重跑。
 
 ## 6. 明确禁止事项
 

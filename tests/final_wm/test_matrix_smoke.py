@@ -13,7 +13,12 @@ import numpy as np
 import torch
 
 from experiments.final_wm import matrix_spec as ms
-from experiments.final_wm.run_matrix import closure_blindness_check, run_dsyn, run_matrix
+from experiments.final_wm.run_matrix import (
+    _adjudicate,
+    closure_blindness_check,
+    run_dsyn,
+    run_matrix,
+)
 from src.final_wm.synthetic import synthetic_canonical_arrays
 from src.final_wm.training import build_world_model
 
@@ -25,6 +30,58 @@ def _args(tmp_path, **kw) -> Namespace:
     )
     base.update(kw)
     return Namespace(**base)
+
+
+def _complete_evidence(unit: str) -> dict[str, bool]:
+    return {name: True for name in ms.REQUIRED_EVIDENCE[unit]}
+
+
+def test_verdict_is_fail_closed_when_protocol_evidence_is_missing() -> None:
+    evidence = _complete_evidence("o1")
+    evidence.pop("state_continuity")
+    result = _adjudicate(
+        "o1", "SUPPORTED", evidence,
+        quick=False, seeds=ms.SEEDS, arm_filter=None,
+    )
+    assert result["verdict"] == "INCOMPLETE"
+    assert result["missing_evidence"] == ["state_continuity"]
+    assert result["required_evidence"] == list(ms.REQUIRED_EVIDENCE["o1"])
+
+
+def test_verdict_requires_full_unfiltered_execution() -> None:
+    evidence = _complete_evidence("b1")
+    full = _adjudicate(
+        "b1", "SUPPORTED", evidence,
+        quick=False, seeds=ms.SEEDS, arm_filter=None,
+    )
+    quick = _adjudicate(
+        "b1", "SUPPORTED", evidence,
+        quick=True, seeds=(0,), arm_filter=None,
+    )
+    partial = _adjudicate(
+        "b1", "SUPPORTED", evidence,
+        quick=False, seeds=(0, 1), arm_filter=None,
+    )
+    filtered = _adjudicate(
+        "b1", "SUPPORTED", evidence,
+        quick=False, seeds=ms.SEEDS, arm_filter="gru",
+    )
+    assert full["verdict"] == "SUPPORTED"
+    assert quick["verdict"] == "SMOKE"
+    assert partial["verdict"] == "INCOMPLETE"
+    assert filtered["verdict"] == "INCOMPLETE"
+
+
+def test_matrix_version_and_required_evidence_are_v07() -> None:
+    assert ms.MATRIX_VERSION == "0.7"
+    assert set(ms.REQUIRED_EVIDENCE) == {"o1", "t1", "b1", "j1", "r1"}
+    assert "state_continuity" in ms.REQUIRED_EVIDENCE["o1"]
+    assert "boundary_h36" in ms.REQUIRED_EVIDENCE["b1"]
+    assert "constant_h60_stability" in ms.REQUIRED_EVIDENCE["t1"]
+    assert "h36_stability" in ms.REQUIRED_EVIDENCE["j1"]
+    assert {"valve1_h18", "valve1_h60", "valve2_h18", "valve2_h60"} <= set(
+        ms.REQUIRED_EVIDENCE["r1"]
+    )
 
 
 def test_dsyn_quick_gate_runs(tmp_path, monkeypatch) -> None:
@@ -149,7 +206,8 @@ def test_r1_arm_targets_norew_stack_without_clobbering(tmp_path, monkeypatch) ->
     summary = run_matrix(args)
     block = summary["units"]["r1_closure_cons_norew"]
     assert block["arm"] == "closure_cons_norew"
-    assert block["verdict"] == "MIXED"  # no checkpoints in the smoke out dir
+    assert block["verdict"] == "SMOKE"  # quick tier never emits a directional verdict
+    assert block["status"] == "SMOKE"
     assert "norew" in block["reports"][0]["error"]
     assert "r1" not in summary["units"]
     assert (out / "r1_report_closure_cons_norew.json").exists()

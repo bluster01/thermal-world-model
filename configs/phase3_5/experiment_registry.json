@@ -1,6 +1,6 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
-  "updated_at": "2026-08-18",
+  "updated_at": "2026-08-27",
   "active_gate": "final_world_model_pipeline",
   "linux_authorized_gate": null,
   "pipeline_order": [
@@ -1230,14 +1230,35 @@
         "rm3b_closure_audit": {
           "path": "docs/PHASE35_MS3R_RM3B1_SUPERVISOR_AUDIT_2026-08-18.md",
           "required": true
+        },
+        "credibility_audit_20260827": {
+          "path": "docs/FINAL_WM_CREDIBILITY_AUDIT_2026-08-27.md",
+          "required": true
+        },
+        "credibility_repair_plan_20260827": {
+          "path": "docs/plans/2026-08-27-final-wm-credibility-repair-plan.md",
+          "required": true
         }
       },
-      "decision": "ACTIVE / REPAIR-BATCH-234 IMPLEMENTED 2026-08-20；侧A v0.2 判决审计闭合（11/11 复算全过）；矩阵修正案 v0.3 冻结生效（R1 规则修订 CI<0+占比≥0.60、修复批①→⑤、gray-box 时序分工架构、侧B 延至 AE）；②③④ 已实施：混合传输时滞状态+输出方程状态驱动（消 H1 构造过冲）、再湿质量平衡硬契约（闭正反馈）、th 先验锚定数据回归（7.71/19.45 kg/s）；116/116 测试全过、D-SYN 中等规模探针门禁通过；fingerprint 变化将触发矩阵重训——待授权 Hermes 重跑 T1+R1（①全锚定随后）；论文 FROZEN-DRAFT",
+      "protocol_state": {
+        "active": true,
+        "ready_for_linux": false,
+        "results_returned": true,
+        "audited": true,
+        "audit_verdict": "HOLD_CREDIBILITY_REPAIR_REQUIRED",
+        "current_repair_task": "TASK_1_LOCAL_VERIFIED_TASK_2_NOT_STARTED",
+        "test_locked": true,
+        "authoritative_matrix_version": null,
+        "historical_matrix_results": "SUPERSEDED_PENDING_V07_REISSUE"
+      },
+      "decision": "AUDITED 2026-08-27 / HOLD FOR CREDIBILITY REPAIR；Task 1 于 2026-08-28 本地验证完成：v0.7 required-evidence 合同与 fail-closed tier 已落地，定向回归 17/17；paired-NLL、修正后的 leakage/support 等后续证据未闭合，正式 verdict 仍为 INCOMPLETE；v0.2-v0.6 判决保留为历史探索证据，corrected v2.1 尚待完整三种子正式重发；当前不授权 Linux、不访问 test、不解冻论文",
       "advisories": [
         "Fan2020-UDE是物理transition候选，不是plant truth；动作通道必须保留constant-action identity、方向与支持域审计",
         "Direct-WM v2只支持direct H18 observer/backbone候选；未验证递归rollout、双阀稳定响应或概率校准",
         "最终pipeline不复活RM3-B2/MS4旧批次；任何Linux训练都需要新的矩阵、预算和单独授权提交",
-        "test继续锁定；当前只允许本地接口、单元测试与micro-smoke"
+        "test继续锁定；当前只允许本地接口、单元测试与micro-smoke",
+        "2026-08-27 审计发现 runner 未执行 O1/T1/B1/J1/R1 全部冻结门禁，正式 verdict 在 v0.7 重发前一律降级为历史证据",
+        "修复范围只覆盖可改变科学判决或破坏证据绑定的根因；模型架构、LPV 调参及一般工程化事项保持冻结"
       ]
     },
     "ms4": {

@@ -36,13 +36,17 @@ from src.final_wm.evaluation import (
     WindowMetrics,
     boundary_forecast_metrics,
     calibration_coverage,
+    constant_condition_stability,
     constraint_checks,
     counterfactual_fidelity_synthetic,
+    day_block_mean_ci,
     evaluate_windows,
     horizon_summary,
     persistence_boundary_metrics,
     relative_improvement_ci,
     residual_quantiles,
+    rollout_stability,
+    state_continuity_metrics,
     step_response_direction,
 )
 from src.final_wm.properties import AnalyticThermoProperties, load_grid_properties
@@ -315,11 +319,24 @@ def _train_and_eval(spec, record, out, device, properties, quick, use_compile=Fa
     return final, metrics
 
 
-def _seed_passes(pairs, threshold, metric="nll"):
+def _load_checkpoint_model(spec, out, device, properties):
+    run_id = f"{spec.unit}_{spec.arm}_seed{spec.seed}"
+    model = build_world_model(spec, properties).to(device)
+    model.load_state_dict(torch.load(
+        Path(out) / "checkpoints" / f"{run_id}.pt",
+        map_location=device,
+        weights_only=False,
+    )["state_dict"])
+    return model
+
+
+def _seed_passes(pairs, threshold, metric="nll", horizon=None):
     """pairs: list of (baseline_metrics, arm_metrics) per seed."""
     passes, details = 0, []
     for base, arm in pairs:
-        ci = relative_improvement_ci(base, arm, horizon=ms.HORIZON, metric=metric)
+        ci = relative_improvement_ci(
+            base, arm, horizon=horizon or ms.HORIZON, metric=metric
+        )
         ok = ci.point >= threshold and ci.ci_lo > 0.0
         passes += int(ok)
         details.append({"point": ci.point, "ci_lo": ci.ci_lo, "ci_hi": ci.ci_hi,
@@ -333,6 +350,36 @@ def _verdict(passes, n_seeds):
     if passes == 0:
         return "REJECTED"
     return "MIXED"
+
+
+def _adjudicate(unit, proposed_verdict, evidence, *, quick, seeds, arm_filter):
+    """Apply the executable evidence contract before exposing a verdict."""
+    required = ms.REQUIRED_EVIDENCE[unit]
+    missing = [name for name in required if name not in evidence or evidence[name] is None]
+    reasons = []
+    if tuple(seeds) != tuple(ms.SEEDS):
+        reasons.append("partial_seed_set")
+    if arm_filter is not None:
+        reasons.append("arm_filtered_execution")
+    if missing:
+        reasons.append("missing_required_evidence")
+    if quick:
+        verdict = "SMOKE"
+        status = "SMOKE"
+    elif reasons:
+        verdict = "INCOMPLETE"
+        status = "INCOMPLETE"
+    else:
+        verdict = proposed_verdict
+        status = "COMPLETE"
+    return {
+        "verdict": verdict,
+        "status": status,
+        "required_evidence": list(required),
+        "missing_evidence": missing,
+        "incomplete_reasons": reasons,
+        "evidence": evidence,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -474,6 +521,7 @@ def run_matrix(args) -> dict:
     summary: dict = {
         "quick": quick,
         "matrix_version": ms.MATRIX_VERSION,
+        "required_evidence": {k: list(v) for k, v in ms.REQUIRED_EVIDENCE.items()},
         "side": args.side,
         "record": str(args.record),
         "properties": type(properties).__name__,
@@ -500,7 +548,12 @@ def run_matrix(args) -> dict:
                 prior = json.loads(path.read_text(encoding="utf-8"))
             except json.JSONDecodeError:
                 prior = {}
-            if isinstance(prior.get("units"), dict):
+            same_protocol = (
+                prior.get("matrix_version") == ms.MATRIX_VERSION
+                and prior.get("quick") is quick
+                and prior.get("side") == args.side
+            )
+            if same_protocol and isinstance(prior.get("units"), dict):
                 merged = {**prior, **{k: v for k, v in summary.items() if k != "units"}}
                 merged["units"] = {**prior["units"], **summary["units"]}
         _write_json(path, merged)
@@ -508,26 +561,90 @@ def run_matrix(args) -> dict:
     metrics_store: dict[str, object] = {}
 
     if "o1" in units:
-        for spec in _filter_arm(ms.o1_specs(seeds)):
+        o1_run_specs = _filter_arm(ms.o1_specs(seeds))
+        for spec in o1_run_specs:
             final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
             metrics_store[final["run_id"]] = metrics
         if not quick and getattr(args, "arm_filter", None) is None:
+            continuity = {}
+            for spec in o1_run_specs:
+                model = _load_checkpoint_model(spec, out, device, properties)
+                continuity[(spec.arm, spec.seed)] = state_continuity_metrics(
+                    model, record, SPLIT_VAL,
+                    n_windows=256, history_steps=ms.HISTORY_STEPS,
+                    gap_steps=min(ms.HORIZON, ms.HISTORY_STEPS),
+                    seed=55_000 + spec.seed, device=device,
+                )
             unit_verdicts = {}
             for arm in ("learned", "hybrid"):
                 pairs = [
                     (metrics_store[f"o1_steady_seed{s}"], metrics_store[f"o1_{arm}_seed{s}"])
                     for s in seeds
                 ]
-                passes, details = _seed_passes(pairs, ms.THRESH_O1_NLL)
-                unit_verdicts[arm] = {"verdict": _verdict(passes, len(seeds)), "per_seed": details}
+                _h6_passes, h6 = _seed_passes(
+                    pairs, ms.THRESH_O1_NLL, horizon=6
+                )
+                _h18_passes, h18 = _seed_passes(
+                    pairs, ms.THRESH_O1_NLL, horizon=18
+                )
+                continuity_details = []
+                combined_passes = 0
+                for i, seed in enumerate(seeds):
+                    base_ci = day_block_mean_ci(
+                        continuity[("steady", seed)].values,
+                        continuity[("steady", seed)].day_ids,
+                        seed=56_000 + seed,
+                    )
+                    arm_ci = day_block_mean_ci(
+                        continuity[(arm, seed)].values,
+                        continuity[(arm, seed)].day_ids,
+                        seed=57_000 + seed,
+                    )
+                    continuity_ok = bool(
+                        base_ci["identifiable"]
+                        and arm_ci["identifiable"]
+                        and arm_ci["ci_hi"] <= base_ci["point"]
+                    )
+                    combined_passes += int(h18[i]["pass"] and continuity_ok)
+                    continuity_details.append({
+                        "seed": seed,
+                        "steady": base_ci,
+                        "arm": arm_ci,
+                        "pass": continuity_ok,
+                    })
+                evidence = {
+                    "nll_h6": h6,
+                    "nll_h18": h18,
+                    "state_continuity": continuity_details,
+                    # Task 2 replaces the legacy relative-NLL gate.
+                    "paired_nll_v07": None,
+                }
+                unit_verdicts[arm] = _adjudicate(
+                    "o1", _verdict(combined_passes, len(seeds)), evidence,
+                    quick=quick, seeds=seeds, arm_filter=getattr(args, "arm_filter", None),
+                )
             summary["units"]["o1"] = unit_verdicts
+        else:
+            summary["units"]["o1"] = _adjudicate(
+                "o1", "INCOMPLETE", {}, quick=quick, seeds=seeds,
+                arm_filter=getattr(args, "arm_filter", None),
+            )
         dump_summary()
 
     if "t1" in units:
-        for spec in _filter_arm(ms.t1_specs(seeds)):
+        t1_run_specs = _filter_arm(ms.t1_specs(seeds))
+        for spec in t1_run_specs:
             final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
             metrics_store[final["run_id"]] = metrics
         if not quick and getattr(args, "arm_filter", None) is None:
+            stability = {}
+            for spec in t1_run_specs:
+                model = _load_checkpoint_model(spec, out, device, properties)
+                stability[(spec.arm, spec.seed)] = constant_condition_stability(
+                    model, record, SPLIT_VAL,
+                    n_windows=64, history_steps=ms.HISTORY_STEPS,
+                    rollout_steps=60, seed=58_000 + spec.seed, device=device,
+                )
             unit_verdicts = {}
             nested = [
                 ("closure_cons", "physics_only"),
@@ -539,44 +656,116 @@ def run_matrix(args) -> dict:
                     (metrics_store[f"t1_{base_arm}_seed{s}"], metrics_store[f"t1_{arm}_seed{s}"])
                     for s in seeds
                 ]
-                passes, details = _seed_passes(pairs, ms.THRESH_T1_NLL)
-                unit_verdicts[f"{arm}_vs_{base_arm}"] = {
-                    "verdict": _verdict(passes, len(seeds)), "per_seed": details
+                _h1_passes, h1 = _seed_passes(pairs, ms.THRESH_T1_NLL, horizon=1)
+                _h6_passes, h6 = _seed_passes(pairs, ms.THRESH_T1_NLL, horizon=6)
+                h18_passes, h18 = _seed_passes(pairs, ms.THRESH_T1_NLL, horizon=18)
+                stability_details = [
+                    {
+                        "seed": seed,
+                        "baseline": stability[(base_arm, seed)],
+                        "arm": stability[(arm, seed)],
+                    }
+                    for seed in seeds
+                ]
+                proposed = _verdict(h18_passes, len(seeds))
+                if any(not item["arm"]["bounded"] for item in stability_details):
+                    proposed = "REJECTED"
+                evidence = {
+                    "nll_h1": h1,
+                    "nll_h6": h6,
+                    "nll_h18": h18,
+                    "constant_h60_stability": stability_details,
+                    "paired_nll_v07": None,
                 }
+                unit_verdicts[f"{arm}_vs_{base_arm}"] = _adjudicate(
+                    "t1", proposed, evidence,
+                    quick=quick, seeds=seeds, arm_filter=getattr(args, "arm_filter", None),
+                )
             summary["units"]["t1"] = unit_verdicts
+        else:
+            summary["units"]["t1"] = _adjudicate(
+                "t1", "INCOMPLETE", {}, quick=quick, seeds=seeds,
+                arm_filter=getattr(args, "arm_filter", None),
+            )
         dump_summary()
 
     if "b1" in units:
         b_metrics = {}
+        b_downstream = {}
+        b_horizon = ms.HORIZON if quick else 36
         for spec in _filter_arm(ms.b1_specs(seeds)):
             final, _ = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
-            model = build_world_model(spec, properties).to(device)
-            ckpt = out / "checkpoints" / f"{final['run_id']}.pt"
-            model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=False)["state_dict"])
+            model = _load_checkpoint_model(spec, out, device, properties)
             b_metrics[spec.seed] = boundary_forecast_metrics(
                 model, record, SPLIT_VAL, n_windows=32 if quick else 256, batch_size=32,
-                history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON, seed=60_000 + spec.seed, device=device,
+                history_steps=ms.HISTORY_STEPS, horizon=b_horizon,
+                seed=60_000 + spec.seed, device=device,
             )
             _save_eval_metrics(out, f"{final['run_id']}_boundary", b_metrics[spec.seed])
+            if not quick:
+                forecast = evaluate_windows(
+                    model, record, SPLIT_VAL, n_windows=256, batch_size=32,
+                    history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON,
+                    boundary_mode="forecast", seed=61_000 + spec.seed, device=device,
+                )
+                oracle = evaluate_windows(
+                    model, record, SPLIT_VAL, n_windows=256, batch_size=32,
+                    history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON,
+                    boundary_mode="oracle", seed=61_000 + spec.seed, device=device,
+                )
+                delta = forecast.nll[:, :ms.HORIZON].mean(dim=1) - oracle.nll[:, :ms.HORIZON].mean(dim=1)
+                b_downstream[spec.seed] = day_block_mean_ci(
+                    delta, forecast.day_ids, seed=62_000 + spec.seed,
+                )
         if not quick and getattr(args, "arm_filter", None) is None:
             pairs = []
             for s in seeds:
                 base = persistence_boundary_metrics(
                     record, SPLIT_VAL, n_windows=256, batch_size=32,
-                    history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON, seed=60_000 + s,
+                    history_steps=ms.HISTORY_STEPS, horizon=b_horizon, seed=60_000 + s,
                 )
                 pairs.append((base, b_metrics[s]))
-            passes, details = _seed_passes(pairs, ms.THRESH_B1_CRPS, metric="crps")
-            summary["units"]["b1"] = {"verdict": _verdict(passes, len(seeds)), "per_seed": details}
+            _h6_passes, h6 = _seed_passes(
+                pairs, ms.THRESH_B1_CRPS, metric="crps", horizon=6
+            )
+            h18_passes, h18 = _seed_passes(
+                pairs, ms.THRESH_B1_CRPS, metric="crps", horizon=18
+            )
+            _h36_passes, h36 = _seed_passes(
+                pairs, ms.THRESH_B1_CRPS, metric="crps", horizon=36
+            )
+            evidence = {
+                "boundary_h6": h6,
+                "boundary_h18": h18,
+                "boundary_h36": h36,
+                "downstream_h18": (
+                    [{"seed": seed, **b_downstream[seed]} for seed in seeds]
+                    if all(b_downstream[seed]["identifiable"] for seed in seeds)
+                    else None
+                ),
+            }
+            summary["units"]["b1"] = _adjudicate(
+                "b1", _verdict(h18_passes, len(seeds)), evidence,
+                quick=quick, seeds=seeds, arm_filter=getattr(args, "arm_filter", None),
+            )
+        else:
+            summary["units"]["b1"] = _adjudicate(
+                "b1", "INCOMPLETE", {}, quick=quick, seeds=seeds,
+                arm_filter=getattr(args, "arm_filter", None),
+            )
         dump_summary()
 
     if "j1" in units:
         joint_metrics, staged_metrics = {}, {}
-        for spec in _filter_arm(ms.j1_specs(seeds)):
+        joint_models, staged_models = {}, {}
+        j1_run_specs = _filter_arm(ms.j1_specs(seeds))
+        for spec in j1_run_specs:
             final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
             metrics_store[final["run_id"]] = metrics
             if spec.arm == "joint":
                 joint_metrics[spec.seed] = metrics
+                if not quick and getattr(args, "arm_filter", None) is None:
+                    joint_models[spec.seed] = _load_checkpoint_model(spec, out, device, properties)
         for seed in seeds:
             main_ckpt = out / "checkpoints" / f"j1_staged_main_seed{seed}.pt"
             if not main_ckpt.exists() and getattr(args, "arm_filter", None) is not None:
@@ -600,7 +789,8 @@ def run_matrix(args) -> dict:
                 properties,
             ).to(device)
             model.load_state_dict(torch.load(out / "checkpoints" / f"{bnd_run_id}.pt",
-                                             map_location=device, weights_only=False)["state_dict"])
+                                              map_location=device, weights_only=False)["state_dict"])
+            staged_models[seed] = model
             staged_metrics[seed] = evaluate_windows(
                 model, record, SPLIT_VAL, n_windows=32 if quick else 256, batch_size=32,
                 history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON, boundary_mode="forecast",
@@ -609,8 +799,55 @@ def run_matrix(args) -> dict:
             _save_eval_metrics(out, f"j1_staged_seed{seed}", staged_metrics[seed])
         if not quick and getattr(args, "arm_filter", None) is None:
             pairs = [(staged_metrics[s], joint_metrics[s]) for s in seeds]
-            passes, details = _seed_passes(pairs, ms.THRESH_J1_NLL)
-            summary["units"]["j1"] = {"verdict": _verdict(passes, len(seeds)), "per_seed": details}
+            h18_passes, h18 = _seed_passes(pairs, ms.THRESH_J1_NLL, horizon=18)
+            stability_details = []
+            combined_passes = 0
+            for i, seed in enumerate(seeds):
+                staged_stability = rollout_stability(
+                    staged_models[seed], record, SPLIT_VAL,
+                    n_windows=128, history_steps=ms.HISTORY_STEPS, horizon=36,
+                    boundary_mode="forecast", seed=72_000 + seed, device=device,
+                )
+                joint_stability = rollout_stability(
+                    joint_models[seed], record, SPLIT_VAL,
+                    n_windows=128, history_steps=ms.HISTORY_STEPS, horizon=36,
+                    boundary_mode="forecast", seed=72_000 + seed, device=device,
+                )
+                stability_ok = bool(
+                    joint_stability["bounded"]
+                    and staged_stability["bounded"]
+                    and joint_stability["p95_abs_drift_c"]
+                    <= staged_stability["p95_abs_drift_c"]
+                )
+                combined_passes += int(h18[i]["pass"] and stability_ok)
+                stability_details.append({
+                    "seed": seed,
+                    "staged": staged_stability,
+                    "joint": joint_stability,
+                    "pass": stability_ok,
+                })
+            evidence = {
+                "h1_h6_h18_metrics": [
+                    {
+                        "seed": seed,
+                        "staged": horizon_summary(staged_metrics[seed]),
+                        "joint": horizon_summary(joint_metrics[seed]),
+                    }
+                    for seed in seeds
+                ],
+                "nll_h18": h18,
+                "h36_stability": stability_details,
+                "paired_nll_v07": None,
+            }
+            summary["units"]["j1"] = _adjudicate(
+                "j1", _verdict(combined_passes, len(seeds)), evidence,
+                quick=quick, seeds=seeds, arm_filter=getattr(args, "arm_filter", None),
+            )
+        else:
+            summary["units"]["j1"] = _adjudicate(
+                "j1", "INCOMPLETE", {}, quick=quick, seeds=seeds,
+                arm_filter=getattr(args, "arm_filter", None),
+            )
         dump_summary()
 
     if "r1" in units:
@@ -628,10 +865,17 @@ def run_matrix(args) -> dict:
             model = build_world_model(spec, properties).to(device)
             model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=False)["state_dict"])
             blind_ok = closure_blindness_check(model, device)["runtime_blind_ok"]
-            direction_on = step_response_direction(
-                model, record, SPLIT_VAL, n_windows=16 if quick else 32,
-                history_steps=ms.HISTORY_STEPS, seed=80_000 + seed, device=device,
-            )
+            directions = {}
+            for valve_index, valve_name in ((0, "valve1"), (1, "valve2")):
+                directions[valve_name] = {}
+                for rollout_steps in (18, 60):
+                    directions[valve_name][f"H{rollout_steps}"] = step_response_direction(
+                        model, record, SPLIT_VAL, n_windows=16 if quick else 64,
+                        history_steps=ms.HISTORY_STEPS, rollout_steps=rollout_steps,
+                        valve_index=valve_index,
+                        seed=80_000 + 1_000 * valve_index + rollout_steps + seed,
+                        device=device,
+                    )
             # Steady-state gain evidence (2026-08-21 audit): the 60-step gate
             # reads the transient; with learned tau_mix ~470s the 600s window
             # only reaches ~72% of steady state.  A 240-step (40 min) probe
@@ -667,7 +911,9 @@ def run_matrix(args) -> dict:
             r1_reports.append({
                 "seed": seed,
                 "runtime_blind_ok": blind_ok,
-                "direction": direction_on,
+                "directions": directions,
+                # Compatibility alias for historical consumers: v2/H60.
+                "direction": directions["valve2"]["H60"],
                 "direction_steady": direction_steady,
                 "leakage": leak,
                 "residual_quantiles": quant,
@@ -679,9 +925,48 @@ def run_matrix(args) -> dict:
                 continue
             if not rep["runtime_blind_ok"] or rep["leakage"]["leakage_suspected"]:
                 verdict = "REJECTED"
-            if rep["direction"]["frac_negative"] < 1.0:
-                verdict = "REJECTED"
-        summary["units"][r1_key] = {"verdict": verdict, "arm": r1_arm, "reports": r1_reports}
+            for valve in rep["directions"].values():
+                for direction in valve.values():
+                    if not direction["ci_identifiable"]:
+                        if verdict == "SUPPORTED":
+                            verdict = "MIXED"
+                    elif (
+                        direction["mean_delta_c"] >= 0.0
+                        or direction["ci_hi_c"] >= 0.0
+                        or direction["frac_negative"] < 0.60
+                    ):
+                        verdict = "REJECTED"
+        complete_reports = (
+            len(r1_reports) == len(seeds)
+            and all("error" not in report for report in r1_reports)
+        )
+        evidence = {
+            "runtime_blindness": [
+                {"seed": report["seed"], "pass": report["runtime_blind_ok"]}
+                for report in r1_reports if "error" not in report
+            ] if complete_reports else None,
+            "residual_power": [
+                {"seed": report["seed"], **report["residual_quantiles"]}
+                for report in r1_reports if "error" not in report
+            ] if complete_reports else None,
+            "valve1_h18": [report["directions"]["valve1"]["H18"] for report in r1_reports]
+            if complete_reports else None,
+            "valve1_h60": [report["directions"]["valve1"]["H60"] for report in r1_reports]
+            if complete_reports else None,
+            "valve2_h18": [report["directions"]["valve2"]["H18"] for report in r1_reports]
+            if complete_reports else None,
+            "valve2_h60": [report["directions"]["valve2"]["H60"] for report in r1_reports]
+            if complete_reports else None,
+            # Task 3 and Task 4 replace the known-invalid legacy probes.
+            "leakage_v07": None,
+            "support_domain_v07": None,
+        }
+        protocol = _adjudicate(
+            "r1", verdict, evidence, quick=quick, seeds=seeds,
+            arm_filter=getattr(args, "arm_filter", None),
+        )
+        protocol.update({"arm": r1_arm, "reports": r1_reports})
+        summary["units"][r1_key] = protocol
         r1_file = "r1_report.json" if r1_arm == "closure_cons" else f"r1_report_{r1_arm}.json"
         _write_json(out / r1_file, summary["units"][r1_key])
         dump_summary()
