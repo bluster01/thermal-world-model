@@ -15,6 +15,7 @@ from src.final_wm.evaluation import (
     constant_condition_stability,
     day_block_mean_ci,
     gaussian_crps,
+    paired_difference_ci,
     relative_improvement_ci,
     residual_quantiles,
     state_continuity_metrics,
@@ -54,6 +55,36 @@ def test_relative_improvement_ci_day_paired() -> None:
     assert ci.point == pytest.approx(0.2, abs=0.03)
     assert ci.ci_lo > 0.0
     assert ci.n_days == 10
+
+
+def test_paired_nll_difference_is_invariant_to_additive_unit_shift() -> None:
+    days = torch.arange(10).repeat_interleave(4)
+    gen = torch.Generator().manual_seed(7)
+    base_vals = 0.2 + 0.05 * torch.randn(40, 18, generator=gen)
+    arm_vals = base_vals - 0.1
+    base = WindowMetrics(nll=base_vals, mae=base_vals.abs(), crps=base_vals.abs(), day_ids=days)
+    arm = WindowMetrics(nll=arm_vals, mae=arm_vals.abs(), crps=arm_vals.abs(), day_ids=days)
+    shifted_base = base._replace(nll=base.nll + 20.0)
+    shifted_arm = arm._replace(nll=arm.nll + 20.0)
+
+    original = paired_difference_ci(base, arm, horizon=18, metric="nll", n_boot=200, seed=3)
+    shifted = paired_difference_ci(
+        shifted_base, shifted_arm, horizon=18, metric="nll", n_boot=200, seed=3,
+    )
+    assert original.point == pytest.approx(-0.1, abs=1e-6)
+    assert original.ci_hi < 0.0
+    assert shifted == pytest.approx(original)
+
+
+def test_paired_nll_difference_handles_negative_baseline() -> None:
+    days = torch.arange(8).repeat_interleave(3)
+    base_vals = torch.full((24, 6), -2.0)
+    arm_vals = torch.full((24, 6), -2.1)
+    base = WindowMetrics(nll=base_vals, mae=-base_vals, crps=-base_vals, day_ids=days)
+    arm = WindowMetrics(nll=arm_vals, mae=-arm_vals, crps=-arm_vals, day_ids=days)
+    ci = paired_difference_ci(base, arm, horizon=6, n_boot=100)
+    assert ci.point == pytest.approx(-0.1, abs=1e-6)
+    assert ci.ci_hi < 0.0
 
 
 def test_day_block_mean_ci_reports_identifiability() -> None:

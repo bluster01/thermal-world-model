@@ -30,6 +30,11 @@ from src.final_wm.evaluation import (
 )
 
 TOL = 1e-6
+# Historical v0.2 replay constants.  They stay local so v0.7 cannot reuse
+# percentage-NLL thresholds for a new formal verdict.
+V02_THRESH_O1_NLL = 0.05
+V02_THRESH_T1_NLL = 0.02
+V02_THRESH_J1_NLL = 0.03
 
 
 def _load_metrics(path: Path) -> WindowMetrics:
@@ -73,6 +78,8 @@ def main() -> None:
 
     out = Path(args.out)
     summary = json.loads((out / f"matrix_summary_side{args.side}.json").read_text(encoding="utf-8"))
+    if summary.get("matrix_version") != "0.2":
+        raise RuntimeError("audit_verdicts.py is the historical v0.2 replayer only")
     checks: list = []
 
     def m(run_id: str) -> WindowMetrics:
@@ -81,14 +88,14 @@ def main() -> None:
     # O1
     for arm in ("learned", "hybrid"):
         pairs = [(m(f"o1_steady_seed{s}"), m(f"o1_{arm}_seed{s}")) for s in ms.SEEDS]
-        _compare(f"o1_{arm}", _replay_pairs(pairs, ms.THRESH_O1_NLL),
+        _compare(f"o1_{arm}", _replay_pairs(pairs, V02_THRESH_O1_NLL),
                  summary["units"]["o1"][arm], checks)
 
     # T1 nested arms
     for arm, base_arm in [("closure_cons", "physics_only"), ("closure_steam", "closure_cons"),
                           ("latent4", "closure_cons")]:
         pairs = [(m(f"t1_{base_arm}_seed{s}"), m(f"t1_{arm}_seed{s}")) for s in ms.SEEDS]
-        _compare(f"t1_{arm}_vs_{base_arm}", _replay_pairs(pairs, ms.THRESH_T1_NLL),
+        _compare(f"t1_{arm}_vs_{base_arm}", _replay_pairs(pairs, V02_THRESH_T1_NLL),
                  summary["units"]["t1"][f"{arm}_vs_{base_arm}"], checks)
 
     # B1: persistence baseline recomputed from the record (deterministic).
@@ -105,7 +112,7 @@ def main() -> None:
 
     # J1
     pairs = [(m(f"j1_staged_seed{s}"), m(f"j1_joint_seed{s}")) for s in ms.SEEDS]
-    _compare("j1", _replay_pairs(pairs, ms.THRESH_J1_NLL), summary["units"]["j1"], checks)
+    _compare("j1", _replay_pairs(pairs, V02_THRESH_J1_NLL), summary["units"]["j1"], checks)
 
     # R1: rule replay + cross-file consistency
     r1_file = json.loads((out / "r1_report.json").read_text(encoding="utf-8"))

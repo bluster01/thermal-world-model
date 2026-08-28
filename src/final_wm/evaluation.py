@@ -250,6 +250,38 @@ class ImprovementCI(NamedTuple):
     n_days: int
 
 
+class DifferenceCI(NamedTuple):
+    point: float
+    ci_lo: float
+    ci_hi: float
+    n_days: int
+
+
+def paired_difference_ci(
+    baseline: WindowMetrics,
+    arm: WindowMetrics,
+    *,
+    horizon: int,
+    metric: str = "nll",
+    n_boot: int = 1000,
+    seed: int = 0,
+) -> DifferenceCI:
+    """Paired UTC-day bootstrap CI for ``arm - baseline``."""
+    base_values = getattr(baseline, metric)
+    arm_values = getattr(arm, metric)
+    if base_values.shape != arm_values.shape or not torch.equal(baseline.day_ids, arm.day_ids):
+        raise FinalWMProtocolError("paired metrics must use identical windows and UTC-day ids")
+    if horizon < 1 or horizon > base_values.shape[1]:
+        raise FinalWMProtocolError("horizon exceeds paired metric width")
+    delta = (arm_values[:, :horizon] - base_values[:, :horizon]).mean(dim=1)
+    ci = day_block_mean_ci(delta, baseline.day_ids, n_boot=n_boot, seed=seed)
+    if not ci["identifiable"]:
+        raise FinalWMProtocolError("fewer than two UTC days; paired CI is not identifiable")
+    return DifferenceCI(
+        point=ci["point"], ci_lo=ci["ci_lo"], ci_hi=ci["ci_hi"], n_days=ci["n_days"]
+    )
+
+
 def relative_improvement_ci(
     baseline: WindowMetrics,
     arm: WindowMetrics,

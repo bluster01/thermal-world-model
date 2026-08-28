@@ -42,6 +42,7 @@ from src.final_wm.evaluation import (
     day_block_mean_ci,
     evaluate_windows,
     horizon_summary,
+    paired_difference_ci,
     persistence_boundary_metrics,
     relative_improvement_ci,
     residual_quantiles,
@@ -329,18 +330,43 @@ def _load_checkpoint_model(spec, out, device, properties):
     return model
 
 
-def _seed_passes(pairs, threshold, metric="nll", horizon=None):
+def _seed_relative_passes(pairs, threshold, metric, horizon):
     """pairs: list of (baseline_metrics, arm_metrics) per seed."""
     passes, details = 0, []
     for base, arm in pairs:
         ci = relative_improvement_ci(
-            base, arm, horizon=horizon or ms.HORIZON, metric=metric
+            base, arm, horizon=horizon, metric=metric
         )
         ok = ci.point >= threshold and ci.ci_lo > 0.0
         passes += int(ok)
         details.append({"point": ci.point, "ci_lo": ci.ci_lo, "ci_hi": ci.ci_hi,
                         "n_days": ci.n_days, "pass": bool(ok)})
     return passes, details
+
+
+def _seed_delta_passes(pairs, horizon):
+    """Formal NLL gate: paired ``arm - baseline`` CI must be below zero."""
+    passes, details = 0, []
+    for base, arm in pairs:
+        ci = paired_difference_ci(base, arm, horizon=horizon, metric="nll")
+        ok = ci.ci_hi < 0.0
+        passes += int(ok)
+        details.append({"point": ci.point, "ci_lo": ci.ci_lo, "ci_hi": ci.ci_hi,
+                        "n_days": ci.n_days, "pass": bool(ok)})
+    return passes, details
+
+
+def _practical_effects(pairs, horizon):
+    """Relative effect sizes for positive-scale metrics; never a NLL gate."""
+    return [
+        {
+            metric: relative_improvement_ci(
+                base, arm, horizon=horizon, metric=metric
+            )._asdict()
+            for metric in ("crps", "mae")
+        }
+        for base, arm in pairs
+    ]
 
 
 def _verdict(passes, n_seeds):
@@ -580,12 +606,8 @@ def run_matrix(args) -> dict:
                     (metrics_store[f"o1_steady_seed{s}"], metrics_store[f"o1_{arm}_seed{s}"])
                     for s in seeds
                 ]
-                _h6_passes, h6 = _seed_passes(
-                    pairs, ms.THRESH_O1_NLL, horizon=6
-                )
-                _h18_passes, h18 = _seed_passes(
-                    pairs, ms.THRESH_O1_NLL, horizon=18
-                )
+                _h6_passes, h6 = _seed_delta_passes(pairs, horizon=6)
+                h18_passes, h18 = _seed_delta_passes(pairs, horizon=18)
                 continuity_details = []
                 combined_passes = 0
                 for i, seed in enumerate(seeds):
@@ -615,8 +637,13 @@ def run_matrix(args) -> dict:
                     "nll_h6": h6,
                     "nll_h18": h18,
                     "state_continuity": continuity_details,
-                    # Task 2 replaces the legacy relative-NLL gate.
-                    "paired_nll_v07": None,
+                    "paired_nll_v07": {
+                        "rule": "delta_nll_arm_minus_baseline_ci_hi_lt_0",
+                        "horizon": 18,
+                        "passes": h18_passes,
+                        "per_seed": h18,
+                    },
+                    "practical_effects_h18": _practical_effects(pairs, horizon=18),
                 }
                 unit_verdicts[arm] = _adjudicate(
                     "o1", _verdict(combined_passes, len(seeds)), evidence,
@@ -655,9 +682,9 @@ def run_matrix(args) -> dict:
                     (metrics_store[f"t1_{base_arm}_seed{s}"], metrics_store[f"t1_{arm}_seed{s}"])
                     for s in seeds
                 ]
-                _h1_passes, h1 = _seed_passes(pairs, ms.THRESH_T1_NLL, horizon=1)
-                _h6_passes, h6 = _seed_passes(pairs, ms.THRESH_T1_NLL, horizon=6)
-                h18_passes, h18 = _seed_passes(pairs, ms.THRESH_T1_NLL, horizon=18)
+                _h1_passes, h1 = _seed_delta_passes(pairs, horizon=1)
+                _h6_passes, h6 = _seed_delta_passes(pairs, horizon=6)
+                h18_passes, h18 = _seed_delta_passes(pairs, horizon=18)
                 stability_details = [
                     {
                         "seed": seed,
@@ -674,7 +701,13 @@ def run_matrix(args) -> dict:
                     "nll_h6": h6,
                     "nll_h18": h18,
                     "constant_h60_stability": stability_details,
-                    "paired_nll_v07": None,
+                    "paired_nll_v07": {
+                        "rule": "delta_nll_arm_minus_baseline_ci_hi_lt_0",
+                        "horizon": 18,
+                        "passes": h18_passes,
+                        "per_seed": h18,
+                    },
+                    "practical_effects_h18": _practical_effects(pairs, horizon=18),
                 }
                 unit_verdicts[f"{arm}_vs_{base_arm}"] = _adjudicate(
                     "t1", proposed, evidence,
@@ -724,13 +757,13 @@ def run_matrix(args) -> dict:
                     history_steps=ms.HISTORY_STEPS, horizon=b_horizon, seed=60_000 + s,
                 )
                 pairs.append((base, b_metrics[s]))
-            _h6_passes, h6 = _seed_passes(
+            _h6_passes, h6 = _seed_relative_passes(
                 pairs, ms.THRESH_B1_CRPS, metric="crps", horizon=6
             )
-            h18_passes, h18 = _seed_passes(
+            h18_passes, h18 = _seed_relative_passes(
                 pairs, ms.THRESH_B1_CRPS, metric="crps", horizon=18
             )
-            _h36_passes, h36 = _seed_passes(
+            _h36_passes, h36 = _seed_relative_passes(
                 pairs, ms.THRESH_B1_CRPS, metric="crps", horizon=36
             )
             evidence = {
@@ -797,8 +830,15 @@ def run_matrix(args) -> dict:
             )
             _save_eval_metrics(out, f"j1_staged_seed{seed}", staged_metrics[seed])
         if not quick and getattr(args, "arm_filter", None) is None:
+            for seed in seeds:
+                joint_metrics[seed] = evaluate_windows(
+                    joint_models[seed], record, SPLIT_VAL, n_windows=256, batch_size=32,
+                    history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON,
+                    boundary_mode="forecast", seed=70_000 + seed, device=device,
+                )
+                _save_eval_metrics(out, f"j1_joint_paired_seed{seed}", joint_metrics[seed])
             pairs = [(staged_metrics[s], joint_metrics[s]) for s in seeds]
-            h18_passes, h18 = _seed_passes(pairs, ms.THRESH_J1_NLL, horizon=18)
+            h18_passes, h18 = _seed_delta_passes(pairs, horizon=18)
             stability_details = []
             combined_passes = 0
             for i, seed in enumerate(seeds):
@@ -836,7 +876,13 @@ def run_matrix(args) -> dict:
                 ],
                 "nll_h18": h18,
                 "h36_stability": stability_details,
-                "paired_nll_v07": None,
+                "paired_nll_v07": {
+                    "rule": "delta_nll_arm_minus_baseline_ci_hi_lt_0",
+                    "horizon": 18,
+                    "passes": h18_passes,
+                    "per_seed": h18,
+                },
+                "practical_effects_h18": _practical_effects(pairs, horizon=18),
             }
             summary["units"]["j1"] = _adjudicate(
                 "j1", _verdict(combined_passes, len(seeds)), evidence,

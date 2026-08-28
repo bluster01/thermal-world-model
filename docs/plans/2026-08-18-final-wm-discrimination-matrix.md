@@ -224,9 +224,12 @@ D0 必须产出**点位映射审计表**（DCS 点名 → 注册表通道 → �
    terminal drift p95 不高于 staged；
 7. R1 对 valve1/valve2 分别报告 H18/H60 的均值、95% day-block CI 与正确方向占比，判据沿用
    v0.3（均值<0、CI 上界<0、占比≥0.60）。
+8. O1/T1/J1 的正式 NLL 门使用相同验证窗口上的 `ΔNLL = arm - baseline`，先按 UTC 日聚合再
+   bootstrap；单 seed 仅当 95% CI 上界 `< 0` 才计通过，完整判决仍要求至少 2/3 seeds。
+   NLL 不再使用百分比阈值；CRPS/MAE 的相对改善只作为实用效应量报告。
 
-阶段护栏：Task 1 只闭合 C1。`paired_nll_v07`、`leakage_v07`、`support_domain_v07` 在对应修复
-完成前保持缺失，因此相关单元仍为 `INCOMPLETE`；当前不授权 Linux 或正式重跑。
+阶段护栏：Task 1–2 已闭合 C1 与 paired-NLL。`leakage_v07`、`support_domain_v07` 在对应修复
+完成前保持缺失，因此 R1 仍为 `INCOMPLETE`；当前不授权 Linux 或正式重跑。
 
 ## 6. 明确禁止事项
 

@@ -15,11 +15,13 @@ import torch
 from experiments.final_wm import matrix_spec as ms
 from experiments.final_wm.run_matrix import (
     _adjudicate,
+    _seed_delta_passes,
     closure_blindness_check,
     run_dsyn,
     run_matrix,
 )
 from src.final_wm.synthetic import synthetic_canonical_arrays
+from src.final_wm.evaluation import WindowMetrics
 from src.final_wm.training import build_world_model
 
 
@@ -82,6 +84,23 @@ def test_matrix_version_and_required_evidence_are_v07() -> None:
     assert {"valve1_h18", "valve1_h60", "valve2_h18", "valve2_h60"} <= set(
         ms.REQUIRED_EVIDENCE["r1"]
     )
+    assert not any(hasattr(ms, name) for name in ("THRESH_O1_NLL", "THRESH_T1_NLL", "THRESH_J1_NLL"))
+
+
+def test_nll_seed_gate_uses_paired_absolute_difference() -> None:
+    days = torch.arange(8).repeat_interleave(3)
+    base_values = torch.full((24, 18), -2.0)
+    arm_values = torch.full((24, 18), -2.1)
+    base = WindowMetrics(base_values, -base_values, -base_values, days)
+    arm = WindowMetrics(arm_values, -arm_values, -arm_values, days)
+
+    passes, details = _seed_delta_passes([(base, arm)], horizon=18)
+    shifted_passes, shifted = _seed_delta_passes([
+        (base._replace(nll=base.nll + 20.0), arm._replace(nll=arm.nll + 20.0))
+    ], horizon=18)
+    assert passes == shifted_passes == 1
+    assert details[0]["pass"] is True
+    assert abs(details[0]["point"] - shifted[0]["point"]) < 1e-6
 
 
 def test_dsyn_quick_gate_runs(tmp_path, monkeypatch) -> None:

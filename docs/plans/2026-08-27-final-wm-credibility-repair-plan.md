@@ -10,7 +10,7 @@
 
 ---
 
-> 状态：`TASK 1 POST-AUDIT LOCAL VERIFIED / TASK 2 NOT STARTED / HOLD / TEST LOCKED`
+> 状态：`TASK 1–2 LOCAL VERIFIED / TASK 3 NEXT / HOLD / TEST LOCKED`
 > 依据：`docs/FINAL_WM_CREDIBILITY_AUDIT_2026-08-27.md`
 > 执行原则：一次只完成一个任务；测试通过、人工核对 diff 后再进入下一项；不自动启动 Linux、test 或论文改写。
 
@@ -70,6 +70,10 @@ Expected: PASS；quick/partial 只产生 `SMOKE/INCOMPLETE`。
 - Commit: `fix(final-wm): fail closed on incomplete matrix evidence`。
 
 ## Task 2: 修正 NLL 正式判决统计口径
+
+> 完成记录（2026-08-28）：O1/T1/J1 正式门已改为同窗口、按 UTC 日聚合的
+> `ΔNLL = arm - baseline` bootstrap CI；J1 改为同窗口复评，CRPS/MAE 仅报告效应量；
+> 定向回归 `21 passed`。未启动训练、Linux 或 test split。
 
 **Files:**
 

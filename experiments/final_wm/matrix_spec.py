@@ -39,10 +39,7 @@ REQUIRED_EVIDENCE = {
 }
 
 # Frozen verdict thresholds (matrix document §2/§3).
-THRESH_O1_NLL = 0.05        # learned/hybrid vs steady, H18 NLL relative improvement
-THRESH_T1_NLL = 0.02        # nested structure gains, H18 NLL
 THRESH_B1_CRPS = 0.03       # boundary model vs persistence, H18 CRPS
-THRESH_J1_NLL = 0.03        # joint vs staged, H18 NLL
 THRESH_R1_LEAK = 0.05       # aware-probe relative gain over blind probe
 MIN_SEED_PASSES = 2         # >=2/3 seeds must pass
 
