@@ -4,7 +4,7 @@ Design (spec: docs/plans/2026-08-25-v06-canonical-v2-spec.md):
 
 - v1 registries stay frozen.  The v2 record carries the six v1 keys
   (boundary/actions/obs/valid/timestamps/split) byte-verbatim from the v1
-  npz, plus three extension keys: ``boundary_ext`` (7), ``aux`` (15),
+  npz, plus three extension keys: ``boundary_ext`` (9), ``aux`` (15),
   ``mill_on`` (8, uint8).
 - Fail-closed gates: (a) grid containment -- every v1 timestamp must land
   exactly on the all_merged 10 s grid; (b) numeric alignment checks of v1
@@ -36,7 +36,7 @@ from src.final_wm.contracts import (
 from src.final_wm.data import CanonicalRecord
 
 CANONICAL_V2_VERSION = 2
-CANONICAL_V2_REVISION = "2.1"  # 2.1 = actions rebuilt per corrected valve wiring
+CANONICAL_V2_REVISION = "2.2"  # 2.2 = true water-coal ratio + unit-load context
 
 # Registry order is contractual; the mapping must match these exactly.
 BOUNDARY_EXT_ELEMENTS = (
@@ -47,7 +47,10 @@ BOUNDARY_EXT_ELEMENTS = (
     "secondary_air_total",  # total secondary air, t/h
     "rh_gas_in_temp_a",     # vertical LT-reheater inlet flue gas temp (A), degC
     "rh_gas_in_temp_b",     # vertical LT-reheater inlet flue gas temp (B), degC
+    "water_coal_ratio",     # DCS water/coal ratio tag, dimensionless
+    "unit_load",            # generator power, MW (A5 operating gate/reference)
 )
+BOUNDARY_EXT_ELEMENTS_V21 = BOUNDARY_EXT_ELEMENTS[:7]
 AUX_ELEMENTS = (
     "att1_in_temp_l", "att1_in_temp_r",
     "att1_out_temp_l", "att1_out_temp_r",
@@ -459,7 +462,14 @@ class CanonicalV2Record(CanonicalRecord):
         self.boundary_ext = torch.from_numpy(arrays["boundary_ext"].astype(np.float32))
         self.aux = torch.from_numpy(arrays["aux"].astype(np.float32))
         self.mill_on = torch.from_numpy(arrays["mill_on"].astype(np.uint8))
-        if self.boundary_ext.shape != (self.n, len(BOUNDARY_EXT_ELEMENTS)):
+        width = int(self.boundary_ext.shape[1])
+        if width == len(BOUNDARY_EXT_ELEMENTS):
+            self.boundary_ext_elements = BOUNDARY_EXT_ELEMENTS
+        elif width == len(BOUNDARY_EXT_ELEMENTS_V21):
+            # Historical v2.1 artifacts remain readable for evidence replay;
+            # A5 itself explicitly requires the current v2.2 registry.
+            self.boundary_ext_elements = BOUNDARY_EXT_ELEMENTS_V21
+        else:
             raise FinalWMProtocolError("v2 boundary_ext width mismatch")
         if self.aux.shape != (self.n, len(AUX_ELEMENTS)):
             raise FinalWMProtocolError("v2 aux width mismatch")

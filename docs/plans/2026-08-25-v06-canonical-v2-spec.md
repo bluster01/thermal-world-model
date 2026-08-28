@@ -11,12 +11,12 @@
    v2 记录中 `boundary/obs/valid/timestamps/split` 五个键**逐位搬运**自 v1 npz
    （不重采样、不重切分）。`actions` 自 v2.1 起例外——按修正接线从 all_merged
    重建（known-defect 修复，见 §9）。
-2. **扩展即附加**：新信号存 `boundary_ext`（7 列）、`aux`（15 列）、`mill_on`（8 列
+2. **扩展即附加**：新信号存 `boundary_ext`（v2.2 为 9 列）、`aux`（15 列）、`mill_on`（8 列
    二值）三个新键；v2 记录仍可被 v1 加载器原样打开（宽度契约不破）。
 3. **fail-closed**：对齐门不过 → 构建中止；新通道质量门不过 → 构建中止。
 4. **口径分列**：v2 下一切数字与 v1 冻结判决分列报告，禁止聚合。
 
-## 2. boundary_ext（7 列，Phase 2-A1 进模型的候选输入）
+## 2. boundary_ext（v2.2：9 列，Phase 2 机制臂的候选输入）
 
 | 名称 | 源列（all_merged_10s.csv） | 单位/变换 | 物理角色 |
 |---|---|---|---|
@@ -27,6 +27,8 @@
 | `secondary_air_total` | 总二次风量 | t/h | 配风强度 |
 | `rh_gas_in_temp_a` | 立式低温再热器入口烟气温度(A) | degC | 炉膛出口烟温场（A 侧） |
 | `rh_gas_in_temp_b` | 立式低温再热器入口烟气温度(B) | degC | 炉膛出口烟温场（B 侧） |
+| `water_coal_ratio` | 水煤比 | 无量纲 | A5 真实 DCS 水煤比修正量 |
+| `unit_load` | 机组负荷_GENERATOR_POWER | MW | A5 运行工况门与训练集内 `wc_ref(L)` |
 
 ## 3. aux（15 列，监督/诊断，Phase 1 不进模型输入）
 
@@ -81,6 +83,8 @@
   [0,800] °C；spray 流量 [0,400] t/h；superheat_sep [-60,200] °C。
 - 已知野值处置（侦察实测）：磨炉烟流量负值 → clip≥0 后参与加权；7 号磨停机
   炉烟温度 ~10°C 环境温度 → 权重=0 时不入加权，自然豁免。
+- v2.2 A5 两列的存储量程为：`water_coal_ratio` [0,10]、`unit_load` [0,800] MW；
+  A5 采窗另按预注册运行工况门 `unit_load>160, 1<ratio<8, fuel>50` 排除停机与异常点。
 
 ## 6. 产物与指纹
 
@@ -134,3 +138,10 @@
   corr 记录入 meta.provenance（不设门，预计 ≈0.8）。
 - 元数据：version=2.1；provenance 增 known_defect 引用与旧 actions 指纹。
 - 加载器不变（键集合不变）；`CanonicalV2Record` 行为不变。
+
+## 10. v2.2 修订：A5 真实水煤比上下文（2026-08-28）
+
+- `boundary_ext` 末尾追加 `water_coal_ratio` 与 `unit_load`；v1 七通道契约及所有核心键不变。
+- 两列只服务预注册 A5 独立机制臂：真实 ratio 进入 metal-power 修正，unit load 只用于
+  运行工况门和在 train split 内拟合二次 `wc_ref(L)`，不得从 validation/test 拟合。
+- A5 模型使用 7+2 的专用 oracle 视图；正式 v0.7 模型、历史 v2.1 结果和 paper verdict 不改。

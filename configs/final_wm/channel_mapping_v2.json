@@ -1,5 +1,5 @@
 {
-  "_provenance": "v0.6 canonical v2 mapping DRAFT 2026-08-25 (spec: docs/plans/2026-08-25-v06-canonical-v2-spec.md). Freezes on first successful dual-side build. Source: all_merged_10s.csv (boiler-level, covers both sides).",
+  "_provenance": "v0.6 canonical v2 mapping, revision 2.2 on 2026-08-28 adds true DCS water-coal ratio and generator load for the pre-registered A5 arm. Spec: docs/plans/2026-08-25-v06-canonical-v2-spec.md. Source: all_merged_10s.csv (boiler-level, covers both sides).",
   "version": 2,
   "source": {
     "file": "merged_all_data/all_merged_10s.csv",
@@ -12,7 +12,9 @@
     "flue_o2":             {"column": "烟气含氧量", "clip": [0.0, 15.0], "range": [0.0, 15.0], "stuck_max": 0.05},
     "secondary_air_total": {"column": "总二次风量", "clip": [0.0, 2000.0], "range": [0.0, 2000.0], "stuck_max": 0.05},
     "rh_gas_in_temp_a":    {"column": "立式低温再热器入口烟气温度(A)", "clip": [0.0, 900.0], "range": [0.0, 900.0], "stuck_max": 0.05},
-    "rh_gas_in_temp_b":    {"column": "立式低温再热器入口烟气温度(B)", "clip": [0.0, 900.0], "range": [0.0, 900.0], "stuck_max": 0.05}
+    "rh_gas_in_temp_b":    {"column": "立式低温再热器入口烟气温度(B)", "clip": [0.0, 900.0], "range": [0.0, 900.0], "stuck_max": 0.05},
+    "water_coal_ratio":    {"column": "水煤比", "clip": [0.0, 10.0], "range": [0.0, 10.0], "stuck_max": 0.05},
+    "unit_load":           {"column": "机组负荷_GENERATOR_POWER", "clip": [0.0, 800.0], "range": [0.0, 800.0], "stuck_max": 0.05}
   },
   "aux": {
     "att1_in_temp_l":      {"column": "选择后左侧一过喷水减温器入口", "range": [0.0, 800.0], "stuck_max": 0.05},

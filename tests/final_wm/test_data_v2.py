@@ -22,6 +22,7 @@ from src.final_wm.data_v2 import (
     build_canonical_v2,
     load_channel_mapping_v2,
 )
+from src.final_wm.water_coal import WaterCoalRecord
 
 
 def _fixture(tmp_path, n: int = 400, time_offset_s: int = 0):
@@ -42,6 +43,8 @@ def _fixture(tmp_path, n: int = 400, time_offset_s: int = 0):
         "v2a_col": valve_v2a, "v2b_col": valve_v2b,
         "time": times,
         "fuel_col": 250.0 + rng.normal(0, 20, n).cumsum() * 0.01 + 10 * np.sin(np.arange(n) / 30.0),
+        "water_coal_col": 3.6 + 0.15 * np.sin(np.arange(n) / 31.0),
+        "unit_load_col": 360.0 + 40.0 * np.sin(np.arange(n) / 45.0),
         "o2_col": 4.0 + 0.5 * np.sin(np.arange(n) / 25.0),
         "air_col": 900.0 + 50.0 * np.sin(np.arange(n) / 35.0),
         "rh_gas_a": 700.0 + 30.0 * np.sin(np.arange(n) / 50.0),
@@ -85,6 +88,8 @@ def _fixture(tmp_path, n: int = 400, time_offset_s: int = 0):
         "source": {"file": "all_merged.csv", "time_column": "time"},
         "boundary_ext": {
             "fuel_corrected": {"column": "fuel_col", "range": [0.0, 600.0], "stuck_max": 0.05},
+            "water_coal_ratio": {"column": "water_coal_col", "range": [0.0, 10.0], "stuck_max": 0.05},
+            "unit_load": {"column": "unit_load_col", "range": [0.0, 800.0], "stuck_max": 0.05},
             "mill_count_on": {"derived": "mill_on_count", "range": [0.0, 8.0], "stuck_max": None},
             "mill_gas_temp_wavg": {"derived": "mill_gas_wavg", "range": [0.0, 900.0], "stuck_max": 0.05},
             "flue_o2": {"column": "o2_col", "range": [0.0, 15.0], "stuck_max": 0.05},
@@ -171,10 +176,10 @@ def test_build_happy_path(tmp_path) -> None:
     v2_arrays = np.load(out)
     for key in ("boundary", "obs", "valid", "timestamps", "split"):
         np.testing.assert_array_equal(v2_arrays[key], v1_arrays[key])
-    # v2.1: actions rebuilt per corrected wiring; side-A fixture wiring matches,
+    # v2.2 retains the v2.1 corrected wiring; side-A fixture wiring matches,
     # so actions are still byte-equal here, and valve2 continuity must be perfect.
     np.testing.assert_array_equal(v2_arrays["actions"], v1_arrays["actions"])
-    assert meta["version"] == "2.1"
+    assert meta["version"] == "2.2"
     assert meta["side"] == "A"
     assert meta["actions_continuity"]["valve2"]["corr_with_v1"] == pytest.approx(1.0)
     assert meta["actions_continuity"]["valve2"]["mae_vs_v1"] == pytest.approx(0.0, abs=1e-4)
@@ -187,6 +192,10 @@ def test_build_happy_path(tmp_path) -> None:
     assert mill_on[:, :3].sum() == 3 * n
     assert mill_on[:, 3:].sum() == 0
     ext = v2_arrays["boundary_ext"]
+    i_wc = BOUNDARY_EXT_ELEMENTS.index("water_coal_ratio")
+    np.testing.assert_allclose(ext[:, i_wc], 3.6 + 0.15 * np.sin(np.arange(n) / 31.0), atol=1e-6)
+    i_load = BOUNDARY_EXT_ELEMENTS.index("unit_load")
+    np.testing.assert_allclose(ext[:, i_load], 360.0 + 40.0 * np.sin(np.arange(n) / 45.0), atol=1e-5)
     i_count = BOUNDARY_EXT_ELEMENTS.index("mill_count_on")
     np.testing.assert_array_equal(ext[:, i_count], 3.0)
     i_wavg = BOUNDARY_EXT_ELEMENTS.index("mill_gas_temp_wavg")
@@ -210,6 +219,46 @@ def test_side_b_wiring(tmp_path) -> None:
     # side-A pattern) must therefore FAIL -- proving the gate actually bites.
     with pytest.raises(FinalWMProtocolError, match="continuity gate"):
         build_canonical_v2(v1, tmp_path, mpath, out, side="B")
+
+
+def test_loader_keeps_historical_v21_artifacts_readable(tmp_path) -> None:
+    v1, mpath = _fixture(tmp_path)
+    current = tmp_path / "current.npz"
+    build_canonical_v2(v1, tmp_path, mpath, current, side="A")
+    arrays = np.load(current)
+    old = tmp_path / "historical_v21.npz"
+    np.savez_compressed(
+        old,
+        **{key: (arrays[key][:, :7] if key == "boundary_ext" else arrays[key])
+           for key in arrays.files},
+    )
+    record = CanonicalV2Record(old)
+    assert record.boundary_ext.shape[1] == 7
+    assert record.boundary_full().shape[1] == len(BOUNDARY_ELEMENTS) + 7
+    with pytest.raises(FinalWMProtocolError, match="v2.2"):
+        WaterCoalRecord(old)
+
+
+def test_a5_record_applies_preregistered_operating_gate(tmp_path) -> None:
+    import pandas as pd
+
+    v1, mpath = _fixture(tmp_path)
+    frame = pd.read_csv(tmp_path / "all_merged.csv")
+    frame.loc[20:29, "water_coal_col"] = 0.5
+    frame.loc[40:49, "unit_load_col"] = 100.0
+    frame.loc[60:69, "fuel_col"] = 20.0
+    frame.to_csv(tmp_path / "all_merged.csv", index=False)
+    out = tmp_path / "canonical_sideX_v22.npz"
+    build_canonical_v2(v1, tmp_path, mpath, out, side="A")
+
+    record = WaterCoalRecord(out)
+    assert record.boundary.shape == (record.n, len(BOUNDARY_ELEMENTS) + 2)
+    assert record.boundary_full().shape == (record.n, len(BOUNDARY_FULL_ELEMENTS))
+    assert not bool(record.operating_mask[20:30].any())
+    assert not bool(record.operating_mask[40:50].any())
+    assert not bool(record.operating_mask[60:70].any())
+    assert bool((record.split[~record.operating_mask] == -1).all())
+    assert record.fit_reference().n_train == int(record.operating_mask.sum())
 
 
 def test_actions_continuity_fail_closed(tmp_path) -> None:
