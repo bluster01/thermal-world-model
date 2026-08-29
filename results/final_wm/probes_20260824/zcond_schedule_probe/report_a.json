@@ -1,0 +1,227 @@
+{
+  "arm": "zcond_k_k",
+  "status": "INCONCLUSIVE_EXPLORATORY_SEED0",
+  "single_seed_exploratory": true,
+  "user_design": "z = 2-dim bottleneck of fused hybrid initial state; physical-form bounded factors; A then B (user-ordered)",
+  "record": "/home/bluster/projectA/thermal-world-model/artifacts/final_wm/canonical_sideA_v2.npz",
+  "identity_gate": {
+    "exact": true,
+    "max_abs_temp_diff_c": 0.0
+  },
+  "data": {
+    "operating_fraction": 0.9999858736991882,
+    "n_total": 707709,
+    "n_operating": 707699
+  },
+  "train": {
+    "zcond_k": {
+      "run_id": "t1_zcond_k_seed0",
+      "commit": "920d57aeacb2b914eaff2303c1725daf57765a06",
+      "best_val_nll": 1.039164423942566,
+      "best_epoch": 86,
+      "epochs_run": 107,
+      "stop_reason": "patience",
+      "converged": true,
+      "flags": {
+        "compile_substep": false,
+        "matmul_precision": "highest"
+      },
+      "timing": {
+        "data_s": 46.3,
+        "step_s": 3672.0,
+        "eval_s": 102.6
+      }
+    },
+    "reused_control": {
+      "source": "/home/bluster/projectA/thermal-world-model/results/final_wm/probes_20260824/a5_water_coal_probe/control/checkpoints/t1_a5_filtered_control_seed0.pt",
+      "a5_train_record": {
+        "run_id": "t1_a5_filtered_control_seed0",
+        "commit": "97780cd2755267671d3ec30f75cd766bb3f18524",
+        "best_val_nll": 1.1137727499008179,
+        "best_epoch": 98,
+        "epochs_run": 119,
+        "stop_reason": "patience",
+        "converged": true,
+        "flags": {
+          "compile_substep": false,
+          "matmul_precision": "highest"
+        },
+        "timing": {
+          "data_s": 54.7,
+          "step_s": 3734.9,
+          "eval_s": 111.0
+        }
+      },
+      "a5_report_h18": 0.4261806488037109,
+      "re_evaluated_h18": 0.4261806488037109,
+      "max_abs_diff": 0.0
+    }
+  },
+  "evaluation": {
+    "arm": {
+      "overall_h18_mae": 0.43198909163475036,
+      "bins_q1q5": [
+        0.3405306339263916,
+        0.4242841601371765,
+        0.4532078206539154,
+        0.4984774887561798,
+        0.4434453547000885
+      ],
+      "spread_ratio": 1.4638256858380903
+    },
+    "matched_filtered_control": {
+      "overall_h18_mae": 0.4261806488037109,
+      "bins_q1q5": [
+        0.3430060148239136,
+        0.4306655526161194,
+        0.5040490031242371,
+        0.4789524972438812,
+        0.37423017621040344
+      ],
+      "spread_ratio": 1.469504852219565
+    },
+    "relative_h18_change": 0.013629062810204377,
+    "spread_change": -0.0038646802512403416
+  },
+  "z_diagnostics": {
+    "z_dim": 2,
+    "k_max_band": 1.5,
+    "factor_p01_p50_p99": [
+      1.0574662685394287,
+      1.0954608917236328,
+      1.1238033771514893
+    ],
+    "corr_effz_load": -0.9701342390862135,
+    "corr_effz_dload": -0.023168831324067364,
+    "corr_z0_load": 0.9792133546716041,
+    "corr_z1_load": -0.91528814624085,
+    "r2_z0_on_load": 0.9588587880134583,
+    "r2_z1_on_load": 0.8377524018287659,
+    "v_k_norm": 0.06342269480228424,
+    "z_proj_w_norm": 1.4417717456817627
+  },
+  "direction_v03": {
+    "valve1": {
+      "H18": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.002899567363783717,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.0028923177160322666,
+            "ci_lo": -0.002994593232870102,
+            "ci_hi": -0.00276591582223773,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.0028974188026040792,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.002883460372686386,
+            "ci_lo": -0.002990195993334055,
+            "ci_hi": -0.0027516481932252645,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      },
+      "H60": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.025783443823456764,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.02572968229651451,
+            "ci_lo": -0.026475228369235992,
+            "ci_hi": -0.02498791553080082,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.025700952857732773,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.025673069059848785,
+            "ci_lo": -0.02641970105469227,
+            "ci_hi": -0.02496166341006756,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      }
+    },
+    "valve2": {
+      "H18": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.023740053176879883,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.024028349667787552,
+            "ci_lo": -0.026711925864219666,
+            "ci_hi": -0.02177482843399048,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.023586835712194443,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.023797256872057915,
+            "ci_lo": -0.026532696560025215,
+            "ci_hi": -0.02152080647647381,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      },
+      "H60": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.09060832858085632,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.09181574732065201,
+            "ci_lo": -0.10532096028327942,
+            "ci_hi": -0.08044387400150299,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.09018547087907791,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.09093423932790756,
+            "ci_lo": -0.10445340722799301,
+            "ci_hi": -0.079817995429039,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      }
+    }
+  },
+  "preregistered_gates": {
+    "accuracy_at_least_5pct": false,
+    "spread_no_more_than_10pct_worse": true,
+    "both_valves_h18_h60_direction": true,
+    "all_pass": false
+  },
+  "baseline": {
+    "decision_comparator": "reused A5 matched filtered control",
+    "protocol": "A5 probe protocol, seed0 exploratory"
+  }
+}
