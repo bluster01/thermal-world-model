@@ -519,9 +519,13 @@ def counterfactual_fidelity_synthetic(
 
     def _replay_state(transition) -> torch.Tensor:
         s = transition.initial_steady_state(
-            history.boundary[:, 0], history.actions[:, 0], history.obs[:, -1]
+            history.boundary[:, 0], history.actions[:, 0], history.obs[:, 0]
         )
-        states, _temps = transition.integrate(s, history.boundary, history.actions)
+        if history.actions.shape[1] == 1:
+            return s
+        states, _temps = transition.integrate(
+            s, history.boundary[:, 1:], history.actions[:, 1:]
+        )
         return states[:, -1]  # integrate returns the full (B, H, dim) trajectory
 
     t_state = _replay_state(teacher)
@@ -540,7 +544,9 @@ def counterfactual_fidelity_synthetic(
 
     d_teacher = t_cf - t_base          # (B, H, 5)
     d_student = s_cf - s_base
+    baseline_diff = (s_base - t_base).abs()
     diff = (d_student - d_teacher).abs()          # delta-trajectory error
+    baseline_mae_per_channel = baseline_diff.mean(dim=(0, 1))
     per_channel_mae = diff.mean(dim=(0, 1))       # (5,)
     mag_ratio = (
         d_student.abs().mean(dim=(0, 1)) / d_teacher.abs().mean(dim=(0, 1)).clamp_min(1e-9)
@@ -556,6 +562,8 @@ def counterfactual_fidelity_synthetic(
         "delta_v": float(delta_v),
         "horizon": int(horizon),
         "n_windows": int(n_windows),
+        "baseline_mae_per_channel": baseline_mae_per_channel.tolist(),
+        "baseline_mae": float(baseline_mae_per_channel.mean()),
         "delta_mae_per_channel": per_channel_mae.tolist(),
         "delta_mae": float(per_channel_mae.mean()),
         "delta_magnitude_ratio_per_channel": mag_ratio.tolist(),

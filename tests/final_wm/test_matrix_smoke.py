@@ -163,6 +163,8 @@ def test_matrix_quick_t1_and_r1_run(tmp_path, monkeypatch) -> None:
     assert len(reports) == 1 and "error" not in reports[0]
     assert reports[0]["runtime_blind_ok"] is True
     assert "leakage" in reports[0] and "direction" in reports[0]
+    assert summary["units"]["r1"]["evidence"]["leakage_v07"] is not None
+    assert summary["units"]["r1"]["missing_evidence"] == ["support_domain_v07"]
 
 
 def test_closure_blindness_check_passes(tmp_path) -> None:

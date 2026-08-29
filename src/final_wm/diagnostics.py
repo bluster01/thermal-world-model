@@ -58,7 +58,7 @@ def _one_step_residuals(
     """Frozen physics model one-step residuals plus closure features/actions."""
     model.eval()
     gen = torch.Generator().manual_seed(seed)
-    batch = sample_windows(record, split_id, n_windows, history_steps, 2, gen)
+    batch = sample_windows(record, split_id, n_windows, history_steps, 1, gen)
     history = batch.history.__class__(
         obs=batch.history.obs.to(device),
         actions=batch.history.actions.to(device),
@@ -68,9 +68,9 @@ def _one_step_residuals(
     boundary_t = batch.future_boundary[:, 0].to(device)
     action_t = batch.future_actions[:, 0].to(device)
     step = model.transition.step(state, boundary_t, action_t)
-    pred = model.transition.output_temperatures(step.state, batch.future_boundary[:, 1].to(device), batch.future_actions[:, 1].to(device))
-    residual = batch.future_obs[:, 1].to(device) - pred
-    features = model.closure.features(step.state, batch.future_boundary[:, 1].to(device))
+    pred = model.transition.output_temperatures(step.state, boundary_t, action_t)
+    residual = batch.future_obs[:, 0].to(device) - pred
+    features = model.closure.features(state, boundary_t)
     return features.cpu(), action_t.cpu(), residual.cpu()
 
 

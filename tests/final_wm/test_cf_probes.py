@@ -6,12 +6,14 @@ CF-4 constraint_checks, D1 calibration_coverage.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 import torch
 
 from src.final_wm.contracts import FinalWMProtocolError, TransitionConfig
-from src.final_wm.data import SPLIT_VAL, CanonicalRecord
+from src.final_wm.data import SPLIT_VAL, CanonicalRecord, HistoryWindow, WindowBatch
 from src.final_wm.evaluation import (
     calibration_coverage,
     constraint_checks,
@@ -22,6 +24,95 @@ from src.final_wm.synthetic import synthetic_canonical_arrays
 from src.final_wm.training import build_world_model
 from src.final_wm.transition import Fan2020UDETransition
 from experiments.final_wm import matrix_spec as ms
+
+
+def test_leakage_one_step_residual_is_causally_aligned(monkeypatch):
+    from src.final_wm import diagnostics
+
+    batch = WindowBatch(
+        history=HistoryWindow(
+            obs=torch.full((1, 2, 5), 10.0),
+            actions=torch.zeros(1, 2, 1),
+            boundary=torch.zeros(1, 2, 1),
+        ),
+        future_boundary=torch.tensor([[[2.0], [100.0]]]),
+        future_actions=torch.tensor([[[3.0], [200.0]]]),
+        future_obs=torch.tensor([[[20.0] * 5, [99.0] * 5]]),
+        day_ids=torch.tensor([0]),
+    )
+    monkeypatch.setattr(diagnostics, "sample_windows", lambda *_args, **_kwargs: batch)
+
+    class Transition:
+        def step(self, state, boundary, action):
+            return SimpleNamespace(state=state + boundary + action)
+
+        def output_temperatures(self, state, boundary, action):
+            return (state + boundary).repeat(1, 5)
+
+    class Closure:
+        def features(self, state, boundary):
+            return state + boundary
+
+    model = SimpleNamespace(
+        eval=lambda: None,
+        _initial_state=lambda _history: torch.tensor([[10.0]]),
+        transition=Transition(),
+        closure=Closure(),
+    )
+    features, actions, residual = diagnostics._one_step_residuals(
+        model, object(), 1, n_windows=1, history_steps=2, seed=0, device="cpu",
+    )
+    assert torch.equal(features, torch.tensor([[12.0]]))
+    assert torch.equal(actions, torch.tensor([[3.0]]))
+    assert torch.equal(residual, torch.full((1, 5), 3.0))
+
+
+def test_cf1_replay_starts_from_contemporaneous_first_history_sample(monkeypatch):
+    from src.final_wm import evaluation
+
+    batch = WindowBatch(
+        history=HistoryWindow(
+            obs=torch.tensor([[[1.0] * 5, [5.0] * 5, [9.0] * 5]]),
+            actions=torch.tensor([[[3.0, 0.0], [5.0, 0.0], [7.0, 0.0]]]),
+            boundary=torch.tensor([[[2.0], [4.0], [6.0]]]),
+        ),
+        future_boundary=torch.tensor([[[8.0], [10.0]]]),
+        future_actions=torch.tensor([[[9.0, 0.0], [11.0, 0.0]]]),
+        future_obs=torch.zeros(1, 2, 5),
+        day_ids=torch.tensor([0]),
+    )
+    monkeypatch.setattr(evaluation, "sample_windows", lambda *_args, **_kwargs: batch)
+
+    class SpyTransition:
+        def __init__(self):
+            self.initial_args = None
+            self.integrations = []
+
+        def initial_steady_state(self, boundary, action, obs):
+            self.initial_args = (boundary.clone(), action.clone(), obs.clone())
+            return obs[:, :1]
+
+        def integrate(self, state, boundary, actions):
+            self.integrations.append((boundary.clone(), actions.clone()))
+            states, temps = [], []
+            current = state
+            for i in range(boundary.shape[1]):
+                current = current + boundary[:, i, :1] + actions[:, i, :1]
+                states.append(current)
+                temps.append(current.repeat(1, 5))
+            return torch.stack(states, 1), torch.stack(temps, 1)
+
+    teacher = SpyTransition()
+    student = SpyTransition()
+    model = SimpleNamespace(eval=lambda: None, transition=student)
+    out = counterfactual_fidelity_synthetic(
+        model, teacher, object(), 1, n_windows=1, history_steps=3, horizon=2,
+    )
+    assert torch.equal(teacher.initial_args[2], batch.history.obs[:, 0])
+    assert torch.equal(teacher.integrations[0][0], batch.history.boundary[:, 1:])
+    assert torch.equal(teacher.integrations[0][1], batch.history.actions[:, 1:])
+    assert out["baseline_mae"] == 0.0
+    assert out["delta_mae"] == 0.0
 
 
 @pytest.fixture(scope="module")
@@ -51,6 +142,7 @@ def test_cf1_replay_identity_is_exact(syn_record, student_model):
         n_windows=8, history_steps=96, horizon=18, seed=0,
     )
     assert out["abduction"] == "replay"
+    assert out["baseline_mae"] < 1e-6
     assert out["delta_mae"] < 1e-6
     assert out["terminal_sign_agreement"] >= 0.0  # defined even when teacher delta ~ 0
 

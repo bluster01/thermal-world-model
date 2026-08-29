@@ -1002,8 +1002,11 @@ def run_matrix(args) -> dict:
             if complete_reports else None,
             "valve2_h60": [report["directions"]["valve2"]["H60"] for report in r1_reports]
             if complete_reports else None,
-            # Task 3 and Task 4 replace the known-invalid legacy probes.
-            "leakage_v07": None,
+            "leakage_v07": [
+                {"seed": report["seed"], **report["leakage"]}
+                for report in r1_reports if "error" not in report
+            ] if complete_reports else None,
+            # Task 4 replaces the known-invalid legacy support path.
             "support_domain_v07": None,
         }
         protocol = _adjudicate(

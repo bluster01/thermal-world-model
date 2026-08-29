@@ -10,7 +10,7 @@
 
 ---
 
-> 状态：`TASK 1–2 LOCAL VERIFIED / TASK 3 NEXT / HOLD / TEST LOCKED`
+> 状态：`TASK 1–3 LOCAL VERIFIED / TASK 4 NEXT / HOLD / TEST LOCKED`
 > 依据：`docs/FINAL_WM_CREDIBILITY_AUDIT_2026-08-27.md`
 > 执行原则：一次只完成一个任务；测试通过、人工核对 diff 后再进入下一项；不自动启动 Linux、test 或论文改写。
 
@@ -118,6 +118,13 @@ Expected: PASS。
 Commit: `fix(final-wm): use paired delta nll for verdicts`。
 
 ## Task 3: 修正泄漏探针与 CF replay 的时序语义
+
+> 完成记录（2026-08-30）：统一为
+> `state_t + boundary_t + action_t -> state_{t+1} -> observation_{t+1}`；
+> leakage probe 不再混用两个未来时刻，CF replay 从首个共时三元组初始化且不重复消费起点；
+> identity 同时报 baseline 与 delta 一致性。定向回归 `31 passed`，完整回归
+> `164 passed`。未启动训练、Linux 或 test split。审计稿见
+> `docs/FINAL_WM_TASK3_TIMESTEP_AUDIT_2026-08-30.md`。
 
 **Files:**
 

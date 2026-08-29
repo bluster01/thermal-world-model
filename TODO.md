@@ -193,6 +193,8 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 
 | 64 | 执行侧探针批次审计（dd6217e..5b95636，六提交）+ v1 阀位错侧重大发现 | 本地 | ✓ 审计 results/final_wm/probe_batch_audit_20260826.md。**纪律全绿**：80 文件全在 results/、0 RESUMED、冻结零触碰、sanity 保真自检逐位一致。**重大发现（已在 canonical 实物上独立复核成立，scripts/verify_valve_alignment.py）：v1 canonical 双侧 valve1（一级减温阀）错配到对侧**——物理接线=一级同侧/二级交叉（用户 8/25 现场确认），v1 桥接按"两级都交叉"设计致 sideA 配成(一级B,二级B)、sideB 配成(一级A,二级A)，valve2 本就正确；缓解因子=一级A/B 阀 corr≈0.8（~80% 信号共享、方向同号）→ 方向类冻结判决预计定性存活，幅度/CF 定量声称降级，sh1 链误差归因新增候选。**8/25 首建的 v2 npz 因 actions 逐位搬运继承错侧，标记 SUPERSEDED**。其余五包核验：预算重训(120/20) H18 seed0 1.046→0.724；常数锚定种子极差 0.30→0.06（盆地救援成立）；编码器路线可关闭（TCN 负、itx 贴带沿、组合臂负）；训练速度 P1 hoist 可批。A/B/C 三项已批准并实施（8/26）：**A. canonical v2.1** 落地——DCS 图读法（两级皆交叉）与数据冲突，扰动裁决实验（变步多滞后+隔离事件自然实验 n=1260-4938，scripts/adjudicate_valve_wiring.py）四阀两法全一致支持**一级同侧/二级交叉**，actions 按此重建双侧（valve2 连续性门 0.9999985/0.9998541 过、valve1 与旧错侧 corr=0.7843=预期 provenance；阀位负零漂 ≤-1% 按 [-0.02,1] 容忍带+终端 clip）；v1 判决补丁=results/final_wm/known_defect_v1_valve1_20260826.md。**B. 训练协议修订包**（docs/plans/2026-08-26-v06-training-protocol-amendment.md）：P1 hoist 落地（tsat 系数+psub_lo 构造期 float 化，逐位回归测试过）、TrainSpec.anchor_constants_checkpoint+apply_anchor_constants 落地（仅 transition.raw、fail-closed、与 init_checkpoint/norew 互斥、指纹自动覆盖）、v0.6 预算口径 120/20 由运行配置显式给出（默认值不动）、P2/P3 不进首训。**C. 编码器路线登记关闭**。148/148 |
 
+| 65 | Final WM 可信度修复 Task 1–3 | 本地 | ✓ Task 1 fail-closed、Task 2 paired ΔNLL、Task 3 leakage/CF 共时 `t→t+1` 语义均已本地验证；Task 3 定向 31/31、完整 164/164。审计 `docs/FINAL_WM_TASK3_TIMESTEP_AUDIT_2026-08-30.md`。**下一项仅 Task 4 逐样本反事实支持域**；Linux 未授权、test/论文继续锁定。 |
+
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 
 ## 不可提前声称
