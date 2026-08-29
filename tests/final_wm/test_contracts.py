@@ -109,15 +109,39 @@ def test_observation_sigma_bounds() -> None:
 def test_action_support_contains_and_margin() -> None:
     history = torch.tensor([[[0.2, 0.4], [0.5, 0.6]]])
     support = action_support_from_history(history, margin=0.05)
-    assert support.lo == pytest.approx((0.15, 0.35))
-    assert support.hi == pytest.approx((0.55, 0.65))
-    inside = torch.tensor([[0.3, 0.5], [0.9, 0.5]])
+    assert support.lo.shape == support.hi.shape == (1, 2)
+    assert support.lo[0].tolist() == pytest.approx((0.15, 0.35))
+    assert support.hi[0].tolist() == pytest.approx((0.55, 0.65))
+    inside = torch.tensor([[[0.3, 0.5], [0.9, 0.5]]])
     mask = support.contains(inside)
-    assert mask.tolist() == [True, False]
+    assert mask.tolist() == [[True, False]]
     with pytest.raises(FinalWMProtocolError):
         support.contains(torch.zeros(3))
     with pytest.raises(FinalWMProtocolError):
-        ActionSupport(lo=(0.6, 0.0), hi=(0.5, 1.0))
+        ActionSupport(lo=torch.tensor([[0.6, 0.0]]), hi=torch.tensor([[0.5, 1.0]]))
+
+
+def test_action_support_is_isolated_per_window() -> None:
+    history = torch.tensor([
+        [[0.10, 0.20], [0.20, 0.30]],
+        [[0.80, 0.60], [0.90, 0.70]],
+    ])
+    support = action_support_from_history(history, margin=0.0)
+    actions = torch.tensor([
+        [[0.85, 0.65]],  # only window 1 supports this row
+        [[0.85, 0.65]],
+    ], dtype=torch.float64)
+    mask = support.contains(actions)
+    assert mask.tolist() == [[False], [True]]
+    assert mask.device == actions.device
+    if torch.cuda.is_available():
+        gpu_history = history.cuda()
+        gpu_actions = actions.cuda()
+        gpu_support = action_support_from_history(gpu_history, margin=0.0)
+        gpu_mask = gpu_support.contains(gpu_actions)
+        assert gpu_support.lo.device == gpu_actions.device
+        assert gpu_mask.device == gpu_actions.device
+        assert gpu_mask.cpu().tolist() == [[False], [True]]
 
 
 def test_boundary_config_rejects_bad_horizon() -> None:

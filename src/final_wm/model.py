@@ -209,6 +209,7 @@ class FinalWorldModel(nn.Module):
         true_future_boundary: torch.Tensor | None = None,
         scenario: torch.Tensor | None = None,
         allow_extrapolation: bool = False,
+        initial_state: torch.Tensor | None = None,
     ) -> RolloutResult:
         """Support-domain action replacement through the shared transition.
 
@@ -228,7 +229,9 @@ class FinalWorldModel(nn.Module):
         boundary = self._boundary_sequence(
             history, action_seq.shape[1], mode, true_future_boundary, scenario
         )
-        state_0 = self._initial_state(history)
+        state_0 = self._initial_state(history) if initial_state is None else initial_state
+        if state_0.shape != (history.obs.shape[0], self.layout.dim):
+            raise FinalWMProtocolError("counterfactual initial_state shape mismatch")
         return self._rollout(state_0, boundary, action_seq, mode=mode, in_support=in_support)
 
     def closed_loop(

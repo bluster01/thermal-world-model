@@ -74,6 +74,22 @@ def test_verdict_requires_full_unfiltered_execution() -> None:
     assert filtered["verdict"] == "INCOMPLETE"
 
 
+def test_r1_verdict_fails_closed_on_counterfactual_support_violation() -> None:
+    evidence = _complete_evidence("r1")
+    evidence["support_domain_v07"] = [{
+        "seed": 0,
+        "directions": {
+            "valve1": {"H18": {"n_unsupported": 1}},
+        },
+    }]
+    result = _adjudicate(
+        "r1", "SUPPORTED", evidence,
+        quick=False, seeds=ms.SEEDS, arm_filter=None,
+    )
+    assert result["verdict"] == "INCOMPLETE"
+    assert "counterfactual_support_violation" in result["incomplete_reasons"]
+
+
 def test_matrix_version_and_required_evidence_are_v07() -> None:
     assert ms.MATRIX_VERSION == "0.7"
     assert set(ms.REQUIRED_EVIDENCE) == {"o1", "t1", "b1", "j1", "r1"}
@@ -164,7 +180,8 @@ def test_matrix_quick_t1_and_r1_run(tmp_path, monkeypatch) -> None:
     assert reports[0]["runtime_blind_ok"] is True
     assert "leakage" in reports[0] and "direction" in reports[0]
     assert summary["units"]["r1"]["evidence"]["leakage_v07"] is not None
-    assert summary["units"]["r1"]["missing_evidence"] == ["support_domain_v07"]
+    assert summary["units"]["r1"]["evidence"]["support_domain_v07"] is not None
+    assert summary["units"]["r1"]["missing_evidence"] == []
 
 
 def test_closure_blindness_check_passes(tmp_path) -> None:

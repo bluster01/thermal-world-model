@@ -104,7 +104,17 @@ def test_cf1_replay_starts_from_contemporaneous_first_history_sample(monkeypatch
 
     teacher = SpyTransition()
     student = SpyTransition()
-    model = SimpleNamespace(eval=lambda: None, transition=student)
+
+    def counterfactual(_history, actions, *, true_future_boundary, initial_state, **_kwargs):
+        _states, temps = student.integrate(initial_state, true_future_boundary, actions)
+        return SimpleNamespace(
+            temps_mu=temps,
+            in_support=torch.ones(actions.shape[:2], dtype=torch.bool),
+        )
+
+    model = SimpleNamespace(
+        eval=lambda: None, transition=student, counterfactual=counterfactual,
+    )
     out = counterfactual_fidelity_synthetic(
         model, teacher, object(), 1, n_windows=1, history_steps=3, horizon=2,
     )
@@ -140,6 +150,7 @@ def test_cf1_replay_identity_is_exact(syn_record, student_model):
     out = counterfactual_fidelity_synthetic(
         student_model, teacher, syn_record, SPLIT_VAL,
         n_windows=8, history_steps=96, horizon=18, seed=0,
+        allow_extrapolation=True,
     )
     assert out["abduction"] == "replay"
     assert out["baseline_mae"] < 1e-6
@@ -152,16 +163,21 @@ def test_cf1_schema_and_determinism(syn_record, student_model):
     a = counterfactual_fidelity_synthetic(
         student_model, teacher, syn_record, SPLIT_VAL,
         n_windows=8, history_steps=96, horizon=18, seed=3, abduction="observer",
+        allow_extrapolation=True,
     )
     b = counterfactual_fidelity_synthetic(
         student_model, teacher, syn_record, SPLIT_VAL,
         n_windows=8, history_steps=96, horizon=18, seed=3, abduction="observer",
+        allow_extrapolation=True,
     )
     assert a["delta_mae"] == b["delta_mae"]
     assert len(a["delta_mae_per_channel"]) == 5
     assert len(a["delta_magnitude_ratio_per_channel"]) == 5
     assert 0.0 <= a["terminal_sign_agreement"] <= 1.0
     assert np.isfinite(a["delta_mae"])
+    assert 0.0 <= a["support_rate"] <= 1.0
+    assert a["n_unsupported"] >= 0
+    assert a["allow_extrapolation"] is True
     with pytest.raises(FinalWMProtocolError):
         counterfactual_fidelity_synthetic(
             student_model, teacher, syn_record, SPLIT_VAL,
@@ -169,12 +185,27 @@ def test_cf1_schema_and_determinism(syn_record, student_model):
         )
 
 
-def test_cf4_constraints_on_prior_model(syn_record, student_model):
+def test_cf1_uses_formal_counterfactual_path(syn_record, student_model, monkeypatch):
+    teacher = Fan2020UDETransition(TransitionConfig(), AnalyticThermoProperties())
+
+    def reject_formal_path(*_args, **_kwargs):
+        raise FinalWMProtocolError("formal counterfactual path reached")
+
+    monkeypatch.setattr(student_model, "counterfactual", reject_formal_path)
+    with pytest.raises(FinalWMProtocolError, match="formal counterfactual path reached"):
+        counterfactual_fidelity_synthetic(
+            student_model, teacher, syn_record, SPLIT_VAL,
+            n_windows=4, history_steps=96, horizon=18, seed=5,
+        )
+
+
+def test_cf4_constraints_on_prior_model(syn_record, student_model, monkeypatch):
     """An untrained model at priors must satisfy both hard constraints:
     more spray -> more cooling (monotone), and zero-spray drifts warm."""
     out = constraint_checks(
         student_model, syn_record, SPLIT_VAL,
         n_windows=8, history_steps=96, rollout_steps=30, seed=0,
+        allow_extrapolation=True,
     )
     mono = out["monotonicity"]
     assert len(mono["mean_terminal_delta_c"]) == 4
@@ -182,6 +213,18 @@ def test_cf4_constraints_on_prior_model(syn_record, student_model):
     drift = out["zero_spray_drift"]
     assert drift["frac_positive_sh1_out"] == 1.0
     assert drift["frac_positive_sh2_out"] == 1.0
+    assert out["allow_extrapolation"] is True
+    assert out["n_unsupported"] >= 0
+
+    def reject_formal_path(*_args, **_kwargs):
+        raise FinalWMProtocolError("formal counterfactual path reached")
+
+    monkeypatch.setattr(student_model, "counterfactual", reject_formal_path)
+    with pytest.raises(FinalWMProtocolError, match="formal counterfactual path reached"):
+        constraint_checks(
+            student_model, syn_record, SPLIT_VAL,
+            n_windows=2, history_steps=96, rollout_steps=4, seed=1,
+        )
 
 
 def test_d1_calibration_schema_and_sanity(syn_record, student_model):
@@ -246,6 +289,16 @@ def test_cf3_position_binned_gain_handbuilt(tmp_path):
     assert low["data"]["n"] == 1 and high["data"]["n"] == 1
     assert abs(low["data"]["mean_gain"] - (-10.0)) < 1e-4
     assert abs(high["data"]["mean_gain"] - (-10.0)) < 1e-4
+
+    def reject_formal_path(*_args, **_kwargs):
+        raise FinalWMProtocolError("formal counterfactual path reached")
+
+    model = SimpleNamespace(eval=lambda: None, counterfactual=reject_formal_path)
+    with pytest.raises(FinalWMProtocolError, match="formal counterfactual path reached"):
+        position_binned_gain(
+            record, SPLIT_VAL, 1, model=model, n_bins=2, horizon=60,
+            n_windows=2, history_steps=96,
+        )
 
 
 def test_cf3_too_few_events(tmp_path):

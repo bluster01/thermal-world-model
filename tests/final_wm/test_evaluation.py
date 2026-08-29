@@ -8,7 +8,12 @@ import numpy as np
 import pytest
 import torch
 
-from src.final_wm.contracts import ClosureConfig, ObserverConfig, WorldModelConfig
+from src.final_wm.contracts import (
+    ClosureConfig,
+    FinalWMProtocolError,
+    ObserverConfig,
+    WorldModelConfig,
+)
 from src.final_wm.data import CanonicalRecord
 from src.final_wm.evaluation import (
     WindowMetrics,
@@ -144,17 +149,33 @@ def test_constant_condition_stability_uses_condition_anchored_state(tmp_path, mo
     assert report["all_finite"] is True
 
 
-def test_step_response_direction_and_residual_quantiles(tmp_path) -> None:
+def test_step_response_direction_and_residual_quantiles(tmp_path, monkeypatch) -> None:
     from src.final_wm.data import CanonicalRecord
 
     record = CanonicalRecord(_record(tmp_path))
     model = FinalWorldModel(
-        WorldModelConfig(closure=ClosureConfig(injection_mode="conservative")),
+        WorldModelConfig(
+            observer=ObserverConfig(history_steps=16),
+            closure=ClosureConfig(injection_mode="conservative"),
+        ),
         AnalyticThermoProperties(),
     )
     direction = step_response_direction(
-        model, record, 1, n_windows=8, history_steps=16, rollout_steps=30, seed=0
+        model, record, 1, n_windows=8, history_steps=16, rollout_steps=30, seed=0,
+        allow_extrapolation=True,
     )
     assert direction["frac_negative"] == 1.0
+    assert 0.0 <= direction["support_rate"] <= 1.0
+    assert direction["n_unsupported"] >= 0
+    assert direction["allow_extrapolation"] is True
     quant = residual_quantiles(model, record, 1, n_windows=8, history_steps=16)
     assert quant["max_kw"] == pytest.approx(0.0, abs=1e-6)  # zero-init closure
+
+    def reject_formal_path(*_args, **_kwargs):
+        raise FinalWMProtocolError("formal counterfactual path reached")
+
+    monkeypatch.setattr(model, "counterfactual", reject_formal_path)
+    with pytest.raises(FinalWMProtocolError, match="formal counterfactual path reached"):
+        step_response_direction(
+            model, record, 1, n_windows=2, history_steps=16, rollout_steps=4, seed=1,
+        )

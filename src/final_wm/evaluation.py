@@ -405,6 +405,7 @@ def step_response_direction(
     n_boot: int = 1000,
     seed: int = 0,
     device: str | torch.device = "cpu",
+    allow_extrapolation: bool = False,
 ) -> dict:
     """v2 (or v1) step +delta_v from window end; expected terminal response
     is negative (spray cools).  Returns mean delta and the fraction of
@@ -412,18 +413,33 @@ def step_response_direction(
     model.eval()
     gen = torch.Generator().manual_seed(seed)
     batch = sample_windows(record, split_id, n_windows, history_steps, 1, gen)
+    history = batch.history.__class__(
+        obs=batch.history.obs.to(device),
+        actions=batch.history.actions.to(device),
+        boundary=batch.history.boundary.to(device),
+    )
     boundary_0 = batch.future_boundary[:, 0].to(device)
     action_0 = batch.future_actions[:, 0].to(device)
-    obs_0 = batch.history.obs[:, -1].to(device)
-    state_0 = model.transition.initial_steady_state(boundary_0, action_0, obs_0)
     boundary_seq = boundary_0.unsqueeze(1).repeat(1, rollout_steps, 1)
     base_actions = action_0.unsqueeze(1).repeat(1, rollout_steps, 1)
     step_actions = base_actions.clone()
     step_actions[:, :, valve_index] = (step_actions[:, :, valve_index] + delta_v).clamp(max=1.0)
-    _s0, temps_base = model.transition.integrate(state_0, boundary_seq, base_actions)
-    _s1, temps_step = model.transition.integrate(state_0, boundary_seq, step_actions)
+    base = model.counterfactual(
+        history, base_actions, boundary_mode="oracle", true_future_boundary=boundary_seq,
+        allow_extrapolation=allow_extrapolation,
+    )
+    step = model.counterfactual(
+        history, step_actions, boundary_mode="oracle", true_future_boundary=boundary_seq,
+        allow_extrapolation=allow_extrapolation,
+    )
+    temps_base = base.temps_mu
+    temps_step = step.temps_mu
     delta = (temps_step[:, -10:, 4] - temps_base[:, -10:, 4]).mean(dim=1)
     ci = day_block_mean_ci(delta.cpu(), batch.day_ids, n_boot=n_boot, seed=seed + 1)
+    support_mask = step.in_support
+    baseline_support_mask = base.in_support
+    if support_mask is None or baseline_support_mask is None:
+        raise FinalWMProtocolError("counterfactual path did not return support masks")
     return {
         "mean_delta_c": ci["point"],
         "ci_lo_c": ci["ci_lo"],
@@ -434,6 +450,13 @@ def step_response_direction(
         "n_windows": int(n_windows),
         "rollout_steps": int(rollout_steps),
         "valve_index": int(valve_index),
+        "support_rate": float(support_mask.float().mean()),
+        "n_unsupported": int((~support_mask).sum()),
+        "in_support_mask": support_mask.cpu().tolist(),
+        "baseline_support_rate": float(baseline_support_mask.float().mean()),
+        "baseline_n_unsupported": int((~baseline_support_mask).sum()),
+        "baseline_in_support_mask": baseline_support_mask.cpu().tolist(),
+        "allow_extrapolation": bool(allow_extrapolation),
     }
 
 
@@ -493,6 +516,7 @@ def counterfactual_fidelity_synthetic(
     abduction: str = "replay",
     seed: int = 0,
     device: str | torch.device = "cpu",
+    allow_extrapolation: bool = False,
 ) -> dict:
     """CF-1: counterfactual delta-trajectory fidelity against the known teacher.
 
@@ -539,8 +563,20 @@ def counterfactual_fidelity_synthetic(
 
     _s, t_base = teacher.integrate(t_state, fut_b, fut_a)
     _s, t_cf = teacher.integrate(t_state, fut_b, cf_actions)
-    _s, s_base = model.transition.integrate(s_state, fut_b, fut_a)
-    _s, s_cf = model.transition.integrate(s_state, fut_b, cf_actions)
+    s_base_result = model.counterfactual(
+        history, fut_a, boundary_mode="oracle", true_future_boundary=fut_b,
+        allow_extrapolation=allow_extrapolation, initial_state=s_state,
+    )
+    s_cf_result = model.counterfactual(
+        history, cf_actions, boundary_mode="oracle", true_future_boundary=fut_b,
+        allow_extrapolation=allow_extrapolation, initial_state=s_state,
+    )
+    s_base = s_base_result.temps_mu
+    s_cf = s_cf_result.temps_mu
+    support_mask = s_cf_result.in_support
+    baseline_support_mask = s_base_result.in_support
+    if support_mask is None or baseline_support_mask is None:
+        raise FinalWMProtocolError("counterfactual path did not return support masks")
 
     d_teacher = t_cf - t_base          # (B, H, 5)
     d_student = s_cf - s_base
@@ -562,6 +598,13 @@ def counterfactual_fidelity_synthetic(
         "delta_v": float(delta_v),
         "horizon": int(horizon),
         "n_windows": int(n_windows),
+        "support_rate": float(support_mask.float().mean()),
+        "n_unsupported": int((~support_mask).sum()),
+        "in_support_mask": support_mask.cpu().tolist(),
+        "baseline_support_rate": float(baseline_support_mask.float().mean()),
+        "baseline_n_unsupported": int((~baseline_support_mask).sum()),
+        "baseline_in_support_mask": baseline_support_mask.cpu().tolist(),
+        "allow_extrapolation": bool(allow_extrapolation),
         "baseline_mae_per_channel": baseline_mae_per_channel.tolist(),
         "baseline_mae": float(baseline_mae_per_channel.mean()),
         "delta_mae_per_channel": per_channel_mae.tolist(),
@@ -584,6 +627,7 @@ def constraint_checks(
     rollout_steps: int = 120,
     seed: int = 0,
     device: str | torch.device = "cpu",
+    allow_extrapolation: bool = False,
 ) -> dict:
     """CF-4: physics constraint consistency (no ground truth needed).
 
@@ -594,41 +638,74 @@ def constraint_checks(
     model.eval()
     gen = torch.Generator().manual_seed(seed)
     batch = sample_windows(record, split_id, n_windows, history_steps, 1, gen)
+    history = batch.history.__class__(
+        obs=batch.history.obs.to(device),
+        actions=batch.history.actions.to(device),
+        boundary=batch.history.boundary.to(device),
+    )
     b0 = batch.future_boundary[:, 0].to(device)
     a0 = batch.future_actions[:, 0].to(device)
-    obs0 = batch.history.obs[:, -1].to(device)
-    state0 = model.transition.initial_steady_state(b0, a0, obs0)
     boundary_seq = b0.unsqueeze(1).repeat(1, rollout_steps, 1)
     base_actions = a0.unsqueeze(1).repeat(1, rollout_steps, 1)
-    _s, temps_base = model.transition.integrate(state0, boundary_seq, base_actions)
+    base_result = model.counterfactual(
+        history, base_actions, boundary_mode="oracle", true_future_boundary=boundary_seq,
+        allow_extrapolation=allow_extrapolation,
+    )
+    temps_base = base_result.temps_mu
 
     terminal = temps_base[:, -10:, :].mean(dim=1)  # (B, 5)
 
     grid = (0.01, 0.02, 0.05, 0.10)
     mono: list[float] = []
+    mono_support: list[torch.Tensor] = []
     for dv in grid:
         step = base_actions.clone()
         step[:, :, 1] = (step[:, :, 1] + dv).clamp(max=1.0)
-        _s, temps_step = model.transition.integrate(state0, boundary_seq, step)
+        step_result = model.counterfactual(
+            history, step, boundary_mode="oracle", true_future_boundary=boundary_seq,
+            allow_extrapolation=allow_extrapolation,
+        )
+        temps_step = step_result.temps_mu
+        if step_result.in_support is None:
+            raise FinalWMProtocolError("counterfactual path did not return a support mask")
+        mono_support.append(step_result.in_support)
         mono.append(float((temps_step[:, -10:, _SH2_OUT].mean(dim=1) - terminal[:, _SH2_OUT]).mean()))
     monotone = all(mono[i + 1] < mono[i] for i in range(len(mono) - 1)) and mono[-1] < 0.0
 
     zero = torch.zeros_like(base_actions)
-    _s, temps_zero = model.transition.integrate(state0, boundary_seq, zero)
+    zero_result = model.counterfactual(
+        history, zero, boundary_mode="oracle", true_future_boundary=boundary_seq,
+        allow_extrapolation=allow_extrapolation,
+    )
+    temps_zero = zero_result.temps_mu
+    if base_result.in_support is None or zero_result.in_support is None:
+        raise FinalWMProtocolError("counterfactual path did not return a support mask")
     drift = temps_zero[:, -10:, :].mean(dim=1) - terminal  # (B, 5)
+    intervention_support = torch.cat([*mono_support, zero_result.in_support], dim=1)
     return {
         "monotonicity": {
             "delta_v_grid": list(grid),
             "mean_terminal_delta_c": mono,
             "monotone_cooling": bool(monotone),
             "rollout_steps": int(rollout_steps),
+            "support_rate_by_delta_v": [float(mask.float().mean()) for mask in mono_support],
+            "n_unsupported_by_delta_v": [int((~mask).sum()) for mask in mono_support],
         },
         "zero_spray_drift": {
             "mean_drift_c": drift.mean(dim=0).tolist(),
             "frac_positive_sh1_out": float((drift[:, _SH1_OUT] > 0).float().mean()),
             "frac_positive_sh2_out": float((drift[:, _SH2_OUT] > 0).float().mean()),
+            "support_rate": float(zero_result.in_support.float().mean()),
+            "n_unsupported": int((~zero_result.in_support).sum()),
         },
         "n_windows": int(n_windows),
+        "support_rate": float(intervention_support.float().mean()),
+        "n_unsupported": int((~intervention_support).sum()),
+        "in_support_mask": intervention_support.cpu().tolist(),
+        "baseline_support_rate": float(base_result.in_support.float().mean()),
+        "baseline_n_unsupported": int((~base_result.in_support).sum()),
+        "baseline_in_support_mask": base_result.in_support.cpu().tolist(),
+        "allow_extrapolation": bool(allow_extrapolation),
     }
 
 

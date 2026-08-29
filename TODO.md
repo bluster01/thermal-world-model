@@ -195,6 +195,8 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 
 | 65 | Final WM 可信度修复 Task 1–3 | 本地 | ✓ Task 1 fail-closed、Task 2 paired ΔNLL、Task 3 leakage/CF 共时 `t→t+1` 语义均已本地验证；Task 3 定向 31/31、完整 164/164。审计 `docs/FINAL_WM_TASK3_TIMESTEP_AUDIT_2026-08-30.md`。**下一项仅 Task 4 逐样本反事实支持域**；Linux 未授权、test/论文继续锁定。 |
 
+| 66 | Final WM 可信度修复 Task 4：逐样本反事实支持域 | 本地 | ✓ `(B,2)` 逐窗口支持域、正式 R1/CF-1/CF-3/CF-4 counterfactual 路径、逐步 mask 与 fail-closed adjudication 已闭合；定向 56/56、完整 168/168。审计 `docs/FINAL_WM_TASK4_SUPPORT_DOMAIN_AUDIT_2026-08-30.md`。**下一项 Task 5 D-SYN teacher 扰动可观测性**；Linux 未授权、test 锁定，论文结论不自动升级。 |
+
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 
 ## 不可提前声称

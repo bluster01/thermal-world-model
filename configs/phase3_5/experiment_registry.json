@@ -1251,6 +1251,10 @@
           "path": "docs/FINAL_WM_TASK3_TIMESTEP_AUDIT_2026-08-30.md",
           "required": true
         },
+        "task4_support_domain_audit_20260830": {
+          "path": "docs/FINAL_WM_TASK4_SUPPORT_DOMAIN_AUDIT_2026-08-30.md",
+          "required": true
+        },
         "jepa_xp_phys_note_20260828": {
           "path": "results/final_wm/probes_20260824/jepa_architecture_note_20260826.md",
           "required": false
@@ -1262,12 +1266,12 @@
         "results_returned": true,
         "audited": true,
         "audit_verdict": "HOLD_CREDIBILITY_REPAIR_REQUIRED",
-        "current_repair_task": "TASK_1_3_LOCAL_VERIFIED_TASK_4_NEXT",
+        "current_repair_task": "TASK_1_4_LOCAL_VERIFIED_TASK_5_NEXT",
         "test_locked": true,
         "authoritative_matrix_version": null,
         "historical_matrix_results": "SUPERSEDED_PENDING_V07_REISSUE"
       },
-      "decision": "AUDITED 2026-08-27 / HOLD FOR CREDIBILITY REPAIR；Task 1–3 已本地验证：v0.7 required-evidence / fail-closed 合同成立；O1/T1/J1 使用同窗口、按 UTC 日聚合的绝对 ΔNLL bootstrap CI；leakage probe 与 CF replay 已统一为共时 t→t+1 语义并通过 164 项回归。Task 4 的逐样本反事实支持域仍未完成，support_domain_v07 缺失，R1 verdict 保持 INCOMPLETE；当前不授权 Linux、不访问 test、不解冻论文",
+      "decision": "AUDITED 2026-08-27 / HOLD FOR CREDIBILITY REPAIR；Task 1–4 已本地验证：v0.7 required-evidence / fail-closed、paired ΔNLL、共时 t→t+1 语义和逐窗口反事实支持域均已落地；R1/CF-1/CF-3/CF-4 统一走正式 counterfactual 路径，任一 R1 越界均以 counterfactual_support_violation 降为 INCOMPLETE。Task 5–8 尚未完成；当前不授权 Linux、不访问 test、不自动升级论文结论",
       "advisories": [
         "Fan2020-UDE是物理transition候选，不是plant truth；动作通道必须保留constant-action identity、方向与支持域审计",
         "Direct-WM v2只支持direct H18 observer/backbone候选；未验证递归rollout、双阀稳定响应或概率校准",

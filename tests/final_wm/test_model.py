@@ -119,13 +119,32 @@ def test_counterfactual_support_gate() -> None:
     assert flagged.in_support is not None and not bool(flagged.in_support.all())
 
 
+def test_counterfactual_cannot_borrow_another_windows_support() -> None:
+    model = _model()
+    batch = _history()
+    history = batch.history.__class__(
+        obs=batch.history.obs,
+        actions=torch.tensor([
+            [[0.10, 0.20], [0.20, 0.30]],
+            [[0.80, 0.60], [0.90, 0.70]],
+        ]).repeat_interleave(batch.history.actions.shape[1] // 2, dim=1),
+        boundary=batch.history.boundary,
+    )
+    borrowed = torch.tensor([0.85, 0.65]).view(1, 1, 2).expand(2, 8, 2)
+    with pytest.raises(FinalWMProtocolError):
+        model.counterfactual(
+            history, borrowed,
+            boundary_mode="oracle", true_future_boundary=batch.future_boundary,
+        )
+
+
 def test_counterfactual_uses_shared_transition_and_is_action_sensitive() -> None:
     model = _model()
     batch = _history(horizon=36)
-    lo = batch.history.actions.reshape(-1, 2).min(dim=0).values
-    hi = batch.history.actions.reshape(-1, 2).max(dim=0).values
-    low = lo.view(1, 1, 2).expand(2, 36, 2)
-    high = hi.view(1, 1, 2).expand(2, 36, 2)
+    lo = batch.history.actions.min(dim=1).values
+    hi = batch.history.actions.max(dim=1).values
+    low = lo.unsqueeze(1).expand(2, 36, 2)
+    high = hi.unsqueeze(1).expand(2, 36, 2)
     truth = batch.future_boundary[:, :1].repeat(1, 36, 1)
     r_low = model.counterfactual(batch.history, low, boundary_mode="oracle", true_future_boundary=truth)
     r_high = model.counterfactual(batch.history, high, boundary_mode="oracle", true_future_boundary=truth)

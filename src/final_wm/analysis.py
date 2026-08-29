@@ -315,6 +315,7 @@ def rewetting_ablation(
     device: str | torch.device = "cpu",
     valve_index: int = 1,
     delta_v: float = 0.05,
+    allow_extrapolation: bool = False,
 ) -> dict:
     """Step-response direction with the wall-rewetting gains intact vs zeroed
     (aW1/aW2 raw -> -30, softplus ≈ 0).  Parameters are restored afterwards."""
@@ -322,6 +323,7 @@ def rewetting_ablation(
         record=record, split_id=split_id, n_windows=n_windows,
         history_steps=history_steps, seed=seed, device=device,
         valve_index=valve_index, delta_v=delta_v,
+        allow_extrapolation=allow_extrapolation,
     )
     intact = step_response_direction(model, **probe)
     raws = [model.transition.raw[name] for name in ("aW1", "aW2")]
@@ -356,6 +358,7 @@ def position_binned_gain(
     n_windows: int = 256,
     seed: int = 0,
     device: str | torch.device = "cpu",
+    allow_extrapolation: bool = False,
 ) -> dict:
     """Local spray gain vs absolute valve opening, data side + model side.
 
@@ -412,17 +415,30 @@ def position_binned_gain(
         model.eval()
         gen = torch.Generator().manual_seed(seed)
         batch = sample_windows(record, split_id, n_windows, history_steps, 1, gen)
+        history = batch.history.__class__(
+            obs=batch.history.obs.to(device),
+            actions=batch.history.actions.to(device),
+            boundary=batch.history.boundary.to(device),
+        )
         b0 = batch.future_boundary[:, 0].to(device)
         a0 = batch.future_actions[:, 0].to(device)
-        obs0 = batch.history.obs[:, -1].to(device)
         v_abs = batch.history.actions[:, -1, valve_index].numpy()
-        state0 = model.transition.initial_steady_state(b0, a0, obs0)
         boundary_seq = b0.unsqueeze(1).repeat(1, rollout_steps, 1)
         base = a0.unsqueeze(1).repeat(1, rollout_steps, 1)
         step = base.clone()
         step[:, :, valve_index] = (step[:, :, valve_index] + delta_v).clamp(max=1.0)
-        _s, temps_base = model.transition.integrate(state0, boundary_seq, base)
-        _s, temps_step = model.transition.integrate(state0, boundary_seq, step)
+        base_result = model.counterfactual(
+            history, base, boundary_mode="oracle", true_future_boundary=boundary_seq,
+            allow_extrapolation=allow_extrapolation,
+        )
+        step_result = model.counterfactual(
+            history, step, boundary_mode="oracle", true_future_boundary=boundary_seq,
+            allow_extrapolation=allow_extrapolation,
+        )
+        if base_result.in_support is None or step_result.in_support is None:
+            raise FinalWMProtocolError("counterfactual path did not return support masks")
+        temps_base = base_result.temps_mu
+        temps_step = step_result.temps_mu
         gains = ((temps_step[:, -10:, obs_index].mean(dim=1)
                   - temps_base[:, -10:, obs_index].mean(dim=1)) / delta_v).detach().cpu().numpy()
         for i, (opening, gain) in enumerate(zip(v_abs, gains)):
@@ -433,6 +449,17 @@ def position_binned_gain(
             cell["model"]["n"] += 1
             cell["model"]["mean_gain"] += (float(gain) - cell["model"]["mean_gain"]) / cell["model"]["n"]
 
-    return {"valve_index": valve_index, "obs_index": obs_index, "horizon": horizon,
-            "bin_edges": [float(e) for e in edges], "bins": bins,
-            "n_events": len(events)}
+    report = {"valve_index": valve_index, "obs_index": obs_index, "horizon": horizon,
+              "bin_edges": [float(e) for e in edges], "bins": bins,
+              "n_events": len(events)}
+    if model is not None:
+        report.update({
+            "support_rate": float(step_result.in_support.float().mean()),
+            "n_unsupported": int((~step_result.in_support).sum()),
+            "in_support_mask": step_result.in_support.cpu().tolist(),
+            "baseline_support_rate": float(base_result.in_support.float().mean()),
+            "baseline_n_unsupported": int((~base_result.in_support).sum()),
+            "baseline_in_support_mask": base_result.in_support.cpu().tolist(),
+            "allow_extrapolation": bool(allow_extrapolation),
+        })
+    return report

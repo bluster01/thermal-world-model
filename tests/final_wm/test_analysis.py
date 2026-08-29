@@ -160,13 +160,16 @@ def test_auditpack_phase_record_only(tmp_path) -> None:
 
 
 def test_rewetting_ablation_restores_parameters(tmp_path) -> None:
-    arrays = synthetic_canonical_arrays(total_steps=600, seed=11)
+    arrays = synthetic_canonical_arrays(total_steps=800, seed=11)
     record = _record(tmp_path, arrays)
     spec = ms._base("t1", "closure_cons", 0, boundary_mode="oracle",
                     initial_state_mode="hybrid", closure_mode="conservative")
     model = build_world_model(spec, properties=None)
     before = [model.transition.raw[n].data.clone() for n in ("aW1", "aW2")]
-    report = rewetting_ablation(model, record, 1, n_windows=4, history_steps=16, seed=0)
+    report = rewetting_ablation(
+        model, record, 1, n_windows=4, history_steps=96, seed=0,
+        allow_extrapolation=True,
+    )
     after = [model.transition.raw[n].data for n in ("aW1", "aW2")]
     for b, a in zip(before, after):
         assert torch.equal(b, a)  # restoration

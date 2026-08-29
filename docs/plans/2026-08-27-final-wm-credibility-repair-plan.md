@@ -10,7 +10,7 @@
 
 ---
 
-> 状态：`TASK 1–3 LOCAL VERIFIED / TASK 4 NEXT / HOLD / TEST LOCKED`
+> 状态：`TASK 1–4 LOCAL VERIFIED / TASK 5 NEXT / HOLD / TEST LOCKED`
 > 依据：`docs/FINAL_WM_CREDIBILITY_AUDIT_2026-08-27.md`
 > 执行原则：一次只完成一个任务；测试通过、人工核对 diff 后再进入下一项；不自动启动 Linux、test 或论文改写。
 
@@ -167,6 +167,12 @@ Expected: PASS。
 Commit: `fix(final-wm): align leakage and replay timesteps`。
 
 ## Task 4: 修正逐样本反事实支持域并统一正式 CF 路径
+
+> 完成记录（2026-08-30）：支持域改为逐窗口 `(B, 2)`，R1/CF-1/CF-3/CF-4 与
+> 再湿消融统一走 `model.counterfactual()`；默认越界拒绝，显式外推逐步报告 mask、
+> 支持率和数量，R1 任一越界按协议降为 `INCOMPLETE`。定向回归 `56 passed`，完整
+> 回归 `168 passed`。未启动训练、Linux 或 test split。审计稿见
+> `docs/FINAL_WM_TASK4_SUPPORT_DOMAIN_AUDIT_2026-08-30.md`。
 
 **Files:**
 

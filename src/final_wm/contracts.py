@@ -358,36 +358,44 @@ def validate_world_model_config(config: WorldModelConfig) -> StateLayout:
 
 @dataclass(frozen=True)
 class ActionSupport:
-    """Axis-aligned action support box estimated from history."""
+    """Per-window axis-aligned action support boxes estimated from history."""
 
-    lo: tuple[float, ...]
-    hi: tuple[float, ...]
+    lo: Any  # tensor (B, 2)
+    hi: Any  # tensor (B, 2)
 
     def __post_init__(self) -> None:
-        if len(self.lo) != len(ACTION_ELEMENTS) or len(self.hi) != len(ACTION_ELEMENTS):
-            raise FinalWMProtocolError("action support rank mismatch")
-        if any(a > b for a, b in zip(self.lo, self.hi)):
-            raise FinalWMProtocolError("action support box is empty")
-
-    def contains(self, actions: Any) -> Any:
-        """Return a boolean mask (...,) marking in-support action rows."""
         import torch
 
-        tensor = torch.as_tensor(actions, dtype=torch.float32)
-        if tensor.shape[-1] != len(ACTION_ELEMENTS):
+        lo = torch.as_tensor(self.lo)
+        hi = torch.as_tensor(self.hi, device=lo.device, dtype=lo.dtype)
+        if lo.ndim != 2 or hi.shape != lo.shape or lo.shape[1] != len(ACTION_ELEMENTS):
+            raise FinalWMProtocolError("action support rank mismatch")
+        if bool((lo > hi).any()):
+            raise FinalWMProtocolError("action support box is empty")
+        object.__setattr__(self, "lo", lo)
+        object.__setattr__(self, "hi", hi)
+
+    def contains(self, actions: Any) -> Any:
+        """Return a boolean mask (B, ...) marking in-support action rows."""
+        import torch
+
+        tensor = torch.as_tensor(actions)
+        if tensor.ndim < 2 or tensor.shape[-1] != len(ACTION_ELEMENTS):
             raise FinalWMProtocolError("action tensor last dim must match ACTION_ELEMENTS")
-        lo = torch.tensor(self.lo, dtype=tensor.dtype)
-        hi = torch.tensor(self.hi, dtype=tensor.dtype)
+        if tensor.shape[0] != self.lo.shape[0]:
+            raise FinalWMProtocolError("action/support batch mismatch")
+        shape = (tensor.shape[0],) + (1,) * (tensor.ndim - 2) + (len(ACTION_ELEMENTS),)
+        lo = self.lo.to(device=tensor.device, dtype=tensor.dtype).reshape(shape)
+        hi = self.hi.to(device=tensor.device, dtype=tensor.dtype).reshape(shape)
         return ((tensor >= lo) & (tensor <= hi)).all(dim=-1)
 
 
 def action_support_from_history(history_actions: Any, margin: float) -> ActionSupport:
     import torch
 
-    tensor = torch.as_tensor(history_actions, dtype=torch.float32)
-    if tensor.ndim < 2 or tensor.shape[-1] != len(ACTION_ELEMENTS):
-        raise FinalWMProtocolError("history actions must have shape (..., steps, 2)")
-    flat = tensor.reshape(-1, tensor.shape[-1])
-    lo = (flat.min(dim=0).values - margin).clamp(0.0, 1.0)
-    hi = (flat.max(dim=0).values + margin).clamp(0.0, 1.0)
-    return ActionSupport(lo=tuple(float(v) for v in lo), hi=tuple(float(v) for v in hi))
+    tensor = torch.as_tensor(history_actions)
+    if tensor.ndim != 3 or tensor.shape[-1] != len(ACTION_ELEMENTS):
+        raise FinalWMProtocolError("history actions must have shape (B, steps, 2)")
+    lo = (tensor.min(dim=1).values - margin).clamp(0.0, 1.0)
+    hi = (tensor.max(dim=1).values + margin).clamp(0.0, 1.0)
+    return ActionSupport(lo=lo, hi=hi)

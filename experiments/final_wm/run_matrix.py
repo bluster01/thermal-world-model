@@ -207,6 +207,9 @@ def run_dsyn(args) -> dict:
             n_windows=16 if args.quick else 64,
             history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON,
             seed=95_000 + seed, device=device,
+            # The synthetic teacher is defined over the full generated action
+            # domain; retain every window but expose the per-step support mask.
+            allow_extrapolation=True,
         )
         results.append({
             "seed": seed,
@@ -388,6 +391,15 @@ def _adjudicate(unit, proposed_verdict, evidence, *, quick, seeds, arm_filter):
         reasons.append("arm_filtered_execution")
     if missing:
         reasons.append("missing_required_evidence")
+    if unit == "r1" and evidence.get("support_domain_v07") is not None:
+        unsupported = sum(
+            result["n_unsupported"]
+            for seed_report in evidence["support_domain_v07"]
+            for valve in seed_report["directions"].values()
+            for result in valve.values()
+        )
+        if unsupported:
+            reasons.append("counterfactual_support_violation")
     if quick:
         verdict = "SMOKE"
         status = "SMOKE"
@@ -461,6 +473,7 @@ def run_auditpack(args) -> dict:
         report["rewetting_ablation"] = rewetting_ablation(
             model, record, SPLIT_VAL, n_windows=16 if args.quick else 64,
             history_steps=ms.HISTORY_STEPS, seed=120_000 + seed, device=device,
+            allow_extrapolation=True,
         )
         # CF/D1 credentials (checklist 2026-08-21): constraint consistency,
         # position-binned local gain, calibration coverage.  Evidence-only.
@@ -469,6 +482,9 @@ def run_auditpack(args) -> dict:
             history_steps=ms.HISTORY_STEPS,
             rollout_steps=30 if args.quick else 120,
             seed=130_000 + seed, device=device,
+            # Structural CF-4 deliberately spans the synthetic/physical action
+            # grid; preserve it as diagnostics while exposing every support mask.
+            allow_extrapolation=True,
         )
         report["calibration_coverage"] = calibration_coverage(
             model, record, SPLIT_VAL,
@@ -483,6 +499,7 @@ def run_auditpack(args) -> dict:
                 rollout_steps=60,
                 n_windows=32 if args.quick else 256,
                 seed=150_000 + seed + v, device=device,
+                allow_extrapolation=True,
             )
             for v in (0, 1)
         }
@@ -919,7 +936,7 @@ def run_matrix(args) -> dict:
                         history_steps=ms.HISTORY_STEPS, rollout_steps=rollout_steps,
                         valve_index=valve_index,
                         seed=80_000 + 1_000 * valve_index + rollout_steps + seed,
-                        device=device,
+                        device=device, allow_extrapolation=True,
                     )
             # Steady-state gain evidence (2026-08-21 audit): the 60-step gate
             # reads the transient; with learned tau_mix ~470s the 600s window
@@ -929,7 +946,7 @@ def run_matrix(args) -> dict:
             direction_steady = step_response_direction(
                 model, record, SPLIT_VAL, n_windows=16 if quick else 32,
                 history_steps=ms.HISTORY_STEPS, rollout_steps=24 if quick else 240,
-                seed=85_000 + seed, device=device,
+                seed=85_000 + seed, device=device, allow_extrapolation=True,
             )
             if spec.closure_mode == "none":
                 # 2026-08-23 physics_only R1 probe: no closure head exists, so
@@ -1006,8 +1023,23 @@ def run_matrix(args) -> dict:
                 {"seed": report["seed"], **report["leakage"]}
                 for report in r1_reports if "error" not in report
             ] if complete_reports else None,
-            # Task 4 replaces the known-invalid legacy support path.
-            "support_domain_v07": None,
+            "support_domain_v07": [
+                {
+                    "seed": report["seed"],
+                    "directions": {
+                        valve: {
+                            horizon: {
+                                "support_rate": result["support_rate"],
+                                "n_unsupported": result["n_unsupported"],
+                                "allow_extrapolation": result["allow_extrapolation"],
+                            }
+                            for horizon, result in horizons.items()
+                        }
+                        for valve, horizons in report["directions"].items()
+                    },
+                }
+                for report in r1_reports if "error" not in report
+            ] if complete_reports else None,
         }
         protocol = _adjudicate(
             "r1", verdict, evidence, quick=quick, seeds=seeds,
