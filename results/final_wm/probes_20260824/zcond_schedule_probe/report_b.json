@@ -1,5 +1,5 @@
 {
-  "arm": "zcond_k_k",
+  "arm": "zcond_all_k_tau_ua",
   "status": "INCONCLUSIVE_EXPLORATORY_SEED0",
   "single_seed_exploratory": true,
   "user_design": "z = 2-dim bottleneck of fused hybrid initial state; physical-form bounded factors; A then B (user-ordered)",
@@ -14,9 +14,9 @@
     "n_operating": 707699
   },
   "train": {
-    "zcond_k": {
-      "run_id": "t1_zcond_k_seed0",
-      "commit": "920d57aeacb2b914eaff2303c1725daf57765a06",
+    "zcond_all": {
+      "run_id": "t1_zcond_all_seed0",
+      "commit": "fb6214eb59f981dcce1c700f8bc38c1a60935f50",
       "best_val_nll": 1.039164423942566,
       "best_epoch": 86,
       "epochs_run": 107,
@@ -27,9 +27,9 @@
         "matmul_precision": "highest"
       },
       "timing": {
-        "data_s": 46.3,
-        "step_s": 3672.0,
-        "eval_s": 102.6
+        "data_s": 46.1,
+        "step_s": 3662.1,
+        "eval_s": 97.1
       }
     },
     "reused_control": {
@@ -225,7 +225,7 @@
     "protocol": "A5 probe protocol, seed0 exploratory"
   },
   "post_hoc_correction_20260829": {
-    "label": "zcond_k (claimed k-only)",
+    "label": "zcond_all",
     "bug": "promote_zcond group gating: name-vs-group test never matched (v_k vs k); all three factor paths (k/tau/ua) were active in BOTH runs with v_init=0",
     "what_this_report_actually_measured": "z conditions k+tau+ua, v_init=0 (not the claimed k-only for arm a)",
     "evidence": "ledger val_nll sequences bit-identical (107/107) between arm_a and arm_b; checkpoints 88/88 tensors equal",

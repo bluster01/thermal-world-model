@@ -132,10 +132,19 @@ class ZSchedTransition(Fan2020UDETransition):
                                 steam_power, metal_power)
 
 
+GROUP_OF = {"v_k": "k", "v_tau": "tau", "v_ua": "ua"}
+
+
 def promote_zcond(model, center: torch.Tensor, scale: torch.Tensor,
                   groups: tuple[str, ...], v_init: float = V_INIT) -> nn.Module:
     """Rebind the transition class in place (LPV-probe pattern) and register
-    the z bottleneck.  No src change, all base params/buffers preserved."""
+    the z bottleneck.  No src change, all base params/buffers preserved.
+
+    Group gating (fixed 2026-08-29): parameter names are ``v_k``/``v_tau``/
+    ``v_ua`` -- the old lambda tested the NAME against the GROUP set (always
+    False), so every arm trained all three factor paths from 0.  Now in-group
+    v's start at ``v_init`` and train; out-of-group v's are FROZEN at 0, which
+    makes their factor exactly 1 (bit-identical, no gradient)."""
     tr = model.transition
     dev = next(tr.parameters()).device
     tr.__class__ = ZSchedTransition
@@ -149,10 +158,12 @@ def promote_zcond(model, center: torch.Tensor, scale: torch.Tensor,
     z_proj = nn.Linear(center.shape[0], Z_DIM, bias=False).to(dev)
     nn.init.normal_(z_proj.weight, std=W_INIT)
     tr.add_module("z_proj", z_proj)
-    init = lambda g: float(v_init) if g in groups else 0.0
-    for name in ("v_k", "v_tau", "v_ua"):
-        tr.register_parameter(
-            name, nn.Parameter(torch.full((Z_DIM,), init(name), device=dev)))
+    for name, grp in GROUP_OF.items():
+        active = grp in groups
+        p = nn.Parameter(torch.full((Z_DIM,), v_init if active else 0.0,
+                                    device=dev))
+        p.requires_grad_(active)
+        tr.register_parameter(name, p)
     return model
 
 
