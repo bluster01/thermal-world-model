@@ -16,8 +16,8 @@
   "train": {
     "zcond_all": {
       "run_id": "t1_zcond_all_seed0",
-      "commit": "fb6214eb59f981dcce1c700f8bc38c1a60935f50",
-      "best_val_nll": 1.039164423942566,
+      "commit": "3a17714123508597043b7dfccd347e373ca02ca2",
+      "best_val_nll": 1.0489139556884766,
       "best_epoch": 86,
       "epochs_run": 107,
       "stop_reason": "patience",
@@ -27,9 +27,9 @@
         "matmul_precision": "highest"
       },
       "timing": {
-        "data_s": 46.1,
-        "step_s": 3662.1,
-        "eval_s": 97.1
+        "data_s": 45.9,
+        "step_s": 3672.2,
+        "eval_s": 99.1
       }
     },
     "reused_control": {
@@ -59,15 +59,15 @@
   },
   "evaluation": {
     "arm": {
-      "overall_h18_mae": 0.43198909163475036,
+      "overall_h18_mae": 0.4107081532478333,
       "bins_q1q5": [
-        0.3405306339263916,
-        0.4242841601371765,
-        0.4532078206539154,
-        0.4984774887561798,
-        0.4434453547000885
+        0.31089234352111816,
+        0.41653579473495483,
+        0.45682695508003235,
+        0.44823989272117615,
+        0.42104578018188477
       ],
-      "spread_ratio": 1.4638256858380903
+      "spread_ratio": 1.4694056145162069
     },
     "matched_filtered_control": {
       "overall_h18_mae": 0.4261806488037109,
@@ -80,49 +80,49 @@
       ],
       "spread_ratio": 1.469504852219565
     },
-    "relative_h18_change": 0.013629062810204377,
-    "spread_change": -0.0038646802512403416
+    "relative_h18_change": -0.036305016662086714,
+    "spread_change": -6.753138869074775e-05
   },
   "z_diagnostics": {
     "z_dim": 2,
     "k_max_band": 1.5,
     "factor_p01_p50_p99": [
-      1.0574662685394287,
-      1.0954608917236328,
-      1.1238033771514893
+      0.9970826506614685,
+      1.0562584400177002,
+      1.1200848817825317
     ],
-    "corr_effz_load": -0.9701342390862135,
-    "corr_effz_dload": -0.023168831324067364,
-    "corr_z0_load": 0.9792133546716041,
-    "corr_z1_load": -0.91528814624085,
-    "r2_z0_on_load": 0.9588587880134583,
-    "r2_z1_on_load": 0.8377524018287659,
-    "v_k_norm": 0.06342269480228424,
-    "z_proj_w_norm": 1.4417717456817627
+    "corr_effz_load": -0.8396743931181847,
+    "corr_effz_dload": -0.13328217487504848,
+    "corr_z0_load": 0.9843380965231858,
+    "corr_z1_load": -0.18158291177116614,
+    "r2_z0_on_load": 0.9689214825630188,
+    "r2_z1_on_load": 0.03297233581542969,
+    "v_k_norm": 0.16106712818145752,
+    "z_proj_w_norm": 1.5217084884643555
   },
   "direction_v03": {
     "valve1": {
       "H18": {
         "all_windows": {
           "n": 256,
-          "mean_delta_c": -0.002899567363783717,
+          "mean_delta_c": -0.002758026123046875,
           "frac_negative": 1.0,
           "ci": {
-            "point": -0.0028923177160322666,
-            "ci_lo": -0.002994593232870102,
-            "ci_hi": -0.00276591582223773,
+            "point": -0.0027488181367516518,
+            "ci_lo": -0.002825395669788122,
+            "ci_hi": -0.002663854043930769,
             "n_days": 13
           },
           "gate_pass": true
         },
         "in_support_only": {
           "n": 244,
-          "mean_delta_c": -0.0028974188026040792,
+          "mean_delta_c": -0.002752585569396615,
           "frac_negative": 1.0,
           "ci": {
-            "point": -0.002883460372686386,
-            "ci_lo": -0.002990195993334055,
-            "ci_hi": -0.0027516481932252645,
+            "point": -0.0027394210919737816,
+            "ci_lo": -0.00281613995321095,
+            "ci_hi": -0.0026537086814641953,
             "n_days": 13
           },
           "gate_pass": true
@@ -132,24 +132,24 @@
       "H60": {
         "all_windows": {
           "n": 256,
-          "mean_delta_c": -0.025783443823456764,
+          "mean_delta_c": -0.024580955505371094,
           "frac_negative": 1.0,
           "ci": {
-            "point": -0.02572968229651451,
-            "ci_lo": -0.026475228369235992,
-            "ci_hi": -0.02498791553080082,
+            "point": -0.02449721284210682,
+            "ci_lo": -0.025572380051016808,
+            "ci_hi": -0.023451436311006546,
             "n_days": 13
           },
           "gate_pass": true
         },
         "in_support_only": {
           "n": 244,
-          "mean_delta_c": -0.025700952857732773,
+          "mean_delta_c": -0.024474048987030983,
           "frac_negative": 1.0,
           "ci": {
-            "point": -0.025673069059848785,
-            "ci_lo": -0.02641970105469227,
-            "ci_hi": -0.02496166341006756,
+            "point": -0.02443252131342888,
+            "ci_lo": -0.02550683729350567,
+            "ci_hi": -0.02340473234653473,
             "n_days": 13
           },
           "gate_pass": true
@@ -161,24 +161,24 @@
       "H18": {
         "all_windows": {
           "n": 256,
-          "mean_delta_c": -0.023740053176879883,
+          "mean_delta_c": -0.021854721009731293,
           "frac_negative": 1.0,
           "ci": {
-            "point": -0.024028349667787552,
-            "ci_lo": -0.026711925864219666,
-            "ci_hi": -0.02177482843399048,
+            "point": -0.02212303876876831,
+            "ci_lo": -0.024681542068719864,
+            "ci_hi": -0.019952895119786263,
             "n_days": 13
           },
           "gate_pass": true
         },
         "in_support_only": {
           "n": 244,
-          "mean_delta_c": -0.023586835712194443,
+          "mean_delta_c": -0.021704833954572678,
           "frac_negative": 1.0,
           "ci": {
-            "point": -0.023797256872057915,
-            "ci_lo": -0.026532696560025215,
-            "ci_hi": -0.02152080647647381,
+            "point": -0.02189735323190689,
+            "ci_lo": -0.02450597658753395,
+            "ci_hi": -0.019701950252056122,
             "n_days": 13
           },
           "gate_pass": true
@@ -188,24 +188,24 @@
       "H60": {
         "all_windows": {
           "n": 256,
-          "mean_delta_c": -0.09060832858085632,
+          "mean_delta_c": -0.0843975767493248,
           "frac_negative": 1.0,
           "ci": {
-            "point": -0.09181574732065201,
-            "ci_lo": -0.10532096028327942,
-            "ci_hi": -0.08044387400150299,
+            "point": -0.08557860553264618,
+            "ci_lo": -0.098555788397789,
+            "ci_hi": -0.07470617443323135,
             "n_days": 13
           },
           "gate_pass": true
         },
         "in_support_only": {
           "n": 244,
-          "mean_delta_c": -0.09018547087907791,
+          "mean_delta_c": -0.08397611975669861,
           "frac_negative": 1.0,
           "ci": {
-            "point": -0.09093423932790756,
-            "ci_lo": -0.10445340722799301,
-            "ci_hi": -0.079817995429039,
+            "point": -0.0847134068608284,
+            "ci_lo": -0.09779323637485504,
+            "ci_hi": -0.074111208319664,
             "n_days": 13
           },
           "gate_pass": true
@@ -223,13 +223,5 @@
   "baseline": {
     "decision_comparator": "reused A5 matched filtered control",
     "protocol": "A5 probe protocol, seed0 exploratory"
-  },
-  "post_hoc_correction_20260829": {
-    "label": "zcond_all",
-    "bug": "promote_zcond group gating: name-vs-group test never matched (v_k vs k); all three factor paths (k/tau/ua) were active in BOTH runs with v_init=0",
-    "what_this_report_actually_measured": "z conditions k+tau+ua, v_init=0 (not the claimed k-only for arm a)",
-    "evidence": "ledger val_nll sequences bit-identical (107/107) between arm_a and arm_b; checkpoints 88/88 tensors equal",
-    "handling": "artifacts archived under arm_{a,b}_dup_init0; corrected reruns follow",
-    "fix": "GROUP_OF name->group mapping; out-of-group v frozen at 0 (requires_grad False)"
   }
 }
