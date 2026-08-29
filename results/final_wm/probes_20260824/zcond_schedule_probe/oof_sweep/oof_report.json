@@ -1,0 +1,62 @@
+{
+  "stride": 9,
+  "windows": 11783,
+  "record": "/home/bluster/projectA/thermal-world-model/artifacts/final_wm/canonical_sideA_v2.npz",
+  "models": {
+    "control": {
+      "n_windows": 11783,
+      "overall_h18_mae": 0.4339631497859955,
+      "bins_q1q5": [
+        0.3059246242046356,
+        0.4086713492870331,
+        0.5486074686050415,
+        0.44905978441238403,
+        0.4575481116771698
+      ],
+      "spread_ratio": 1.7932765956037369,
+      "nll_err_term": 0.6396799683570862,
+      "nll_logsigma_term": 0.36208951473236084,
+      "nll_total": 1.0017695426940918,
+      "mean_abs_err_c": 0.4339631199836731,
+      "mean_sigma_c": 0.5812793374061584,
+      "sigma_err_ratio": 1.339467167854309
+    },
+    "a": {
+      "n_windows": 11783,
+      "overall_h18_mae": 0.5563351511955261,
+      "bins_q1q5": [
+        0.3671208322048187,
+        0.519106388092041,
+        0.7146029472351074,
+        0.5715699195861816,
+        0.6092661619186401
+      ],
+      "spread_ratio": 1.9465061215497206,
+      "nll_err_term": 0.757917582988739,
+      "nll_logsigma_term": 0.5341672897338867,
+      "nll_total": 1.2920846939086914,
+      "mean_abs_err_c": 0.5563350915908813,
+      "mean_sigma_c": 0.6879286170005798,
+      "sigma_err_ratio": 1.2365365028381348
+    },
+    "b": {
+      "n_windows": 11783,
+      "overall_h18_mae": 0.4306003153324127,
+      "bins_q1q5": [
+        0.3001058101654053,
+        0.4001396894454956,
+        0.5362651944160461,
+        0.4619663953781128,
+        0.4545252025127411
+      ],
+      "spread_ratio": 1.7869204002431012,
+      "nll_err_term": 0.6820370554924011,
+      "nll_logsigma_term": 0.3073311448097229,
+      "nll_total": 0.9893683195114136,
+      "mean_abs_err_c": 0.4306003451347351,
+      "mean_sigma_c": 0.5485996007919312,
+      "sigma_err_ratio": 1.2740342617034912
+    }
+  },
+  "note": "robustness layer; frozen 256-window protocol remains the decision metric"
+}
