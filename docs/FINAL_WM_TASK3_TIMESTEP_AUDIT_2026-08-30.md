@@ -1,7 +1,7 @@
 # Final WM Task 3 时序语义修复审计
 
-> 日期：2026-08-30  
-> 状态：`LOCAL VERIFIED / HOLD / TEST LOCKED`  
+> 日期：2026-08-30
+> 状态：`LOCAL VERIFIED / HOLD / TEST LOCKED`
 > 范围：可信度修复计划 Task 3；不含 Task 4 支持域、正式训练、Linux 执行或论文判决。
 
 ## 1. 审计结论
