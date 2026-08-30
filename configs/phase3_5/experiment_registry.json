@@ -1,8 +1,8 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
   "updated_at": "2026-08-30",
-  "active_gate": "final_world_model_pipeline",
-  "linux_authorized_gate": null,
+  "active_gate": "jepa_b_series",
+  "linux_authorized_gate": "jepa_b_series",
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -16,6 +16,7 @@
     "ms3_d",
     "ms3_r",
     "final_world_model_pipeline",
+    "jepa_b_series",
     "ms4"
   ],
   "status_vocabulary": [
@@ -1280,7 +1281,69 @@
         "2026-08-27 审计发现 runner 未执行 O1/T1/B1/J1/R1 全部冻结门禁，正式 verdict 在 v0.7 重发前一律降级为历史证据",
         "修复范围只覆盖可改变科学判决或破坏证据绑定的根因；模型架构、LPV 调参及一般工程化事项保持冻结",
         "2026-08-28 探针复审：DiD 的 200 次置换不得报告 p=0，factual counterfactual 必须逐步检查支持域；在 factual rollout 误差明显大于反事实效应时只作模型内部方向诊断",
-        "2026-08-28 JEPA 文献增补（XP-JEPA 2608.24044 / Phys-JEPA 2606.16076 / LeJEPA SIGReg）：动机=未观测炉膛侧驱动是 sh1_in 逼近信息极限的主因（v0.6 诊断），XP-JEPA 特权物理分支（训练期富通道交叉预测、部署丢弃、接口不变）与 Phys-JEPA 物理-残差分解（static/dynamic 双一致性）提供了比 CVAE 潜变量更直接的机制；B 系列重排：B3 改 XP-JEPA 式特权分支、新增 B4 Phys-JEPA 式分解，判定沿用 A 系列三条件+方向门并增报 H36/H60 漂移与段级偏置；优先级不变（排在 A 系列四合一与 v0.6 ①之后）；两篇均为初始验证性质（机器人/气象域、单种子、弱 descriptor），引作机制与术语来源不作证据背书"
+        "2026-08-28 JEPA 文献增补（JEPA-x 2608.24044 / Phys-JEPA 2606.16076 / LeJEPA SIGReg）：动机=未观测炉膛侧驱动是 sh1_in 逼近信息极限的主因（v0.6 诊断），JEPA-x 特权物理分支（训练期富通道交叉预测、部署丢弃、接口不变）与 Phys-JEPA 物理-残差分解（static/dynamic 双一致性）提供了比 CVAE 潜变量更直接的机制；B 系列重排：B3 改 JEPA-x 式特权分支、新增 B4 Phys-JEPA 式分解，判定沿用 A 系列三条件+方向门并增报 H36/H60 漂移与段级偏置；优先级不变（排在 A 系列四合一与 v0.6 ①之后）；两篇均为初始验证性质（机器人/气象域、单种子、弱 descriptor），引作机制与术语来源不作证据背书"
+      ]
+    },
+    "jepa_b_series": {
+      "title": "JEPA 状态增强 B1–B4 预注册探索批",
+      "status": "ready_for_linux",
+      "owner": "local_design_code_linux_run_local_audit",
+      "evidence_scope": "validation_only_single_seed_state_representation_probe",
+      "scripts": {
+        "model_adapters": {
+          "path": "src/final_wm/jepa.py",
+          "status": "active",
+          "required": true
+        },
+        "matrix_contract": {
+          "path": "experiments/final_wm/jepa_b_spec.py",
+          "status": "active",
+          "required": true
+        },
+        "runner": {
+          "path": "experiments/final_wm/run_jepa_b.py",
+          "status": "active",
+          "required": true
+        }
+      },
+      "artifacts": {
+        "design": {
+          "path": "docs/plans/2026-08-30-jepa-b-series-design.md",
+          "required": true
+        },
+        "preregistration": {
+          "path": "results/final_wm/probes_20260824/PREREG_jepa_b_series_20260830.md",
+          "required": true
+        },
+        "matrix": {
+          "path": "configs/final_wm/jepa_b_series_v1.json",
+          "required": true
+        },
+        "linux_runbook": {
+          "path": "results/final_wm/probes_20260824/JEPA_B_LINUX_RUN_20260830.md",
+          "required": true
+        },
+        "local_audit": {
+          "path": "results/final_wm/probes_20260824/JEPA_B_LOCAL_AUDIT_20260830.md",
+          "required": true
+        }
+      },
+      "protocol_state": {
+        "active": true,
+        "ready_for_linux": true,
+        "results_returned": false,
+        "audited": false,
+        "authorized_batch": "jepa_b_series_v1",
+        "seed_scope": [0],
+        "test_locked": true,
+        "paper_verdict_authorized": false,
+        "automatic_retry": false
+      },
+      "decision": "B1–B4 与 B3 固定错配对照已本地实现和预注册；仅授权 Linux 顺序执行侧A seed0 validation 探索批。通过只允许晋级固定 seeds 1/2，不升级正式论文 verdict",
+      "advisories": [
+        "final_world_model_pipeline Task 5–8 可信度修复仍未完成；本批是独立 validation-only 状态表示探针，不替代 v0.7 正式重发",
+        "B3 使用 canonical v2.2 已注册 32 维特权量，不直接读取未注册的原始 381 列",
+        "JEPA-x/Phys-JEPA 原文只作机制来源；机器人域与单种子时间序列结果不构成本项目证据背书"
       ]
     },
     "ms4": {
