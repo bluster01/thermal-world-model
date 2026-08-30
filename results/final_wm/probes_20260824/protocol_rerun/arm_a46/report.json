@@ -1,0 +1,211 @@
+{
+  "arm": "a46_joint_rerun",
+  "status": "REJECT_EXPLORATORY_SEED0",
+  "single_seed_exploratory": true,
+  "protocol": "PREREG_protocol_fix_20260829.md (v2.2 record + A5 gates)",
+  "train": {
+    "run_id": "t1_a46_joint_rerun_seed0",
+    "commit": "b3d542debb003a7c1df8cf582a218d5ca07b0304",
+    "best_val_nll": 1.1383991241455078,
+    "best_epoch": 78,
+    "epochs_run": 99,
+    "stop_reason": "patience",
+    "converged": true,
+    "flags": {
+      "compile_substep": false,
+      "matmul_precision": "high"
+    },
+    "timing": {
+      "data_s": 44.7,
+      "step_s": 3709.9,
+      "eval_s": 97.4
+    }
+  },
+  "evaluation_256": {
+    "arm": {
+      "overall_h18_mae": 0.500674021244049,
+      "bins_q1q5": [
+        0.3545724153518677,
+        0.5137841701507568,
+        0.5791520476341248,
+        0.5507571697235107,
+        0.5051043033599854
+      ],
+      "spread_ratio": 1.633381567653509
+    },
+    "matched_filtered_control": {
+      "overall_h18_mae": 0.42594480514526367,
+      "bins_q1q5": [
+        0.34258726239204407,
+        0.4302804172039032,
+        0.5036879777908325,
+        0.47882020473480225,
+        0.37434816360473633
+      ],
+      "spread_ratio": 1.4702472423345117
+    },
+    "relative_h18_change": 0.1754434264629658,
+    "spread_change": 0.11095706941096985
+  },
+  "oof": {
+    "arm": {
+      "n_windows": 11783,
+      "overall_h18_mae": 0.49321871995925903,
+      "bins_q1q5": [
+        0.3428613543510437,
+        0.46498432755470276,
+        0.5889564752578735,
+        0.5278677940368652,
+        0.5414265394210815
+      ],
+      "spread_ratio": 1.7177686192502806,
+      "nll_err_term": 0.6734488606452942,
+      "nll_logsigma_term": 0.4413113296031952,
+      "nll_total": 1.1147602796554565,
+      "mean_abs_err_c": 0.4932187497615814,
+      "mean_sigma_c": 0.6284297704696655,
+      "sigma_err_ratio": 1.2741401195526123
+    },
+    "control": {
+      "n_windows": 11783,
+      "overall_h18_mae": 0.4338153600692749,
+      "bins_q1q5": [
+        0.3056653141975403,
+        0.4085513949394226,
+        0.5484814643859863,
+        0.4490617513656616,
+        0.4573127329349518
+      ],
+      "spread_ratio": 1.7943856856179725,
+      "nll_err_term": 0.6391710638999939,
+      "nll_logsigma_term": 0.3621247112751007,
+      "nll_total": 1.001295566558838,
+      "mean_abs_err_c": 0.4338153898715973,
+      "mean_sigma_c": 0.5812956690788269,
+      "sigma_err_ratio": 1.3399609327316284
+    },
+    "relative_h18_change": 0.13693235730633915,
+    "spread_change": -0.042698215317798646
+  },
+  "direction_v03": {
+    "valve1": {
+      "H18": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.017081182450056076,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.017203716561198235,
+            "ci_lo": -0.0210423581302166,
+            "ci_hi": -0.013064680621027946,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.01730855368077755,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.017219938337802887,
+            "ci_lo": -0.02103869616985321,
+            "ci_hi": -0.012963533401489258,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      },
+      "H60": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.11684916168451309,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.11701341718435287,
+            "ci_lo": -0.12936921417713165,
+            "ci_hi": -0.10282927751541138,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.11729976534843445,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.11670462787151337,
+            "ci_lo": -0.12923918664455414,
+            "ci_hi": -0.10222680121660233,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      }
+    },
+    "valve2": {
+      "H18": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.06783239543437958,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.0682283490896225,
+            "ci_lo": -0.07581177353858948,
+            "ci_hi": -0.059590671211481094,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.06701301783323288,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.06776441633701324,
+            "ci_lo": -0.0752410963177681,
+            "ci_hi": -0.05934258922934532,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      },
+      "H60": {
+        "all_windows": {
+          "n": 256,
+          "mean_delta_c": -0.20531406998634338,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.20721600949764252,
+            "ci_lo": -0.2238800972700119,
+            "ci_hi": -0.19199804961681366,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_only": {
+          "n": 244,
+          "mean_delta_c": -0.204019233584404,
+          "frac_negative": 1.0,
+          "ci": {
+            "point": -0.2055721879005432,
+            "ci_lo": -0.22257299721240997,
+            "ci_hi": -0.18998190760612488,
+            "n_days": 13
+          },
+          "gate_pass": true
+        },
+        "in_support_frac": 0.953125
+      }
+    }
+  },
+  "preregistered_gates": {
+    "accuracy_at_least_5pct": false,
+    "spread_no_more_than_10pct_worse": false,
+    "both_valves_h18_h60_direction": true,
+    "all_pass": false
+  },
+  "decision_comparator": "reused A5 matched filtered control"
+}
