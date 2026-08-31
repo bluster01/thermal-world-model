@@ -1,8 +1,8 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
   "updated_at": "2026-08-30",
-  "active_gate": "jepa_b_series",
-  "linux_authorized_gate": "jepa_b_series",
+  "active_gate": "jepa_b5",
+  "linux_authorized_gate": "jepa_b5",
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -1093,23 +1093,23 @@
         "H60/H180正交校准保留完整prefix trajectory，不以单端点假装辨识三极点",
         "R1当前仅作固定60/180/600s非负三极点trajectory projection，context scheduling仍未识别",
         "selector按output_scope计算；所有候选共享terminal MAE描述，但禁止跨scope composite冠军",
-        "runner/selector/artifact contract及六候选reduced-cache训练已本地闭合；仍需独立授权提交才可运行Hermes"
-        ,"RM3返回48/48 complete、exit0；本地重放terminal MAE最大误差2.15e-8"
-        ,"逐run ledger要求的36个checkpoint未入库；只允许从原输出目录补传原字节，不得重训或重写ledger"
-        ,"返回的R1 least-squares后截负系数不是NNLS，短时投影RMSE被人为放大；本地已改为三基函数active-set NNLS"
-        ,"P5相对P3/P4末温MAE在6/6配对改善约0.085°C，但local MAE更差；仅支持terminal预测方向，不支持局部物理冠军"
-        ,"R0 12/12 rank门通过但H180对角gain跨fold明显漂移；仅称时变条件响应轨迹，不称唯一plant gain"
-        ,"补传36 checkpoint与ledger/manifest/best selector逐项匹配，六类模型strict load通过，RM3 artifact contract最终闭合"
-        ,"P3/P4/P5均跑满4000 updates；P5参数状态约122k而P3/P4约87k，下一步必须容量匹配，不得直接称冠军"
-        ,"RM3-A使用P3/P4 d77约121k对齐P5-64，并用P5 d52约84k对齐P3/P4-64，完成双向容量辨析"
-        ,"RM3-A只新增A0-A4共30 runs，旧P3/P4/P5的18 runs从最终审计结果复用，禁止重跑"
-        ,"RM3-A A3/A4只改变full-multitask component weights；terminal/local以Pareto表报告，不设单一综合冠军"
-        ,"独立审计不直接否决P5或RM3-B；先用RM3-AV成对实验验证free/bypass/response/valve/MIMO/timing/init/convergence等命题"
-        ,"RM3-AV matrix/runner/AV0/诊断与32候选逐一一更新全链路已本地闭合；Hermes现仅获RM3-AV0+AV1一次执行授权，不得访问test、代写AV2判决或启动RM3-B/MS4"
-        ,"RM3-B1 22/22 validation产物、110项run ledger与3项root ledger闭合；episode四项MAE复算最大差9.54e-7"
-        ,"RM3-B1只支持对角响应作为等效简化；shield、R-loss、valve dynamics、PI+GRU和ramp为混合证据，一极点与bypass add-on拒绝"
-        ,"RM3-B1筛查不含预注册非劣界，只作validation候选压缩；不生成B2、不访问test、不升级路线冠军"
-        ,"MS3-R模型扩展路线在此关闭；Linux授权清空，后续仅按最终世界模型pipeline的新冻结提交逐批授权"
+        "runner/selector/artifact contract及六候选reduced-cache训练已本地闭合；仍需独立授权提交才可运行Hermes",
+        "RM3返回48/48 complete、exit0；本地重放terminal MAE最大误差2.15e-8",
+        "逐run ledger要求的36个checkpoint未入库；只允许从原输出目录补传原字节，不得重训或重写ledger",
+        "返回的R1 least-squares后截负系数不是NNLS，短时投影RMSE被人为放大；本地已改为三基函数active-set NNLS",
+        "P5相对P3/P4末温MAE在6/6配对改善约0.085°C，但local MAE更差；仅支持terminal预测方向，不支持局部物理冠军",
+        "R0 12/12 rank门通过但H180对角gain跨fold明显漂移；仅称时变条件响应轨迹，不称唯一plant gain",
+        "补传36 checkpoint与ledger/manifest/best selector逐项匹配，六类模型strict load通过，RM3 artifact contract最终闭合",
+        "P3/P4/P5均跑满4000 updates；P5参数状态约122k而P3/P4约87k，下一步必须容量匹配，不得直接称冠军",
+        "RM3-A使用P3/P4 d77约121k对齐P5-64，并用P5 d52约84k对齐P3/P4-64，完成双向容量辨析",
+        "RM3-A只新增A0-A4共30 runs，旧P3/P4/P5的18 runs从最终审计结果复用，禁止重跑",
+        "RM3-A A3/A4只改变full-multitask component weights；terminal/local以Pareto表报告，不设单一综合冠军",
+        "独立审计不直接否决P5或RM3-B；先用RM3-AV成对实验验证free/bypass/response/valve/MIMO/timing/init/convergence等命题",
+        "RM3-AV matrix/runner/AV0/诊断与32候选逐一一更新全链路已本地闭合；Hermes现仅获RM3-AV0+AV1一次执行授权，不得访问test、代写AV2判决或启动RM3-B/MS4",
+        "RM3-B1 22/22 validation产物、110项run ledger与3项root ledger闭合；episode四项MAE复算最大差9.54e-7",
+        "RM3-B1只支持对角响应作为等效简化；shield、R-loss、valve dynamics、PI+GRU和ramp为混合证据，一极点与bypass add-on拒绝",
+        "RM3-B1筛查不含预注册非劣界，只作validation候选压缩；不生成B2、不访问test、不升级路线冠军",
+        "MS3-R模型扩展路线在此关闭；Linux授权清空，后续仅按最终世界模型pipeline的新冻结提交逐批授权"
       ]
     },
     "final_world_model_pipeline": {
@@ -1286,7 +1286,7 @@
     },
     "jepa_b_series": {
       "title": "JEPA 状态增强 B1–B4 预注册探索批",
-      "status": "ready_for_linux",
+      "status": "results_returned",
       "owner": "local_design_code_linux_run_local_audit",
       "evidence_scope": "validation_only_single_seed_state_representation_probe",
       "scripts": {
@@ -1330,11 +1330,13 @@
       },
       "protocol_state": {
         "active": true,
-        "ready_for_linux": true,
-        "results_returned": false,
+        "ready_for_linux": false,
+        "results_returned": true,
         "audited": false,
         "authorized_batch": "jepa_b_series_v1",
-        "seed_scope": [0],
+        "seed_scope": [
+          0
+        ],
         "test_locked": true,
         "paper_verdict_authorized": false,
         "automatic_retry": false
@@ -1383,6 +1385,61 @@
       "scripts": {},
       "artifacts": {},
       "decision": "Phase3.5-MS 完成前不启动"
+    },
+    "jepa_b5": {
+      "title": "JEPA-B5 动作盲慢态（B2 因果修复，预注册探索批）",
+      "status": "ready_for_linux",
+      "owner": "execution_side_user_authorized",
+      "evidence_scope": "validation_only_single_seed_state_representation_probe",
+      "scripts": {
+        "model_adapters": {
+          "path": "src/final_wm/jepa.py",
+          "status": "active",
+          "required": true
+        },
+        "matrix_contract": {
+          "path": "experiments/final_wm/jepa_b5_spec.py",
+          "status": "active",
+          "required": true
+        },
+        "runner": {
+          "path": "experiments/final_wm/run_jepa_b.py",
+          "status": "active",
+          "required": true
+        }
+      },
+      "artifacts": {
+        "design": {
+          "path": "docs/plans/2026-08-31-jepa-b5-design.md",
+          "required": true
+        },
+        "preregistration": {
+          "path": "results/final_wm/probes_20260824/PREREG_jepa_b5_20260831.md",
+          "required": true
+        },
+        "matrix": {
+          "path": "configs/final_wm/jepa_b5_series_v1.json",
+          "required": true
+        },
+        "linux_runbook": {
+          "path": "results/final_wm/probes_20260824/JEPA_B5_LINUX_RUN_20260831.md",
+          "required": true
+        }
+      },
+      "protocol_state": {
+        "active": true,
+        "ready_for_linux": true,
+        "linux_completed": false,
+        "note": "B5 = B2 action-blind fix: slow update drops the physical-state input (physical state is a function of logged actions). Direction gate uses original-trajectory semantics (base = real future_actions/future_boundary).",
+        "authorized_batch": "jepa_b5_series_v1",
+        "seed_scope": [
+          0
+        ],
+        "test_locked": true,
+        "paper_verdict_authorized": false,
+        "automatic_retry": false,
+        "results_returned": false
+      }
     }
   }
 }

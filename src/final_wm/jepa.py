@@ -255,15 +255,23 @@ class B2SlowState(nn.Module):
         slow_dim: int = 4,
         stride: int = 6,
         observer_hidden: int = 64,
+        *,
+        use_physical: bool = True,
     ) -> None:
         super().__init__()
         if stride < 1:
             raise FinalWMProtocolError("slow stride must be positive")
         self.slow_dim = int(slow_dim)
         self.stride = int(stride)
+        self.use_physical = bool(use_physical)
+        # B5 (action-blind): drop the physical state from the update features.
+        # The physical state is a function of logged actions, so reading it lets
+        # the slow state absorb spray-valve cooling effects and dilute the
+        # action->temperature causal response (B2 valve2 direction break).
+        update_in = slow_dim + boundary_dim + (physical_dim if self.use_physical else 0)
         self.init_projection = nn.Linear(observer_hidden, slow_dim)
         self.update_net = nn.Sequential(
-            nn.Linear(slow_dim + physical_dim + boundary_dim, 32), nn.Tanh(), nn.Linear(32, slow_dim)
+            nn.Linear(update_in, 32), nn.Tanh(), nn.Linear(32, slow_dim)
         )
         self.power_net = nn.Sequential(nn.Linear(slow_dim, 32), nn.Tanh(), nn.Linear(32, 3))
         nn.init.zeros_(self.power_net[-1].weight)
@@ -282,10 +290,10 @@ class B2SlowState(nn.Module):
     ) -> torch.Tensor:
         if step == 0 or step % self.stride:
             return slow
-        features = torch.cat(
-            [slow, (physical - self.state_loc) / self.state_scale,
-             (boundary - self.boundary_loc) / self.boundary_scale], dim=-1
-        )
+        parts = [slow, (boundary - self.boundary_loc) / self.boundary_scale]
+        if self.use_physical:
+            parts.append((physical - self.state_loc) / self.state_scale)
+        features = torch.cat(parts, dim=-1)
         return slow + 0.1 * torch.tanh(self.update_net(features))
 
     def power(self, slow: torch.Tensor, scale_kw: float = 3.0e4) -> torch.Tensor:
@@ -498,7 +506,7 @@ class JepaBModel(nn.Module):
         return RolloutResult(state_seq, temp_seq, sigma, boundary, boundary.mode, in_support)
 
     def forecast(self, history: HistoryWindow, action_seq: torch.Tensor, **kwargs) -> RolloutResult:
-        if self.arm != "b2":
+        if self.arm not in ("b2", "b5"):
             return self.base.forecast(history, action_seq, **kwargs)
         self.base._check_history(history)
         mode = kwargs.pop("boundary_mode", None) or self.base.config.boundary_mode
@@ -515,7 +523,7 @@ class JepaBModel(nn.Module):
         return self._slow_rollout(history, state0, boundary, action_seq)
 
     def counterfactual(self, history: HistoryWindow, action_seq: torch.Tensor, **kwargs) -> RolloutResult:
-        if self.arm != "b2":
+        if self.arm not in ("b2", "b5"):
             return self.base.counterfactual(history, action_seq, **kwargs)
         self.base._check_history(history)
         allow = bool(kwargs.pop("allow_extrapolation", False))
@@ -545,7 +553,7 @@ class JepaBModel(nn.Module):
         if self.arm == "b1":
             state0 = self.base._initial_state(batch.history)
             return self.auxiliary.terms(state0, batch.future_obs)  # type: ignore[union-attr]
-        if self.arm == "b2":
+        if self.arm in ("b2", "b5"):
             if result is None:
                 raise FinalWMProtocolError("B2 auxiliary loss requires rollout result")
             slow = result.states[..., -self.slow.slow_dim:]  # type: ignore[union-attr]
@@ -566,7 +574,7 @@ def build_jepa_model(
     properties: ThermoProperties | None = None,
     normalizer: PrivilegedNormalizer | None = None,
 ) -> JepaBModel:
-    if arm not in ("c0", "b1", "b2", "b3", "b3_shuffle", "b4"):
+    if arm not in ("c0", "b1", "b2", "b3", "b3_shuffle", "b4", "b5"):
         raise FinalWMProtocolError(f"unknown JEPA-B arm: {arm}")
     latent_dim = 4 if arm == "b4" else 0
     spec = TrainSpec(
@@ -579,10 +587,11 @@ def build_jepa_model(
         return JepaBModel(base, arm)
     if arm == "b1":
         return JepaBModel(base, arm, auxiliary=B1FutureStateAux(8))
-    if arm == "b2":
+    if arm in ("b2", "b5"):
         slow = B2SlowState(
             physical_dim=len(PHYSICAL_STATE_ELEMENTS), boundary_dim=len(BOUNDARY_ELEMENTS),
             slow_dim=4, stride=6, observer_hidden=base.config.observer.d_hidden,
+            use_physical=(arm == "b2"),
         )
         return JepaBModel(base, arm, slow=slow)
     if arm in ("b3", "b3_shuffle"):

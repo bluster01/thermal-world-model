@@ -1,0 +1,90 @@
+{
+  "protocol_version": "jepa-b5-series-v1",
+  "frozen_at": "2026-08-31",
+  "record": "artifacts/final_wm/canonical_sideA_v2.npz",
+  "properties": "artifacts/final_wm/iapws_surrogate.npz",
+  "result_root": "results/final_wm/jepa_b5_series_v1",
+  "data_contract": {
+    "canonical_revision": "2.2",
+    "side": "A",
+    "history_steps": 96,
+    "training_horizon": 18,
+    "test_locked": true,
+    "operating_gate": {
+      "unit_load_gt_mw": 160.0,
+      "water_coal_ratio_gt": 1.0,
+      "water_coal_ratio_lt": 8.0,
+      "fuel_corrected_gt_tph": 50.0
+    },
+    "privileged_registry": {
+      "total": 32,
+      "normalization": "train_valid_only",
+      "note": "B5 (action-blind slow state) does NOT consume the privileged channels; total kept for contract parity with v1"
+    }
+  },
+  "training": {
+    "seeds": [0],
+    "epochs": 120,
+    "patience": 20,
+    "batch_size": 32,
+    "batches_per_epoch": 200,
+    "learning_rate": 0.001,
+    "grad_clip": 10.0,
+    "boundary_mode": "oracle",
+    "initial_state_mode": "hybrid",
+    "closure_mode": "conservative_norew",
+    "automatic_retry": false
+  },
+  "losses": {
+    "observation_nll": 1.0,
+    "jepa_prediction": 0.0,
+    "gaussian_cf": 0.01,
+    "b4_static": 0.0,
+    "b4_dynamic": 0.0,
+    "gaussian_cf_slices": 16,
+    "gaussian_cf_knots": 17,
+    "gaussian_cf_seed": 260830
+  },
+  "arms": [
+    {"id": "c0", "role": "matched_control", "latent_dim": 0},
+    {"id": "b5", "role": "b2_action_blind_slow_state", "slow_dim": 4, "slow_stride": 6, "use_physical": false}
+  ],
+  "evaluation": {
+    "paired_windows": 256,
+    "paired_seed": 50000,
+    "decision_metric": "final_outlet_terminal_mae",
+    "horizons": [18, 36, 60],
+    "load_bins_mw": [160.0, 300.0, 450.0, 550.0, 700.0],
+    "direction": {
+      "valves": [0, 1],
+      "horizons": [18, 60],
+      "delta_valve": 0.05,
+      "support_margin": 0.05,
+      "bootstrap_replicates": 1000,
+      "formal_rule": "mean_lt_0_and_day_bootstrap_ci_hi_lt_0_and_frac_negative_ge_0.60",
+      "legacy_frac_negative_1_report_only": true,
+      "semantics": "original_trajectory_base",
+      "note": "base = window's real future_actions/future_boundary (original trajectory); step = base + delta on the valve"
+    },
+    "promotion": {
+      "h18_mae_relative_improvement_min": 0.05,
+      "load_spread_relative_worsening_max": 0.10,
+      "requires_all_direction_cells": true,
+      "pass_status": "PROMOTE_TO_FIXED_SEEDS_1_2",
+      "no_paper_verdict_upgrade": true
+    }
+  },
+  "execution_contract": {
+    "ordered_arms": ["c0", "b5"],
+    "single_gpu_sequential": true,
+    "resume_requires_commit_and_matrix_hash": true,
+    "linux_authorized_batch": "jepa_b5_series_v1",
+    "test_authorized": false,
+    "paper_verdict_authorized": false
+  },
+  "sources": [
+    "https://arxiv.org/abs/2511.08544",
+    "https://arxiv.org/abs/2606.16076",
+    "results/final_wm/jepa_b_series_v1/b2/report.json"
+  ]
+}

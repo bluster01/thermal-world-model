@@ -22,11 +22,11 @@ from src.final_wm.jepa import (
 )
 from src.final_wm.model import HistoryWindow
 from src.final_wm.properties import AnalyticThermoProperties
+from experiments.final_wm import jepa_b5_spec
 from experiments.final_wm.jepa_b_spec import (
     FROZEN_MATRIX_SHA256,
     load_matrix,
     matrix_sha256,
-    require_linux_authorization,
 )
 from experiments.final_wm.run_jepa_b import _verified_existing_train, sanity_report, train_arm
 
@@ -183,6 +183,38 @@ def test_b2_slow_state_holds_between_registered_updates():
     assert not torch.equal(slow.update(z, physical, boundary, step=3), z)
 
 
+def test_b5_slow_state_is_action_blind():
+    # B5 update must NOT read the physical state (a function of logged actions).
+    slow = B2SlowState(physical_dim=len(PHYSICAL_STATE_ELEMENTS), boundary_dim=7,
+                       slow_dim=4, stride=3, use_physical=False)
+    z = torch.randn(2, 4)
+    physical_a = torch.randn(2, len(PHYSICAL_STATE_ELEMENTS))
+    physical_b = torch.randn(2, len(PHYSICAL_STATE_ELEMENTS))
+    boundary = torch.randn(2, 7)
+    a = slow.update(z, physical_a, boundary, step=3)
+    b = slow.update(z, physical_b, boundary, step=3)
+    assert torch.equal(a, b), "B5 slow update must be invariant to the physical state"
+    assert not torch.equal(a, z), "B5 slow update must still move on registered steps"
+
+
+def test_b5_identity_gate_off_is_exact():
+    # With the slow mechanism scaled to 0, b5 rollout must be bitwise equal to c0.
+    model = build_jepa_model(
+        "b5", history_steps=12, properties=AnalyticThermoProperties(), normalizer=_normalizer()
+    )
+    control = build_jepa_model(
+        "c0", history_steps=12, properties=AnalyticThermoProperties(), normalizer=_normalizer()
+    )
+    model.base.load_state_dict(control.base.state_dict())
+    model.slow_mechanism_scale = 0.0
+    batch = _batch()
+    r0 = control.forecast(batch.history, batch.future_actions, boundary_mode="oracle",
+                          true_future_boundary=batch.future_boundary)
+    r1 = model.forecast(batch.history, batch.future_actions, boundary_mode="oracle",
+                        true_future_boundary=batch.future_boundary)
+    assert torch.equal(r0.temps_mu, r1.temps_mu)
+
+
 def test_b4_auxiliary_splits_physical_and_residual_state():
     model = build_jepa_model(
         "b4", history_steps=12, properties=AnalyticThermoProperties(), normalizer=_normalizer()
@@ -208,10 +240,12 @@ def test_frozen_matrix_has_all_and_only_registered_arms():
 
 def test_registry_authorizes_only_the_jepa_batch():
     root = Path(__file__).resolve().parents[2]
-    experiment = require_linux_authorization(
+    experiment = jepa_b5_spec.require_linux_authorization(
         root / "configs/phase3_5/experiment_registry.json"
     )
-    assert experiment["protocol_state"]["authorized_batch"] == "jepa_b_series_v1"
+    # gate moved to jepa_b5 after B-series completion; both batches share the
+    # authorization contract (seed0-only, test-locked, no paper verdict).
+    assert experiment["active_gate"] == "jepa_b5"
     assert experiment["protocol_state"]["test_locked"] is True
 
 

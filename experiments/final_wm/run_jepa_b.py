@@ -26,12 +26,7 @@ if str(ROOT) not in sys.path:
 
 import torch
 
-from experiments.final_wm.jepa_b_spec import (
-    ORDERED_ARMS,
-    load_matrix,
-    matrix_sha256,
-    require_linux_authorization,
-)
+from experiments.final_wm import jepa_b5_spec, jepa_b_spec
 from src.final_wm.contracts import FinalWMProtocolError
 from src.final_wm.data import SPLIT_TRAIN, SPLIT_VAL
 from src.final_wm.jepa import (
@@ -48,6 +43,16 @@ from src.final_wm.properties import AnalyticThermoProperties, load_grid_properti
 
 DEFAULT_MATRIX = ROOT / "configs/final_wm/jepa_b_series_v1.json"
 DEFAULT_REGISTRY = ROOT / "configs/phase3_5/experiment_registry.json"
+
+_SPEC = jepa_b_spec  # module-level contract; selected in main() by protocol version
+
+
+def _spec_for(matrix_path: Path):
+    """Pick the frozen contract module by protocol version."""
+    payload = json.loads(Path(matrix_path).read_text(encoding="utf-8"))
+    if payload.get("protocol_version") == "jepa-b5-series-v1":
+        return jepa_b5_spec
+    return jepa_b_spec
 
 
 def _git_commit() -> str:
@@ -447,14 +452,14 @@ def sanity_report(
         true_future_boundary=batch.future_boundary,
     )
     identities = {}
-    for arm in ORDERED_ARMS[1:]:
+    for arm in _SPEC.ORDERED_ARMS[1:]:
         torch.manual_seed(0)
         model = build_jepa_model(
             arm, history_steps=history_steps, properties=properties, normalizer=normalizer
         ).to(device).eval()
         if arm != "b4":
             model.base.load_state_dict(control.base.state_dict())
-        if arm == "b2":
+        if arm in ("b2", "b5"):
             model.slow_mechanism_scale = 0.0
         result = model.forecast(
             batch.history, batch.future_actions, boundary_mode="oracle",
@@ -566,7 +571,7 @@ def parse_args() -> argparse.Namespace:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--sanity", action="store_true")
     mode.add_argument("--queue", action="store_true")
-    mode.add_argument("--arm", choices=ORDERED_ARMS)
+    mode.add_argument("--arm", choices=_SPEC.ORDERED_ARMS)
     parser.add_argument("--quick", action="store_true")
     parser.add_argument("--matrix", type=Path, default=DEFAULT_MATRIX)
     parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
@@ -579,11 +584,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    global _SPEC
     args = parse_args()
-    matrix = load_matrix(args.matrix)
-    matrix_hash = matrix_sha256(args.matrix)
+    _SPEC = _spec_for(args.matrix)
+    matrix = _SPEC.load_matrix(args.matrix)
+    matrix_hash = _SPEC.matrix_sha256(args.matrix)
     if not args.sanity:
-        require_linux_authorization(args.registry)
+        _SPEC.require_linux_authorization(args.registry)
     if args.analytic_properties and not args.quick and not args.sanity:
         raise FinalWMProtocolError("analytic properties are forbidden for full JEPA-B execution")
     record_path = args.record or ROOT / matrix["record"]
@@ -612,8 +619,8 @@ def main() -> None:
         if not all(item["exact"] for item in report["identities"].values()):
             raise SystemExit("JEPA-B identity gate failed")
         return
-    arms = list(ORDERED_ARMS) if args.queue else [args.arm]
-    if arms != list(ORDERED_ARMS) and "c0" not in arms:
+    arms = list(_SPEC.ORDERED_ARMS) if args.queue else [args.arm]
+    if arms != list(_SPEC.ORDERED_ARMS) and "c0" not in arms:
         control_report = out_root / "c0" / "report.json"
         if not control_report.exists():
             raise FinalWMProtocolError("run c0 before a single non-control arm")
