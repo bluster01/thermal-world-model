@@ -5,6 +5,15 @@
   "quick": false,
   "commit": "a0495d9ddfaa95449c0a1d97b835890bfedfa3c1",
   "matrix_sha256": "b664c06272318775ad5aa89cc93c337c09a72806e5b16340552d536c66224751",
+  "direction_evaluation_provenance": {
+    "training_commit": "a0495d9ddfaa95449c0a1d97b835890bfedfa3c1",
+    "source_result_commit": "7791cc48340330eac5ed864477caa1b89f6066d4",
+    "evaluation_code_commit": "cde385ef64461e97d09aa42494d16b8ee35d27af",
+    "semantics": "original_trajectory_base",
+    "post_result_protocol_correction": true,
+    "verdict_changed": false,
+    "anchor_sha256_by_horizon": {"H18": "23b9af707de071a05ac9b358e611f39aa7e5ff8aa6cafa1968a9bd35bb0c5dd0", "H60": "102065079d9010e4f7b2b6e96946f5f358399ea011d9b43aee1d1da836709fe4"}
+  },
   "train": {
     "arm": "b3",
     "seed": 0,

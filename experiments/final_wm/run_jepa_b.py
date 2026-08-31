@@ -571,7 +571,7 @@ def parse_args() -> argparse.Namespace:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--sanity", action="store_true")
     mode.add_argument("--queue", action="store_true")
-    mode.add_argument("--arm", choices=_SPEC.ORDERED_ARMS)
+    mode.add_argument("--arm")
     parser.add_argument("--quick", action="store_true")
     parser.add_argument("--matrix", type=Path, default=DEFAULT_MATRIX)
     parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
@@ -587,6 +587,10 @@ def main() -> None:
     global _SPEC
     args = parse_args()
     _SPEC = _spec_for(args.matrix)
+    if args.arm is not None and args.arm not in _SPEC.ORDERED_ARMS:
+        raise FinalWMProtocolError(
+            f"arm {args.arm!r} is not registered for {_SPEC.PROTOCOL_VERSION}"
+        )
     matrix = _SPEC.load_matrix(args.matrix)
     matrix_hash = _SPEC.matrix_sha256(args.matrix)
     if not args.sanity:

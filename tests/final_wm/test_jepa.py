@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -28,7 +29,13 @@ from experiments.final_wm.jepa_b_spec import (
     load_matrix,
     matrix_sha256,
 )
-from experiments.final_wm.run_jepa_b import _verified_existing_train, sanity_report, train_arm
+from experiments.final_wm.run_jepa_b import (
+    _spec_for,
+    _verified_existing_train,
+    parse_args,
+    sanity_report,
+    train_arm,
+)
 
 
 def _record(path: Path, n: int = 320) -> Path:
@@ -238,15 +245,49 @@ def test_frozen_matrix_has_all_and_only_registered_arms():
     assert matrix["execution_contract"]["paper_verdict_authorized"] is False
 
 
-def test_registry_authorizes_only_the_jepa_batch():
+def test_registry_closes_jepa_batches_after_linux_audit():
     root = Path(__file__).resolve().parents[2]
-    experiment = jepa_b5_spec.require_linux_authorization(
-        root / "configs/phase3_5/experiment_registry.json"
+    registry = json.loads(
+        (root / "configs/phase3_5/experiment_registry.json").read_text(encoding="utf-8")
     )
-    # gate moved to jepa_b5 after B-series completion; both batches share the
-    # authorization contract (seed0-only, test-locked, no paper verdict).
-    assert experiment["active_gate"] == "jepa_b5"
-    assert experiment["protocol_state"]["test_locked"] is True
+    assert registry["linux_authorized_gate"] is None
+    for experiment_id in ("jepa_b_series", "jepa_b5"):
+        experiment = registry["experiments"][experiment_id]
+        assert experiment["status"] == "audited"
+        assert experiment["protocol_state"]["test_locked"] is True
+        assert experiment["protocol_state"]["audited"] is True
+
+
+def test_b5_arm_is_validated_after_matrix_selects_b5_spec(monkeypatch):
+    root = Path(__file__).resolve().parents[2]
+    matrix = root / "configs/final_wm/jepa_b5_series_v1.json"
+    monkeypatch.setattr(sys, "argv", ["run_jepa_b.py", "--matrix", str(matrix), "--arm", "b5"])
+    args = parse_args()
+    assert args.arm == "b5"
+    spec = _spec_for(args.matrix)
+    assert spec is jepa_b5_spec
+    assert "b5" in spec.ORDERED_ARMS
+
+
+def test_b5_registry_authorization_is_fail_closed(tmp_path: Path):
+    root = Path(__file__).resolve().parents[2]
+    registry = json.loads(
+        (root / "configs/phase3_5/experiment_registry.json").read_text(encoding="utf-8")
+    )
+    registry["active_gate"] = "jepa_b5"
+    registry["linux_authorized_gate"] = "jepa_b5"
+    experiment = registry["experiments"]["jepa_b5"]
+    experiment["status"] = "ready_for_linux"
+    state = experiment["protocol_state"]
+    state.update({"active": True, "ready_for_linux": True, "linux_completed": False,
+                  "results_returned": False, "audited": False})
+    path = tmp_path / "registry.json"
+    path.write_text(json.dumps(registry), encoding="utf-8")
+    assert jepa_b5_spec.require_linux_authorization(path)["status"] == "ready_for_linux"
+    state["seed_scope"] = [0, 1]
+    path.write_text(json.dumps(registry), encoding="utf-8")
+    with pytest.raises(FinalWMProtocolError, match="seed/retry"):
+        jepa_b5_spec.require_linux_authorization(path)
 
 
 def test_sanity_identity_gates_all_registered_mechanisms(tmp_path: Path):

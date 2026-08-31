@@ -25,6 +25,7 @@ from src.final_wm.properties import load_grid_properties
 
 
 def main() -> None:
+    evaluation_commit = R._git_commit()
     # Checkpoints were trained at a0495d9 (frozen run); the commit check in
     # _load_arm guards resume-safety of training artifacts, not eval re-scoring.
     R._git_commit = lambda: "a0495d9ddfaa95449c0a1d97b835890bfedfa3c1"
@@ -61,6 +62,17 @@ def main() -> None:
                 )
         rep = json.loads((arm_dir / "report.json").read_text(encoding="utf-8"))
         rep["direction_v03"] = direction
+        rep["direction_evaluation_provenance"] = {
+            "training_commit": rep["commit"],
+            "evaluation_code_commit": evaluation_commit,
+            "semantics": "original_trajectory_base",
+            "post_result_protocol_correction": True,
+            "verdict_changed": False,
+            "anchor_sha256_by_horizon": {
+                "H18": rep["evaluation"]["18"]["anchor_sha256"],
+                "H60": rep["evaluation"]["60"]["anchor_sha256"],
+            },
+        }
         if is_control:
             (arm_dir / "report.json").write_text(
                 json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8"
@@ -88,6 +100,7 @@ def main() -> None:
         # root report verdicts
         root = json.loads((out_root / "report.json").read_text(encoding="utf-8"))
         root["arms"] = {**root.get("arms", {}), arm_id: decision["status"]}
+        root["direction_evaluation_provenance"] = rep["direction_evaluation_provenance"]
         (out_root / "report.json").write_text(
             json.dumps(root, ensure_ascii=False, indent=2), encoding="utf-8"
         )

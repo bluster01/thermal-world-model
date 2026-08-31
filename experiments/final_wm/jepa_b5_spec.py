@@ -82,8 +82,17 @@ def require_linux_authorization(registry_path: str | Path) -> dict:
     exp = registry.get("experiments", {}).get("jepa_b5", {})
     if exp.get("status") != "ready_for_linux":
         raise FinalWMProtocolError(f"jepa_b5 registry status is {exp.get('status')!r}")
+    state = exp.get("protocol_state", {})
+    if state.get("authorized_batch") != "jepa_b5_series_v1":
+        raise FinalWMProtocolError("JEPA-B5 authorized batch mismatch")
+    if state.get("seed_scope") != [0] or state.get("automatic_retry") is not False:
+        raise FinalWMProtocolError("JEPA-B5 seed/retry authorization contract breached")
+    if state.get("ready_for_linux") is not True or state.get("results_returned") is not False:
+        raise FinalWMProtocolError("JEPA-B5 execution-state contract breached")
+    if state.get("test_locked") is not True or state.get("paper_verdict_authorized") is not False:
+        raise FinalWMProtocolError("JEPA-B5 test/paper authorization contract breached")
     return {
         "active_gate": "jepa_b5",
         "status": exp.get("status"),
-        "protocol_state": exp.get("protocol_state", {}),
+        "protocol_state": state,
     }

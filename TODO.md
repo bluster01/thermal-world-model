@@ -197,9 +197,9 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 
 | 66 | Final WM 可信度修复 Task 4：逐样本反事实支持域 | 本地 | ✓ `(B,2)` 逐窗口支持域、正式 R1/CF-1/CF-3/CF-4 counterfactual 路径、逐步 mask 与 fail-closed adjudication 已闭合；定向 56/56、完整 168/168。审计 `docs/FINAL_WM_TASK4_SUPPORT_DOMAIN_AUDIT_2026-08-30.md`。**下一项 Task 5 D-SYN teacher 扰动可观测性**；Linux 未授权、test 锁定，论文结论不自动升级。 |
 
-| 67 | JEPA 状态增强 B1–B4（含 B3 固定错配） | 本地+Linux | **READY FOR LINUX / 预注册 seed0 validation-only**。原文已核对 LeJEPA、LeWorldModel、JEPA-x、Phys-JEPA；冻结 C0/B1/B2/B3/B3-SHUFFLE/B4 六臂、A5 质量门、32 维已注册特权量、固定验证锚、H18 主门/负荷稳健门/两阀 H18-H60 v0.3 方向门。通过只晋级 seeds1/2，不升级论文 verdict；runbook `results/final_wm/probes_20260824/JEPA_B_LINUX_RUN_20260830.md`。 |
+| 67 | JEPA 状态增强 B1–B5（含 B3 固定错配） | 本地+Linux | ✓ **AUDITED / CLOSED**。B1 inconclusive；B2/B3/B4/B5 reject；B3-SHUFFLE 仅负控制，5 个可晋级候选均未 PROMOTE。方向门 `cde385e` 原轨迹修复前后裁定不变；B5-C0 与原 C0 evaluation/方向逐位一致。只支持单种子 validation 探索性表述，不支持“机制级因果冲突”或跨机组外推。审计 `results/final_wm/probes_20260824/JEPA_B_LINUX_AUDIT_20260901.md`。 |
 
-Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 只授权 `jepa_b_series_v1`，任何旧命令都不得继续执行。
+Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 
 ## 不可提前声称
 

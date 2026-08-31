@@ -1,8 +1,8 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
-  "updated_at": "2026-08-30",
-  "active_gate": "jepa_b5",
-  "linux_authorized_gate": "jepa_b5",
+  "updated_at": "2026-09-01",
+  "active_gate": "final_world_model_pipeline",
+  "linux_authorized_gate": null,
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -17,6 +17,7 @@
     "ms3_r",
     "final_world_model_pipeline",
     "jepa_b_series",
+    "jepa_b5",
     "ms4"
   ],
   "status_vocabulary": [
@@ -1286,7 +1287,7 @@
     },
     "jepa_b_series": {
       "title": "JEPA 状态增强 B1–B4 预注册探索批",
-      "status": "results_returned",
+      "status": "audited",
       "owner": "local_design_code_linux_run_local_audit",
       "evidence_scope": "validation_only_single_seed_state_representation_probe",
       "scripts": {
@@ -1326,13 +1327,17 @@
         "local_audit": {
           "path": "results/final_wm/probes_20260824/JEPA_B_LOCAL_AUDIT_20260830.md",
           "required": true
+        },
+        "linux_result_audit": {
+          "path": "results/final_wm/probes_20260824/JEPA_B_LINUX_AUDIT_20260901.md",
+          "required": true
         }
       },
       "protocol_state": {
-        "active": true,
+        "active": false,
         "ready_for_linux": false,
         "results_returned": true,
-        "audited": false,
+        "audited": true,
         "authorized_batch": "jepa_b_series_v1",
         "seed_scope": [
           0
@@ -1341,7 +1346,7 @@
         "paper_verdict_authorized": false,
         "automatic_retry": false
       },
-      "decision": "B1–B4 与 B3 固定错配对照已本地实现和预注册；仅授权 Linux 顺序执行侧A seed0 validation 探索批。通过只允许晋级固定 seeds 1/2，不升级正式论文 verdict",
+      "decision": "AUDITED / CLOSED：B1 INCONCLUSIVE；B2/B3/B4 REJECT；B3-SHUFFLE 仅负控制。方向门原轨迹修复前后裁定不变；无候选晋级，不升级论文 verdict",
       "advisories": [
         "final_world_model_pipeline Task 5–8 可信度修复仍未完成；本批是独立 validation-only 状态表示探针，不替代 v0.7 正式重发",
         "B3 使用 canonical v2.2 已注册 32 维特权量，不直接读取未注册的原始 381 列",
@@ -1388,7 +1393,7 @@
     },
     "jepa_b5": {
       "title": "JEPA-B5 动作盲慢态（B2 因果修复，预注册探索批）",
-      "status": "ready_for_linux",
+      "status": "audited",
       "owner": "execution_side_user_authorized",
       "evidence_scope": "validation_only_single_seed_state_representation_probe",
       "scripts": {
@@ -1424,12 +1429,20 @@
         "linux_runbook": {
           "path": "results/final_wm/probes_20260824/JEPA_B5_LINUX_RUN_20260831.md",
           "required": true
+        },
+        "results": {
+          "path": "results/final_wm/jepa_b5_series_v1/report.json",
+          "required": true
+        },
+        "linux_result_audit": {
+          "path": "results/final_wm/probes_20260824/JEPA_B_LINUX_AUDIT_20260901.md",
+          "required": true
         }
       },
       "protocol_state": {
-        "active": true,
-        "ready_for_linux": true,
-        "linux_completed": false,
+        "active": false,
+        "ready_for_linux": false,
+        "linux_completed": true,
         "note": "B5 = B2 action-blind fix: slow update drops the physical-state input (physical state is a function of logged actions). Direction gate uses original-trajectory semantics (base = real future_actions/future_boundary).",
         "authorized_batch": "jepa_b5_series_v1",
         "seed_scope": [
@@ -1438,8 +1451,14 @@
         "test_locked": true,
         "paper_verdict_authorized": false,
         "automatic_retry": false,
-        "results_returned": false
-      }
+        "results_returned": true,
+        "audited": true
+      },
+      "decision": "AUDITED / CLOSED：B5 H18 −4.42% 未过 5% 门，负荷 spread +10.94% 未过 10% 门，valve2-H18 方向门失败；REJECT_EXPLORATORY_SEED0，不补种子、不升级论文 verdict",
+      "advisories": [
+        "B2→B5 的均值符号变化只支持动作效果吸收/注入通道冲突假说，不构成机制因果识别",
+        "B5-C0 与 B-v1 C0 evaluation 和 direction 逐位一致；候选臂未在本机完整重跑，验证状态为 ANALYZED"
+      ]
     }
   }
 }
