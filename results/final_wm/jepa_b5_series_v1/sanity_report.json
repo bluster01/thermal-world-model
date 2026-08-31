@@ -1,0 +1,19 @@
+{
+  "identities": {
+    "b5": {
+      "exact": true,
+      "max_abs_temp_diff_c": 0.0
+    }
+  },
+  "target_action_permissions": {
+    "b1": "future_obs_only",
+    "b3": "representation_targets_no_action",
+    "b4": "residual_target_no_action; physical_anchor_uses_logged_same_instant_action"
+  },
+  "privileged_dim": 32,
+  "test_locked": true,
+  "commit": "0170d9f0125e38a047b32ecbc318b6589f512117",
+  "matrix_sha256": "28dcb4b6f41aed44184c1ca785916b9e3b6d03499c22f78e7969cbc0ceeed884",
+  "record_sha256": "24da77960e05e3636cc7b97a60a75e9b4ba470a3abb4f8ba920ddf11c6dad1d0",
+  "properties_sha256": "9fd7a1dba96a5b968661f644fa185ac755266c85853d689d065432a2d41f6e92"
+}
