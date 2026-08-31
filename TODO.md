@@ -198,6 +198,7 @@ Gate B 的四个冻结配对主门均通过：A/B specificity 日中位数为 `0
 | 66 | Final WM 可信度修复 Task 4：逐样本反事实支持域 | 本地 | ✓ `(B,2)` 逐窗口支持域、正式 R1/CF-1/CF-3/CF-4 counterfactual 路径、逐步 mask 与 fail-closed adjudication 已闭合；定向 56/56、完整 168/168。审计 `docs/FINAL_WM_TASK4_SUPPORT_DOMAIN_AUDIT_2026-08-30.md`。**下一项 Task 5 D-SYN teacher 扰动可观测性**；Linux 未授权、test 锁定，论文结论不自动升级。 |
 
 | 67 | JEPA 状态增强 B1–B5（含 B3 固定错配） | 本地+Linux | ✓ **AUDITED / CLOSED**。B1 inconclusive；B2/B3/B4/B5 reject；B3-SHUFFLE 仅负控制，5 个可晋级候选均未 PROMOTE。方向门 `cde385e` 原轨迹修复前后裁定不变；B5-C0 与原 C0 evaluation/方向逐位一致。只支持单种子 validation 探索性表述，不支持“机制级因果冲突”或跨机组外推。审计 `results/final_wm/probes_20260824/JEPA_B_LINUX_AUDIT_20260901.md`。 |
+| 68 | Final WM v0.6/v0.7 全量可信度重发 | 本地设计+Linux执行+本地审计 | ◻ **READY FOR LINUX**。Task 1–8 本地闭合；v0.6 canonical v2.2/120-20 与 v0.7 判决/身份合同合并为单次双侧重发，每侧 39 runs，R1=`closure_cons_norew`；生产式 v2.2 重建和全单元 quick 已过，审计 `docs/FINAL_WM_TASK5_8_LOCAL_AUDIT_2026-09-01.md`。唯一执行单 `results/final_wm/v07_full_reissue_runbook_20260901.md`；等待 Linux 回传 manifest/ledger/summary，test 与论文 verdict 继续锁定。 |
 
 Linux 历史命令保留在 [experiments/phase3_5/README.md](experiments/phase3_5/README.md)，仅供复现历史批次；当前 registry 的 Linux 授权为空，任何旧命令都不得继续执行。
 

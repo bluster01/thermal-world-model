@@ -179,6 +179,8 @@ def train_arm(
         "properties": type(model.transition.properties).__name__,
         "device": str(device),
     }
+    validation_anchor_seed = 10_000 + spec.seed
+    base_entry["validation_anchor_seed"] = validation_anchor_seed
 
     best_val = float("inf")
     best_epoch = -1
@@ -235,7 +237,7 @@ def train_arm(
                 model, record, 1,
                 n_windows=spec.eval_windows, batch_size=spec.eval_batch,
                 history_steps=spec.history_steps, horizon=spec.horizon,
-                boundary_mode=spec.boundary_mode, seed=10_000 + epoch, device=device,
+                boundary_mode=spec.boundary_mode, seed=validation_anchor_seed, device=device,
             )
             val_nll = float(val.nll.mean())
             val_history.append(val_nll)
@@ -315,7 +317,25 @@ def _git_tree_hash(path: str) -> str:
         return "unknown"
 
 
-def config_fingerprint(spec: TrainSpec) -> str:
+def _content_identity(path: str | Path | None) -> str | None:
+    if path is None:
+        return None
+    candidate = Path(path)
+    if not candidate.is_file():
+        return f"MISSING:{candidate}"
+    digest = hashlib.sha256()
+    with candidate.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def config_fingerprint(
+    spec: TrainSpec,
+    *,
+    record_path: str | Path | None = None,
+    properties_path: str | Path | None = None,
+) -> str:
     # The code tree hashes close the bisection blind spot: a repair that only
     # changes dynamics (no registry/prior change) still busts the resume cache.
     payload = json.dumps(
@@ -323,6 +343,12 @@ def config_fingerprint(spec: TrainSpec) -> str:
             "spec": asdict(spec),
             "structure": model_structure_fingerprint(),
             "code": [_git_tree_hash("src/final_wm"), _git_tree_hash("experiments/final_wm")],
+            "inputs": {
+                "record_sha256": _content_identity(record_path),
+                "properties_sha256": _content_identity(properties_path),
+                "init_checkpoint_sha256": _content_identity(spec.init_checkpoint),
+                "anchor_checkpoint_sha256": _content_identity(spec.anchor_constants_checkpoint),
+            },
         },
         sort_keys=True,
     ).encode("utf-8")

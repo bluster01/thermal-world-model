@@ -54,6 +54,27 @@ from src.final_wm.synthetic import synthetic_canonical_arrays
 from src.final_wm.training import build_world_model, config_fingerprint, train_arm
 
 from experiments.final_wm import matrix_spec as ms
+from experiments.final_wm.audit_manifest import (
+    create_authoritative_manifest,
+    ensure_authoritative_preflight,
+)
+
+
+def _ensure_output_tier(out: str | Path, *, quick: bool) -> Path:
+    """Bind one output directory to exactly one execution tier."""
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    marker = out / ".final_wm_tier.json"
+    tier = "quick" if quick else "full"
+    if marker.exists():
+        prior = json.loads(marker.read_text(encoding="utf-8"))
+        if prior.get("tier") != tier:
+            raise FinalWMProtocolError(
+                f"output tier mismatch: {out} is {prior.get('tier')}, requested {tier}"
+            )
+    else:
+        marker.write_text(json.dumps({"tier": tier}, indent=2) + "\n", encoding="utf-8")
+    return out
 
 
 def closure_blindness_check(model, device) -> dict:
@@ -157,8 +178,9 @@ def phase_split_sides(args) -> None:
 
 def run_dsyn(args) -> dict:
     device = _device(args.device)
-    out = Path(args.out)
-    out.mkdir(parents=True, exist_ok=True)
+    if not args.quick:
+        ensure_authoritative_preflight(args.out)
+    out = _ensure_output_tier(args.out, quick=bool(args.quick))
     seeds = (0,) if args.quick else ms.SEEDS
     total_steps = 2_000 if args.quick else 20_000
     results = []
@@ -166,11 +188,22 @@ def run_dsyn(args) -> dict:
         torch.manual_seed(10_000 + seed)
         teacher_spec = ms._base("dsyn", "teacher", seed, closure_mode="conservative")
         teacher = build_world_model(teacher_spec, AnalyticThermoProperties()).to(device)
+        before = torch.cat([
+            parameter.detach().reshape(-1).cpu()
+            for parameter in teacher.transition.raw.parameters()
+        ])
         with torch.no_grad():  # deterministic same-type perturbation away from priors
             gen = torch.Generator().manual_seed(20_000 + seed)
-            for name, p in teacher.transition.named_parameters():
-                if name.startswith("raw_"):
-                    p.add_(0.15 * torch.randn(p.shape, generator=gen).to(device))
+            for parameter in teacher.transition.raw.parameters():
+                parameter.add_(0.15 * torch.randn(parameter.shape, generator=gen).to(device))
+        after = torch.cat([
+            parameter.detach().reshape(-1).cpu()
+            for parameter in teacher.transition.raw.parameters()
+        ])
+        n_perturbed = int(before.numel())
+        parameter_delta_l2 = float(torch.linalg.vector_norm(after - before))
+        if n_perturbed == 0 or parameter_delta_l2 <= 0.0:
+            raise FinalWMProtocolError("D-SYN teacher perturbation was a no-op")
         arrays = synthetic_canonical_arrays(total_steps, seed=30_000 + seed, teacher=teacher.transition)
         record_path = out / f"dsyn_record_seed{seed}.npz"
         np.savez_compressed(record_path, **arrays)
@@ -217,6 +250,8 @@ def run_dsyn(args) -> dict:
             "student_val_nll": final["best_val_nll"],
             "improvement": improvement,
             "pass": passed,
+            "n_perturbed": n_perturbed,
+            "parameter_delta_l2": parameter_delta_l2,
             "cf1": cf1,
         })
         print(f"[dsyn] seed={seed} skeleton={skeleton_val:.3f} student={final['best_val_nll']:.3f} pass={passed}")
@@ -238,7 +273,9 @@ def run_dsyn(args) -> dict:
 # Phase: matrix units
 # ---------------------------------------------------------------------------
 
-def _save_metrics(out: Path, run_id: str, metrics, spec, final) -> Path:
+def _save_metrics(
+    out: Path, run_id: str, metrics, spec, final, *, record_path, properties_path=None,
+) -> Path:
     path = out / "metrics" / f"{run_id}.pt"
     path.parent.mkdir(parents=True, exist_ok=True)
     torch.save({
@@ -247,7 +284,9 @@ def _save_metrics(out: Path, run_id: str, metrics, spec, final) -> Path:
             "day_ids": metrics.day_ids,
         },
         "final": final,
-        "fingerprint": config_fingerprint(spec),
+        "fingerprint": config_fingerprint(
+            spec, record_path=record_path, properties_path=properties_path,
+        ),
     }, path)
     return path
 
@@ -263,7 +302,7 @@ def _save_eval_metrics(out: Path, run_id: str, metrics) -> Path:
     return path
 
 
-def _try_resume(spec, out) -> tuple[dict, WindowMetrics] | None:
+def _try_resume(spec, out, *, record_path=None, properties_path=None) -> tuple[dict, WindowMetrics] | None:
     """Skip-if-artifacts-exist resume: a run is reused iff its checkpoint and
     metrics exist AND the stored code fingerprint matches.
 
@@ -280,7 +319,9 @@ def _try_resume(spec, out) -> tuple[dict, WindowMetrics] | None:
     blob = torch.load(mpath, map_location="cpu", weights_only=False)
     if "metrics" not in blob:  # legacy flat format: no fingerprint, no resume
         return None
-    if blob.get("fingerprint") != config_fingerprint(spec):
+    if blob.get("fingerprint") != config_fingerprint(
+        spec, record_path=record_path, properties_path=properties_path,
+    ):
         return None
     metrics = WindowMetrics(**blob["metrics"])
     final = dict(blob.get("final") or {}, run_id=run_id, resumed=True)
@@ -293,10 +334,14 @@ def _use_compile(args) -> bool:
     return bool(getattr(args, "compile", False))
 
 
-def _train_and_eval(spec, record, out, device, properties, quick, use_compile=False):
+def _train_and_eval(
+    spec, record, out, device, properties, quick, use_compile=False, properties_path=None,
+):
     if quick:
         spec = ms.quicken(spec)
-    resumed = _try_resume(spec, out)
+    resumed = _try_resume(
+        spec, out, record_path=record.path, properties_path=properties_path,
+    )
     if resumed is not None:
         final, metrics = resumed
         print(f"[{spec.unit}] {spec.arm} seed={spec.seed} RESUMED (artifacts match spec) "
@@ -316,7 +361,10 @@ def _train_and_eval(spec, record, out, device, properties, quick, use_compile=Fa
         history_steps=ms.HISTORY_STEPS, horizon=ms.HORIZON,
         boundary_mode=spec.boundary_mode, seed=50_000 + spec.seed, device=device,
     )
-    _save_metrics(out, run_id, metrics, spec, final)
+    _save_metrics(
+        out, run_id, metrics, spec, final,
+        record_path=record.path, properties_path=properties_path,
+    )
     print(f"[{spec.unit}] {spec.arm} seed={spec.seed} best_val={final['best_val_nll']:.3f} "
           f"eval={horizon_summary(metrics)}")
     return final, metrics
@@ -545,7 +593,9 @@ def run_leakdist(args) -> dict:
 def run_matrix(args) -> dict:
     device = _device(args.device)
     properties = _properties(args.properties_npz)
-    out = Path(args.out)
+    if not args.quick:
+        ensure_authoritative_preflight(args.out)
+    out = _ensure_output_tier(args.out, quick=bool(args.quick))
     record = CanonicalRecord(args.record)
     units = args.units.split(",") if args.units else ["o1", "t1", "b1", "j1", "r1"]
     quick = bool(args.quick)
@@ -605,7 +655,9 @@ def run_matrix(args) -> dict:
     if "o1" in units:
         o1_run_specs = _filter_arm(ms.o1_specs(seeds))
         for spec in o1_run_specs:
-            final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
+            final, metrics = _train_and_eval(
+                spec, record, out, device, properties, quick, _use_compile(args), args.properties_npz,
+            )
             metrics_store[final["run_id"]] = metrics
         if not quick and getattr(args, "arm_filter", None) is None:
             continuity = {}
@@ -677,7 +729,9 @@ def run_matrix(args) -> dict:
     if "t1" in units:
         t1_run_specs = _filter_arm(ms.t1_specs(seeds))
         for spec in t1_run_specs:
-            final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
+            final, metrics = _train_and_eval(
+                spec, record, out, device, properties, quick, _use_compile(args), args.properties_npz,
+            )
             metrics_store[final["run_id"]] = metrics
         if not quick and getattr(args, "arm_filter", None) is None:
             stability = {}
@@ -743,7 +797,9 @@ def run_matrix(args) -> dict:
         b_downstream = {}
         b_horizon = ms.HORIZON if quick else 36
         for spec in _filter_arm(ms.b1_specs(seeds)):
-            final, _ = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
+            final, _ = _train_and_eval(
+                spec, record, out, device, properties, quick, _use_compile(args), args.properties_npz,
+            )
             model = _load_checkpoint_model(spec, out, device, properties)
             b_metrics[spec.seed] = boundary_forecast_metrics(
                 model, record, SPLIT_VAL, n_windows=32 if quick else 256, batch_size=32,
@@ -809,7 +865,9 @@ def run_matrix(args) -> dict:
         joint_models, staged_models = {}, {}
         j1_run_specs = _filter_arm(ms.j1_specs(seeds))
         for spec in j1_run_specs:
-            final, metrics = _train_and_eval(spec, record, out, device, properties, quick, _use_compile(args))
+            final, metrics = _train_and_eval(
+                spec, record, out, device, properties, quick, _use_compile(args), args.properties_npz,
+            )
             metrics_store[final["run_id"]] = metrics
             if spec.arm == "joint":
                 joint_metrics[spec.seed] = metrics
@@ -913,10 +971,10 @@ def run_matrix(args) -> dict:
         dump_summary()
 
     if "r1" in units:
-        # --r1-arm (v0.4): the frozen gate defaults to closure_cons; the norew
-        # ablation stack gets its own evidence block, never clobbering 'r1'.
-        r1_arm = getattr(args, "r1_arm", "closure_cons")
-        r1_key = "r1" if r1_arm == "closure_cons" else f"r1_{r1_arm}"
+        # v0.4/v0.7: the frozen R1 gate uses the norew production stack.
+        # Explicit historical stacks remain isolated under suffixed keys.
+        r1_arm = getattr(args, "r1_arm", ms.R1_ARM)
+        r1_key = "r1" if r1_arm == ms.R1_ARM else f"r1_{r1_arm}"
         r1_reports = []
         for seed in seeds:
             ckpt = out / "checkpoints" / f"t1_{r1_arm}_seed{seed}.pt"
@@ -1047,11 +1105,31 @@ def run_matrix(args) -> dict:
         )
         protocol.update({"arm": r1_arm, "reports": r1_reports})
         summary["units"][r1_key] = protocol
-        r1_file = "r1_report.json" if r1_arm == "closure_cons" else f"r1_report_{r1_arm}.json"
+        r1_file = "r1_report.json" if r1_arm == ms.R1_ARM else f"r1_report_{r1_arm}.json"
         _write_json(out / r1_file, summary["units"][r1_key])
         dump_summary()
 
     dump_summary()
+    full_units = {"o1", "t1", "b1", "j1", "r1"}
+    if (
+        not quick
+        and set(units) == full_units
+        and tuple(seeds) == tuple(ms.SEEDS)
+        and getattr(args, "arm_filter", None) is None
+    ):
+        if args.side not in ("A", "B"):
+            raise FinalWMProtocolError("authoritative v0.7 run requires --side A or B")
+        if not args.properties_npz:
+            raise FinalWMProtocolError("authoritative v0.7 run requires --properties-npz")
+        manifest = create_authoritative_manifest(
+            out=out,
+            summary_path=out / summary_name,
+            record_path=args.record,
+            properties_path=args.properties_npz,
+            side=args.side,
+            command=list(sys.argv),
+        )
+        print(f"[matrix] authoritative manifest written: {manifest}")
     print(f"[matrix] summary written: {out / summary_name}")
     return summary
 
@@ -1087,7 +1165,7 @@ def main() -> None:
                         help="tf32 matmul precision (tensor-core fp32; ~10-bit mantissa on GRU/MLP matmuls only, physics elementwise unaffected)")
     parser.add_argument("--checkpoint", default=None, help="auditpack: trained model checkpoint")
     parser.add_argument("--arm", default="closure_cons", help="auditpack/leakdist: T1 arm of --checkpoint")
-    parser.add_argument("--r1-arm", dest="r1_arm", default="closure_cons",
+    parser.add_argument("--r1-arm", dest="r1_arm", default=ms.R1_ARM,
                         help="r1: T1 arm whose checkpoints the gate probes (v0.4 norew stack)")
     parser.add_argument("--seed", default=0, help="auditpack: seed of --checkpoint")
     args = parser.parse_args()

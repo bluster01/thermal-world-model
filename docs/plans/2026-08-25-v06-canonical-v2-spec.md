@@ -83,6 +83,10 @@
   [0,800] °C；spray 流量 [0,400] t/h；superheat_sep [-60,200] °C。
 - 已知野值处置（侦察实测）：磨炉烟流量负值 → clip≥0 后参与加权；7 号磨停机
   炉烟温度 ~10°C 环境温度 → 权重=0 时不入加权，自然豁免。
+- 原始质量门先于 clip：`spray_flow_sh_total` 已审计负零漂最低 −9.05 t/h，冻结
+  `raw_range=[-10,400]`；`spray_flow_rh_total` 最低 −1.03 t/h，冻结
+  `raw_range=[-2,400]`。通过 raw 门后才 clip 到模型范围 `[0,400]`；其他通道未声明
+  `raw_range` 时直接以 `range` 作原始门，禁止用 clip 隐藏越界。
 - v2.2 A5 两列的存储量程为：`water_coal_ratio` [0,10]、`unit_load` [0,800] MW；
   A5 采窗另按预注册运行工况门 `unit_load>160, 1<ratio<8, fuel>50` 排除停机与异常点。
 

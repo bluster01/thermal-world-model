@@ -1,6 +1,6 @@
 # 最终世界模型判别实验矩阵 v0.2（冻结稿）
 
-> 状态：**HOLD / v0.7 CREDIBILITY REPAIR / NO LINUX AUTHORIZATION**。原冻结稿 v0.2 及后续修正案
+> 状态：**v0.7 LOCAL VERIFIED / READY FOR LINUX FULL REISSUE / TEST LOCKED**。原冻结稿 v0.2 及后续修正案
 > 保留为历史；本文件冻结 O1/B1/T1/R1/J1 判别实验与前置 D0/D-SYN
 > 门禁的假设、数据合同、预算、判决规则与禁止事项。K1 为条件实验，母模型未过门禁前保持 HOLD。
 > v0.1 → v0.2 修正案见 §5（首轮执行回传后生效）。
@@ -227,6 +227,9 @@ D0 必须产出**点位映射审计表**（DCS 点名 → 注册表通道 → �
 8. O1/T1/J1 的正式 NLL 门使用相同验证窗口上的 `ΔNLL = arm - baseline`，先按 UTC 日聚合再
    bootstrap；单 seed 仅当 95% CI 上界 `< 0` 才计通过，完整判决仍要求至少 2/3 seeds。
    NLL 不再使用百分比阈值；CRPS/MAE 的相对改善只作为实用效应量报告。
+9. 2026-09-01 全量重发继承 v0.6-B 的显式 `epochs=120 / patience=20`，取代 v0.2 的历史
+   60/10 预算；正式记录为 canonical v2.2 的 7 通道 base view，正式 R1 栈固定为
+   `closure_cons_norew`。A5/LPV/zcond/JEPA-B 不并入本矩阵。
 
 阶段护栏：Task 1–2 已闭合 C1 与 paired-NLL。`leakage_v07`、`support_domain_v07` 在对应修复
 完成前保持缺失，因此 R1 仍为 `INCOMPLETE`；当前不授权 Linux 或正式重跑。

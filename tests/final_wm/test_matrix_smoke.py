@@ -10,16 +10,19 @@ import json
 from argparse import Namespace
 
 import numpy as np
+import pytest
 import torch
 
 from experiments.final_wm import matrix_spec as ms
 from experiments.final_wm.run_matrix import (
     _adjudicate,
+    _ensure_output_tier,
     _seed_delta_passes,
     closure_blindness_check,
     run_dsyn,
     run_matrix,
 )
+from src.final_wm.contracts import FinalWMProtocolError
 from src.final_wm.synthetic import synthetic_canonical_arrays
 from src.final_wm.evaluation import WindowMetrics
 from src.final_wm.training import build_world_model
@@ -101,6 +104,9 @@ def test_matrix_version_and_required_evidence_are_v07() -> None:
         ms.REQUIRED_EVIDENCE["r1"]
     )
     assert not any(hasattr(ms, name) for name in ("THRESH_O1_NLL", "THRESH_T1_NLL", "THRESH_J1_NLL"))
+    assert ms.R1_ARM == "closure_cons_norew"
+    for spec in ms.o1_specs() + ms.t1_specs() + ms.b1_specs() + ms.j1_specs():
+        assert (spec.epochs, spec.patience) == (120, 20)
 
 
 def test_nll_seed_gate_uses_paired_absolute_difference() -> None:
@@ -129,6 +135,16 @@ def test_dsyn_quick_gate_runs(tmp_path, monkeypatch) -> None:
     assert verdict["quick"] is True
     for entry in verdict["per_seed"]:
         assert np.isfinite(entry["student_val_nll"])
+        assert entry["n_perturbed"] > 0
+        assert entry["parameter_delta_l2"] > 0.0
+
+
+def test_quick_and_full_outputs_cannot_share_a_directory(tmp_path) -> None:
+    out = tmp_path / "one-tier-only"
+    _ensure_output_tier(out, quick=True)
+    _ensure_output_tier(out, quick=True)
+    with pytest.raises(FinalWMProtocolError, match="output tier mismatch"):
+        _ensure_output_tier(out, quick=False)
 
 
 def _ledger_final_count(out) -> int:
@@ -167,7 +183,7 @@ def test_matrix_rerun_retrains_when_spec_changes(tmp_path, monkeypatch) -> None:
 def test_matrix_quick_t1_and_r1_run(tmp_path, monkeypatch) -> None:
     """End-to-end coverage of the R1 unit path (the unit that crashed the
     first Linux run): trains the four T1 arms quick, then runs the R1 probes
-    against the closure_cons checkpoints."""
+    against the frozen closure_cons_norew production checkpoints."""
     monkeypatch.setattr(ms, "HISTORY_STEPS", 16)
     record_path = tmp_path / "record.npz"
     np.savez_compressed(record_path, **synthetic_canonical_arrays(total_steps=1500, seed=9))
@@ -231,24 +247,23 @@ def test_summary_merges_across_invocations(tmp_path, monkeypatch) -> None:
     assert merged["units"]["t1"] == {"marker": "from-another-invocation"}
 
 
-def test_r1_arm_targets_norew_stack_without_clobbering(tmp_path, monkeypatch) -> None:
-    """Amendment v0.4 regression: --r1-arm closure_cons_norew probes the norew
-    checkpoints and writes r1_closure_cons_norew / r1_report_<arm>.json; the
-    frozen 'r1' block and r1_report.json are untouched."""
+def test_nonofficial_r1_arm_does_not_clobber_frozen_norew_block(tmp_path, monkeypatch) -> None:
+    """v0.7 freezes norew as R1; an explicit historical intact probe remains
+    isolated under a non-authoritative key and filename."""
     monkeypatch.setattr(ms, "HISTORY_STEPS", 16)
     record_path = tmp_path / "record.npz"
     np.savez_compressed(record_path, **synthetic_canonical_arrays(total_steps=1200, seed=3))
     out = tmp_path / "out"
     args = _args(tmp_path, record=str(record_path), units="r1", seeds="0",
-                 r1_arm="closure_cons_norew")
+                 r1_arm="closure_cons")
     summary = run_matrix(args)
-    block = summary["units"]["r1_closure_cons_norew"]
-    assert block["arm"] == "closure_cons_norew"
+    block = summary["units"]["r1_closure_cons"]
+    assert block["arm"] == "closure_cons"
     assert block["verdict"] == "SMOKE"  # quick tier never emits a directional verdict
     assert block["status"] == "SMOKE"
-    assert "norew" in block["reports"][0]["error"]
+    assert "closure_cons" in block["reports"][0]["error"]
     assert "r1" not in summary["units"]
-    assert (out / "r1_report_closure_cons_norew.json").exists()
+    assert (out / "r1_report_closure_cons.json").exists()
     assert not (out / "r1_report.json").exists()
 
 

@@ -94,6 +94,14 @@ def load_channel_mapping_v2(path: str | Path) -> dict:
             rng = spec.get("range")
             if rng is None or float(rng[0]) >= float(rng[1]):
                 raise FinalWMProtocolError(f"{section}.{name} lacks a valid range gate")
+            raw_rng = spec.get("raw_range")
+            if raw_rng is not None:
+                if float(raw_rng[0]) >= float(raw_rng[1]):
+                    raise FinalWMProtocolError(f"{section}.{name} has invalid raw_range")
+                if float(raw_rng[0]) > float(rng[0]) or float(raw_rng[1]) < float(rng[1]):
+                    raise FinalWMProtocolError(
+                        f"{section}.{name} raw_range must contain postprocess range"
+                    )
     mill = mapping.get("mill_on", {})
     for key in ("feeder_columns", "mill_gas_temp_columns", "mill_gas_flow_columns"):
         if len(mill.get(key, [])) != N_MILLS:
@@ -310,17 +318,22 @@ def build_canonical_v2(
     mill = mapping["mill_on"]
     thresh = float(mill["threshold_tph"])
     feeders = np.stack([col(c) for c in mill["feeder_columns"]], axis=1)
-    mill_on = (np.nan_to_num(feeders, nan=0.0) > thresh).astype(np.uint8)
-    mill_count = mill_on.sum(axis=1).astype(np.float64)
-    gas_t = np.stack([col(c) for c in mill["mill_gas_temp_columns"]], axis=1)
-    gas_f = np.clip(np.nan_to_num(
-        np.stack([col(c) for c in mill["mill_gas_flow_columns"]], axis=1), nan=0.0), 0.0, None)
+    feeder_valid = np.isfinite(feeders).all(axis=1)
+    mill_on_raw = (np.nan_to_num(feeders, nan=0.0) > thresh).astype(np.uint8)
+    mill_count = mill_on_raw.sum(axis=1).astype(np.float64)
+    mill_count[~feeder_valid] = np.nan
+    gas_t_raw = np.stack([col(c) for c in mill["mill_gas_temp_columns"]], axis=1)
+    gas_f_raw = np.stack([col(c) for c in mill["mill_gas_flow_columns"]], axis=1)
+    gas_valid = np.isfinite(gas_t_raw).all(axis=1) & np.isfinite(gas_f_raw).all(axis=1)
+    gas_t = np.nan_to_num(gas_t_raw, nan=0.0)
+    gas_f = np.clip(np.nan_to_num(gas_f_raw, nan=0.0), 0.0, None)
     w_sum = gas_f.sum(axis=1)
     wavg = np.where(
         w_sum > 1e-9,
         (np.nan_to_num(gas_t, nan=0.0) * gas_f).sum(axis=1) / np.maximum(w_sum, 1e-9),
         np.nan_to_num(gas_t, nan=0.0).mean(axis=1),
     )
+    wavg[~gas_valid] = np.nan
     derived = {"mill_on_count": mill_count, "mill_gas_wavg": wavg}
 
     def channel_values(spec: dict) -> np.ndarray:
@@ -331,7 +344,9 @@ def build_canonical_v2(
             return derived[kind].copy()
         return col(spec["column"])
 
-    # Assemble ext/aux, apply clip, then Gate 3: quality gates.
+    # Assemble raw ext/aux.  Gate 3 must see the source values before clip or
+    # fill; otherwise a production mapping with clip==range hides excursions
+    # and derived channels can turn missing source rows into valid zeros.
     min_run = int(gates.stuck_minutes * 60.0 / gates.dt_seconds)
     quality: dict[str, dict] = {}
     ext = np.stack([channel_values(mapping["boundary_ext"][k]) for k in BOUNDARY_EXT_ELEMENTS], axis=1)
@@ -373,35 +388,60 @@ def build_canonical_v2(
     new_actions = np.clip(np.nan_to_num(new_actions, nan=0.0), 0.0, 1.0).astype(np.float32)
 
     breaches: list[str] = []
+    source_quality = {
+        "mill_on": {"source_coverage": float(feeder_valid.mean())},
+        "mill_gas_temp_wavg": {"source_coverage": float(gas_valid.mean())},
+    }
+    for name, report in source_quality.items():
+        if report["source_coverage"] < gates.min_coverage:
+            breaches.append(
+                f"{name} source_coverage {report['source_coverage']:.4f} < {gates.min_coverage}"
+            )
     for block_name, registry, arr in (("boundary_ext", BOUNDARY_EXT_ELEMENTS, ext),
                                       ("aux", AUX_ELEMENTS, aux)):
         for j, name in enumerate(registry):
             spec = mapping[block_name][name]
-            values = arr[:, j]
-            coverage = float(np.isfinite(values).mean())
-            if "clip" in spec:
-                lo, hi = float(spec["clip"][0]), float(spec["clip"][1])
-                values = np.clip(values, lo, hi)
-                arr[:, j] = values
-            lo, hi = float(spec["range"][0]), float(spec["range"][1])
-            finite = np.isfinite(values)
-            range_violation = float(((values[finite] < lo) | (values[finite] > hi)).mean()) \
+            raw_values = arr[:, j].copy()
+            coverage = float(np.isfinite(raw_values).mean())
+            raw_range = spec.get("raw_range", spec["range"])
+            lo, hi = float(raw_range[0]), float(raw_range[1])
+            finite = np.isfinite(raw_values)
+            range_violation = float(((raw_values[finite] < lo) | (raw_values[finite] > hi)).mean()) \
                 if finite.any() else 1.0
             stuck_max = spec.get("stuck_max")
             stuck = None if stuck_max is None else _stuck_ratio(
-                np.nan_to_num(values, nan=0.0), min_run)
+                np.nan_to_num(raw_values, nan=0.0), min_run)
             quality[f"{block_name}.{name}"] = {
-                "coverage": coverage, "range_violation": range_violation, "stuck_ratio": stuck,
+                "coverage": coverage,
+                "range_violation": range_violation,
+                "raw_coverage": coverage,
+                "raw_range_violation": range_violation,
+                "raw_range": [lo, hi],
+                "stuck_ratio": stuck,
             }
             if coverage < gates.min_coverage:
                 breaches.append(f"{block_name}.{name} coverage {coverage:.4f} < {gates.min_coverage}")
             if range_violation > gates.max_range_violation:
-                breaches.append(f"{block_name}.{name} range_violation {range_violation:.5f}")
+                breaches.append(f"{block_name}.{name} raw_range_violation {range_violation:.5f}")
             if stuck is not None and stuck > float(stuck_max):
                 breaches.append(f"{block_name}.{name} stuck_ratio {stuck:.4f} > {stuck_max}")
     if breaches:
         raise FinalWMProtocolError("v2 quality gates breached: " + "; ".join(breaches))
 
+    for block_name, registry, arr in (("boundary_ext", BOUNDARY_EXT_ELEMENTS, ext),
+                                      ("aux", AUX_ELEMENTS, aux)):
+        for j, name in enumerate(registry):
+            spec = mapping[block_name][name]
+            if "clip" in spec:
+                lo, hi = float(spec["clip"][0]), float(spec["clip"][1])
+                arr[:, j] = np.clip(arr[:, j], lo, hi)
+            post = np.nan_to_num(arr[:, j], nan=0.0)
+            quality[f"{block_name}.{name}"]["postprocess"] = {
+                "coverage": float(np.isfinite(post).mean()),
+                "min": float(post.min()),
+                "max": float(post.max()),
+            }
+    mill_on = mill_on_raw
     ext = np.nan_to_num(ext, nan=0.0).astype(np.float32)
     aux = np.nan_to_num(aux, nan=0.0).astype(np.float32)
 
@@ -423,6 +463,7 @@ def build_canonical_v2(
         "aux_elements": list(AUX_ELEMENTS),
         "n_mills": N_MILLS,
         "quality": quality,
+        "source_quality": source_quality,
         "alignment": [r._asdict() for r in alignment],
         "provenance": {
             "v1_record_path": str(v1_path),

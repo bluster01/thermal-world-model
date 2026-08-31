@@ -325,6 +325,32 @@ def test_quality_gates_fail_closed(tmp_path) -> None:
         build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz", side="A")
 
 
+def test_raw_range_gate_runs_before_clip(tmp_path) -> None:
+    v1, mpath = _fixture(tmp_path)
+    import pandas as pd
+
+    mapping = json.loads(mpath.read_text(encoding="utf-8"))
+    mapping["boundary_ext"]["fuel_corrected"]["clip"] = [0.0, 600.0]
+    mapping["boundary_ext"]["fuel_corrected"]["range"] = [0.0, 600.0]
+    mpath.write_text(json.dumps(mapping), encoding="utf-8")
+    frame = pd.read_csv(tmp_path / "all_merged.csv")
+    frame.loc[:9, "fuel_col"] = 900.0
+    frame.to_csv(tmp_path / "all_merged.csv", index=False)
+    with pytest.raises(FinalWMProtocolError, match="raw_range_violation"):
+        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz", side="A")
+
+
+def test_derived_channel_coverage_uses_raw_sources(tmp_path) -> None:
+    v1, mpath = _fixture(tmp_path)
+    import pandas as pd
+
+    frame = pd.read_csv(tmp_path / "all_merged.csv")
+    frame.loc[50:79, "feeder1"] = np.nan
+    frame.to_csv(tmp_path / "all_merged.csv", index=False)
+    with pytest.raises(FinalWMProtocolError, match="source_coverage"):
+        build_canonical_v2(v1, tmp_path, mpath, tmp_path / "out.npz", side="A")
+
+
 def _prepend_rows(v1_path, n_pre: int):
     """Return a new v1 npz with n_pre duplicated rows prepended (earlier times)."""
     arrays = np.load(v1_path)

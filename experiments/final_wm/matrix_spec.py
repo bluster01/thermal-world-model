@@ -17,6 +17,7 @@ MATRIX_VERSION = "0.7"
 SEEDS = (0, 1, 2)
 HISTORY_STEPS = 96
 HORIZON = 18
+R1_ARM = "closure_cons_norew"
 
 # A directional verdict is legal only when every named evidence item is
 # present.  The runner records missing items and emits INCOMPLETE rather than
@@ -45,6 +46,10 @@ MIN_SEED_PASSES = 2         # >=2/3 seeds must pass
 
 
 def _base(unit: str, arm: str, seed: int, **kw) -> TrainSpec:
+    # v0.6-B is the latest approved training budget inherited by the v0.7
+    # credibility reissue.  Keep it explicit in every serialized TrainSpec.
+    kw.setdefault("epochs", 120)
+    kw.setdefault("patience", 20)
     return TrainSpec(unit=unit, arm=arm, seed=seed, history_steps=HISTORY_STEPS, horizon=HORIZON, **kw)
 
 
@@ -57,11 +62,7 @@ def o1_specs(seeds: tuple[int, ...] = SEEDS) -> list[TrainSpec]:
 
 
 def t1_specs(seeds: tuple[int, ...] = SEEDS) -> list[TrainSpec]:
-    """Nested structure arms.  v0.2 amendment: uniform budget epochs=60 /
-    patience=10 for ALL T1 arms (default 30/6 undertrained the latent arm on
-    side A seed 2 — it hit the epoch cap while still descending; a uniform
-    raise keeps the comparison symmetric, early stopping still bounds cost).
-    """
+    """Nested structure arms under the superseding v0.6-B 120/20 budget."""
     arms = (
         ("physics_only", "none", 0),
         ("closure_cons", "conservative", 0),
@@ -74,7 +75,7 @@ def t1_specs(seeds: tuple[int, ...] = SEEDS) -> list[TrainSpec]:
     )
     return [
         _base("t1", arm, seed, boundary_mode="oracle", initial_state_mode="hybrid",
-              closure_mode=closure, latent_dim=latent, epochs=60, patience=10)
+              closure_mode=closure, latent_dim=latent)
         for seed in seeds
         for arm, closure, latent in arms
     ]

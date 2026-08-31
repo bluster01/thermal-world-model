@@ -415,6 +415,7 @@ class CanonicalRecord:
         path = Path(path)
         if not path.exists():
             raise FinalWMProtocolError(f"canonical record missing: {path}")
+        self.path = path.resolve()
         arrays = np.load(path)
         self.boundary = torch.from_numpy(arrays["boundary"].astype(np.float32))
         self.actions = torch.from_numpy(arrays["actions"].astype(np.float32))

@@ -10,7 +10,7 @@
 
 ---
 
-> 状态：`TASK 1–4 LOCAL VERIFIED / TASK 5 NEXT / HOLD / TEST LOCKED`
+> 状态：`TASK 1–8 LOCAL VERIFIED / READY FOR LINUX FULL REISSUE / TEST LOCKED`
 > 依据：`docs/FINAL_WM_CREDIBILITY_AUDIT_2026-08-27.md`
 > 执行原则：一次只完成一个任务；测试通过、人工核对 diff 后再进入下一项；不自动启动 Linux、test 或论文改写。
 
@@ -219,6 +219,9 @@ Commit: `fix(final-wm): enforce per-window counterfactual support`。
 
 ## Task 5: 让 D-SYN 真实扰动 teacher
 
+> 完成记录（2026-09-01）：直接遍历 `transition.raw`，no-op fail-closed；报告保存
+> `n_perturbed` 与 `parameter_delta_l2`。quick 与定向回归通过。
+
 **Files:**
 
 - Modify: `experiments/final_wm/run_matrix.py`
@@ -257,6 +260,9 @@ Expected: PASS；quick 仍只标 `SMOKE`。
 Commit: `fix(final-wm): make dsyn teacher perturbation observable`。
 
 ## Task 6: 修正 canonical v2 原始质量门
+
+> 完成记录（2026-09-01）：raw/source coverage 与 range violation 在 clip/fill 前执行，
+> 合法 fixture 数组保持不变；meta 同时报 raw 与 postprocess 摘要。
 
 **Files:**
 
@@ -298,6 +304,9 @@ Expected: PASS；合法 fixture 数组逐位一致。
 Commit: `fix(final-wm): gate v2 channels before clipping`。
 
 ## Task 7: 固定 validation anchors 并内容寻址正式 run
+
+> 完成记录（2026-09-01）：每 run 固定 validation anchor seed；resume 指纹绑定 record、
+> properties、init/anchor checkpoint 内容；quick/full tier 强制隔离；manifest 审计器已落地。
 
 **Files:**
 
@@ -346,6 +355,9 @@ Expected: PASS。
 Commit: `fix(final-wm): bind validation runs to immutable inputs`。
 
 ## Task 8: 全量本地验证并冻结 Linux 重发命令
+
+> 完成记录（2026-09-01）：v0.6/v0.7 谱系审计、双侧每侧 39-run 冻结执行单、README/TODO/
+> registry 已更新；唯一授权批次为 `final_wm_v07_full_reissue_v1`，test 仍锁定。
 
 **Files:**
 

@@ -250,7 +250,8 @@ def test_registry_closes_jepa_batches_after_linux_audit():
     registry = json.loads(
         (root / "configs/phase3_5/experiment_registry.json").read_text(encoding="utf-8")
     )
-    assert registry["linux_authorized_gate"] is None
+    assert registry["linux_authorized_gate"] == "final_world_model_pipeline"
+    assert registry["experiments"]["final_world_model_pipeline"]["status"] == "ready_for_linux"
     for experiment_id in ("jepa_b_series", "jepa_b5"):
         experiment = registry["experiments"][experiment_id]
         assert experiment["status"] == "audited"

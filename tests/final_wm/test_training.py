@@ -51,6 +51,44 @@ def test_config_fingerprint_covers_model_structure() -> None:
         assert config_fingerprint(spec) != fp_before
 
 
+def test_config_fingerprint_binds_input_content(tmp_path) -> None:
+    record = tmp_path / "record.npz"
+    properties = tmp_path / "properties.npz"
+    anchor = tmp_path / "anchor.pt"
+    record.write_bytes(b"record-v1")
+    properties.write_bytes(b"properties-v1")
+    anchor.write_bytes(b"anchor-v1")
+    spec = _quick_spec(anchor_constants_checkpoint=str(anchor))
+    before = config_fingerprint(spec, record_path=record, properties_path=properties)
+    record.write_bytes(b"record-v2")
+    assert config_fingerprint(spec, record_path=record, properties_path=properties) != before
+    record.write_bytes(b"record-v1")
+    properties.write_bytes(b"properties-v2")
+    assert config_fingerprint(spec, record_path=record, properties_path=properties) != before
+    properties.write_bytes(b"properties-v1")
+    anchor.write_bytes(b"anchor-v2")
+    assert config_fingerprint(spec, record_path=record, properties_path=properties) != before
+
+
+def test_validation_anchor_seed_is_fixed_across_epochs(tmp_path, monkeypatch) -> None:
+    import src.final_wm.training as training
+
+    record = _record(tmp_path)
+    seen: list[int] = []
+    original = training.evaluate_windows
+
+    def capture(*args, **kwargs):
+        seen.append(int(kwargs["seed"]))
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(training, "evaluate_windows", capture)
+    spec = _quick_spec(epochs=3, patience=3)
+    final = train_arm(spec, record, tmp_path / "out")
+    assert len(seen) == final["epochs_run"]
+    assert len(set(seen)) == 1
+    assert final["validation_anchor_seed"] == seen[0]
+
+
 def test_spec_validation_fail_closed() -> None:
     with pytest.raises(FinalWMProtocolError):
         TrainSpec(unit="x", arm="a", seed=0, boundary_mode="forecast", train_boundary=False).validate()
@@ -101,9 +139,8 @@ def test_train_arm_learns_on_teacher_record(tmp_path) -> None:
     torch.manual_seed(0)
     teacher = FinalWorldModel(WorldModelConfig(), AnalyticThermoProperties())
     with torch.no_grad():
-        for name, p in teacher.transition.named_parameters():
-            if name.startswith("raw_"):
-                p.add_(0.15 * torch.randn_like(p))
+        for parameter in teacher.transition.raw.parameters():
+            parameter.add_(0.15 * torch.randn_like(parameter))
     arrays = synthetic_canonical_arrays(total_steps=1500, seed=3, teacher=teacher.transition)
     path = tmp_path / "teacher_record.npz"
     np.savez_compressed(path, **arrays)
