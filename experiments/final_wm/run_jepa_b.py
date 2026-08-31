@@ -390,14 +390,12 @@ def direction_gate(
     for start in range(0, len(indices), 32):
         chunk = indices[start:start + 32]
         raw = sample_jepa_windows(
-            record, SPLIT_VAL, len(chunk), history_steps, 1,
+            record, SPLIT_VAL, len(chunk), history_steps, horizon,
             torch.Generator().manual_seed(0), fixed_indices=chunk,
         )
         batch = _device_batch(raw, device)
-        b0 = batch.future_boundary[:, 0]
-        a0 = batch.future_actions[:, 0]
-        boundary = b0[:, None].repeat(1, horizon, 1)
-        base_actions = a0[:, None].repeat(1, horizon, 1)
+        boundary = batch.future_boundary[:, :horizon]          # 原轨迹边界序列
+        base_actions = batch.future_actions[:, :horizon]       # 原轨迹动作序列
         step_actions = base_actions.clone()
         step_actions[..., valve] = (step_actions[..., valve] + delta).clamp(max=1.0)
         base = model.counterfactual(
@@ -498,13 +496,13 @@ def run_arm_and_report(
             device, matrix["evaluation"]["load_bins_mw"],
         )
     direction = {}
-    direction_indices = _fixed_indices(
-        record, SPLIT_VAL, matrix["data_contract"]["history_steps"], 1,
-        n_eval, matrix["evaluation"]["paired_seed"],
-    )
     for valve in matrix["evaluation"]["direction"]["valves"]:
         direction[f"valve{valve + 1}"] = {}
         for horizon in matrix["evaluation"]["direction"]["horizons"]:
+            direction_indices = _fixed_indices(
+                record, SPLIT_VAL, matrix["data_contract"]["history_steps"], horizon,
+                n_eval, matrix["evaluation"]["paired_seed"],
+            )
             direction[f"valve{valve + 1}"][f"H{horizon}"] = direction_gate(
                 model, record, direction_indices, matrix["data_contract"]["history_steps"],
                 horizon, valve, matrix["evaluation"]["direction"]["delta_valve"],
