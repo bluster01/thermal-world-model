@@ -11,6 +11,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 from experiments.final_wm import matrix_spec as ms
 from src.final_wm.contracts import FinalWMProtocolError
 
