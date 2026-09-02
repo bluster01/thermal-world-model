@@ -26,8 +26,8 @@
 \begin{abstract}
 Task-critical industrial processes demand more from a temporal model than accurate
 forecasts. A model promoted to the inner loop of a controller must respond to candidate
-actions with the right sign, magnitude, and transient shape, and it must know when it
-cannot. The question arose on a live unit where a monitoring forecast had been wired
+actions with the right sign, magnitude, and transient shape---and whether it knows
+when it cannot. The question arose on a live unit where a monitoring forecast had been wired
 into the control chain: a 180-step-ahead predictor whose 90-second-ahead prediction
 corrects the temperature setpoint as differential feedforward. That system forecasts
 well, and it barely responds to its own valves. We study this gap on a once-through
@@ -193,8 +193,8 @@ to that exposure. An action-blind closure absorbs unmeasured disturbances from s
 and whitelisted boundary channels only. A probabilistic observer estimates the
 initial state. The model rolls out recursively, so any counterfactual branch is a
 consistent trajectory of the same dynamics. Its 18-step MAE is about
-3.9~\si{\degreeCelsius} under the amended training budget (side A, seed-averaged;
-see Section 4).
+3.9~\si{\degreeCelsius} (side A, seed-averaged; pre-v07 protocol---the v07 reissue
+re-measures this under the corrected 120/20 budget; see Section~4).
 
 \section{The Tension, Measured Three Ways}
 
@@ -260,11 +260,11 @@ as persistence one step ahead (0.16 vs.\ 0.09~\si{\degreeCelsius} MAE) and beats
 at 18 steps (1.05 vs.\ 1.18); at the upstream stage it is 38$\times$ worse than
 persistence (9.4 vs.\ 0.25~\si{\degreeCelsius}), and the model's learned noise scale
 confirms it has written this channel off ($\sigma \approx 8.8$~\si{\degreeCelsius}).
-Binning residuals by load shows the monotone regime bias of the initial training
-budget ($+2.1$ to $+5.4$~\si{\degreeCelsius} across load bins at the terminal stage)
-collapsing to $\pm$0.2~\si{\degreeCelsius} after retraining with the amended budget:
-level calibration was a training-sufficiency artefact, not a parameter-count
-artefact. What remains is structural: the upstream channel's
+Binning residuals by load shows the monotone regime bias of the earlier, insufficient
+training budget ($+2.1$ to $+5.4$~\si{\degreeCelsius} across load bins at the terminal
+stage) collapsing to $\pm$0.2~\si{\degreeCelsius} once the budget was corrected to
+120/20: level calibration was a training-sufficiency artefact, not a parameter-count
+artefact (this pre-v07 diagnostic is the evidence behind the budget correction). What remains is structural: the upstream channel's
 residual swings $\pm$8.8~\si{\degreeCelsius} across load bins with no monotone
 signature, pointing at the enthalpy--temperature inversion at the first segment
 (pressure partition assumption) and the anchor coverage (two spray-outlet
@@ -278,8 +278,13 @@ errors are model jumps, not noise.
 
 The tension above is only meaningful if the measurements are reproducible. We froze an
 evaluation protocol, run end-to-end by a single runner against a versioned data
-contract, with verdicts computed by paired bootstrap confidence intervals and a 2/3
-seed rule. Table~\ref{tab:verdicts} summarizes the side-A verdicts.
+contract (canonical v2.2), with fixed per-run validation anchors, same-window paired
+$\Delta$NLL verdicts, and fail-closed logic, computed by paired bootstrap confidence
+intervals and a 2/3 seed rule. All quantitative claims in this paper were produced
+under the pre-v07 protocol; the v07 full reissue regenerates the entire matrix, and
+the verdicts tabulated below are pending its return and independent audit (pre-v07
+results are superseded and retained only as provenance, not quoted here).
+Table~\ref{tab:verdicts} lists the units and protocols.
 
 \begin{table}[t]
 \centering
@@ -288,23 +293,28 @@ seed rule. Table~\ref{tab:verdicts} summarizes the side-A verdicts.
 \toprule
 Unit & Side-A verdict & Seeds \\
 \midrule
-D-SYN identifiability & SUPPORTED & 3/3 (NLL $-99$ to $-136$) \\
-O1 posterior, learned & MIXED & $-30.1$, $-31.4$, $+13.3$ (\%) \\
-O1 posterior, hybrid & REJECTED & $-0.3$, $-1.6$, $+3.7$ (\%) \\
-T1 closure (conservative) & SUPPORTED & $+5.7$, $+6.9$, $+2.6$ (\%) \\
-T1 closure (steam-only) & REJECTED & $-6.4$, $-2.3$, $-3.7$ (\%) \\
-T1 latent block & REJECTED & $-1.6$, $+0.3$, $+3.1$ (\%) \\
-B1 boundary forecaster & REJECTED & CRPS gaps $1.7$--$2.0$ \\
-J1 joint training & SUPPORTED & $+13.5$, $+16.4$, $+33.3$ (\%) \\
-R1 blindness & SUPPORTED & 3/3 \\
-R1 leakage (shuffle-controlled) & SUPPORTED & $\Delta = 0.6\%$ \\
-R1 direction & v0.2 REJECTED; repair-batch seed 0 tentative PASS & 19--34\% $\to$ 100\% \\
+D-SYN identifiability & \texttt{<PENDING-V07>} & 0, 1, 2 \\
+O1 posterior, learned & \texttt{<PENDING-V07>} & 0, 1, 2 \\
+O1 posterior, hybrid & \texttt{<PENDING-V07>} & 0, 1, 2 \\
+T1 closure (conservative) & \texttt{<PENDING-V07>} & 0, 1, 2 \\
+T1 closure (steam-only) & \texttt{<PENDING-V07>} & 0, 1, 2 \\
+T1 latent block & \texttt{<PENDING-V07>} & 0, 1, 2 \\
+B1 boundary forecaster & \texttt{<PENDING-V07>} & 0, 1, 2 \\
+J1 joint training & \texttt{<PENDING-V07>} & 0, 1, 2 \\
+R1 blindness & \texttt{<PENDING-V07>} & 0, 1, 2 \\
+R1 leakage (shuffle-controlled) & \texttt{<PENDING-V07>} & 0, 1, 2 \\
+R1 direction & \texttt{<PENDING-V07>} & 0, 1, 2 \\
 \bottomrule
 \end{tabular}
-\caption{Side-A discrimination matrix verdicts. Percentages are validation-NLL
-improvements (CRPS gaps for B1); confidence intervals per unit as in the committed
-summary. R1 direction: windows ending negative under a $+5\%$ secondary-valve step
-before (three seeds) and after (seed 0) the repair batch.}
+\caption{Discrimination-matrix units and protocols. Verdicts are pending the v07
+full reissue (canonical v2.2, 120/20 budget, fixed validation anchors; in flight)
+and its independent audit; pre-v07 results (v0.2--v0.6) are HISTORICAL/SUPERSEDED
+and retained only in the audit trail, not quoted here. R1 reuses the
+\texttt{closure\_cons\_norew} checkpoints; its verdicts are judged on both valves at
+H18/H60 with day-block confidence intervals, direction proportions, a
+shuffle-controlled leakage probe, and a per-window support-domain check
+(out-of-support windows make the verdict INCOMPLETE, never an extrapolation
+judgment).}
 \label{tab:verdicts}
 \end{table}
 
@@ -339,17 +349,14 @@ above zero).
 
 \textbf{R1 action-blind and leakage audit.} The causal-diagnosis language follows
 causal discovery for autocorrelated series \cite{runge2020pcmci}, adapted to a plant
-where the controller couples the valve to the temperature it drives. The closure must
-not respond to valve channels (runtime blindness check: 3/3 pass) and the boundary whitelist excludes the
-spray-flow channel. The leakage probe now runs with a shuffle control: an
-action-aware probe must beat its own shuffled-action twin, not just the action-blind
-baseline. This rule is itself a product of the matrix. The original probe flagged
-23.9\% ``leakage'' on the repaired seed; the shuffle control scored 23.2\%, a
-$\Delta$ of 0.6\%---the flag was a probe artifact (an underfit 20-epoch budget where
-any extra input dimension improves validation fit), and the repaired seed passes the
-gate. The direction probe is reported above: v0.2 failed it (19--34\% of windows
-ending negative), the repair batch corrected seed 0 (100\%, $-0.228$~\si{\degreeCelsius}
-per $+5\%$), and seeds 1--2 are pending (\texttt{<R1-3SEED>}).
+where the controller couples the valve to the temperature it drives. In the frozen
+protocol, R1 reuses the \texttt{closure\_cons\_norew} checkpoints and is judged on
+both valves at H18/H60 with day-block confidence intervals, direction proportions, a
+shuffle-controlled leakage probe, and a per-window counterfactual support-domain
+check. Pre-v07 audits (a different stack, a different protocol) found the direction
+inverted on 19--34\% of windows and, after a repair batch, corrected on seed 0
+(100\%); that history is reported here only as provenance---the v07 R1 verdicts are
+pending \texttt{<PENDING-V07>}.
 
 Each verdict is computed by the frozen runner, not by hand, and every number in this
 section reproduces from the committed artifacts through the frozen replay script
@@ -378,7 +385,8 @@ per $+2\%$.}
 \centering
 \includegraphics[width=\textwidth]{figs/fig2_system_matrix.pdf}
 \caption{Left: the steam path with five observed temperatures and two cross-paired
-spray valves. Right: the discrimination matrix with side-A verdicts.}
+spray valves. Right: the discrimination matrix units with side-A protocol
+(verdicts pending the v07 reissue).}
 \label{fig:system}
 \end{figure}
 
@@ -399,7 +407,9 @@ after retraining, the upstream stage swings 5--13~\si{\degreeCelsius}.}
 
 The repaired physics line holds the action direction that the first training lost,
 and its terminal-stage accuracy is near persistence; the remaining cost is
-concentrated and diagnosable. The upstream channel's one-step error points at the
+concentrated and diagnosable. These results are from the pre-v07 protocol; the v07
+reissue re-measures them, and the claims below inherit that status. The upstream
+channel's one-step error points at the
 initialization and inversion layer, not the dynamics: anchoring all five observations
 at initialization (two spray-outlet temperatures currently float) and replacing the
 fixed pressure-partition assumption with a learned or measured one targets most of
@@ -410,8 +420,9 @@ was corrected---the monotone load bias they were meant to absorb was a training
 artefact. This ordering illustrates the value of the matrix: one convergence
 diagnostic and one direction probe re-prioritize the entire optimization agenda.
 
-The magnitude gap deserves a precise status. Direction fidelity is now demonstrated
-on seed 0; magnitude fidelity is not. The model's quasi-steady response is
+The magnitude gap deserves a precise status. Under the pre-v07 protocol, direction
+fidelity was demonstrated on seed 0; magnitude fidelity is not. The model's
+quasi-steady response is
 2.7--7.6$\times$ below the nominal mixing reference, and we argue the reference
 overstates the plant at the operating point (zero-delay linear mixing against an
 equal-percentage valve fed by narrow-band excitation). That argument is a hypothesis
