@@ -53,20 +53,25 @@
 ### ✅ 已一致
 82 天/10s/双侧 ✓（v2.2 n=707709≈82d）；dry operation ✓；seeds 0,1,2 ✓；5 温度+2 阀交叉接线 ✓；single-side verdicts ✓（A only）；"支持域/逐样本"概念稿件未误用 ✓
 
-## C. 统一协议管理建议（"同一协议下管理数据"）
+## 核验记录（2026-09-02 追加）
 
-1. **给稿件建 Material Passport 表**（仿协议审计§Material Passport）：每个数值 → 来源批次（v07 / pre-v07 superseded）+ 状态（LOCKED / PENDING-V07 / HISTORICAL）
-2. 数值规则：
-   - v07 产物（verdicts、MAE/NLL、R1、图）→ **v07 回传 + audit_manifest 独立审计后解锁**（runbook §3.4）
-   - pre-v07 只允许作为历史对照/诊断叙事出现，显式标注
-   - 图/表生成脚本绑定 canonical v2.2 内容寻址（manifest 哈希）
-3. 稿件当前可锁定的部分（不受 v07 影响）：问题定义、设计空间叙事、三层诊断、判别矩阵**方法学**、Limitations、文献定位
-4. 不可锁定（必须占位/标注）：Table 1 全部 verdict、R1 全部、Line 1/2 数值、图 fig1/fig3、预算对比叙事
+### B7 已核：mixing reference 与 dW/dv 的数据版本
+- 来源脚本 `experiments/final_wm/audit/evidence_phys_ref.py`（仓内转正版）：读 `artifacts/final_wm/canonical_sideA.npz`（**canonical v1**，file name 无 v2 后缀）+ env-specific 临时 GRID 路径
+- auditpack `artifacts/final_wm/auditpack_A.json`：`record: "artifacts/final_wm/canonical_sideA.npz"`（v1）；`matrix_version: 0.2`
+- mixing_reference 字段内 v1/v2 两版：**稿件引用的 0.53–1.48°C = 该字段的 "v2"（0.5285/1.4798）**——"v2"指能量平衡公式修正版（assumptions 相同：1674 kJ/kg, cp=2.2），**不是数据版本**；dW/dv=27.756/70.013 → 稿件 27.8/70.0 ✓
+- 结论：**整个 reference 家族基于 canonical v1 数据 + matrix v0.2 → 属 pre-v07/SUPERSEDED**。⚠️ 额外风险：v2.1/v2.2 修复了一级阀接线（v2.0 继承 v1 错侧）；v1 数据的动作-通道配对已错，v2.2 下 dW/dv 与参考区间应重算核验——即使 dW/dv 回归（W~v）与接线相关性弱，也需以 v2.2 重跑确认
+- 处置：稿件已加"computed under the pre-v07 canonical (v1) record；'v2' 指公式修正而非数据版本"标注；v07 回传后重算替换
+
+### B8 已核：fig1/fig3 数据源
+- `experiments/final_wm/audit/make_paper_figs.py`：数据源 = auditpack_A.json（v1 数据 + v0.2 matrix）+ matrix_summary_sideA.json（v0.2 verdicts）+ Direct WM v2 audit 表（commit a3ae48f）
+- fig1 的 ref band = mixing_reference v2（同 B7）；脚本头已声明排除撤回数字（25-450x 等）
+- 结论：**fig1/fig3 全部为 pre-v07 历史插图**；fig2 为示意图（协议单元，无数据依赖，可留）
+- 处置：图注已加"verdicts pending"；v07 回传后重生成 fig1/fig3；脚本头注释建议补数据版本行
 
 ## D. 建议执行顺序
 
-1. **B1 立即修**（摘要删/软化一句，不依赖任何数据）
-2. Table 1 + R1 + B4/B5 改为 `<PENDING-V07>` 占位 + 保留历史标注（等 v07 回传填补）
-3. B6 判决规则表述对齐 v0.7 合同（加 fixed validation anchors 描述）
-4. B7/B8 待核（找脚本/数据版本）
-5. F6/F7/F9 按版面定
+1. **B1 立即修**（摘要删/软化一句，不依赖任何数据）✅ 2026-09-02 已改
+2. Table 1 + R1 + B4/B5 改为 `<PENDING-V07>` 占位 + 保留历史标注 ✅ 已改
+3. B6 判决规则表述对齐 v0.7 合同（加 fixed validation anchors 描述）✅ 已改
+4. B7/B8 待核 ✅ 已核（见上），稿件已精确标注
+5. F6/F7/F9 按版面定（未动）
