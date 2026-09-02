@@ -173,7 +173,9 @@ Line 1 is a direct multi-step forecaster (sequence model over a history window w
 dedicated heads per horizon step, trained with a Gaussian likelihood), the audited
 descendant of the deployed predictor with an explicit action channel. It is
 representative of the pure forecasting line rather than a state of the art: the
-horizon heads are teacher-forced, not recursive. We state this plainly because the
+horizon heads are teacher-forced, not recursive, and we do not benchmark recursive
+or probabilistic foundation forecasters \cite{ansari2024chronos, das2024timesfm}
+against it. We state this plainly because the
 comparison that follows is about what the forecasting objective rewards; per-series
 objective metrics can mask the cross-series structure that downstream decisions
 require \cite{wan2026forecast}. Its 18-step MAE on held-out windows is 0.712 (side A)
@@ -453,7 +455,9 @@ we benchmark no recursive forecaster here, and the external evidence we cite con
 per-series evaluation hiding cross-series structure \cite{wan2026forecast} rather
 than recursive rollout under feedback---the recursive case should be re-measured with
 one. Data are from a single
-unit in dry operation; two-phase regimes are unobserved. The action-response probe
+unit in dry operation; two-phase regimes are unobserved. The dual-side protocol
+(side B deferred) is the first step toward cross-unit qualification, and this
+single-side scope is carried through all verdicts. The action-response probe
 covers valve steps at fixed load; larger interventions and load-coordinated moves
 deserve their own protocol. All matrix verdicts are single-side (A); the side-B
 matrix is deferred, and no bilateral claim should be read from these results. The
