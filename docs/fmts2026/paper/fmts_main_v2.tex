@@ -35,11 +35,14 @@ boiler in dry operation, using 82 days of dual-side field data. A deep forecaste
 attains 0.7--0.9~\si{\degreeCelsius} MAE at 18 steps, yet its valve-step responses span
 0.00004--0.040~\si{\degreeCelsius} with unstable direction across folds, valves, and
 seeds---functionally disabling the action channel. A physics-structured world model
-trades accuracy for an action channel that a first training exposed as directionally
-wrong at 60 steps---an inversion we localize to one feedback term---and that a
-contracted repair batch then corrected: on the repaired seed the direction holds on
-100\% of windows (mean $-0.228$~\si{\degreeCelsius} per $+5\%$ valve step), with the
-remaining seeds pending. Both findings are produced by a discrimination matrix: an
+responds on the right scale but pays a 3--4$\times$ accuracy price, and its first
+training exposed a direction inversion---one feedback term---that a contracted
+repair batch then corrected: on the repaired seed the direction holds on 100\% of
+windows (mean $-0.228$~\si{\degreeCelsius} per $+5\%$ valve step), with the
+remaining seeds pending. Between these extremes we take the world-model middle:
+physics structure buys a verifiable action channel, learned parameters buy back
+accuracy, and the discrimination matrix below certifies the trade while reporting
+what is still open. Both findings are produced by a discrimination matrix: an
 identifiability gate on same-type synthetic data, per-layer structural ablations, and
 an action-blindness and shuffle-controlled leakage audit---a protocol whose own false
 trigger we report and repair in the loop. Finally we locate the physics model's
@@ -116,18 +119,29 @@ model learned to track the setpoint through the controller, not the plant's phys
 valve-to-temperature pathway. Direction had been faked once. Every claim made for the
 physics line in this paper is therefore gated by an audit, not by its architecture.
 
-\textbf{Two lines, each failing alone.} The pure forecasting line (a high-capacity
-direct forecaster with an action channel) predicts held-out trajectories well but its
-valve responses span 0.00004--0.040~\si{\degreeCelsius} with direction drifting
-across folds, valves, and seeds. The pure physics line (a lumped-enthalpy ODE,
-descended from the constrained branch, with a residual closure) responds on the right
-scale but instantaneously---the plant's response builds over minutes---and its
-accuracy is large and initial-state dependent, because the field data carry no
-reliable spray-flow, wall-temperature, or enthalpy ground truth. Neither line alone
-qualifies as an internal model for control.
+\textbf{Two extremes, complementary failures.} The design space of temporal models
+for this task is bounded by two extremes. At the black-box end, a high-capacity direct
+forecaster with an action channel predicts held-out trajectories well (0.712~\si{\degreeCelsius}
+at 18 steps) but its valve responses span 0.00004--0.040~\si{\degreeCelsius} with
+direction drifting across folds, valves, and seeds---accurate, and functionally blind.
+At the physics-structured end, the model responds on the right scale---its learned
+action channel lands in the data-anchored reference band---but pays a 3--4$\times$
+aggregate accuracy price, and its first training produced a sign inversion we later
+localized to a single term. Neither extreme alone qualifies as an internal model for
+control.
 
-\textbf{What follows.} We measure the resulting tension three ways and report it
-through a discrimination matrix: an identifiability gate, structural ablations, and
+\textbf{The world model as the sweet spot.} Our choice is the middle of that space:
+treat the physics structure as the carrier of a verifiable action channel---every term
+is named, and the audit can point at the one that broke (the rewetting inversion)---
+and let the data learn the parameters that buy back accuracy, in the
+universal-differential-equation tradition \cite{chen2018neuralode, rackauckas2020ude}.
+Where that negotiation currently stands is a matter of evidence, not intent: the
+repaired seed holds direction; magnitude fidelity is pending a position-binned probe;
+and the residual accuracy cost is located rather than unexplained (Section~3).
+
+\textbf{What follows.} We measure the tension between the two extremes three ways and
+report the sweet spot's current state through a discrimination matrix: an
+identifiability gate, structural ablations, and
 an action-blindness and leakage audit, run by a frozen protocol with verdicts
 computed by paired bootstrap and a 2/3 seed rule. The matrix is not a checklist; it
 is a process. Its verdict-repair loop caught its own leakage probe misfiring and
@@ -160,9 +174,9 @@ dedicated heads per horizon step, trained with a Gaussian likelihood), the audit
 descendant of the deployed predictor with an explicit action channel. It is
 representative of the pure forecasting line rather than a state of the art: the
 horizon heads are teacher-forced, not recursive. We state this plainly because the
-comparison that follows is about what the forecasting objective rewards, and the
-literature suggests recursive foundation forecasters inherit the same closed-loop
-failure \cite{wan2026forecast}. Its 18-step MAE on held-out windows is 0.712 (side A)
+comparison that follows is about what the forecasting objective rewards; per-series
+objective metrics can mask the cross-series structure that downstream decisions
+require \cite{wan2026forecast}. Its 18-step MAE on held-out windows is 0.712 (side A)
 and 0.927 (side B).
 
 \subsection{Line 2: a physics-structured world model}
@@ -183,6 +197,9 @@ consistent trajectory of the same dynamics. Its 18-step MAE is about
 see Section 4).
 
 \section{The Tension, Measured Three Ways}
+
+The two extremes fail on complementary axes; the three measurements below locate
+where a sweet spot is possible, and where it is not yet.
 
 \subsection{Action response: one line is functionally blind}
 
@@ -215,14 +232,14 @@ spray-to-mixing transport-lag state, a sign-and-magnitude contract on the rewett
 feedback, and spray-sensitivity priors anchored to the data-fit $dW/dv$. The
 retrained seed-0 model holds the correct direction on 100\% of windows with a mean
 terminal response of $-0.228$~\si{\degreeCelsius} per $+5\%$ step, and its 240-step
-(quasi-steady) response is $-0.194$~\si{\degreeCelsius} per $+2\%$. This remains
-2.7--7.6$\times$ below the mixing reference. We read the gap as a distance to a
-nominal linear upper bound, not as demonstrated distortion of the plant: the
+(quasi-steady) response is $-0.194$~\si{\degreeCelsius} per $+2\%$. This gap is 2.7--7.6$\times$ below the mixing reference. We interpret it as a distance
+to a nominal linear upper bound, not as demonstrated distortion of the plant: the
 reference assumes zero-delay mixing, linear valve-to-flow mapping, and fixed
-$\Delta h/c_p$, while the real valve is equal-percentage and the data contain only
-narrow-band micro-adjustments (command changes $>$3\% are absent), so the identifiable
-quantity is a workpoint-local gain---consistent with the learned spray efficiency
-landing at 0.44$\times$ its prior. Magnitude fidelity remains unverified pending a
+$\Delta h/c_p$, whereas the real valve is equal-percentage and the data contain only
+narrow-band micro-adjustments (command changes $>$3\% are absent). The identifiable
+quantity is therefore a workpoint-local gain, and the learned spray efficiency
+converging to 0.44$\times$ its prior is consistent with that reading. Magnitude
+fidelity remains unverified pending a
 position-binned local-gain probe. Seeds 1--2: pending (\texttt{<R1-3SEED>}).
 
 \subsection{Counterfactual coherence}
@@ -243,19 +260,19 @@ as persistence one step ahead (0.16 vs.\ 0.09~\si{\degreeCelsius} MAE) and beats
 at 18 steps (1.05 vs.\ 1.18); at the upstream stage it is 38$\times$ worse than
 persistence (9.4 vs.\ 0.25~\si{\degreeCelsius}), and the model's learned noise scale
 confirms it has written this channel off ($\sigma \approx 8.8$~\si{\degreeCelsius}).
-Binning residuals by load shows that the strong monotone regime bias present under
-the initial training budget ($+2.1$ to $+5.4$~\si{\degreeCelsius} across load bins at
-the terminal stage) collapses to $\pm$0.2~\si{\degreeCelsius} after retraining with
-the amended budget: level calibration was a training-sufficiency artefact, not a
-parameter-count artefact. What remains is structural: the upstream channel's
+Binning residuals by load shows the monotone regime bias of the initial training
+budget ($+2.1$ to $+5.4$~\si{\degreeCelsius} across load bins at the terminal stage)
+collapsing to $\pm$0.2~\si{\degreeCelsius} after retraining with the amended budget:
+level calibration was a training-sufficiency artefact, not a parameter-count
+artefact. What remains is structural: the upstream channel's
 residual swings $\pm$8.8~\si{\degreeCelsius} across load bins with no monotone
 signature, pointing at the enthalpy--temperature inversion at the first segment
 (pressure partition assumption) and the anchor coverage (two spray-outlet
 temperatures float at initialization), and the first spray-outlet channel retains
 44\% regime-correlated variance, the signature of unresolved spray transients
-(Fig.~\ref{fig:evidence}b,c). The autoregressive diagnosis generalizes: the process
-creeps (0.09--0.45~\si{\degreeCelsius} per step), so large one-step errors are model
-jumps, not noise.
+(Fig.~\ref{fig:evidence}b,c). The autoregressive diagnosis also explains the error
+scale: the process creeps (0.09--0.45~\si{\degreeCelsius} per step), so large one-step
+errors are model jumps, not noise.
 
 \section{A Discrimination Matrix for World-Model Qualification}
 
@@ -404,17 +421,19 @@ promise that the model ``knows when it cannot'' is exactly what the calibration
 probe must earn (\texttt{<D1>}): the sentence stays only if the interval coverage
 checks out.
 
-For deployment we endorse the convergent architecture the reduced-order-model lineage
-articulates \cite{ghosh2026rom, benner2015survey, sha2001simplicity}: a learned
-proposer bounded by a certifiable reduced-order model that approves, bounds, or rejects
-each proposed action within its certified envelope. Planning with imperfect models is a
-documented failure mode \cite{jafferjee2021hallucinating, wang2022doublecheck}; the
-two-tier architecture is the constructive answer. The discrimination matrix is the
-qualification gate for that proposer, and it is, to our knowledge, the first
-qualification protocol aimed at the setting RL cannot serve: causal action-channel
-identification from confounded closed-loop records of a safety-class plant, where the
-only admissible exploration is the plant's own operation. Forecasting remains
-necessary; it is not sufficient.
+For deployment, the sweet spot takes engineering form: the convergent architecture
+the reduced-order-model lineage articulates \cite{ghosh2026rom, benner2015survey,
+sha2001simplicity}---a learned proposer bounded by a certifiable reduced-order model
+that approves, bounds, or rejects each proposed action within its certified
+envelope. Planning with imperfect models is a documented failure mode
+\cite{jafferjee2021hallucinating, wang2022doublecheck}; the two-tier architecture is
+the constructive answer. The discrimination matrix is the qualification gate for that
+proposer. Surveys catalogue understanding-oriented benchmarks
+\cite{ding2024understanding}; qualification of an action channel under closed-loop
+confounding is not among them, and to our knowledge this protocol is the first aimed
+at the setting RL cannot serve: causal action-channel identification from confounded
+closed-loop records of a safety-class plant, where the only admissible exploration is
+the plant's own operation. Forecasting remains necessary; it is not sufficient.
 
 \textbf{Limitations.} Line 1 is teacher-forced, not a recursive foundation forecaster;
 we benchmark no recursive forecaster here, and the external evidence we cite concerns
