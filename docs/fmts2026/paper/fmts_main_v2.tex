@@ -57,12 +57,15 @@ single-side (side A); the side-B matrix is deferred to a later stage.
 
 A temporal model that forecasts well is not automatically a world model. World models
 must maintain a state, imagine futures under interventions, and support decisions
-\cite{hafner2023dreamerv3}. Closed-loop identification warned decades ago that
-passively learned dynamics absorb the confounded structure of the controller that
-generated the data \cite{forssell1999closedloop}, and recent evidence shows
-time-series foundation models collapsing under feedback despite strong open-loop
-accuracy \cite{wan2026forecast}. This paper is a case study of that failure being
-encountered in the field, chased to its root, and turned into a reusable protocol.
+\cite{ha2018world,hafner2023dreamerv3}. Surveys frame the same tension as
+``understanding vs.\ predicting'' \cite{ding2024understanding}; this paper
+instantiates it in a fault-critical setting. Closed-loop identification warned
+decades ago that passively learned dynamics absorb the confounded structure of the
+controller that generated the data \cite{forssell1999closedloop}, and recent
+evidence shows per-series evaluation masking the cross-series structure that
+downstream decisions require \cite{wan2026forecast}. This paper is a case study of
+that tension being encountered in the field, chased to its root, and turned into a
+reusable protocol.
 
 \textbf{Where we started.} On a once-through boiler at an industrial plant, a
 monitoring forecast was extended toward closed-loop use. The model predicts 180 steps
@@ -86,9 +89,9 @@ is strongly coupled, disturbance-rich, and time-varying, and a simulator faithfu
 enough that controllers learned inside it transfer to the plant does not exist.
 Closed-loop operating records are the only admissible data. The problem this paper
 addresses is therefore sharper than generic world-model evaluation: \emph{how to
-identify the causal sign and magnitude of an action channel from data generated
-under feedback, when the controller systematically couples the valve to the very
-temperature it drives}. This common-cause structure is precisely what the diagnosis
+identify the causal sign and a verified bound on the magnitude of an action channel
+from data generated under feedback, when the controller systematically couples the
+valve to the very temperature it drives}. This common-cause structure is precisely what the diagnosis
 below unpacks.
 
 \textbf{The diagnosis.} Our earlier diagnosis quantified the anomaly in three layers.
@@ -317,8 +320,10 @@ report as part of the matrix, not around it.
 training: SUPPORTED 3/3 (val NLL improvements of 13.5\%, 16.4\%, 33.3\%, all CIs
 above zero).
 
-\textbf{R1 action-blind and leakage audit.} The closure must not respond to valve
-channels (runtime blindness check: 3/3 pass) and the boundary whitelist excludes the
+\textbf{R1 action-blind and leakage audit.} The causal-diagnosis language follows
+causal discovery for autocorrelated series \cite{runge2020pcmci}, adapted to a plant
+where the controller couples the valve to the temperature it drives. The closure must
+not respond to valve channels (runtime blindness check: 3/3 pass) and the boundary whitelist excludes the
 spray-flow channel. The leakage probe now runs with a shuffle control: an
 action-aware probe must beat its own shuffled-action twin, not just the action-blind
 baseline. This rule is itself a product of the matrix. The original probe flagged
@@ -412,8 +417,10 @@ only admissible exploration is the plant's own operation. Forecasting remains
 necessary; it is not sufficient.
 
 \textbf{Limitations.} Line 1 is teacher-forced, not a recursive foundation forecaster;
-our claim about recursive forecasters rests on external evidence
-\cite{wan2026forecast} and should be re-measured with one. Data are from a single
+we benchmark no recursive forecaster here, and the external evidence we cite concerns
+per-series evaluation hiding cross-series structure \cite{wan2026forecast} rather
+than recursive rollout under feedback---the recursive case should be re-measured with
+one. Data are from a single
 unit in dry operation; two-phase regimes are unobserved. The action-response probe
 covers valve steps at fixed load; larger interventions and load-coordinated moves
 deserve their own protocol. All matrix verdicts are single-side (A); the side-B
