@@ -1,0 +1,523 @@
+{
+  "version": "2.2",
+  "side": "A",
+  "actions_continuity": {
+    "valve1": {
+      "corr_with_v1": 0.7843322933121823,
+      "mae_vs_v1": 0.09759118303846681,
+      "source_column": "过热器一级减温器A侧喷水调节门阀位反馈"
+    },
+    "valve2": {
+      "corr_with_v1": 0.9999981750954726,
+      "mae_vs_v1": 2.713044195023103e-05,
+      "source_column": "过热器二级减温器B侧喷水调节门阀位反馈"
+    }
+  },
+  "known_defect_fix": "results/final_wm/known_defect_v1_valve1_20260826.md",
+  "n_samples": 707709,
+  "boundary_ext_elements": [
+    "fuel_corrected",
+    "mill_count_on",
+    "mill_gas_temp_wavg",
+    "flue_o2",
+    "secondary_air_total",
+    "rh_gas_in_temp_a",
+    "rh_gas_in_temp_b",
+    "water_coal_ratio",
+    "unit_load"
+  ],
+  "aux_elements": [
+    "att1_in_temp_l",
+    "att1_in_temp_r",
+    "att1_out_temp_l",
+    "att1_out_temp_r",
+    "att2_in_temp_l",
+    "att2_in_temp_r",
+    "att2_out_temp_l",
+    "att2_out_temp_r",
+    "spray_flow_sh_total",
+    "spray_flow_rh_total",
+    "superheat_sep",
+    "rh_steam_in_temp_l",
+    "rh_steam_in_temp_r",
+    "rh_steam_out_temp_l",
+    "rh_steam_out_temp_r"
+  ],
+  "n_mills": 8,
+  "quality": {
+    "actions.valve1": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "stuck_ratio": null
+    },
+    "actions.valve2": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "stuck_ratio": null
+    },
+    "boundary_ext.fuel_corrected": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        600.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 492.91025
+      }
+    },
+    "boundary_ext.mill_count_on": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        8.0
+      ],
+      "stuck_ratio": null,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 8.0
+      }
+    },
+    "boundary_ext.mill_gas_temp_wavg": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        900.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 585.6520729684628
+      }
+    },
+    "boundary_ext.flue_o2": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        15.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 8.240399
+      }
+    },
+    "boundary_ext.secondary_air_total": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        2000.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 1942.6573
+      }
+    },
+    "boundary_ext.rh_gas_in_temp_a": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        900.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 654.8696
+      }
+    },
+    "boundary_ext.rh_gas_in_temp_b": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        900.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 654.7977
+      }
+    },
+    "boundary_ext.water_coal_ratio": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        10.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 4.793833
+      }
+    },
+    "boundary_ext.unit_load": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 617.02747
+      }
+    },
+    "aux.att1_in_temp_l": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 554.2277
+      }
+    },
+    "aux.att1_in_temp_r": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 554.4672
+      }
+    },
+    "aux.att1_out_temp_l": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 502.44806
+      }
+    },
+    "aux.att1_out_temp_r": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 511.59802
+      }
+    },
+    "aux.att2_in_temp_l": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 551.24506
+      }
+    },
+    "aux.att2_in_temp_r": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 553.00586
+      }
+    },
+    "aux.att2_out_temp_l": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 546.99274
+      }
+    },
+    "aux.att2_out_temp_r": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 535.781
+      }
+    },
+    "aux.spray_flow_sh_total": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        -10.0,
+        400.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 244.84225
+      }
+    },
+    "aux.spray_flow_rh_total": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        -2.0,
+        400.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 49.294662
+      }
+    },
+    "aux.superheat_sep": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        -60.0,
+        200.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 33.47867
+      }
+    },
+    "aux.rh_steam_in_temp_l": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 531.9001
+      }
+    },
+    "aux.rh_steam_in_temp_r": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 554.0121
+      }
+    },
+    "aux.rh_steam_out_temp_l": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 586.138
+      }
+    },
+    "aux.rh_steam_out_temp_r": {
+      "coverage": 0.9999858698985035,
+      "range_violation": 0.0,
+      "raw_coverage": 0.9999858698985035,
+      "raw_range_violation": 0.0,
+      "raw_range": [
+        0.0,
+        800.0
+      ],
+      "stuck_ratio": 0.0,
+      "postprocess": {
+        "coverage": 1.0,
+        "min": 0.0,
+        "max": 587.5993
+      }
+    }
+  },
+  "source_quality": {
+    "mill_on": {
+      "source_coverage": 0.9999858698985035
+    },
+    "mill_gas_temp_wavg": {
+      "source_coverage": 0.9999858698985035
+    }
+  },
+  "alignment": [
+    {
+      "channel": "steam_flow",
+      "column": "主蒸汽流量_60BKAO0312",
+      "corr": 0.9999855189127667,
+      "mae": 0.2562008308352457,
+      "passed": true
+    },
+    {
+      "channel": "separator_pressure",
+      "column": "选择后分离器最终出口压力",
+      "corr": 0.9999999996909698,
+      "mae": 1.425133532769386e-06,
+      "passed": true
+    },
+    {
+      "channel": "separator_temperature",
+      "column": "分离器最终出口温度",
+      "corr": 0.9999999998048248,
+      "mae": 9.579060172889008e-06,
+      "passed": true
+    },
+    {
+      "channel": "feedwater_temperature",
+      "column": "选择后省煤器出口给水温度",
+      "corr": 0.999999998834324,
+      "mae": 8.138696557978896e-06,
+      "passed": true
+    },
+    {
+      "channel": "outlet_pressure",
+      "column": "选择后末级过热器左侧出口压力",
+      "corr": 0.9999999982683736,
+      "mae": 2.8419692625486937e-06,
+      "passed": true
+    },
+    {
+      "channel": "final_outlet_temp",
+      "column": "选择后左侧末级过热器出口汽温",
+      "corr": 0.9999999879746057,
+      "mae": 1.3521561077851777e-05,
+      "passed": true
+    },
+    {
+      "channel": "spray_flow_total",
+      "column": "过热器减温水总流量",
+      "corr": 0.9999998729436141,
+      "mae": 4.8255039896995875e-05,
+      "passed": true
+    }
+  ],
+  "provenance": {
+    "v1_record_path": "artifacts/final_wm/canonical_sideA.npz",
+    "v1_record_sha256": "3905cc83876f178333ab3563dc664418be024e863f0cc77190663a89967f0392",
+    "source_path": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/merged_all_data/all_merged_10s.csv",
+    "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "mapping_path": "configs/final_wm/channel_mapping_v2.json",
+    "mapping_sha256": "8272f0e7c7ef6358aeed14fdaf1266a70bad8b8cc8c72795f8afe955561bca5a",
+    "mill_on_threshold_tph": 2.0
+  },
+  "v1_keys_verbatim": [
+    "boundary",
+    "obs",
+    "valid",
+    "timestamps",
+    "split"
+  ],
+  "v1_actions_replaced": true,
+  "edge_trim": {
+    "leading": 12,
+    "trailing": 0
+  }
+}
