@@ -1,0 +1,42 @@
+{
+  "source_commit": "a34481f",
+  "execution_commit": "db9447b",
+  "script_hash_verified": true,
+  "prediction_tensor_identity_runs": 9,
+  "response_cells": 36,
+  "support_masks_independently_recomputed": true,
+  "indices_reconstructed_and_matched": true,
+  "paired_CIs_independently_recomputed": 6,
+  "max_norew_response_scalar_difference_vs_original_R1": 0.0,
+  "arms": [
+    {
+      "arm": "physics_only",
+      "three_seed_window_weighted_mae_c": 1.7192374467849731,
+      "negative_CI": 1,
+      "positive_CI": 7,
+      "crosses_zero_CI": 4,
+      "unsupported_cells": 11
+    },
+    {
+      "arm": "closure_cons",
+      "three_seed_window_weighted_mae_c": 1.6026617685953777,
+      "negative_CI": 9,
+      "positive_CI": 0,
+      "crosses_zero_CI": 3,
+      "unsupported_cells": 11
+    },
+    {
+      "arm": "closure_cons_norew",
+      "three_seed_window_weighted_mae_c": 1.8860293626785278,
+      "negative_CI": 12,
+      "positive_CI": 0,
+      "crosses_zero_CI": 0,
+      "unsupported_cells": 11
+    }
+  ],
+  "model_inference_run_in_this_audit": false,
+  "training_run": false,
+  "test_numeric_rows_decoded": 0,
+  "response_CI_recomputation_limit": "Per-window temperature deltas were not saved; response CIs are executed frozen-function outputs, not independently bootstrapped from raw deltas here",
+  "verdict": "RETURN_AUDITED_NO_FULL_R1_UPGRADE"
+}
