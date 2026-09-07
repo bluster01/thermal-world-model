@@ -1,0 +1,144 @@
+{
+  "scope": "Byte-level input and saved T1 artifact identity only",
+  "inputs": [
+    {
+      "input": "record",
+      "expected": "24da77960e05e3636cc7b97a60a75e9b4ba470a3abb4f8ba920ddf11c6dad1d0",
+      "actual": "24da77960e05e3636cc7b97a60a75e9b4ba470a3abb4f8ba920ddf11c6dad1d0",
+      "match": true
+    },
+    {
+      "input": "properties",
+      "expected": "9fd7a1dba96a5b968661f644fa185ac755266c85853d689d065432a2d41f6e92",
+      "actual": "9fd7a1dba96a5b968661f644fa185ac755266c85853d689d065432a2d41f6e92",
+      "match": true
+    }
+  ],
+  "metadata_matches_prior_copy": true,
+  "t1_artifacts": [
+    {
+      "file": "checkpoints/t1_closure_cons_norew_seed0.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_closure_cons_norew_seed1.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_closure_cons_norew_seed2.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_closure_cons_seed0.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_closure_cons_seed1.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_closure_cons_seed2.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_closure_steam_seed0.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_closure_steam_seed1.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_closure_steam_seed2.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_latent4_seed0.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_latent4_seed1.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_latent4_seed2.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_physics_only_seed0.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_physics_only_seed1.pt",
+      "match": true
+    },
+    {
+      "file": "checkpoints/t1_physics_only_seed2.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_closure_cons_norew_seed0.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_closure_cons_norew_seed1.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_closure_cons_norew_seed2.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_closure_cons_seed0.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_closure_cons_seed1.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_closure_cons_seed2.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_closure_steam_seed0.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_closure_steam_seed1.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_closure_steam_seed2.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_latent4_seed0.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_latent4_seed1.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_latent4_seed2.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_physics_only_seed0.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_physics_only_seed1.pt",
+      "match": true
+    },
+    {
+      "file": "metrics/t1_physics_only_seed2.pt",
+      "match": true
+    }
+  ],
+  "arrays_loaded": false,
+  "inference_run": false,
+  "training_run": false,
+  "test_values_accessed": false
+}

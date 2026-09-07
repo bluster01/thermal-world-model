@@ -1,0 +1,15 @@
+{
+  "batch": "norew_paired_inference_20260907",
+  "version": 1,
+  "active": true,
+  "ready_for_linux": true,
+  "results_returned": false,
+  "audited": false,
+  "training_authorized": false,
+  "test_locked": true,
+  "scope": "Existing checkpoints only: 3 arms x 3 seeds, prediction H18 and dual-valve response H18/H60; no leakage training",
+  "local_attempt": "STOPPED_NUMERICAL_REPLAY_MISMATCH, physics_only seed0 only",
+  "linux_diagnostic": "User reports bit-exact physics_only seed0 replay; raw evidence not yet received",
+  "validation": ["Synthetic prefix-isolation and test-rejection check passed", "256 sampled canonical indices match original sample_windows exactly on synthetic fixture", "CLI help passed"],
+  "runbook": "results/final_wm/norew_linux_replay_runbook_20260907.md"
+}

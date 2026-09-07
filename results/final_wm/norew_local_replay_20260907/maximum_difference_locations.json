@@ -1,0 +1,45 @@
+{
+  "mae": {
+    "window_index_zero_based": 180,
+    "horizon_one_based": 15,
+    "first_future_canonical_index": 549643,
+    "target_canonical_index": 549657,
+    "history_start_index": 549547,
+    "target_utc": "2026-02-25T16:57:50+00:00",
+    "saved": 1.773406982421875,
+    "replayed": 1.7810791730880737,
+    "signed_diff": 0.0076721906661987305
+  },
+  "nll": {
+    "window_index_zero_based": 247,
+    "horizon_one_based": 14,
+    "first_future_canonical_index": 543303,
+    "target_canonical_index": 543316,
+    "history_start_index": 543207,
+    "target_utc": "2026-02-24T23:21:00+00:00",
+    "saved": 1.6282882690429688,
+    "replayed": 1.6208677291870117,
+    "signed_diff": -0.007420539855957031
+  },
+  "crps": {
+    "window_index_zero_based": 9,
+    "horizon_one_based": 18,
+    "first_future_canonical_index": 531666,
+    "target_canonical_index": 531683,
+    "history_start_index": 531570,
+    "target_utc": "2026-02-23T15:02:10+00:00",
+    "saved": 1.473152995109558,
+    "replayed": 1.4772757291793823,
+    "signed_diff": 0.004122734069824219
+  },
+  "sampling_index_reconstruction": "original sample_windows algorithm, seed 50000, span 114; day ids exact",
+  "environment_now": {
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "cudnn": 90100,
+    "gpu": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+  }
+}

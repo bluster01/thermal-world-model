@@ -1,0 +1,21 @@
+{
+  "run": "t1_physics_only_seed0",
+  "seed": 0,
+  "arm": "physics_only",
+  "prediction_mae": 1.748900055885315,
+  "replay_checks": {
+    "mae": {
+      "max_abs_difference": 0.0076721906661987305,
+      "allclose": false
+    },
+    "nll": {
+      "max_abs_difference": 0.007420539855957031,
+      "allclose": false
+    },
+    "crps": {
+      "max_abs_difference": 0.004122734069824219,
+      "allclose": false
+    }
+  },
+  "responses": {}
+}
