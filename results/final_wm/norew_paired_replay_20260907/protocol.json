@@ -1,0 +1,59 @@
+{
+  "authorization": "User explicitly authorized checkpoint prediction/response replay, no retraining",
+  "arms": [
+    "physics_only",
+    "closure_cons",
+    "closure_cons_norew"
+  ],
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "prediction": {
+    "windows": 256,
+    "batch": 32,
+    "horizon": 18,
+    "history": 96,
+    "seed": "50000 + seed"
+  },
+  "response": {
+    "windows": 64,
+    "horizons": [
+      18,
+      60
+    ],
+    "valves": [
+      0,
+      1
+    ],
+    "delta_v": 0.05,
+    "summary": "last ten steps, final temperature; equal-day bootstrap",
+    "seed": "80000 + 1000*valve + horizon + seed",
+    "n_boot": 1000,
+    "allow_extrapolation_for_flagged_diagnostics": true
+  },
+  "replay_tolerance": {
+    "atol": 0.002,
+    "rtol": 0.0001,
+    "applies_to": "every saved MAE/NLL/CRPS element; day ids exact"
+  },
+  "paired_mae_ci": "each seed separately, equal UTC-day weighting, 1000 day bootstrap samples; no pooled seed significance",
+  "training": false,
+  "leakage_probe": false,
+  "full_R1_verdict": false,
+  "device": "cuda",
+  "environment": {
+    "platform": "Linux-6.11.0-1016-nvidia-aarch64-with-glibc2.39",
+    "python": "3.11.15",
+    "torch": "2.11.0+cu130",
+    "numpy": "1.26.4",
+    "gpu": "NVIDIA GB10",
+    "cuda": "13.0",
+    "cudnn": 91900,
+    "matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true
+  },
+  "script_sha256": "183c840e905a59f70de0f530bac7e02816dce36aa1af028136d3fb6b91e83656"
+}
