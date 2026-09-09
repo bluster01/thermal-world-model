@@ -1,3 +1,11 @@
+# 当前恢复入口：2026-09-09
+
+当前任务为 `thermal_world_model_tenth_prototype`，替代下文历史 Linux 派发状态。按 [1/10 训练执行单](world_model_plant/linux_training_task.md) 完成预检、数据准备和四臂 seed11 训练；三项任务均已发布，不必等待另一份训练授权。训练源码来自 `22076baca779010fd3d21c9dc573fd6157cf7277`，当前 main 保留相同冻结源码，可直接执行。机器入口为 `configs/phase3_5/experiment_registry.json` 的 `active_gate`。
+
+尚无已确认的远端领取或运行回执。GitHub 是任务与汇总结果的共享通道，私有数据和权重留在 Linux。按原型结果决定下一次架构实验，不扩展外围工程或重复验证。必要子智能体使用降级模型和适中推理。
+
+以下为历史快照。
+
 # Phase 3.5-MS 上下文恢复快照
 
 > 更新：2026-08-14。新会话先读本文，再运行状态检查器。机器状态以 `configs/phase3_5/experiment_registry.json` 为准；本文解释为什么。

@@ -1,8 +1,8 @@
 {
   "schema_version": "phase3.5-experiment-registry-v1",
-  "updated_at": "2026-09-01",
-  "active_gate": "final_world_model_pipeline",
-  "linux_authorized_gate": "final_world_model_pipeline",
+  "updated_at": "2026-09-09",
+  "active_gate": "thermal_world_model_tenth_prototype",
+  "linux_authorized_gate": "thermal_world_model_tenth_prototype",
   "pipeline_order": [
     "ms0",
     "ms1",
@@ -18,6 +18,7 @@
     "final_world_model_pipeline",
     "jepa_b_series",
     "jepa_b5",
+    "thermal_world_model_tenth_prototype",
     "ms4"
   ],
   "status_vocabulary": [
@@ -1115,7 +1116,7 @@
     },
     "final_world_model_pipeline": {
       "title": "最终概率物理状态世界模型 Pipeline",
-      "status": "ready_for_linux",
+      "status": "paused",
       "owner": "local_design_code_linux_run_local_audit",
       "evidence_scope": "observer_boundary_fan2020_ude_transition_action_blind_closure_observation_and_koopman_student",
       "scripts": {
@@ -1284,20 +1285,28 @@
         }
       },
       "protocol_state": {
-        "active": true,
-        "ready_for_linux": true,
+        "active": false,
+        "ready_for_linux": false,
         "results_returned": false,
         "audited": false,
         "audit_verdict": "LOCAL_PROTOCOL_VERIFIED_LINUX_REISSUE_PENDING",
         "current_repair_task": "TASK_1_8_LOCAL_VERIFIED_LINUX_FULL_REISSUE_NEXT",
         "test_locked": true,
         "authoritative_matrix_version": "0.7",
-        "authorized_batch": "final_wm_v07_full_reissue_v1",
-        "seed_scope": [0, 1, 2],
-        "sides": ["A", "B"],
+        "authorized_batch": null,
+        "seed_scope": [
+          0,
+          1,
+          2
+        ],
+        "sides": [
+          "A",
+          "B"
+        ],
         "r1_arm": "closure_cons_norew",
         "automatic_retry": false,
-        "historical_matrix_results": "SUPERSEDED_PENDING_V07_REISSUE"
+        "historical_matrix_results": "SUPERSEDED_PENDING_V07_REISSUE",
+        "last_authorized_batch": "final_wm_v07_full_reissue_v1"
       },
       "decision": "LOCAL PROTOCOL VERIFIED / READY FOR LINUX：Task 1–8 已闭合；唯一授权批次 final_wm_v07_full_reissue_v1 将 v0.6 canonical v2.2 + 120/20 底座与 v0.7 required-evidence、paired ΔNLL、共时时序、逐窗口支持域、D-SYN 非空扰动、raw quality、固定 validation anchors 和内容寻址 manifest 合并为一次双侧全量重发。正式 R1=closure_cons_norew；validation only；test 锁定；回传审计前不升级论文结论",
       "advisories": [
@@ -1309,7 +1318,9 @@
         "修复范围只覆盖可改变科学判决或破坏证据绑定的根因；模型架构、LPV 调参及一般工程化事项保持冻结",
         "2026-08-28 探针复审：DiD 的 200 次置换不得报告 p=0，factual counterfactual 必须逐步检查支持域；在 factual rollout 误差明显大于反事实效应时只作模型内部方向诊断",
         "2026-08-28 JEPA 文献增补（JEPA-x 2608.24044 / Phys-JEPA 2606.16076 / LeJEPA SIGReg）：动机=未观测炉膛侧驱动是 sh1_in 逼近信息极限的主因（v0.6 诊断），JEPA-x 特权物理分支（训练期富通道交叉预测、部署丢弃、接口不变）与 Phys-JEPA 物理-残差分解（static/dynamic 双一致性）提供了比 CVAE 潜变量更直接的机制；B 系列重排：B3 改 JEPA-x 式特权分支、新增 B4 Phys-JEPA 式分解，判定沿用 A 系列三条件+方向门并增报 H36/H60 漂移与段级偏置；优先级不变（排在 A 系列四合一与 v0.6 ①之后）；两篇均为初始验证性质（机器人/气象域、单种子、弱 descriptor），引作机制与术语来源不作证据背书"
-      ]
+      ],
+      "dispatch_superseded_by": "thermal_world_model_tenth_prototype",
+      "dispatch_note": "2026-09-09 current user task is the one-tenth prototype. Retain old scientific records; do not restart the old batch."
     },
     "jepa_b_series": {
       "title": "JEPA 状态增强 B1–B4 预注册探索批",
@@ -1485,6 +1496,59 @@
         "B2→B5 的均值符号变化只支持动作效果吸收/注入通道冲突假说，不构成机制因果识别",
         "B5-C0 与 B-v1 C0 evaluation 和 direction 逐位一致；候选臂未在本机完整重跑，验证状态为 ANALYZED"
       ]
+    },
+    "thermal_world_model_tenth_prototype": {
+      "title": "Thermal world model 连续 1/10 数据快速原型",
+      "status": "ready_for_linux",
+      "owner": "local_research_code_remote_linux_execution",
+      "evidence_scope": "recorded_position_and_boundary_conditioned_plant_prediction",
+      "source_commit": "22076baca779010fd3d21c9dc573fd6157cf7277",
+      "scripts": {
+        "matrix_runner": {
+          "path": "experiments/world_model_plant/run_matrix.py",
+          "required": true
+        }
+      },
+      "artifacts": {
+        "training_task": {
+          "path": "experiments/world_model_plant/task_train_v1.json",
+          "required": true
+        },
+        "release": {
+          "path": "experiments/world_model_plant/release_train_v1.json",
+          "required": true
+        },
+        "instructions": {
+          "path": "docs/world_model_plant/linux_training_task.md",
+          "required": true
+        }
+      },
+      "protocol_state": {
+        "active": true,
+        "ready_for_linux": true,
+        "results_returned": false,
+        "audited": false,
+        "remote_claim_verified": false,
+        "test_locked": true,
+        "authorized_batch": "thermal_world_model_tenth_train_v1",
+        "seed_scope": [
+          11
+        ],
+        "requested_batches_per_arm": 250,
+        "automatic_retry": false
+      },
+      "execution_sequence": [
+        "thermal_world_model_tenth_preflight_v1",
+        "thermal_world_model_tenth_prepare_data_v1",
+        "thermal_world_model_tenth_train_v1"
+      ],
+      "dispatch": "All three tasks are published. After a successful preflight and matching data receipt, continue to the frozen training task without waiting for another release.",
+      "receipt_branches": [
+        "codex/linux-thermal-preflight-20260909",
+        "codex/linux-thermal-data-20260909",
+        "codex/linux-thermal-train-20260909"
+      ],
+      "decision": "One seed and four paired arms first; use the returned errors and support coverage to choose the next architecture experiment."
     }
   }
 }

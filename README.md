@@ -2,9 +2,13 @@
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
-> **当前判断（2026-09-01）**：Final-WM v0.6/v0.7 的 Task 1–8 已完成本地协议修复与验证，唯一授权批次 `final_wm_v07_full_reissue_v1` 已冻结，等待 Linux 执行双侧 validation 全量重发。v0.6 提供 corrected canonical v2.2 与 120/20 训练底座，v0.7 提供 fail-closed 判决、固定 validation anchors 和内容寻址 manifest；正式 R1 栈为 `closure_cons_norew`。旧矩阵结果继续标记 historical/superseded，test 与论文 verdict 在回传独立审计前保持锁定。
+**当前任务（2026-09-09）**：实现 thermal world model，使用连续 1/10 数据快速验证。Linux 通过 GitHub 领取任务与回传结果，无需 SSH。四臂原型已冻结：共享/证据配额缓存 × 年龄加权/注意力，seed 11，每臂最多 250 requested batches。当前尚未收到远端领取回执。
 
-## 当前入口
+执行顺序：[环境预检](docs/world_model_plant/github_handoff.md) → [数据准备](docs/world_model_plant/linux_data_task.md) → [四臂训练](docs/world_model_plant/linux_training_task.md)。三个任务都已发布；前两步成功即可接续训练，预检说明中“等待后续发布”的条件已满足。训练源码来自 `22076baca779010fd3d21c9dc573fd6157cf7277`；可直接在当前 main 执行，release 文件核对同一组冻结源码。汇总回执提交到各任务指定分支。
+
+任务状态以 [TODO](TODO.md) 和 [机器注册表](configs/phase3_5/experiment_registry.json) 的 `thermal_world_model_tenth_prototype` 为准。下列 v0.7 及更早条目保留为历史材料。
+
+## 研究与历史入口
 
 - [v0.6/v0.7 协议谱系审计与解决方案](docs/FINAL_WM_V06_V07_PROTOCOL_AUDIT_2026-09-01.md)
 - [v0.7 Linux 全量冻结执行单](results/final_wm/v07_full_reissue_runbook_20260901.md)
