@@ -1,3 +1,7 @@
+## 当前任务：thermal world model 1/10原型（2026-09-09）
+
+用户当前要求实现thermal world model，使用旧训练区间1/10连续数据快速验证，远程Linux通过GitHub领取和回传任务，无SSH。当前可执行任务为 **thermal_world_model_tenth_preflight_v1**：按 [GitHub交接说明](docs/world_model_plant/github_handoff.md)核实Linux环境及本地资产，回传public_receipt；尚未派发这轮真实数据训练。旧test与既往实验身份保持不变。本节为当前任务入口，下文保留历史队列。
+
 # Thermal World Model TODO
 
 > 更新：2026-08-18。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。RM3-B1 的 22/22 validation 已完成独立 paired audit 并关闭：1 项支持结构化简、5 项混合、2 项拒绝，不生成 RM3-B2。最终世界模型 pipeline 的本地接口包 `src/final_wm/`（observer/boundary/Fan2020-UDE transition/action-blind closure/observation/controller/装配层）已完成并通过 82 项本地合同与 micro-smoke 测试；下一判决点是 O1/B1/T1/R1/J1/K1 判别实验矩阵的冻结与独立授权提交。Linux 授权为空，test 与 MS4 继续锁定。
