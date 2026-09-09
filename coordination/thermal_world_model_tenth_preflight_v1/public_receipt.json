@@ -1,0 +1,58 @@
+{
+  "task_id": "thermal_world_model_tenth_preflight_v1",
+  "task_stage": "preflight",
+  "recorded_utc": "2026-09-09T15:54:10.969758+00:00",
+  "source_sha256": "3d344831fb2481bdb41efc550b35039e2ca99c517516c62a5cefb8a606fc8bae",
+  "platform": "Linux",
+  "python_version": "3.11.15",
+  "dependencies": {
+    "numpy": {
+      "available": true,
+      "version": "1.26.4"
+    },
+    "torch": {
+      "available": true,
+      "version": "2.11.0+cu130",
+      "cuda_available": true,
+      "cuda_device_count": 1,
+      "cuda_runtime": "13.0"
+    },
+    "pandas": {
+      "available": true,
+      "version": "1.5.3"
+    },
+    "pytest": {
+      "available": true,
+      "version": "9.1.1"
+    }
+  },
+  "assets": {
+    "canonical": {
+      "provided": true,
+      "exists": true,
+      "expected_sha256": "24da77960e05e3636cc7b97a60a75e9b4ba470a3abb4f8ba920ddf11c6dad1d0",
+      "sha256": "24da77960e05e3636cc7b97a60a75e9b4ba470a3abb4f8ba920ddf11c6dad1d0",
+      "matches": true
+    },
+    "raw_merged": {
+      "provided": true,
+      "exists": true,
+      "expected_sha256": null,
+      "sha256": null,
+      "matches": null
+    },
+    "properties": {
+      "provided": true,
+      "exists": true,
+      "expected_sha256": "9fd7a1dba96a5b968661f644fa185ac755266c85853d689d065432a2d41f6e92",
+      "sha256": "9fd7a1dba96a5b968661f644fa185ac755266c85853d689d065432a2d41f6e92",
+      "matches": true
+    }
+  },
+  "prerequisites_present": true,
+  "training_started": false,
+  "plant_arrays_loaded": false,
+  "raw_csv_values_read": false,
+  "remote_training_completion": false,
+  "next": "Wait for the exact frozen training task; this receipt alone does not start a fit."
+}
