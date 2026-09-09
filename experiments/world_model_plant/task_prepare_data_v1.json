@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "task_id": "thermal_world_model_tenth_prepare_data_v1",
+  "stage": "prepare_and_verify_private_data",
+  "status": "QUEUED",
+  "execution_target": "user_operated_remote_linux",
+  "transport": "git_branches_and_allowlisted_receipt_files",
+  "ssh_required": false,
+  "training_authorized_by_this_task": false,
+  "optimizer_allowed": false,
+  "requires_preflight_task": "thermal_world_model_tenth_preflight_v1",
+  "requires_preflight_success": true,
+  "expected_data_identity": "experiments/world_model_plant/expected_data_identity_v1.json",
+  "instructions": "docs/world_model_plant/linux_data_task.md",
+  "prepare_module": "analysis.world_model_plant.prepare_tenth",
+  "verify_module": "analysis.world_model_plant.verify_tenth",
+  "compare_module": "analysis.world_model_plant.compare_receipts",
+  "path_inputs_resolved_on_worker": [
+    "canonical_sideA_v2.npz",
+    "all_merged_10s.csv",
+    "new_private_output_directory"
+  ],
+  "canonical_sha256": "24da77960e05e3636cc7b97a60a75e9b4ba470a3abb4f8ba920ddf11c6dad1d0",
+  "raw_header_sha256": "45d6fdc0aa9ca0c8de3d43096f8d5e68924e638a36326d835514bf66110eadb0",
+  "selection": "first floor(old_training_rows/10) continuous canonical gridpoints",
+  "old_training_rows": 530779,
+  "selected_grid_rows": 53077,
+  "dt_seconds": 10,
+  "context": 64,
+  "future": 128,
+  "old_validation_measurement_access_allowed": false,
+  "old_test_measurement_access_allowed": false,
+  "source_policy": "Canonical hash and bounded timestamp/split prefixes only; raw timestamp-bounded prefix; no post-cutoff numeric fields.",
+  "expected_private_artifacts": [
+    "plant_tenth.npz",
+    "manifest.json",
+    "saved_array_audit.json",
+    "public_receipt.json",
+    "public_comparison.json"
+  ],
+  "allowed_github_return": [
+    "public_receipt.json",
+    "public_comparison.json"
+  ],
+  "never_publish": [
+    "raw CSV or NPZ measurements",
+    "full local manifest or local audit",
+    "plant statistics, time ranges, tag values or machine paths",
+    "preparation stdout, stderr, tracebacks or private logs",
+    "weights or optimizer state"
+  ],
+  "completion_requires": [
+    "local saved-array verifier exits zero",
+    "all published data identity fields and 39 stable array hashes match",
+    "current preparer and receipt preparer hashes are accepted exact LF/CRLF forms",
+    "public comparison status equals DATA_RECEIPT_MATCH"
+  ],
+  "on_mismatch": "Stop this data task; retain private diagnostics locally and return only sanitized public_comparison.json. Do not select another data interval, change mappings, relax filters, or start training.",
+  "receipt_branch": "codex/linux-thermal-data-20260909",
+  "receipt_directory": "coordination/thermal_world_model_tenth_prepare_data_v1",
+  "next_phase": "separately_freeze_and_execute_plant_anchor_and_training_task"
+}

@@ -1,6 +1,8 @@
-## 当前任务：thermal world model 1/10原型（2026-09-09）
+## 当前任务：thermal world model 1/10 原型（2026-09-09）
 
-用户当前要求实现thermal world model，使用旧训练区间1/10连续数据快速验证，远程Linux通过GitHub领取和回传任务，无SSH。当前可执行任务为 **thermal_world_model_tenth_preflight_v1**：按 [GitHub交接说明](docs/world_model_plant/github_handoff.md)核实Linux环境及本地资产，回传public_receipt；尚未派发这轮真实数据训练。旧test与既往实验身份保持不变。本节为当前任务入口，下文保留历史队列。
+远端 Linux 通过 GitHub 领取和回传任务，无需 SSH。按顺序执行 [环境预检](docs/world_model_plant/github_handoff.md) → [1/10 数据准备](docs/world_model_plant/linux_data_task.md) → [四臂短预算训练](docs/world_model_plant/linux_training_task.md)。训练任务 **thermal_world_model_tenth_train_v1** 已冻结：seed 11、每臂 250 requested batches、history 64、训练 H32 / 验证 H128。
+
+本地已完成数据准备和必要软件检查，尚未收到远端领取或运行回执。回执分支分别为 `codex/linux-thermal-preflight-20260909`、`codex/linux-thermal-data-20260909`、`codex/linux-thermal-train-20260909`。研究按原型结果推进，暂不扩展外围工程和更多网络模块。以下保留历史记录，其旧授权状态不代替本节冻结任务。
 
 # Thermal World Model TODO
 

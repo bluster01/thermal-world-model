@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "task_id": "thermal_world_model_tenth_train_v1",
+  "status": "QUEUED",
+  "research_question": "Does preserving 64 evidence events improve long rollout prediction, and does attention improve on age weighting under either retention policy?",
+  "variants": [
+    "shared_age",
+    "shared_attention",
+    "quota_age",
+    "quota_attention"
+  ],
+  "seeds": [
+    11
+  ],
+  "model": {
+    "hidden_dim": 32,
+    "heads": 4,
+    "layers": 2,
+    "correction_fraction": 0.25,
+    "cache_capacity": 128,
+    "evidence_capacity": 64,
+    "prediction_capacity": 64,
+    "dtype": "float32"
+  },
+  "training": {
+    "requested_batches": 250,
+    "batch_size": 4,
+    "train_horizon": 32,
+    "validation_horizon": 128,
+    "validation_interval": 50,
+    "anchors_per_side": 16,
+    "sample_seed": 72001,
+    "learning_rate": 0.0003,
+    "gradient_clip": 1.0,
+    "free_weight": 1.0,
+    "prior_weight": 1.0
+  },
+  "timeout_seconds_per_arm": 21600,
+  "expected_data_identity": "experiments/world_model_plant/expected_data_identity_v1.json",
+  "dataset": {
+    "dataset_id": "thermal_plant_contiguous_tenth_v1_20260909",
+    "array_receipt_sha256": "b04a5cb656a8796ce6ec8ce123f456add09caea8485fd901626c850cfaa515f6",
+    "selected_rows": 53077
+  },
+  "input_plan_sha256": "a57da4422a052d71aa2f675d29570b729cd40384427eaf47ae43d6edfb20a900",
+  "cut_anchor_policy": "all_five_observations_present_at_cut",
+  "conditioning": "recorded_positions_and_boundaries_oracle",
+  "selection": "equal-window normalized free MSE; all 32 validation windows and both objective branches must remain supported; missing labels excluded",
+  "parameter_policy": "Fixed inherited physical priors; fresh neural parameters; no old checkpoint",
+  "receipt_branch": "codex/linux-thermal-train-20260909",
+  "receipt_directory": "coordination/thermal_world_model_tenth_train_v1",
+  "allowed_return": [
+    "claim.json",
+    "public_matrix_status.json",
+    "*/public_status.json",
+    "*/public_validation_log.jsonl"
+  ],
+  "instructions": "docs/world_model_plant/linux_training_task.md",
+  "input_plan_hash_rule": "sha256 of JSON bytes with CRLF normalized to LF"
+}

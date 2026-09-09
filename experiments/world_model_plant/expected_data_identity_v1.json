@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "identity_kind": "EXPECTED_PRIVATE_DATA_IDENTITY_ONLY",
+  "expected_receipt": {
+    "schema_version": 1,
+    "dataset_id": "thermal_plant_contiguous_tenth_v1_20260909",
+    "status": "PREPARED_OBSERVATIONAL_INPUTS_NOT_TRAINED",
+    "canonical_sha256": "24da77960e05e3636cc7b97a60a75e9b4ba470a3abb4f8ba920ddf11c6dad1d0",
+    "raw_header_sha256": "45d6fdc0aa9ca0c8de3d43096f8d5e68924e638a36326d835514bf66110eadb0",
+    "raw_selected_prefix_sha256": "d84f4f174230fb0574df765c3991d10ee204ae7c5779ec30fc9fdc2b12ebdddd",
+    "selected_timestamps_array_sha256": "b1754293201836d0bba884619c2e70ad4f9f1223a1c3a8cd438f9ec5f9e02f43",
+    "raw_selected_records_read": 53071,
+    "selected_grid_rows": 53077,
+    "old_training_rows": 530779,
+    "old_validation_measurement_rows_read": 0,
+    "old_test_measurement_rows_read": 0,
+    "split_ranges": {
+      "train": [
+        0,
+        42461
+      ],
+      "prototype_validation": [
+        42461,
+        53077
+      ]
+    },
+    "dt_seconds": 10,
+    "window_context": 64,
+    "window_future": 128,
+    "array_hash_algorithm": "sha256(json.dumps(dtype.str+shape,sort_keys=True,separators=(comma,colon)).ASCII + newline + C-order bytes)",
+    "array_hashes": {
+      "timestamps_epoch_s": "b1754293201836d0bba884619c2e70ad4f9f1223a1c3a8cd438f9ec5f9e02f43",
+      "raw_values": "ce11cfd740133f6e516f49d72594455a1292ef386b69f0d474963d540cc842e6",
+      "raw_exported_record_mask": "fb7f26be2b04e89fa11c4dbd57af3ea2223a931f9583700575a11b681d6476dc",
+      "raw_present_mask": "f7155a361661dca6ca4f41db727fdf95d2daab5f63d04c91297aace67f25637d",
+      "raw_age_s": "3e5a676107e1dc504297f49648dd370809cefd511cb5b4af3ecbb0bdd04b6a0a",
+      "raw_source_timestamp_epoch_s": "a9d916dc5141cc7a575c58066c5a19a6ffbfd16d5f041cde603f0391ff544141",
+      "prototype_split": "131d3f25d224b1189769d3ee9c5f5a996f0eb1bcfa02189fa966c2f6d2bbbe8c",
+      "observations": "fa280efced33c5ee141a2d2ad34f050df99efb27413705397ea44288590d1493",
+      "observations_available_mask": "6f32e5d8a8fade7fcf506582605164ed94fd69583df6c90a1b18f9916a4df586",
+      "observations_present_mask": "254c9a233f7e911c6202412bd65b162af6d3c44aeeed998817ea1312ed85cfee",
+      "observations_age_s": "508cd08b7ded3435634fd1b88b3d8d7c7c4557a98c6305134100e1c03dad65a9",
+      "observations_source_timestamp_epoch_s": "624c3f53391991adcc6f2b510f622e0ca84ab0dd565cb57c7a3ded54877b5395",
+      "positions": "24d66963ed9c81ba47fc42607fa14b8807fbc8e1944494c87694d3281309e372",
+      "positions_available_mask": "9e7c552c5b4089575c16f7661f8dcc49d9109c40a8be5e36679d8032edd3329f",
+      "positions_present_mask": "b6ef51aa0d99933b6dbae4fcc27b154410ef1af582dac3ecfa59b81a450d22e8",
+      "positions_age_s": "2320fe24f4827fea9111887e1b87ffb6651dfcfe343390bbafc5b832690c24d5",
+      "positions_source_timestamp_epoch_s": "ceb542f82c96b35c950ef8477b50c9003e0c025b2abe49d7f9058fb933cf3c38",
+      "boundary": "c63ef2ee19c072b3cc6dd26e87775d99dc1a89be617498ca1e796e6b18c5a26d",
+      "boundary_available_mask": "30e9abaebb396f3d5984ebcb56bdb2778a96edfd545af376f8058e2c4d75d04c",
+      "boundary_present_mask": "3eae00c42bdbd058c1f8f6c0fc6602b581ba42b9317a743c9c63f831f3e9ce45",
+      "boundary_age_s": "d5d5090c79f9ca0624beb84a963f5a68e703e9a2364338ffbe574c0776a20575",
+      "boundary_source_timestamp_epoch_s": "8a00b74dbef0d9f7b5344689d2b79ad520a42d1552fa7ddaccee3eccb2792a7f",
+      "command_candidates_unconfirmed": "a74ee2a8bde758db69b96892bb0e23247cf6b79a71dd2a6ed25968cf47170338",
+      "command_candidates_unconfirmed_available_mask": "9e7c552c5b4089575c16f7661f8dcc49d9109c40a8be5e36679d8032edd3329f",
+      "command_candidates_unconfirmed_present_mask": "b6ef51aa0d99933b6dbae4fcc27b154410ef1af582dac3ecfa59b81a450d22e8",
+      "command_candidates_unconfirmed_age_s": "2320fe24f4827fea9111887e1b87ffb6651dfcfe343390bbafc5b832690c24d5",
+      "command_candidates_unconfirmed_source_timestamp_epoch_s": "ceb542f82c96b35c950ef8477b50c9003e0c025b2abe49d7f9058fb933cf3c38",
+      "A_basic_row_eligible": "940fa621b7404a1e3ae1a993d9a8695c96e47ae3377a8456ea573bb982c6751a",
+      "A_property_input_row_eligible": "fefd0b2daf55dd01b924b310ece6bbafa29a35ce68297c39a8e41c30e948de90",
+      "A_train_basic_window_starts": "73f5ce2a56ebf73a7012e1e66492f8ac45ff91d7d90981de5adf941a3bea7b41",
+      "A_train_property_input_window_starts": "ec1274cb464b9e30115fea00053cee10d2f2bdeeec0ccfef83c346f921a72e61",
+      "A_prototype_validation_basic_window_starts": "535d409ed2e7a605a0e978f26a65adc53c6e6e23925d02980b0b5e02bad48850",
+      "A_prototype_validation_property_input_window_starts": "535d409ed2e7a605a0e978f26a65adc53c6e6e23925d02980b0b5e02bad48850",
+      "B_basic_row_eligible": "940fa621b7404a1e3ae1a993d9a8695c96e47ae3377a8456ea573bb982c6751a",
+      "B_property_input_row_eligible": "ef1d60fdc43173f41956e12433c5f29d3faa12364314aa8da7911a8e5f80cd2d",
+      "B_train_basic_window_starts": "73f5ce2a56ebf73a7012e1e66492f8ac45ff91d7d90981de5adf941a3bea7b41",
+      "B_train_property_input_window_starts": "0365cfd02b79e8b1d467b1a22d5be86764088ce71398ec5f842e7e11db5022ba",
+      "B_prototype_validation_basic_window_starts": "535d409ed2e7a605a0e978f26a65adc53c6e6e23925d02980b0b5e02bad48850",
+      "B_prototype_validation_property_input_window_starts": "2824a450b2293221062c88c30ccdfae7bb80cb1e8c9c9597c12fb46b0c85cbc9"
+    },
+    "command_semantics": "UNCONFIRMED",
+    "actual_DCS_timezone_and_arrival_times_certified": false,
+    "upstream_resampling_causality_certified": false
+  },
+  "preparer_identity": {
+    "lf_normalized_sha256": "d7c150db43cec9217fe36af8bf1e79641c9142320ffcbfa86036d9d170d892a3",
+    "accepted_raw_sha256": {
+      "lf": "d7c150db43cec9217fe36af8bf1e79641c9142320ffcbfa86036d9d170d892a3",
+      "crlf": "b6fd0dd87a0df84ff490c59bef6fd9507fb6a8fc9f1323b0727b2ecfbe81a10f"
+    },
+    "reference_receipt_raw_sha256": "d7c150db43cec9217fe36af8bf1e79641c9142320ffcbfa86036d9d170d892a3",
+    "normalization_rule": "Accept exactly canonical UTF-8 source with all LF or all CRLF line endings; no other byte changes."
+  }
+}
