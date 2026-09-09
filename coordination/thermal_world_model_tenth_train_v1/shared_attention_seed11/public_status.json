@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "task_id": "thermal_world_model_tenth_train_v1",
+  "variant": "shared_attention",
+  "seed": 11,
+  "stage": "requested_schedule_exhausted",
+  "state": "complete",
+  "requested_batch_budget": 250,
+  "best_present": true,
+  "selection_incomplete": false,
+  "device": "cuda",
+  "started_utc": "2026-09-09T16:26:12.644994+00:00",
+  "counters": {
+    "requested_batches": 250,
+    "optimizer_steps": 250,
+    "requested_windows": 1000,
+    "supported_windows": 1000,
+    "unsupported_windows": 0,
+    "skipped_batches": 0,
+    "nonfinite_batches": 0,
+    "failed_batches": 0,
+    "failed_unclassified_windows": 0,
+    "nonfinite_batch_member_windows": 0
+  },
+  "best_requested_batch": 250,
+  "best_optimizer_steps": 250,
+  "best_validation_free_normalized_mse": 2.242659229785204,
+  "latest_validation": {
+    "requested_windows": 32,
+    "completed_records": 32,
+    "supported_windows": 32,
+    "unsupported_windows": 0,
+    "failed_windows": 0,
+    "conditional_supported_free_normalized_mse": 2.242659229785204,
+    "selection_complete": true,
+    "selection_value": 2.242659229785204,
+    "reduction": "equal_weight_requested_window_only_if_all_supported; overlapping_windows_are_not_independent_episodes"
+  },
+  "peak_cuda_allocated_bytes": 100060160,
+  "finished_utc": "2026-09-09T16:55:15.186587+00:00"
+}
