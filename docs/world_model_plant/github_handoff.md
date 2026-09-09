@@ -6,8 +6,8 @@
 
 ## 领取与回传
 
-1. 在对应 GitHub issue 评论 `CLAIMED: thermal_world_model_tenth_preflight_v1`。写入本次实际代码 commit、Python 版本和匿名 worker 标识即可；先检查是否已有未结束的领取记录。
-2. 在独立 checkout/worktree 取 issue 指定的 commit，不覆盖 Linux 上已有实验或输出。不要重启旧 synthetic pilot 或旧 v0.7 test。
+1. 从任务代码 commit 创建回执分支 `codex/linux-thermal-preflight-20260909`，先推送 `coordination/thermal_world_model_tenth_preflight_v1/claim.json`，包含 task_id、status=CLAIMED、source_commit、匿名 worker_id 和 claimed_utc。若远端已有该分支或未结束领取记录，先读取状态，不能覆盖或重复领取。
+2. 在独立 checkout/worktree 取任务指定的 commit，不覆盖 Linux 上已有实验或输出。不要重启旧 synthetic pilot 或旧 v0.7 test。
 3. 在已有 Python 环境运行下列命令。三个路径参数对应 **Linux 机本地**的数据和物性资产；不需要传送原始数据。
 
 ```bash
@@ -20,7 +20,7 @@ python3 -m experiments.world_model_plant.preflight \
 
 `TWM_CANONICAL` 为冻结 canonical_sideA_v2.npz；`TWM_RAW_MERGED` 为原 all_merged_10s.csv；`TWM_PROPERTIES` 为 iapws_surrogate.npz。`TWM_PREFLIGHT_OUTPUT` 是**不存在的新目录**，其父目录必须存在。不确定路径时先省略相应参数，程序会如实回报缺失；不要用不明来源的同名文件替代。
 
-4. `local_details.json` 留在 Linux。把 `public_receipt.json` 的内容作为 issue 评论回传：成功标 `PREFLIGHT_COMPLETE`；退出码2时标 `PREREQUISITE_MISSING` 并说明缺失项。程序不会安装包、读入电厂数组或启动训练。
+4. `local_details.json` 留在 Linux。只把 `public_receipt.json` 复制为 `coordination/thermal_world_model_tenth_preflight_v1/public_receipt.json`，连同状态记录推送到自己的回执分支：成功标 `PREFLIGHT_COMPLETE`；退出码2时标 `PREREQUISITE_MISSING` 并说明缺失项。程序不会安装包、读入电厂数组或启动训练。
 5. 当前任务到此结束。主线程核查回执后，发布确切数据/代码哈希、预算与命令的训练任务。没有领取回执及真实运行日志时，不把任务写成 running。
 
 ## 已知资产身份
@@ -36,7 +36,7 @@ python3 -m experiments.world_model_plant.preflight \
 
 `QUEUED → CLAIMED → PREFLIGHT_COMPLETE / PREREQUISITE_MISSING` 属于本预检任务。未来训练任务使用单独的 `QUEUED → CLAIMED → RUNNING → RETURNED / FAILED → AUDITED`，返回内容须绑定代码 commit、数据身份、配置和 checkpoint。
 
-超时或没有新评论不是失败证据，不应自动重跑。任务重复领取、源码/配置不符、已有输出冲突时保留原记录并回报；不能覆盖已完成结果。断点恢复须使用协议明定的同一次训练状态，不能悄悄从头换一次随机训练。
+超时或没有新回执不是失败证据，不应自动重跑。任务重复领取、源码/配置不符、已有输出冲突时保留原记录并回报；不能覆盖已完成结果。断点恢复须使用协议明定的同一次训练状态，不能悄悄从头换一次随机训练。
 
 ## 共享范围
 
@@ -45,3 +45,5 @@ python3 -m experiments.world_model_plant.preflight \
 本地已完成的12模型合成 pilot 实际运行于 Windows 上的 Ubuntu WSL2，不能计作这台远程 Linux 的任务。该 pilot 的结果没有支持默认采用内容attention；目前正在检验固定总缓存128内的64观测/历史＋64预测配额，软件测试通过不等于已学出更好的模型。
 
 实际阀位条件回放仍须与最终阀门指令控制区分。未确认的串级主调输出不能直接替代阀门开度命令。原型结果不自动证明现场干预效果、风险控制或跨机组通用性。
+
+GitHub连接器本次无issue写权限，git分支推送已经可用，故状态以版本化任务/回执文件为准。只提交上述白名单文件；主线程读取回执分支后更新任务状态。不得强制推送或覆盖另一端提交。

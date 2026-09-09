@@ -4,14 +4,21 @@
   "stage": "preflight",
   "status": "QUEUED",
   "execution_target": "user_operated_remote_linux",
-  "transport": "github_issue_and_versioned_code",
+  "transport": "git_branches_and_allowlisted_receipt_files",
   "ssh_required": false,
   "training_authorized_by_this_task": false,
   "plant_array_loading_required": false,
   "command_module": "experiments.world_model_plant.preflight",
   "canonical_sha256": "24da77960e05e3636cc7b97a60a75e9b4ba470a3abb4f8ba920ddf11c6dad1d0",
   "properties_sha256": "9fd7a1dba96a5b968661f644fa185ac755266c85853d689d065432a2d41f6e92",
-  "expected_local_artifacts": ["local_details.json", "public_receipt.json"],
-  "allowed_github_return": ["public_receipt.json"],
-  "next_phase": "freeze_one_tenth_plant_data_and_model_training_task"
+  "expected_local_artifacts": [
+    "local_details.json",
+    "public_receipt.json"
+  ],
+  "allowed_github_return": [
+    "public_receipt.json"
+  ],
+  "next_phase": "freeze_one_tenth_plant_data_and_model_training_task",
+  "receipt_branch": "codex/linux-thermal-preflight-20260909",
+  "receipt_directory": "coordination/thermal_world_model_tenth_preflight_v1"
 }
