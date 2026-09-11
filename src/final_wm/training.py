@@ -58,6 +58,11 @@ class TrainSpec:
     initial_state_mode: str = "steady"
     closure_mode: str = "none"
     latent_dim: int = 0
+    observer_encoder: str = "gru"
+    observer_patch_length: int = 16
+    observer_patch_stride: int = 8
+    observer_attention_heads: int = 4
+    observer_attention_layers: int = 1
     eval_windows: int = 128
     eval_batch: int = 32
 
@@ -90,7 +95,15 @@ def build_world_model(spec: TrainSpec, properties: ThermoProperties | None = Non
     config = WorldModelConfig(
         transition=TransitionConfig(latent_dim=spec.latent_dim, rewet_ablate=bool(norew)),
         closure=ClosureConfig(injection_mode=closure_mode),
-        observer=ObserverConfig(history_steps=spec.history_steps, latent_dim=spec.latent_dim),
+        observer=ObserverConfig(
+            history_steps=spec.history_steps,
+            latent_dim=spec.latent_dim,
+            encoder_type=spec.observer_encoder,
+            patch_length=spec.observer_patch_length,
+            patch_stride=spec.observer_patch_stride,
+            attention_heads=spec.observer_attention_heads,
+            attention_layers=spec.observer_attention_layers,
+        ),
         boundary=BoundaryModelConfig(history_steps=spec.history_steps),
         boundary_mode=spec.boundary_mode,
         initial_state_mode=spec.initial_state_mode,

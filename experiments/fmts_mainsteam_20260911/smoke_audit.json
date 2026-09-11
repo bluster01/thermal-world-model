@@ -1,0 +1,24 @@
+{
+  "bounded_correction": true,
+  "canonical_data_opened": false,
+  "encode_shape": [
+    2,
+    128
+  ],
+  "finite_rollout": true,
+  "frozen_component_source_sha256": {
+    "src/final_wm/boundary.py": "9979967de89579dd481c66a070895794c6df199638993355b00b5a15607e5d47",
+    "src/final_wm/closure.py": "3deef5fc86fd8ac0843bdf2e03b0bda4949815c3de6c1e32bab9ba5409ff691d",
+    "src/final_wm/model.py": "d93a5e429db1dd74505551fed58a52684caaf26a10c6fb08c8d687e455be144a",
+    "src/final_wm/transition.py": "e25a341f14bf38ee2a46f1be024d03bf3821d1d779c45d7470251401464caf8e"
+  },
+  "frozen_module_config_equal_to_gru": {
+    "boundary": true,
+    "closure": true,
+    "transition": true
+  },
+  "identical_input_rollout_identity": true,
+  "locked_test_opened": false,
+  "passed": true,
+  "zero_init_anchor_identity": true
+}

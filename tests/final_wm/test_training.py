@@ -99,6 +99,26 @@ def test_spec_validation_fail_closed() -> None:
         build_world_model(TrainSpec(unit="x", arm="a", seed=0, initial_state_mode="bogus"))
 
 
+def test_train_spec_builds_token_observer_without_changing_other_modules() -> None:
+    base = _quick_spec(initial_state_mode="hybrid", closure_mode="conservative_norew")
+    token = _quick_spec(
+        initial_state_mode="hybrid",
+        closure_mode="conservative_norew",
+        observer_encoder="token_cross_attention",
+        observer_patch_length=8,
+        observer_patch_stride=4,
+        observer_attention_heads=4,
+        observer_attention_layers=1,
+    )
+    base_model = build_world_model(base)
+    token_model = build_world_model(token)
+    assert token_model.observer.config.encoder_type == "token_cross_attention"
+    assert base_model.transition.config == token_model.transition.config
+    assert base_model.closure.config == token_model.closure.config
+    assert base_model.boundary_model.config == token_model.boundary_model.config
+    assert config_fingerprint(base) != config_fingerprint(token)
+
+
 def test_train_arm_writes_ledger_and_checkpoint(tmp_path) -> None:
     record = _record(tmp_path)
     spec = _quick_spec(initial_state_mode="learned", closure_mode="conservative")

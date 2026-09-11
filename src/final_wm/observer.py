@@ -56,10 +56,10 @@ class ProbabilisticObserver(nn.Module):
             "obs_scale", torch.tensor([s for _l, s in OBSERVATION_NORM], dtype=torch.float32)
         )
         self.register_buffer(
-            "boundary_loc", torch.tensor([loc for loc, _s in BOUNDARY_NORM], dtype=torch.float32)
+            "boundary_loc", torch.tensor([loc for loc, _s in BOUNDARY_NORM] + [0.0] * config.history_extension_dim, dtype=torch.float32)
         )
         self.register_buffer(
-            "boundary_scale", torch.tensor([s for _l, s in BOUNDARY_NORM], dtype=torch.float32)
+            "boundary_scale", torch.tensor([s for _l, s in BOUNDARY_NORM] + [1.0] * config.history_extension_dim, dtype=torch.float32)
         )
         self.register_buffer(
             "action_loc", torch.tensor([loc for loc, _s in ACTION_NORM], dtype=torch.float32)
@@ -68,14 +68,44 @@ class ProbabilisticObserver(nn.Module):
             "action_scale", torch.tensor([s for _l, s in ACTION_NORM], dtype=torch.float32)
         )
 
-        in_dim = len(OBSERVATION_ELEMENTS) + len(ACTION_ELEMENTS) + len(BOUNDARY_ELEMENTS)
-        self.encoder = nn.GRU(input_size=in_dim, hidden_size=config.d_hidden, batch_first=True)
+        in_dim = len(OBSERVATION_ELEMENTS) + len(ACTION_ELEMENTS) + len(BOUNDARY_ELEMENTS) + config.history_extension_dim
+        if config.encoder_type == "gru":
+            # Keep the historical module name and shapes so existing GRU
+            # checkpoints continue to load strictly.
+            self.encoder = nn.GRU(input_size=in_dim, hidden_size=config.d_hidden, batch_first=True)
+        else:
+            n_patches = 1 + (config.history_steps - config.patch_length) // config.patch_stride
+            self.patch_projection = nn.Linear(config.patch_length, config.d_hidden)
+            self.variable_embedding = nn.Parameter(torch.empty(in_dim, config.d_hidden))
+            self.patch_embedding = nn.Parameter(torch.empty(n_patches, config.d_hidden))
+            layer = nn.TransformerEncoderLayer(
+                d_model=config.d_hidden,
+                nhead=config.attention_heads,
+                dim_feedforward=4 * config.d_hidden,
+                dropout=0.0,
+                activation="gelu",
+                batch_first=True,
+                norm_first=False,
+            )
+            self.token_encoder = nn.TransformerEncoder(layer, num_layers=config.attention_layers)
+            self.state_queries = nn.Parameter(torch.empty(layout.dim, config.d_hidden))
+            self.state_cross_attention = nn.MultiheadAttention(
+                config.d_hidden,
+                config.attention_heads,
+                dropout=0.0,
+                batch_first=True,
+            )
+            self.state_query_norm = nn.LayerNorm(config.d_hidden)
+            nn.init.normal_(self.variable_embedding, std=0.02)
+            nn.init.normal_(self.patch_embedding, std=0.02)
+            nn.init.normal_(self.state_queries, std=0.02)
         # Repair 1-B: pressure-segmented inversion.  The T<->h sensitivity and
         # the spray dynamics differ across the critical point, so the
         # correction heads condition on soft sub/supercritical indicators of
         # the last separator pressure plus the normalized pressure itself.
-        self.mu_head = nn.Linear(config.d_hidden + 3, layout.dim)
-        self.logvar_head = nn.Linear(config.d_hidden + 3, layout.dim)
+        head_width = layout.dim if config.encoder_type == "gru" else 1
+        self.mu_head = nn.Linear(config.d_hidden + 3, head_width)
+        self.logvar_head = nn.Linear(config.d_hidden + 3, head_width)
         nn.init.zeros_(self.mu_head.weight)
         nn.init.zeros_(self.mu_head.bias)
         nn.init.zeros_(self.logvar_head.weight)
@@ -91,7 +121,7 @@ class ProbabilisticObserver(nn.Module):
         for name, tensor, width in (
             ("history_obs", history_obs, len(OBSERVATION_ELEMENTS)),
             ("history_actions", history_actions, len(ACTION_ELEMENTS)),
-            ("history_boundary", history_boundary, len(BOUNDARY_ELEMENTS)),
+            ("history_boundary", history_boundary, len(BOUNDARY_ELEMENTS) + self.config.history_extension_dim),
         ):
             if tensor.ndim != 3 or tensor.shape[1] != steps or tensor.shape[2] != width:
                 raise FinalWMProtocolError(
@@ -109,8 +139,34 @@ class ProbabilisticObserver(nn.Module):
         act_n = (history_actions - self.action_loc) / self.action_scale
         bnd_n = (history_boundary - self.boundary_loc) / self.boundary_scale
         features = torch.cat([obs_n, act_n, bnd_n], dim=-1)
-        _output, hidden = self.encoder(features)
-        return hidden[-1]
+        if self.config.encoder_type == "gru":
+            _output, hidden = self.encoder(features)
+            return hidden[-1]
+        # Preserve the public (B, d_hidden) encoding contract used by JEPA.
+        # Posterior construction below retains the state-specific queries.
+        return self._token_state_features(features).mean(dim=1)
+
+    def _token_state_features(self, normalized_history: torch.Tensor) -> torch.Tensor:
+        """Return one past-conditioned representation per packed state.
+
+        Each normalized scalar channel is patched independently, so the
+        observer can distinguish variables without mixing their raw units.
+        Learned state queries then cross-attend to the past-only token memory.
+        """
+        patches = normalized_history.transpose(1, 2).unfold(
+            dimension=-1,
+            size=self.config.patch_length,
+            step=self.config.patch_stride,
+        )
+        tokens = self.patch_projection(patches)
+        tokens = tokens + self.variable_embedding[None, :, None, :]
+        tokens = tokens + self.patch_embedding[None, None, :, :]
+        memory = self.token_encoder(tokens.flatten(1, 2))
+        queries = self.state_queries[None, :, :].expand(normalized_history.shape[0], -1, -1)
+        attended, _weights = self.state_cross_attention(
+            queries, memory, memory, need_weights=False
+        )
+        return self.state_query_norm(queries + attended)
 
     # Critical pressure of water/steam in the boundary's MPa units.
     _PC_MPA = 22.064
@@ -142,10 +198,24 @@ class ProbabilisticObserver(nn.Module):
         """
         if anchor.shape[-1] != self.layout.dim:
             raise FinalWMProtocolError("anchor last dim must match the state layout")
-        hidden = self.encode(history_obs, history_actions, history_boundary)
-        feats = torch.cat([hidden, self._pressure_features(history_boundary)], dim=-1)
-        delta = 0.1 * self.state_scale * torch.tanh(self.mu_head(feats))
-        sigma_norm = F.softplus(self.logvar_head(feats)) + 1e-3
+        if self.config.encoder_type == "gru":
+            hidden = self.encode(history_obs, history_actions, history_boundary)
+            feats = torch.cat([hidden, self._pressure_features(history_boundary)], dim=-1)
+            delta_raw = self.mu_head(feats)
+            logvar_raw = self.logvar_head(feats)
+        else:
+            self._check_history(history_obs, history_actions, history_boundary)
+            obs_n = (history_obs - self.obs_loc) / self.obs_scale
+            act_n = (history_actions - self.action_loc) / self.action_scale
+            bnd_n = (history_boundary - self.boundary_loc) / self.boundary_scale
+            state_features = self._token_state_features(torch.cat([obs_n, act_n, bnd_n], dim=-1))
+            pressure = self._pressure_features(history_boundary)
+            pressure = pressure[:, None, :].expand(-1, self.layout.dim, -1)
+            feats = torch.cat([state_features, pressure], dim=-1)
+            delta_raw = self.mu_head(feats).squeeze(-1)
+            logvar_raw = self.logvar_head(feats).squeeze(-1)
+        delta = 0.1 * self.state_scale * torch.tanh(delta_raw)
+        sigma_norm = F.softplus(logvar_raw) + 1e-3
         sigma = self.state_scale * sigma_norm
         return anchor + delta, sigma
 

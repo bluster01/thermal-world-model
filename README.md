@@ -1,5 +1,7 @@
 # Thermal World Model
 
+> **FMTS 2026，2026-09-11**：v0.2 富历史协议已实现：黑箱与 GRU/token 融合模型共享 23 维历史输入，纯灰箱保留物理输入子集。统一窗口、三 seed 训练入口、主汽温逐步误差、双阀响应及制品重放齐备。见 [Linux 执行单](experiments/fmts_mainsteam_20260911/RUN_LINUX.md) 和 [实验状态](experiments/fmts_mainsteam_20260911/experiment_state.json)。目前只做合成验证，真实三种子训练尚未启动。
+
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
 **当前任务（2026-09-09）**：实现 thermal world model，使用连续 1/10 数据快速验证。Linux 通过 GitHub 领取任务与回传结果，无需 SSH。四臂原型已冻结：共享/证据配额缓存 × 年龄加权/注意力，seed 11，每臂最多 250 requested batches。当前尚未收到远端领取回执。

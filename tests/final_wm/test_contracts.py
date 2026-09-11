@@ -148,3 +148,19 @@ def test_boundary_config_rejects_bad_horizon() -> None:
     config = WorldModelConfig(boundary=BoundaryModelConfig(horizon=0))
     with pytest.raises(FinalWMProtocolError):
         validate_world_model_config(config)
+
+
+@pytest.mark.parametrize(
+    "observer",
+    [
+        ObserverConfig(encoder_type="unknown"),
+        ObserverConfig(encoder_type="token_cross_attention", patch_length=97),
+        ObserverConfig(encoder_type="token_cross_attention", patch_length=16, patch_stride=17),
+        ObserverConfig(encoder_type="token_cross_attention", patch_length=15, patch_stride=8),
+        ObserverConfig(encoder_type="token_cross_attention", d_hidden=30, attention_heads=4),
+        ObserverConfig(encoder_type="token_cross_attention", attention_layers=0),
+    ],
+)
+def test_token_observer_config_fails_closed(observer: ObserverConfig) -> None:
+    with pytest.raises(FinalWMProtocolError):
+        validate_world_model_config(WorldModelConfig(observer=observer))

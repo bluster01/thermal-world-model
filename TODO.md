@@ -6,6 +6,13 @@
 
 # Thermal World Model TODO
 
+## FMTS v0.2 富历史比较（2026-09-11）
+
+- [x] 23 维历史输入、统一质量窗口、训练验证索引和原始数组导出。
+- [x] 四模型训练入口、权重及输入哈希、双阀响应与只读重放。
+- [ ] Linux 执行 12 次 validation 训练并回传审计；见 [执行单](experiments/fmts_mainsteam_20260911/RUN_LINUX.md)。
+- [ ] 按冻结规则选择 hybrid、更新正文图表；保留 test 锁定。
+
 > 更新：2026-08-18。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。RM3-B1 的 22/22 validation 已完成独立 paired audit 并关闭：1 项支持结构化简、5 项混合、2 项拒绝，不生成 RM3-B2。最终世界模型 pipeline 的本地接口包 `src/final_wm/`（observer/boundary/Fan2020-UDE transition/action-blind closure/observation/controller/装配层）已完成并通过 82 项本地合同与 micro-smoke 测试；下一判决点是 O1/B1/T1/R1/J1/K1 判别实验矩阵的冻结与独立授权提交。Linux 授权为空，test 与 MS4 继续锁定。
 
 ## 最终 Pipeline 组装（当前本地任务）

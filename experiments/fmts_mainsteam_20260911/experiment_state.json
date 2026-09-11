@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "experiment": "fmts_mainsteam_20260911",
+  "protocol_version": "0.2",
+  "execution_status": "ready_for_linux",
+  "linux_ready": true,
+  "linux_blocker": null,
+  "dispatch_status": "release_prepared_for_origin_main_linux_not_started",
+  "locked_test_enabled": false,
+  "canonical_data_opened_during_preparation": false,
+  "formal_training_started": false,
+  "registered_seeds": [0, 1, 2],
+  "registered_structured_arms": [
+    "greybox_steady_none",
+    "fusion_gru_norew",
+    "fusion_token_xattn_norew"
+  ],
+  "registered_blackbox_arm": "blackbox_itransformer",
+  "selection_metric": "validation equal-day cumulative main-steam MAE at H18",
+  "response_used_for_selection": false,
+  "local_checks": {
+    "applies_to_protocol_version": "0.2",
+    "full_final_wm_tests_passed": 213,
+    "rich_pipeline_tests_passed": 7,
+    "synthetic_arms_trained": 4,
+    "raw_array_sets_replayed": 8,
+    "synthetic_smoke": "passed",
+    "default_gru_strict_state_dict_compatibility": "passed",
+    "zero_init_anchor_identity": "passed",
+    "identical_input_rollout_identity": "passed",
+    "existing_v07_gru_checkpoint_strict_load": "passed_82_keys"
+  },
+  "next_required_step": "sync reviewed implementation to Linux, execute 12 validation runs and return artifacts",
+  "preregistration": "docs/fmts2026/PREREG_THREE_MODEL_MAIN_STEAM_20260911.md",
+  "frozen_spec": "experiments/fmts_mainsteam_20260911/frozen_spec.json",
+  "smoke_audit": "results/fmts_mainsteam_20260911/synthetic_v02_final_verification/audit.json",
+  "verification": "experiments/fmts_mainsteam_20260911/VERIFICATION.md"
+}

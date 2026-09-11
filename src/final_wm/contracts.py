@@ -229,9 +229,18 @@ class ClosureConfig:
 
 @dataclass(frozen=True)
 class ObserverConfig:
+    history_extension_dim: int = 0
     history_steps: int = 96
     d_hidden: int = 128
     latent_dim: int = 0
+    # The GRU remains the backward-compatible default.  The token observer is
+    # an experimental, initial-state-only replacement: it receives the same
+    # past-only tensors and does not alter transition/closure/action contracts.
+    encoder_type: str = "gru"              # "gru" | "token_cross_attention"
+    patch_length: int = 16
+    patch_stride: int = 8
+    attention_heads: int = 4
+    attention_layers: int = 1
 
 
 @dataclass(frozen=True)
@@ -302,8 +311,31 @@ def validate_closure_config(config: ClosureConfig) -> None:
 
 
 def validate_observer_config(config: ObserverConfig) -> None:
+    if config.history_extension_dim not in (0, 9):
+        raise FinalWMProtocolError("observer history extension must be absent or canonical v2.2 (9)")
     if config.history_steps < 1 or config.d_hidden < 1 or config.latent_dim < 0:
         raise FinalWMProtocolError("observer config is invalid")
+    if config.encoder_type not in ("gru", "token_cross_attention"):
+        raise FinalWMProtocolError(
+            "observer encoder_type must be gru | token_cross_attention"
+        )
+    if config.encoder_type == "token_cross_attention":
+        if not (1 <= config.patch_length <= config.history_steps):
+            raise FinalWMProtocolError("observer patch_length must fit the history")
+        if not (1 <= config.patch_stride <= config.patch_length):
+            raise FinalWMProtocolError(
+                "observer patch_stride must be positive and no larger than patch_length"
+            )
+        if (config.history_steps - config.patch_length) % config.patch_stride != 0:
+            raise FinalWMProtocolError(
+                "token patches must end exactly at the last history step"
+            )
+        if config.attention_heads < 1 or config.d_hidden % config.attention_heads != 0:
+            raise FinalWMProtocolError(
+                "observer attention_heads must divide d_hidden"
+            )
+        if config.attention_layers < 1:
+            raise FinalWMProtocolError("observer attention_layers must be positive")
 
 
 def validate_boundary_config(config: BoundaryModelConfig) -> None:

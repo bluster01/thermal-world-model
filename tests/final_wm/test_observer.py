@@ -13,6 +13,21 @@ def _observer(history_steps: int = 16, latent_dim: int = 0) -> ProbabilisticObse
     return ProbabilisticObserver(ObserverConfig(history_steps=history_steps, d_hidden=32, latent_dim=latent_dim), layout)
 
 
+def _token_observer(history_steps: int = 16, latent_dim: int = 0) -> ProbabilisticObserver:
+    layout = StateLayout(latent_dim=latent_dim)
+    config = ObserverConfig(
+        history_steps=history_steps,
+        d_hidden=32,
+        latent_dim=latent_dim,
+        encoder_type="token_cross_attention",
+        patch_length=8,
+        patch_stride=4,
+        attention_heads=4,
+        attention_layers=1,
+    )
+    return ProbabilisticObserver(config, layout)
+
+
 def test_posterior_shapes_and_validity() -> None:
     observer = _observer()
     batch = synthetic_history(batch=4, history_steps=16, horizon=4, seed=1)
@@ -81,3 +96,48 @@ def test_sample_uses_reparameterization() -> None:
     sample = observer.sample(mu, sigma)
     assert sample.shape == (2, 11)
     assert sample.requires_grad is False or sample.grad_fn is not None  # reparam path exists
+
+
+def test_token_observer_is_past_only_anchor_relative_and_jepa_compatible() -> None:
+    observer = _token_observer()
+    batch = synthetic_history(batch=3, history_steps=16, horizon=4, seed=5)
+    anchor = torch.randn(3, 11)
+    encoded = observer.encode(
+        batch.history.obs, batch.history.actions, batch.history.boundary
+    )
+    mu, sigma = observer.posterior(
+        batch.history.obs, batch.history.actions, batch.history.boundary, anchor
+    )
+    assert encoded.shape == (3, 32)  # preserve the observer.encode contract used by JEPA
+    assert mu.shape == sigma.shape == anchor.shape
+    assert bool((mu == anchor).all())  # zero-init safety contract
+    assert bool((sigma > 0).all())
+
+
+def test_token_observer_bounded_correction_and_gradient_path() -> None:
+    observer = _token_observer()
+    batch = synthetic_history(batch=2, history_steps=16, horizon=4, seed=6)
+    anchor = torch.zeros(2, 11)
+    with torch.no_grad():
+        observer.mu_head.weight.normal_(std=0.1)
+        observer.mu_head.bias.fill_(0.05)
+    mu, _sigma = observer.posterior(
+        batch.history.obs, batch.history.actions, batch.history.boundary, anchor
+    )
+    assert bool(((mu - anchor).abs() <= 0.1 * observer.state_scale + 1e-5).all())
+    mu.sum().backward()
+    assert observer.patch_projection.weight.grad is not None
+    assert observer.state_queries.grad is not None
+    assert observer.state_cross_attention.in_proj_weight.grad is not None
+
+
+def test_default_gru_state_dict_is_backward_compatible() -> None:
+    torch.manual_seed(7)
+    historical_default = _observer()
+    torch.manual_seed(7)
+    explicit_gru = ProbabilisticObserver(
+        ObserverConfig(history_steps=16, d_hidden=32, encoder_type="gru"),
+        StateLayout(),
+    )
+    assert historical_default.state_dict().keys() == explicit_gru.state_dict().keys()
+    explicit_gru.load_state_dict(historical_default.state_dict(), strict=True)
