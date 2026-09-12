@@ -1,0 +1,244 @@
+\documentclass{article}
+\usepackage[dblblindworkshop]{neurips_2026}
+\workshoptitle{Foundation Models for Temporal Systems (FMTS): From Forecasting to World Modeling}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref,url,booktabs,amsmath,amsfonts,microtype,graphicx}
+\hypersetup{hidelinks,pdfauthor={},pdftitle={When Accurate Forecasts Are Not Enough: A Physics-Structured Thermal World Model}}
+\newcommand{\degc}{\ensuremath{^{\circ}\mathrm{C}}}
+\title{When Accurate Forecasts Are Not Enough:\\A Physics-Structured Thermal World Model}
+\author{Anonymous}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Developing predictive feedforward at an operating 600\,MW once-through boiler
+exposed a practical gap: accurate steam-temperature forecasts need not describe
+the effect of changing a spray valve. We construct a thermal world model in
+which physical dynamics carry the action pathway, while a history-based observer
+and bounded neural heat corrections address incomplete states and dynamics.
+On shared internal-validation windows, a three-seed comparison gives main-steam
+MAE of 0.371\degc{} for a black-box forecaster, 0.969\degc{} for a grey-box model,
+and 0.443\degc{} for the GRU hybrid over 180\,s. The hybrid's prediction cost
+relative to the black box is 0.0725\degc{} (19.6\%); its two valve responses are
+negative and appreciable, whereas the black box is nearly insensitive in the
+registered diagnostic. A tokenized cross-attention observer fails to improve
+MAE in all three seeds. These results quantify prediction cost alongside model
+responsiveness, not plant-response fidelity or demonstrated control benefit.
+\end{abstract}
+
+\section{From temperature forecasting to valve evaluation}
+
+Our starting point was predictive feedforward development at a 600\,MW coal-fired
+once-through boiler that had operated for 12 years. Predictors could fit logged
+temperatures closely yet respond weakly, or in an unexpected direction, to a
+changed spray-valve input. This author-reported motivation is not a quantified
+online intervention experiment. Anticipating excursions can support warnings
+or disturbance feedforward; comparing valve corrections additionally requires
+a model of their consequences.
+
+In closed-loop logs, valves respond to temperatures and conditions; a predictor
+can exploit these correlations without an independently informative action
+pathway~\cite{forssell1999closedloop}. Controlled-world-model theory links
+transition identifiability to conditional action excitation under restrictive
+assumptions~\cite{zhang2026identifiability}. This motivates our study mechanistically;
+its linear-Gaussian bounds are not a theorem about the nonlinear boiler.
+
+Physical modelling helps, but incomplete boundaries, latent thermal storage and
+unknown disturbances complicate dynamic regimes. Fan-type models already
+combine balances with data-identified terms~\cite{fan2020thermal}; we do not claim
+their general failure. Accurate steam-temperature forecasting~\cite{zhang2026sst}
+does not settle action fidelity either. Following hybrid dynamics~\cite{rackauckas2020ude,yin2021aphynity}, we ask:
+\emph{can learning improve a physical thermal model while keeping the valve
+pathway explicit, and what prediction cost accompanies that choice?}
+
+We place learning in slow-state initialization and internal heat corrections,
+using one physical transition for forecasts and alternative-action rollouts.
+Our comparison reports main-steam accuracy, two valve-response curves and a
+predeclared observer selection. This is an industrial method study, not
+foundation pretraining, cross-plant transfer or controller deployment.
+
+\clearpage
+\section{Learning inside the physical action pathway}\label{sec:method}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth]{figures/fig1_architecture_en.pdf}
+\caption{\textbf{The physical transition carries the action; neural modules complete the model.}
+The selected hybrid uses a past-only GRU and a bounded power closure (green).
+Valve-driven spray, transport, mixing and steam--metal balances define the
+grey-box rollout. The closure has no direct valve or measured spray-flow input,
+but depends on action-dependent states. Forecast and probe share weights and
+initialization. The diagram shows the mean path; rewetting is ablated in this hybrid.}
+\label{fig:model}
+\end{figure}
+
+\paragraph{State and inputs.}
+The history $\mathcal H_t$ contains 96 samples at 10\,s intervals: five temperatures,
+two valves, seven base boundaries and nine history-only extensions (23 variables).
+The 11-dimensional physical state contains three steam enthalpies, three metal
+temperatures, fuel lag, two liquid inventories and two spray-transport states.
+Valve positions determine spray flows, which affect downstream temperatures
+through transport and enthalpy mixing (Figure~\ref{fig:model}). A thermodynamic
+observation map produces five temperatures; our reported target is main steam.
+
+\paragraph{Anchored initialization and heat closure.}
+Five observed temperatures cannot specify every physical state. Their observation
+relations define a steady anchor $x_{\rm anc}$; a GRU supplies bounded corrections:
+\begin{align}
+x_t &= x_{\rm anc}(\mathcal H_t)+M[0.1s_x\odot\tanh d_\phi(\mathcal H_t)],\label{eq:init}\\
+r_k &= R\tanh f_\theta(x_k,b_{k+1}^{\rm allow}),\quad
+x_{k+1}=\Phi_\psi(x_k,u_{k+1},b_{k+1};r_k),\label{eq:trans}\\
+\hat y_{k+1}&=g_\psi(x_{k+1},b_{k+1}).\label{eq:obs}
+\end{align}
+Here $s_x$ denotes fixed state scales; $M$ selects metal temperatures and fuel lag,
+leaving fast states anchored. The closure adds $r_j$ to steam and $-r_j$ to metal
+power in each segment, with $R=30{,}000$\,kW. These are internal corrections, not
+an additive temperature-prediction head. Trainable physical parameters and
+2\,s semi-implicit substeps complete the transition. Rewetting gains are pinned
+near zero in both hybrid candidates; the grey-box reference retains rewetting.
+
+\paragraph{Shared transition, bounded claim.}
+At fixed history and boundaries, the diagnostic is
+$\widehat{\Delta T}_{1:H}=\hat T(\mathcal H_t,u^+,b)-\hat T(\mathcal H_t,u^0,b)$.
+Identical actions must yield identical outputs. Excluding direct valve and
+spray-flow inputs from $f_\theta$ prevents that direct shortcut, not state-mediated
+action dependence. Opposite power injections likewise do not guarantee correct
+response magnitudes. A token candidate replaces only the GRU observer with
+variable--time patches and state-query cross-attention; the physical rollout
+and closure remain unchanged (Appendix~\ref{app:implementation}).
+
+\clearpage
+\section{A focused, frozen comparison}\label{sec:protocol}
+
+\paragraph{Data and common evaluation.}
+One process side supplies 707,709 samples (about 82 days), split chronologically
+75/15/10. We use internal validation only; the final test segment remains locked.
+Protocol revision 0.2 was frozen before this round of training, but earlier
+validation experiments informed its design. All four arms and seeds 0--2 use the
+same sampled 20,000-window training bank, 256 prediction windows and 64 response
+histories. The two evaluation sets each span 13 UTC days. Eligibility is fixed
+by valid base channels, finite in-range historical extensions and exact 10\,s
+continuity. No results-based window filtering is applied.
+
+Prediction supplies the recorded future valves and seven base boundaries over
+18 steps. This is an \emph{oracle-conditioned} comparison, not prospective
+forecasting with unknown future boundaries. The nine extensions, including
+water--coal ratio and load, are strictly history-only. Their normalization uses
+training rows only. The prediction metric is cumulative main-steam MAE,
+\begin{equation}
+E_H=\frac{1}{3}\sum_{s=0}^2\frac{1}{|\mathcal D|}\sum_{d\in\mathcal D}
+\frac{1}{n_d H}\sum_{i\in d}\sum_{h=1}^{H}|\hat T^{(s)}_{i,h}-T_{i,h}|.
+\label{eq:metric}
+\end{equation}
+Thus days, then seeds, receive equal weight; H18 averages 10--180\,s, rather than
+measuring only the endpoint. Table~\ref{tab:prediction} gives seed variability.
+
+\begin{table}[!ht]
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+Method & H1 & H6 & H18\\
+\midrule
+Persistence (shared reference) & $0.085$ & $0.268$ & $0.639$\\
+Black box (variable tokens) & $0.100\pm0.013$ & $0.191\pm0.011$ & $0.371\pm0.007$\\
+Grey box (steady, no closure) & $0.224\pm0.003$ & $0.529\pm0.007$ & $0.969\pm0.008$\\
+Hybrid GRU (selected) & $0.093\pm0.007$ & $0.224\pm0.014$ & $0.443\pm0.022$\\
+Hybrid token (candidate) & $0.111\pm0.004$ & $0.306\pm0.019$ & $0.654\pm0.048$\\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Main-steam prediction under the v0.2 information contract.}
+Cumulative MAE in \degc{}, equal-day mean then three-seed mean $\pm$ sample
+standard deviation; persistence is shared and deterministic. H1/H6/H18 correspond to 10/60/180\,s. These are
+validation-selected, fixed-budget results, not locked-test estimates.}
+\label{tab:prediction}
+\end{table}
+
+\paragraph{Methods, not a fully matched architecture ablation.}
+The black box is an iTransformer-inspired variable-token forecaster~\cite{liu2024itransformer},
+adapted to accept future covariates; it is not a reproduction of the published
+steam-temperature model. It and both observers receive the same 23 historical
+variables. The grey box has no learned observer or closure and consumes only
+the physical subset. The black box also consumes future measured total spray,
+which the action-driven physical transition ignores. Structured models train
+with five-temperature Gaussian NLL (24,000-update cap, batch 32); the black box
+uses main-steam MSE (3,000 updates, batch 128). All 12 runs reach their caps;
+reported checkpoints minimize validation H18 MAE. Information, loss, budget
+and rewetting differences preclude attributing cross-family differences to
+one architectural component.
+
+\paragraph{Selection and response protocol.}
+The token observer advances only if it improves H18 MAE in at least two of
+three paired seeds, has no higher seed-mean MAE and satisfies implementation
+gates. Valve responses are not selectors. For each probe, both valves and
+boundaries are held at their last historical values; one valve is increased by
+0.05 of full opening, capped at 1.0. All realized doses are 0.05 within floating-point
+precision. Responses are equally averaged by day, then seed. All 64 histories
+pass the registered history-range-plus-0.05 support check for both valves;
+this marginal range check does not establish conditional excitation or joint
+counterfactual support. No field intervention truth is available.
+
+\clearpage
+\section{Results: prediction cost and model responsiveness}\label{sec:results}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth]{figures/fig2_prediction_response_en.pdf}
+\caption{\textbf{The accuracy ranking does not describe the valve-response curves.}
+(a) Cumulative main-steam MAE on 256 common prediction windows.
+(b,c) Step-minus-base main-steam response on 64 common histories, fixed boundaries,
+one valve increased by 0.05. Lines average days then three seeds; bands show seed
+min--max, not confidence intervals. Both response panels share the same scale.
+All registered windows are retained. The responses are model outputs, not observed plant gains.}
+\label{fig:evidence}
+\end{figure}
+
+\paragraph{A measurable forecast cost, not an accuracy win.}
+The GRU hybrid's H18 MAE is 0.443\degc{}, versus 0.371\degc{} for the black box:
++0.0725\degc{} (19.6\%). It is 54.3\% lower than the grey-box reference's
+0.969\degc{}. The ordering is horizon-dependent: GRU has slightly lower mean
+H1 error, but higher H6 and H18 error (Table~\ref{tab:prediction}). Paired
+day-block intervals put the hybrid--black-box H18 difference above zero in
+two seeds; the third includes zero. These intervals are descriptive after
+validation selection, not selection-adjusted tests (Appendix~\ref{app:stats}).
+
+\paragraph{The best forecaster is nearly insensitive in this diagnostic.}
+At 180\,s the black box's seed-mean responses are approximately
+$+0.00010$ and $+0.00073$\degc{} for valves 1 and 2. The GRU hybrid instead
+produces $-0.147$ and $-0.122$\degc{}, with delayed cooling curves
+(Figure~\ref{fig:evidence}). Its H18 responses are negative in all seeds for
+both valves, and all six endpoint day-block intervals exclude zero. The grey
+box produces $+0.00448$ and $+0.03305$\degc{}: a physical state representation
+alone does not ensure the expected cooling direction in these fitted models.
+Because grey-box and hybrid rewetting configurations differ, this is not an
+isolated proof that the neural components repair the sign. Nor do near-zero
+black-box responses prove an error relative to an unmeasured plant gain.
+
+\paragraph{A more elaborate observer does not improve the compromise.}
+Token H18 MAE is 0.654\degc{}, 47.7\% above GRU; it is worse in every seed and
+fails the predeclared advancement rule; its mean also exceeds persistence (0.639\degc{}). Its negative valve responses do not
+override that outcome. We therefore retain GRU. This is a bounded negative
+result for this patch/query observer and budget, not evidence against
+Transformers generally (Appendix~\ref{app:ablation}).
+
+\section{Discussion and conclusion}
+Our model combines learned thermal-state and heat corrections with an explicit,
+shared physical action pathway. The present evidence locates a candidate
+compromise---0.0725\degc{} higher prediction error than the black box alongside
+non-negligible cooling responses---not a calibrated optimum or a Pareto frontier.
+Oracle inputs and reused validation limit generalization claims; differences
+between model families limit causal architectural attribution. A matched
+no-rewetting grey-box control is now separately registered but pending;
+independent test and plant-response calibration remain outstanding.
+For temporal world models intended to evaluate actions, forecast error and
+action response should be reported together; neither the forecasting leaderboard
+nor physical structure alone establishes decision readiness.
+
+\label{maintext:end}
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{references}
+\clearpage
+\appendix
+\input{appendix_en}
+\end{document}

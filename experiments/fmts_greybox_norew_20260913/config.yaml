@@ -1,0 +1,37 @@
+# Human-readable registration summary. Executable config: spec.py.
+# frozen_spec.json is checked before execution; no result-dependent overrides.
+name: FMTS-GNR1
+created: 2026-09-13T02:22:02
+git_commit: "399a60ce71905ad5236ae2692fe2c6021da8ffd1 (dirty: uncommitted changes present)"
+
+# --- what are we testing? (fill this in before running) ---
+hypothesis: >-
+  Disabling rewetting changes the fitted greybox valve response; report prediction cost and direction diagnostics without claiming plant fidelity.
+delta_vs_prior_work: >-
+  Only rewetting is ablated relative to greybox_steady_none; full executable spec in spec.py and snapshot in frozen_spec.json.
+
+# --- data ---
+dataset: exact parent v0.2 record, mapping, properties, normalization and index fingerprints
+split: chronological 75/15/10; train and validation only; test locked
+leakage_check: parent contract retained; oracle information limitations disclosed
+
+# --- baseline you will actually run (not quoted from a table) ---
+baseline: returned greybox_steady_none, fusion_gru_norew, blackbox_itransformer
+
+# --- model / method ---
+model: greybox_steady_none_norew
+hyperparameters:
+  learning_rate: 0.001
+  batch_size: 32
+  epochs: 120
+  batches_per_epoch: 200
+  loss: five-temperature Gaussian NLL
+  checkpoint_selector: equal-day cumulative main-steam MAE H18
+  # ... one place, one truth. change here, not in your head.
+
+# --- protocol ---
+seeds: [0, 1, 2]
+metric: main-steam cumulative MAE and matched dual-valve response H18
+response_used_for_selection: false
+plant_response_truth: false
+status: released_for_linux_via_origin_main

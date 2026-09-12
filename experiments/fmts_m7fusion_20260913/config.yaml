@@ -1,0 +1,24 @@
+# Human-readable index; authoritative executable contract: frozen_spec.json.
+name: fmts-m7fusion
+created: 2026-09-13T02:56:52
+scaffold_git_commit: "399a60ce71905ad5236ae2692fe2c6021da8ffd1 (dirty at preparation)"
+protocol_id: FMTS-M7R1
+status: ready_for_linux
+hypothesis: M7-family observer improves main-steam H18 MAE without changing physics.
+delta_vs_prior: bundled encoder/readout adaptation; not a factorial ablation
+dataset: exact audited parent canonical Side A v2.2
+split: parent 75/15/10; byte-identical train/validation indices
+locked_test_enabled: false
+leakage_checks: past-only observer, train-only extension stats, synthetic contracts
+baseline: retained v0.2 GRU, token, blackbox and greybox; no reruns
+model: M7Observer_v1; explicit effective metadata, not the GRU construction template
+seeds: [0, 1, 2]
+hyperparameters:
+  learning_rate: 0.001
+  batch_size: 32
+  epochs: 120
+  batches_per_epoch: 200
+  patience_evaluations: 20
+  loss: five-temperature NLL
+metric: validation equal-day cumulative main-steam H18 MAE
+scientific_status: exploratory post-v0.2; no real M7 result yet

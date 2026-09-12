@@ -1,0 +1,128 @@
+\documentclass{article}
+\usepackage[dblblindworkshop]{neurips_2026}
+\workshoptitle{Foundation Models for Temporal Systems (FMTS): From Forecasting to World Modeling}
+\usepackage{fontspec,xeCJK}
+\setCJKmainfont[BoldFont=SimHei,ItalicFont=KaiTi]{SimSun}
+\setCJKsansfont{Microsoft YaHei}
+\setCJKmonofont{Microsoft YaHei}
+\usepackage{hyperref,url,booktabs,amsmath,amsfonts,microtype,graphicx}
+\usepackage{etoolbox}
+\patchcmd{\abstract}{Abstract}{摘要}{}{}
+\hypersetup{hidelinks,pdfauthor={},pdftitle={当准确预测还不够：物理结构热过程世界模型}}
+\newcommand{\degc}{\ensuremath{^{\circ}\mathrm{C}}}
+\renewcommand{\abstractname}{摘要}
+\renewcommand{\refname}{参考文献}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\title{当准确预测还不够：\\物理结构热过程世界模型}
+\author{Anonymous}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+在一台在役 600\,MW 直流炉上开发预测前馈时，我们发现一个实际问题：准确的主汽温预测不一定能描述改变减温阀的后果。为此，我们构建物理结构热过程世界模型，由物理动力学承载动作通道，由历史观察器和有界神经热功率修正补充不完整的状态与动力学。在共享的内部验证窗口上，三种子比较得到 180 秒内累计主汽温 MAE：纯黑箱为 0.371\degc{}，纯灰箱为 0.969\degc{}，GRU 融合模型为 0.443\degc{}。融合模型相对黑箱付出 0.0725\degc{}（19.6\%）的预测误差代价；其双阀响应呈明显负向，而黑箱在注册诊断中几乎不敏感。采用 token 化与交叉注意力的观察器在三个种子上均未改善 MAE。这些结果量化的是预测代价与模型动作响应，不是现场响应保真或已验证的控制收益。
+\end{abstract}
+
+\section{工程问题：预测一个温度，不等于评估一个动作}
+
+本研究起于一台已运行 12 年的 600\,MW 燃煤直流炉的预测前馈开发。工程开发中，温度预测器能够很好地拟合历史轨迹，但改变输入的减温阀位后，预测温度的响应可能很弱，或者方向不符合预期。这是作者提供的工程动机，不是一项已经量化的在线干预实验。其操作意义在于：预见温度偏离可以支持报警或扰动前馈；但如果用同一个模型比较不同的阀门修正，就需要它描述这些动作的后果。
+
+闭环日志并不自动提供这种能力。阀门随温度和运行条件变化，预测器可能利用变量间的相关性，而没有获得独立有效的动作响应通道。闭环辨识研究早已区分这些问题~\cite{forssell1999closedloop}。受控世界模型的近期理论在限制性假设下，将转移可辨识性与条件动作激励联系起来~\cite{zhang2026identifiability}。我们仅以这一机制解释研究动机，不把线性高斯条件下的界限直接套用于非线性锅炉。
+
+物理建模提供另一种归纳偏置，但不完整的边界条件、不可直接测量的热储能状态和未知扰动效应，使模型跨动态工况使用并不容易。Fan 型锅炉模型本身已将守恒关系与数据辨识项结合~\cite{fan2020thermal}，因此我们的出发点不是“传统物理模型普遍无效”。另一方面，主汽温预测精度~\cite{zhang2026sst}本身也不能回答动作响应是否可信。沿着混合动力学建模思路~\cite{rackauckas2020ude,yin2021aphynity}，本文提出的问题是：\emph{学习能否改善物理热过程模型，同时保留显式阀门通道；这种选择伴随多大的预测精度代价？}
+
+我们构建一个共享物理转移，同时用于已记录动作下的预测和替代动作下的推演。贡献在于具体的学习位置设计：锚定的慢状态初始化与内部热功率修正，以及聚焦主汽温精度、两级减温阀响应的工业对照。预先规定的观察器比较最终保留 GRU，而不是为了形式新颖换用更复杂的 token 架构。本研究面向从预测走向动作条件世界模型的接口，不声称进行了基础模型预训练、跨电厂迁移或控制器部署验证。
+
+\clearpage
+\section{在物理动作通道内引入学习}\label{sec:method}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth]{figures/fig1_architecture_zh.pdf}
+\caption{\textbf{物理转移承载动作，神经模块补全模型。}选定融合模型使用只读历史的 GRU 与有界功率闭合项（绿色）。阀门驱动的喷水、输运、混合及蒸汽—金属能量平衡构成灰箱推演。闭合项不直接读取阀位或实测喷水总量，但读取已受动作影响的状态。预测与探针共享权重和初态。图中只画均值路径；该融合模型已消融再润湿。}
+\label{fig:model}
+\end{figure}
+
+\paragraph{状态和输入。}
+历史 $\mathcal H_t$ 包含以 10 秒采样的 96 步：5 个温度、2 个阀位、7 个基础边界和 9 个只读历史的扩展变量，共 23 维。11 维物理状态包括 3 个蒸汽焓、3 个金属温度、燃料滞后、2 个液体存量和 2 个喷水输运状态。阀位决定喷水流量，经输运和焓混合影响下游温度（图~\ref{fig:model}）。热力学观测映射输出五个温度，本轮只报告主汽温。
+
+\paragraph{锚定初始化与热闭合项。}
+五个观测温度不能确定所有物理状态。由观测关系形成稳态锚点 $x_{\rm anc}$，再由 GRU 提供有界修正：
+\begin{align}
+x_t &= x_{\rm anc}(\mathcal H_t)+M[0.1s_x\odot\tanh d_\phi(\mathcal H_t)],\label{eq:init}\\
+r_k &= R\tanh f_\theta(x_k,b_{k+1}^{\rm allow}),\quad
+x_{k+1}=\Phi_\psi(x_k,u_{k+1},b_{k+1};r_k),\label{eq:trans}\\
+\hat y_{k+1}&=g_\psi(x_{k+1},b_{k+1}).\label{eq:obs}
+\end{align}
+$s_x$ 为固定状态尺度；$M$ 只选择金属温度和燃料滞后，保留快状态的锚定值。闭合项在每段蒸汽功率中加入 $r_j$，在金属功率中加入 $-r_j$，$R=30{,}000$\,kW。它们是内部功率修正，不是附加的温度预测头。转移使用可学习物理参数和 2 秒半隐式子步。两种融合候选的再润湿增益均固定在近零值；纯灰箱参考保留再润湿。
+
+\paragraph{共享转移不等于保真保证。}
+固定历史和边界后，诊断定义为 $\widehat{\Delta T}_{1:H}=\hat T(\mathcal H_t,u^+,b)-\hat T(\mathcal H_t,u^0,b)$。相同动作必须产生相同输出。闭合项不直接读取阀位和喷水总量，只限制这条直接捷径，并没有去除经状态传递的动作依赖；正负配对功率也不保证真实响应幅值。token 候选只将 GRU 观察器替换为变量—时间分块和状态查询交叉注意力，物理推演与闭合项不变（附录~\ref{app:implementation}）。
+
+\clearpage
+\section{聚焦且冻结的对照协议}\label{sec:protocol}
+
+\paragraph{数据和共同评估。}
+单个流程侧有 707,709 个样本，约 82 天，按时间以 75/15/10 划分。本轮仅使用内部验证集，最终测试段仍锁定。v0.2 在本轮训练前冻结，但此前验证实验已经参与设计。四个实验臂、种子 0--2 共享同一个抽样的 20,000 窗口训练库、256 个预测窗口和 64 个响应历史。两个评估集合均覆盖 13 个 UTC 日。合格条件由基础通道有效性、历史扩展变量有限且在注册范围内、严格 10 秒连续性共同决定，不按结果筛选窗口。
+
+预测时给定未来 18 步的已记录阀位及 7 个基础边界，这是 \emph{oracle 条件预测}，不是未来边界未知时的前瞻预测。包括水煤比、负荷在内的 9 个扩展变量严格只读历史，归一化统计量只由训练行得到。累计主汽温 MAE 为
+\begin{equation}
+E_H=\frac{1}{3}\sum_{s=0}^2\frac{1}{|\mathcal D|}\sum_{d\in\mathcal D}
+\frac{1}{n_d H}\sum_{i\in d}\sum_{h=1}^{H}|\hat T^{(s)}_{i,h}-T_{i,h}|.
+\label{eq:metric}
+\end{equation}
+即先等权平均日，再等权平均种子；H18 是 10--180 秒的累计平均，不是只计算末端误差。
+
+\begin{table}[!ht]
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+方法 & H1 & H6 & H18\\
+\midrule
+持续值（共同参考） & $0.085$ & $0.268$ & $0.639$\\
+纯黑箱（变量 token） & $0.100\pm0.013$ & $0.191\pm0.011$ & $0.371\pm0.007$\\
+纯灰箱（稳态、无闭合项） & $0.224\pm0.003$ & $0.529\pm0.007$ & $0.969\pm0.008$\\
+GRU 融合（选定） & $0.093\pm0.007$ & $0.224\pm0.014$ & $0.443\pm0.022$\\
+Token 融合（候选） & $0.111\pm0.004$ & $0.306\pm0.019$ & $0.654\pm0.048$\\
+\bottomrule
+\end{tabular}
+\caption{\textbf{v0.2 信息合同下的主汽温预测。}累计 MAE（\degc{}）：日均后取三种子均值 $\pm$ 样本标准差；持续值参考为共享的确定量。H1/H6/H18 对应 10/60/180 秒。结果来自固定预算与验证集选模，不是锁定测试估计。}
+\label{tab:prediction}
+\end{table}
+
+\paragraph{完整方法比较，而非完全匹配的架构消融。}
+纯黑箱借鉴 iTransformer 的变量 token 思路~\cite{liu2024itransformer}并增加未来协变量接口，不是对已发表主汽温模型的原样复现。它与两种融合观察器共享 23 维历史；灰箱没有学习观察器和闭合项，只消费物理子集。黑箱还消费未来实测喷水总量，动作驱动的物理转移则忽略该通道。结构模型使用五温度高斯 NLL（24,000 更新上限、batch 32），黑箱使用主汽温 MSE（3,000 更新、batch 128）。12 个运行均达到上限，报告验证 H18 MAE 最低的检查点。信息、损失、预算和再润湿差异意味着不能把跨模型族差异归因于某一个架构组件。
+
+\paragraph{选择与响应协议。}
+token 只有在三个配对种子中至少两个改善 H18 MAE、种子均值不高于 GRU 且满足实现门时才晋级，阀门响应不参与选择。响应探针将双阀和边界固定在历史末值，仅将一个阀位增加满开度的 0.05，上限为 1.0；本轮全部实际剂量在浮点精度内为 0.05。响应按日、种子等权平均。两个阀门的 64 个历史均通过注册的“历史范围加 0.05”检查；这一边际范围检查不等于条件动作激励或联合反事实支持。没有现场干预真值。
+
+\clearpage
+\section{结果：预测代价与模型动作响应}\label{sec:results}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth]{figures/fig2_prediction_response_zh.pdf}
+\caption{\textbf{精度排序不能描述阀门响应曲线。}(a) 256 个共同窗口的累计主汽温 MAE。(b,c) 64 个共同历史上、固定边界、单阀增加 0.05 的“阶跃减基线”主汽温响应。实线先按日再按三种子平均；阴影是种子最小—最大值，不是置信区间。两张响应图共享刻度，保留所有注册窗口。这些是模型输出，不是实测现场增益。}
+\label{fig:evidence}
+\end{figure}
+
+\paragraph{可以量化的精度代价，而非精度胜出。}
+GRU 融合的 H18 MAE 为 0.443\degc{}，黑箱为 0.371\degc{}，差值为 +0.0725\degc{}（19.6\%）；相比灰箱的 0.969\degc{}，降低 54.3\%。排序取决于时长：GRU 的 H1 平均误差略低，但 H6 和 H18 更高（表~\ref{tab:prediction}）。配对日块区间中，GRU 相对黑箱的 H18 误差增量在两个种子上整体高于零，另一个种子区间含零。这是验证集选择后的描述性区间，不是经过选模校正的检验（附录~\ref{app:stats}）。
+
+\paragraph{精度最好的预测器在该诊断中几乎不敏感。}
+180 秒时，黑箱对一级、二级阀的种子平均响应约为 $+0.00010$ 和 $+0.00073$\degc{}；GRU 融合为 $-0.147$ 和 $-0.122$\degc{}，呈延迟发展的降温曲线（图~\ref{fig:evidence}）。两个阀门在三个种子上的 H18 响应均为负，六个末端日块区间均不含零。纯灰箱为 $+0.00448$ 和 $+0.03305$\degc{}：在这些拟合模型中，仅有物理状态表示也不保证预期的降温方向。但灰箱与融合的再润湿设置不同，不能把结果当作“神经组件修复方向”的隔离证明；没有实测现场增益时，也不能直接断言黑箱近零响应相对真值错了多少。
+
+\paragraph{更复杂的观察器没有改善当前折中。}
+token 的 H18 MAE 为 0.654\degc{}，比 GRU 高 47.7\%，每个种子均更差，未通过预定晋级规则；其均值也高于持续值参考的 0.639\degc{}。负向阀门响应不能推翻这一结果，因此保留 GRU。这是限定于该分块/查询观察器与预算的负结果，不是对 Transformer 的一般否定（附录~\ref{app:ablation}）。
+
+\section{讨论与结论}
+该世界模型将学习的热状态与功率修正放入显式、共享的物理动作通道。现有证据定位了一个候选折中：相对黑箱增加 0.0725\degc{} 预测误差，同时呈现非微弱的降温响应；它不是经校准的最优点，也不是 Pareto 前沿。oracle 信息和重复使用的验证集限制泛化结论，模型族之间的配置差异限制架构因果归因。匹配的 no-rewet 纯灰箱对照已单独注册，尚待执行；独立测试和现场响应校准仍未完成。对于需要评估动作的时序世界模型，应同时报告预测误差和动作响应；预测排行榜或物理结构本身，都不能证明模型已经适合决策。
+
+\label{maintext:end}
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{references}
+\clearpage
+\appendix
+\input{appendix_zh}
+\end{document}

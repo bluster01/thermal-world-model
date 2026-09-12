@@ -1,0 +1,71 @@
+{
+  "status": "PASS",
+  "documents": {
+    "en": {
+      "pdf": "output\\pdf\\fmts_draft_20260913\\en\\paper_en.pdf",
+      "sha256": "1eaa3af3d313165860fa73e230ccf30088f93067acf9b11fa89ebe72e94e442b",
+      "total_pages": 9,
+      "main_pages": 4,
+      "references_start": 5,
+      "unresolved_references": false,
+      "anonymity_scan_passed": true,
+      "cited_keys": [
+        "fan2020thermal",
+        "forssell1999closedloop",
+        "liu2024itransformer",
+        "rackauckas2020ude",
+        "yin2021aphynity",
+        "zhang2026identifiability",
+        "zhang2026sst"
+      ]
+    },
+    "zh": {
+      "pdf": "output\\pdf\\fmts_draft_20260913\\zh\\paper_zh.pdf",
+      "sha256": "47bdb001427587162235bfb98fcb754beee66e1cf03bd7348581154138c603b3",
+      "total_pages": 8,
+      "main_pages": 4,
+      "references_start": 5,
+      "unresolved_references": false,
+      "anonymity_scan_passed": true,
+      "cited_keys": [
+        "fan2020thermal",
+        "forssell1999closedloop",
+        "liu2024itransformer",
+        "rackauckas2020ude",
+        "yin2021aphynity",
+        "zhang2026identifiability",
+        "zhang2026sst"
+      ]
+    }
+  },
+  "figures": {
+    "fig1_architecture_en.svg": {
+      "editable_text_elements": 36,
+      "embedded_images": 0
+    },
+    "fig1_architecture_zh.svg": {
+      "editable_text_elements": 36,
+      "embedded_images": 0
+    },
+    "fig2_prediction_response_en.svg": {
+      "editable_text_elements": 37,
+      "embedded_images": 0
+    },
+    "fig2_prediction_response_zh.svg": {
+      "editable_text_elements": 37,
+      "embedded_images": 0
+    },
+    "figS1_observer_ablation_en.svg": {
+      "editable_text_elements": 33,
+      "embedded_images": 0
+    },
+    "figS1_observer_ablation_zh.svg": {
+      "editable_text_elements": 33,
+      "embedded_images": 0
+    }
+  },
+  "layout": "Official style unchanged. Vector figure width 139.7 mm matches the 5.5 inch text area.",
+  "human_visual_review": "All rendered pages inspected; no clipping/overlap found. Final modified pages rechecked.",
+  "preflight": "11 pass, 3 advisory warnings, 0 fail. PDF/SVG are submission vectors; PNG is a 360 dpi preview, no TIFF required.",
+  "tests": "10 related experiment tests passed; no training or plant-data model replay performed."
+}

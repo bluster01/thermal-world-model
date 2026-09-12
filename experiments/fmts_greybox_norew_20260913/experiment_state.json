@@ -1,0 +1,21 @@
+{
+  "experiment": "FMTS-GNR1",
+  "parent_protocol": "fmts_mainsteam_20260911/v0.2",
+  "status": "ready_for_linux",
+  "dispatch_status": "released_for_linux_via_origin_main",
+  "dispatch_authorization": "user requested push on 2026-09-13",
+  "formal_training_started": false,
+  "results_returned": false,
+  "audited": false,
+  "seeds": [0, 1, 2],
+  "arm": "greybox_steady_none_norew",
+  "only_scientific_delta": "rewetting ablated relative to greybox_steady_none",
+  "locked_test_enabled": false,
+  "response_used_for_checkpoint_selection": false,
+  "plant_response_truth": false,
+  "local_tests_passed": 7,
+  "local_synthetic_training": "engineering smoke: one seed, two updates; not plant training",
+  "local_synthetic_array_sets_replayed": 2,
+  "preregistration": "docs/fmts2026/PREREG_GREYBOX_NOREW_20260913.md",
+  "next_step": "Linux executes the frozen three-seed command and returns explicit six-array replay audit; no training-start acknowledgement received yet"
+}

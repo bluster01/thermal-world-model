@@ -1,6 +1,10 @@
 # Thermal World Model
 
-> **FMTS 2026，2026-09-11**：v0.2 富历史协议已实现：黑箱与 GRU/token 融合模型共享 23 维历史输入，纯灰箱保留物理输入子集。统一窗口、三 seed 训练入口、主汽温逐步误差、双阀响应及制品重放齐备。见 [Linux 执行单](experiments/fmts_mainsteam_20260911/RUN_LINUX.md) 和 [实验状态](experiments/fmts_mainsteam_20260911/experiment_state.json)。目前只做合成验证，真实三种子训练尚未启动。
+> **当前 FMTS 优化（2026-09-13）**：已发布 **M7R1**（M7 的 RevIN/Patch/逐变量 TCN/VarAttn 主干＋独立物理状态读出）与 **GNR1**（no-rewet 纯灰箱）。每项只做 3 seed，旧 12 次结果保留。[设计与状态快照](docs/fmts2026/CONTEXT_M7_GNR1_20260913.md) · [联合 Linux 执行单](experiments/fmts_m7fusion_20260913/RUN_LINUX.md)。相关测试 24 通过；全回归 226 通过/1 个旧 JEPA 队列断言失败。尚无启动/结果回执；token 退化不能解释为所有 attention 编码器较差，响应恢复须等真实回传审计。
+
+> **FMTS-GNR1，2026-09-13**：根据作者对纯灰箱正向阀门响应的质疑，已发布 no-rewet 灰箱单变量补充对照（3 seed、原预算、复用原窗口）供 Linux 执行。[注册](docs/fmts2026/PREREG_GREYBOX_NOREW_20260913.md) · [Linux 执行单](experiments/fmts_greybox_norew_20260913/RUN_LINUX.md)。尚未收到启动/结果回执；不将其预期效果写成“物理响应正确”。
+
+> **FMTS 2026，2026-09-13**：Linux v0.2 已回传 12/12 正式验证运行（`399a60c`），本地完成哈希/配对检查及 24 份保存数组独立复算。按冻结规则保留 GRU（token 改善 0/3）；主汽温 H18 MAE：黑箱 0.371、灰箱 0.969、GRU 0.443、token 0.654°C。新 [中英文论文初稿与插图](docs/fmts2026/paper/draft_20260913/README.md) 已据此重构，保留验证复用、oracle 信息、再润湿差异和无现场干预真值的边界。test 继续锁定，未补训练。见 [实验状态](experiments/fmts_mainsteam_20260911/experiment_state.json)。
 
 伊敏 6 号机主汽温数据驱动与灰箱世界模型研究。项目分别回答预测是否准确、实际阀门响应是否可信，以及这些证据是否足以支持控制应用。
 
