@@ -1,8 +1,10 @@
 # Thermal World Model
 
-> **当前 FMTS 优化（2026-09-13）**：已发布 **M7R1**（M7 的 RevIN/Patch/逐变量 TCN/VarAttn 主干＋独立物理状态读出）与 **GNR1**（no-rewet 纯灰箱）。每项只做 3 seed，旧 12 次结果保留。[设计与状态快照](docs/fmts2026/CONTEXT_M7_GNR1_20260913.md) · [联合 Linux 执行单](experiments/fmts_m7fusion_20260913/RUN_LINUX.md)。相关测试 24 通过；全回归 226 通过/1 个旧 JEPA 队列断言失败。尚无启动/结果回执；token 退化不能解释为所有 attention 编码器较差，响应恢复须等真实回传审计。
+> **FMTS-CORE1 交付 Linux，真实证据回传前暂停改稿（2026-09-14）**：作者确认先做同核固定权重对照。保留 GRU 每个 seed 的物理参数，观察器×闭合四格+原GNR参考，共15个真实数据推理单元、零训练；不把提取物理核心冒充独立辨识。[证据计划](experiments/fmts_core_20260914/EVIDENCE_PLAN_ZH.md) · [注册](docs/fmts2026/PREREG_CORE_ABLATION_20260914.md) · [Linux执行单](experiments/fmts_core_20260914/RUN_LINUX.md)。本地35项工程测试通过，不是科学实验结果；尚无Linux启动/回传回执。[时间外候选溯源](analysis/fmts_greybox_core_20260914/EXPOSURE_REVIEW_ZH.md)确认3–5月数据已有历史使用，不能称全新独立test；本轮不开放评分。
 
-> **FMTS-GNR1，2026-09-13**：根据作者对纯灰箱正向阀门响应的质疑，已发布 no-rewet 灰箱单变量补充对照（3 seed、原预算、复用原窗口）供 Linux 执行。[注册](docs/fmts2026/PREREG_GREYBOX_NOREW_20260913.md) · [Linux 执行单](experiments/fmts_greybox_norew_20260913/RUN_LINUX.md)。尚未收到启动/结果回执；不将其预期效果写成“物理响应正确”。
+> **当前 FMTS 审计（2026-09-14）**：Linux `15757e8` 回传 M7R1/GNR1 全部 6 次拟合，已完成本地源代码/产物及保存数组复算；Linux 记录 12 份预测响应回放、9 份健康回放。M7 MAE **0.509880°C**，改善旧 token 但输给 GRU，配对 **0/3，不晋级**。no-rewet 灰箱 **0.973432°C**，双阀响应转负但幅值仍弱，**不代表现场增益恢复正确**。[完整审计与论文整合建议](docs/fmts2026/audits/m7_gnr1_20260914/REVIEW_ZH.md) · [上下文](docs/fmts2026/CONTEXT_M7_GNR1_20260913.md)。相关测试重跑 24 通过，保留旧结果/旧稿，不继续搜索或开 test。
+
+> **FMTS-GNR1 已审计**：[注册](docs/fmts2026/PREREG_GREYBOX_NOREW_20260913.md) · [结果](experiments/fmts_greybox_norew_20260913/RESULTS.md)。三种子保持原窗口/预算，末端两阀均值 −0.000280/−0.002809°C；精度未显示改善。可作匹配 no-rewet 的描述性参考，原 rewet-on 灰箱保留，禁止把模型负向曲线当现场响应真值。
 
 > **FMTS 2026，2026-09-13**：Linux v0.2 已回传 12/12 正式验证运行（`399a60c`），本地完成哈希/配对检查及 24 份保存数组独立复算。按冻结规则保留 GRU（token 改善 0/3）；主汽温 H18 MAE：黑箱 0.371、灰箱 0.969、GRU 0.443、token 0.654°C。新 [中英文论文初稿与插图](docs/fmts2026/paper/draft_20260913/README.md) 已据此重构，保留验证复用、oracle 信息、再润湿差异和无现场干预真值的边界。test 继续锁定，未补训练。见 [实验状态](experiments/fmts_mainsteam_20260911/experiment_state.json)。
 

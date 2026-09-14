@@ -1,11 +1,27 @@
-## 当前 FMTS 任务：M7 融合观察器与灰箱响应恢复（2026-09-13）
+## 当前 FMTS 任务：CORE1 同核固定权重对照（2026-09-14）
+
+- [x] 作者确认先做同核对照、再决定重辨识；冻结 [CORE1注册](docs/fmts2026/PREREG_CORE_ABLATION_20260914.md)。
+- [x] 对照 GRU/GNR 源码及六个checkpoint：共用物理配置但辨识参数不同；实现观察器×闭合四格、原GNR重放和小温差工程门。
+- [x] 完成本地合成合同/相关测试、保存 [验证记录](experiments/fmts_core_20260914/VERIFICATION.md) 和 [Linux推理执行单](experiments/fmts_core_20260914/RUN_LINUX.md)。
+- [x] [核实候选使用史](analysis/fmts_greybox_core_20260914/EXPOSURE_REVIEW_ZH.md)：同源3–5月数据已参与历史拟合/分析，不能称全新独立test；评分保持关闭。
+- [x] 权限更新后完成release同步/最终复测：35项工程测试通过，元数据预检确认已使用候选不适格为全新独立test。
+- [x] 准备CORE1发布提交及 [证据计划](experiments/fmts_core_20260914/EVIDENCE_PLAN_ZH.md)，经origin/main交付Linux；不把发布状态当运行回执。
+- [ ] Linux执行15个真实数据推理单元，无新训练；当前尚无启动/回传回执。
+- [ ] 回传后核对30份预测/响应数组及15份状态轨迹，再分析组件依赖；不按响应符号挑选baseline，不自动重辨识。
+- [ ] 如继续时间外探索，另注册23通道适配、最终模型和窗口，披露历史使用；独立确认需要另核实未用数据。
+
+机器状态：[CORE1](experiments/fmts_core_20260914/experiment_state.json)。
+
+## 上一任务：M7 / GNR1 审计完成（2026-09-14）
 
 - [x] 保存 [token 饱和诊断与历史 M7 编码器回溯](docs/fmts2026/audits/token_20260913/HISTORICAL_ENCODERS_ZH.md)。
 - [x] 注册并实现 [FMTS-M7R1](docs/fmts2026/PREREG_M7_FUSION_20260913.md)：只新增 M7 融合 3 seed，独立状态头，不增加直接温度残差通道。
 - [x] 接入旧 GRU/token 真实验证历史诊断、新 observer 梯度/饱和记录与独立 checkpoint 回放。
 - [x] 相关测试 24 通过；全回归 226 通过/1 个旧 JEPA 队列断言失败（独立复现，未改队列）；发布 [M7R1 + GNR1 六次拟合执行单](experiments/fmts_m7fusion_20260913/RUN_LINUX.md)。
-- [ ] Linux 返回 M7R1 的 3 seed / 6 预测响应回放 / 9 健康回放，以及 GNR1 的 3 seed / 6 回放。
-- [ ] 审核精度、观察器健康和双阀响应后再改论文；不预写提升/物理正确，不访问 locked test。
+- [x] Linux `15757e8` 返回 M7R1 的 3 seed / 6 预测响应回放 / 9 健康回放，以及 GNR1 的 3 seed / 6 回放。
+- [x] 保存 [审计与论文整合建议](docs/fmts2026/audits/m7_gnr1_20260914/REVIEW_ZH.md)：M7 改善旧 token 但对 GRU 0/3 不晋级；GNR 符号转负但响应幅值仍弱、未校准。相关测试重跑 24 通过。
+- [ ] 据审计整合中英文稿/图：保留 GRU，使用 no-rewet 灰箱作匹配参考，附录完整保留旧灰箱及 token/M7 修复结果；v0.2 PDF 先保留快照。
+- [ ] 作者审读响应幅值/现场校准边界；不默认追加搜索、重训、去 oracle 或访问 locked test。
 
 机器状态：[M7R1](experiments/fmts_m7fusion_20260913/experiment_state.json)、[GNR1](experiments/fmts_greybox_norew_20260913/experiment_state.json)。
 
@@ -21,14 +37,14 @@
 
 - [x] 根据作者要求注册并实现 FMTS-GNR1：纯灰箱仅关闭再润湿，三种子和原预算不变。
 - [x] 按作者 push 指令发布 GNR1 给 Linux，仅三个 no-rewet 灰箱种子。
-- [ ] 等待 3 seed / 6 数组推理重放审计；再决定主图灰箱参考，不预写改善结果。
+- [x] 3 seed / 6 数组 Linux 回放及本地保存数组复算完成；no-rewet 响应符号改变但幅值仍弱，精度未显示改善。
 
 - [x] 23 维历史输入、统一质量窗口、训练验证索引和原始数组导出。
 - [x] 四模型训练入口、权重及输入哈希、双阀响应与只读重放。
 - [x] Linux 回传 12 次 validation 训练；本地检查哈希/配对，独立复算 24 份数组。执行侧推理重放 24 份仅有回传提交说明，本地不冒充再次推理重放。
 - [x] 按冻结规则保留 GRU（token 0/3），保存 [中英文新初稿、图源和审计](docs/fmts2026/paper/draft_20260913/README.md)；保留 test 锁定。
 - [ ] 作者审读新稿，确认工业描述、匿名材料与数据共享权限；不默认启动补充实验。
-- [ ] 如作者后续授权，分别考虑锁定测试、现场响应校准与去 oracle；同再润湿消融已转入上面的 GNR1，尚未执行。
+- [ ] 如作者后续授权，分别考虑锁定测试、现场响应校准与去 oracle；再润湿消融 GNR1 已执行审计，不自动追加实验。
 
 > 更新：2026-08-18。本文是项目唯一人工任务队列；机器状态见 `configs/phase3_5/experiment_registry.json`。RM3-B1 的 22/22 validation 已完成独立 paired audit 并关闭：1 项支持结构化简、5 项混合、2 项拒绝，不生成 RM3-B2。最终世界模型 pipeline 的本地接口包 `src/final_wm/`（observer/boundary/Fan2020-UDE transition/action-blind closure/observation/controller/装配层）已完成并通过 82 项本地合同与 micro-smoke 测试；下一判决点是 O1/B1/T1/R1/J1/K1 判别实验矩阵的冻结与独立授权提交。Linux 授权为空，test 与 MS4 继续锁定。
 

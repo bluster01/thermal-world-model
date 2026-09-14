@@ -1,0 +1,18 @@
+{
+  "protocol_id": "FMTS-CORE1",
+  "version": 1,
+  "seeds": [0, 1, 2],
+  "variants": {"C00": [false, false], "C10": [true, false], "C01": [false, true], "C11": [true, true]},
+  "parent_arm": "fusion_gru_norew",
+  "reference_arm": "greybox_steady_none_norew",
+  "history_steps": 96,
+  "horizon_steps": 18,
+  "response_dose": 0.05,
+  "training": false,
+  "locked_test_scoring": false,
+  "new_model_selection": false,
+  "absolute_replay_rtol": 0.00001,
+  "absolute_replay_atol": 0.00001,
+  "difference_replay_rtol": 0.0001,
+  "difference_replay_atol_c": 0.0001
+}

@@ -1,0 +1,26 @@
+{
+  "audit_date": "2026-09-14",
+  "audit_repository_head": "15757e8",
+  "candidate_contract": "experiments/side_full_windows_20260913/contract.json",
+  "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+  "source_rows": 1192329,
+  "partition_start_epoch_s": {"extension": 1773619210},
+  "candidate_eligible_after_embargo_epoch_s": 1773629450,
+  "last_epoch_s": 1778543960,
+  "embargo_seconds": 10240,
+  "history_variables": 13,
+  "fmts_alignment_verified": false,
+  "exposure_status": "historically_exposed",
+  "eligible_as_clean_independent_test": false,
+  "final_checkpoint_manifest_sha256": null,
+  "evaluation_window_manifest_sha256": null,
+  "evidence": [
+    {"path": "results/phase35_segmented_v2/run_manifest.json", "sha256": "b82c6aed8786f111d2b2297e6669f590f419b8aa32d7750683b0dba050647021", "role": "same source identity, prior development and May previously viewed"},
+    {"path": "results/phase35_segmented_v2/run_manifest_v0.json", "sha256": "5a01eb87b15f637f2eadc907d28f1671b0272eab6e6899055c43dc08a229288f", "role": "same source identity, row count and temporal coverage"},
+    {"path": "experiments/phase3_5/segmented_v2/v23_models.py", "sha256": "d1d628f24cf6522bb4e9d3de454e9935e22bdabec86aa119163fa845cde3c1b5", "role": "block filters, per-block fitting and delay selection, cross-block evaluation"},
+    {"path": "results/phase35_segmented_v2/blocked_model_scores.json", "sha256": "9fb8d7fde0dc54c6a3b0817ace111373a3dc79d174f96c9b0c9c35a19267f236", "role": "nonempty April and May fits and prediction evaluation"}
+  ],
+  "targets_read_by_this_task": false,
+  "new_scores_computed": false,
+  "future_use_boundary": "Only separately registered temporal robustness exploration with prior exposure disclosed; no scoring authorization here."
+}

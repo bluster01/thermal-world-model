@@ -1,0 +1,18 @@
+{
+  "status": "METADATA_ONLY_NOT_SCORING_AUTHORIZATION",
+  "metadata_sha256": "2705325e45360ce1e736e0c3aedd8a231beebc23c1da7b483e983cb51ab07883",
+  "source_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+  "extension_start_epoch_s": 1773619210,
+  "declared_exposure_status": "historically_exposed",
+  "blockers": [
+    "FMTS_SCHEMA_NOT_CONFIRMED",
+    "HISTORICAL_EXPOSURE_CONFIRMED",
+    "FINAL_MODELS_NOT_FROZEN",
+    "FMTS_WINDOWS_NOT_FROZEN"
+  ],
+  "scoring_enabled": false,
+  "ready_for_independent_scoring": false,
+  "old_test_cannot_be_declared_unseen": true,
+  "targets_read": false,
+  "note": "Even satisfied declarations require source/exposure review and separately frozen scoring protocol."
+}
