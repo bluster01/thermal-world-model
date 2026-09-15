@@ -1,5 +1,7 @@
 # Thermal World Model
 
+> **FMTS-BLOCK1：已发布，授权Linux执行（2026-09-15，`ef1c4ed`）**：每次回填完整180秒主汽温预测块，累计1,200秒；原黑箱/GRU/no-rewet独立灰箱×3 seed，零训练。其余输入使用记录上下文，不称自主全状态仿真。[注册](docs/fmts2026/PREREG_BLOCK_ROLLOUT_20260915.md) · [Linux执行单](experiments/fmts_block_rollout_20260915/RUN_LINUX.md) · [验证](experiments/fmts_block_rollout_20260915/VERIFICATION.md)。30项工程测试复测通过、9个checkpoint严格加载；已push至origin/main，待Linux领取/运行回执。原H18双阀响应及稿件保持不变；真实历史/逐时轨迹私有回传。下方旧任务条目为历史，不是本次执行清单。
+
 > **FMTS-CORE1 交付 Linux，真实证据回传前暂停改稿（2026-09-14）**：作者确认先做同核固定权重对照。保留 GRU 每个 seed 的物理参数，观察器×闭合四格+原GNR参考，共15个真实数据推理单元、零训练；不把提取物理核心冒充独立辨识。[证据计划](experiments/fmts_core_20260914/EVIDENCE_PLAN_ZH.md) · [注册](docs/fmts2026/PREREG_CORE_ABLATION_20260914.md) · [Linux执行单](experiments/fmts_core_20260914/RUN_LINUX.md)。本地35项工程测试通过，不是科学实验结果；尚无Linux启动/回传回执。[时间外候选溯源](analysis/fmts_greybox_core_20260914/EXPOSURE_REVIEW_ZH.md)确认3–5月数据已有历史使用，不能称全新独立test；本轮不开放评分。
 
 > **当前 FMTS 审计（2026-09-14）**：Linux `15757e8` 回传 M7R1/GNR1 全部 6 次拟合，已完成本地源代码/产物及保存数组复算；Linux 记录 12 份预测响应回放、9 份健康回放。M7 MAE **0.509880°C**，改善旧 token 但输给 GRU，配对 **0/3，不晋级**。no-rewet 灰箱 **0.973432°C**，双阀响应转负但幅值仍弱，**不代表现场增益恢复正确**。[完整审计与论文整合建议](docs/fmts2026/audits/m7_gnr1_20260914/REVIEW_ZH.md) · [上下文](docs/fmts2026/CONTEXT_M7_GNR1_20260913.md)。相关测试重跑 24 通过，保留旧结果/旧稿，不继续搜索或开 test。

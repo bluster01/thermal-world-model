@@ -1,4 +1,15 @@
-## 当前 FMTS 任务：CORE1 同核固定权重对照（2026-09-14）
+## 当前 FMTS 任务：BLOCK1已发布，待Linux执行回执（2026-09-15）
+
+- [x] 作者确认180秒完整预测块反馈；注册 [FMTS-BLOCK1](docs/fmts2026/PREREG_BLOCK_ROLLOUT_20260915.md)，不是旧stride1或原生H60方案。
+- [x] 实现黑箱/GRU/独立GNR1共9个固定权重推理单元、原256窗H18重放门、共同长程资格及真实历史导出；本地30项无训练工程测试通过。
+- [x] 保存 [Linux执行与私有轨迹回传说明](experiments/fmts_block_rollout_20260915/RUN_LINUX.md)、[验证记录](experiments/fmts_block_rollout_20260915/VERIFICATION.md)及[机器状态](experiments/fmts_block_rollout_20260915/experiment_state.json)。
+- [x] 代码包 `ef1c4ed` 已push至origin/main并核验远端ref；作者已授权执行，30项测试复测通过。
+- [ ] Linux领取本任务并记录source commit与实际开始时间；当前没有领取/运行回执，不记running。
+- [ ] Linux完成9/9真实推理、9/9完整重放；公共汇总和私有历史/轨迹均回传。
+- [ ] 作者侧审计回传后制作“实测历史→预测起点→1,200秒分块预测与实际值”候选图；保留原H18双阀响应。
+- **限定补充**：只落实作者新授权的推理与可视化，不新增训练/搜索/test/extension评分，不改既有正式verdict，不提前改稿。
+
+## 上一任务：CORE1 同核固定权重对照（2026-09-14）
 
 - [x] 作者确认先做同核对照、再决定重辨识；冻结 [CORE1注册](docs/fmts2026/PREREG_CORE_ABLATION_20260914.md)。
 - [x] 对照 GRU/GNR 源码及六个checkpoint：共用物理配置但辨识参数不同；实现观察器×闭合四格、原GNR重放和小温差工程门。
