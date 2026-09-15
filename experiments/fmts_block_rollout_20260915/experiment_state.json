@@ -1,6 +1,6 @@
 {
   "id": "FMTS-BLOCK1",
-  "status": "linux_claimed",
+  "status": "linux_block1_returned_pending_author_audit",
   "ready_for_linux": true,
   "published": true,
   "published_source_commit": "ef1c4eda783ff1f0fb6dcaf958e478f19bb441e2",
@@ -8,9 +8,16 @@
   "execution_authorized": true,
   "execution_authorization_date": "2026-09-15",
   "linux_claim_received": true,
-  "formal_inference_started": false,
+  "linux_claim": {
+    "source_commit": "8f1b6a40dcb47e030a21227b3f3e9ceb4d05aacc",
+    "worker": "linux worker",
+    "claimed_at": "2026-09-15T16:21:20+08:00",
+    "actual_start": "2026-09-15T16:21:20+08:00",
+    "note": "claim recorded before formal inference; 9 fixed-weight cells, no training"
+  },
+  "formal_inference_started": true,
   "results_returned": false,
-  "public_receipt_returned": false,
+  "public_receipt_returned": true,
   "private_traces_returned": false,
   "audited": false,
   "training_authorized": false,
@@ -21,11 +28,22 @@
   "local_real_record_inference": false,
   "checkpoint_load_checks_passed": 9,
   "registration": "docs/fmts2026/PREREG_BLOCK_ROLLOUT_20260915.md",
-  "linux_claim": {
-    "source_commit": "8f1b6a40dcb47e030a21227b3f3e9ceb4d05aacc",
-    "worker": "linux worker",
-    "claimed_at": "2026-09-15T16:21:20+08:00",
-    "actual_start": "2026-09-15T16:21:20+08:00",
-    "note": "claim recorded before formal inference; 9 fixed-weight cells, no training"
-  }
+  "linux_return": {
+    "execution_source_commit": "75fc29e6761f3697735e9142d9efea7e77f3dff8",
+    "bundle": "results/fmts_block_rollout_20260915/linux_block1_receipt",
+    "device": "cuda",
+    "record_sha256": "24da77960e05e3636cc7b97a60a75e9b4ba470a3abb4f8ba920ddf11c6dad1d0",
+    "indices_sha256": "eea161e388c52c62a92d127b29614853db98a6af731c15f1d94ec017836ecde7",
+    "inference_cells_completed": 9,
+    "failures": 0,
+    "cells_replayed": 9,
+    "eligible_windows": 256,
+    "exclusion_reason_counts": {"out_of_bounds": 0, "non_validation": 0, "invalid_base": 0, "time_gap": 0, "invalid_history_extension": 0},
+    "audit_complete": true,
+    "public_receipt_sha256": "633da808809ec8013ba71310367c5681b3550723fecca7c39da0d779a533927d",
+    "private_audit_sha256": "62ca1b503877e4a20f4c723f03a64e93e68b8393813d42786dba3b5f2e8605e1",
+    "private_bundle": "/home/bluster/fmts_block1_private_20260915 (26 files, ~1.2 MB: identity, eligibility, 256-window real history, observed, 9x per-cell prediction/report, summary, audit, manifest)",
+    "private_traces_delivery": "staged; awaiting author-side private channel / pickup (raw history and per-step trajectories intentionally not in Git)"
+  },
+  "next_step": "Author audits the returned BLOCK1 public receipt and private bundle before figure work (measured history -> forecast start -> 1,200 s block trajectories with 180 s boundaries); keep original H18 two-valve response evidence unchanged; no new training/search/test scoring."
 }
