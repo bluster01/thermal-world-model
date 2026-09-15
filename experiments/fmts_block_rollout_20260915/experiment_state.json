@@ -1,13 +1,13 @@
 {
   "id": "FMTS-BLOCK1",
-  "status": "queued_for_linux",
+  "status": "linux_claimed",
   "ready_for_linux": true,
   "published": true,
   "published_source_commit": "ef1c4eda783ff1f0fb6dcaf958e478f19bb441e2",
   "publication_branch": "origin/main",
   "execution_authorized": true,
   "execution_authorization_date": "2026-09-15",
-  "linux_claim_received": false,
+  "linux_claim_received": true,
   "formal_inference_started": false,
   "results_returned": false,
   "public_receipt_returned": false,
@@ -20,5 +20,12 @@
   "local_engineering_tests_passed": 30,
   "local_real_record_inference": false,
   "checkpoint_load_checks_passed": 9,
-  "registration": "docs/fmts2026/PREREG_BLOCK_ROLLOUT_20260915.md"
+  "registration": "docs/fmts2026/PREREG_BLOCK_ROLLOUT_20260915.md",
+  "linux_claim": {
+    "source_commit": "8f1b6a40dcb47e030a21227b3f3e9ceb4d05aacc",
+    "worker": "linux worker",
+    "claimed_at": "2026-09-15T16:21:20+08:00",
+    "actual_start": "2026-09-15T16:21:20+08:00",
+    "note": "claim recorded before formal inference; 9 fixed-weight cells, no training"
+  }
 }
