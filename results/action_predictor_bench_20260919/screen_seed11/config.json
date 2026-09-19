@@ -1,0 +1,39 @@
+{
+  "models": [
+    "direct_no_action",
+    "direct",
+    "gru",
+    "ssm",
+    "attention_concat",
+    "ait",
+    "r4",
+    "r4_mlp",
+    "r4_directref"
+  ],
+  "seeds": [
+    11
+  ],
+  "epochs": 6,
+  "batch_size": 128,
+  "learning_rate": 0.001,
+  "response_windows": 8,
+  "threads": 1,
+  "device": "cpu",
+  "smoke": false,
+  "data_sha256": "5767ecb38470980e4661356db06336f34e068b0d642e4872e53dcb48d3daff88",
+  "source_sha256": {
+    "__init__.py": "d2b28e2bceac3035eb4e6ee55323053ae16f666e14a0e85fecb7a5133247c1ff",
+    "models.py": "eb1995e89b749a9acfb8359bd7bb532afa68882475f9cdab5bc5d1c7534d47f1",
+    "evaluation.py": "b33178b16b5a3f041e165e5ff928e5dc6e74cb573b0cdb2ef054a19eca81efe3",
+    "r4_transport.py": "e2cae8ef993b052a2aea5a1e6714d534ad22203e9efb79b0cf1b1741de0d1903",
+    "report.py": "4a1b607f9b125ff66d93e400a1240485772eba452a713af1976ce3913ecd22e6",
+    "run.py": "aa7d04a7da82e248daad785116932c7499f3fa3455cc9c9cfe9216be2640854c",
+    "test_bench.py": "a5d17fc752ac9e2ae94e2b18c123a0f7b937bcf61a1bad12a7bb800595a79b1b",
+    "r4_base.py": "d796cb4b2c0da25be7c3e4948a5d1c768405fb0c45aeacca5ee46a8a3b6b709d",
+    "data.py": "d46b1a784a728cd266953f589e901ebd003321a436f2e8e2ed72757e8a3ae8e2"
+  },
+  "git_commit": "b1f25738f7be68865f612cd87807878faf6168c5",
+  "torch_version": "2.11.0+cu130",
+  "conditioning": "recorded future controls; held-boundary sensitivity separately",
+  "selection": "best selector H32 main MAE, fixed full epochs; separate chronological reporting windows"
+}
