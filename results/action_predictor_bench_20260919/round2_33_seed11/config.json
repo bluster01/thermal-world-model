@@ -1,0 +1,44 @@
+{
+  "arms": [
+    "r4_protected",
+    "ssm_protected",
+    "ssm_continue",
+    "ssm_soft_response",
+    "ssm_r4_joint",
+    "ssm_r4_teacher"
+  ],
+  "seed": 11,
+  "epochs": 6,
+  "batch_size": 128,
+  "learning_rate": 0.0003,
+  "response_windows": 8,
+  "threads": 1,
+  "device": "cpu",
+  "smoke": false,
+  "data_sha256": "ddf42e52acfb1bf31465703c5c6f735b4337a8d696c2f13ccd1320e970c09389",
+  "parent_checkpoint_sha256": {
+    "ssm": "1fa5ca61358882c666e85d737007c559973c9eac7449805201ee0e6f7eee123f",
+    "r4_mlp": "b0fa3c940dbab7a93201693207f0cfde9fae136e3188955376321995b63c85d5"
+  },
+  "source_sha256": {
+    "__init__.py": "d2b28e2bceac3035eb4e6ee55323053ae16f666e14a0e85fecb7a5133247c1ff",
+    "models.py": "eb1995e89b749a9acfb8359bd7bb532afa68882475f9cdab5bc5d1c7534d47f1",
+    "round2.py": "d16e2b725ee5d4e32737849af3a10b83f9ca0feab61a4772d88cc9d36fce9efd",
+    "evaluation.py": "7c1b0fe04c6dddff461c11d851abd370931ffc91a1dc2ceff0f99413d0812736",
+    "analyze_return.py": "a745fa8e3f95a845d527f0955f737ae5b2e6dca8d15a07c6c1d5819d2f0c78ff",
+    "r4_transport.py": "e2cae8ef993b052a2aea5a1e6714d534ad22203e9efb79b0cf1b1741de0d1903",
+    "test_round2.py": "f5a0fef28c608a7c4323d70959f03c6e3132dfcdfebd32844e27a21bd31ae791",
+    "report.py": "73f3c614cddaed882dc31a64d377bef0b07dfb48c7a58aa365cabc6186ee2674",
+    "run.py": "bdb37c2fbdace01783a9999008e4d9747c4f7c99b3fa0bd17e05d16036abbe54",
+    "test_bench.py": "a5d17fc752ac9e2ae94e2b18c123a0f7b937bcf61a1bad12a7bb800595a79b1b",
+    "r4_base.py": "d796cb4b2c0da25be7c3e4948a5d1c768405fb0c45aeacca5ee46a8a3b6b709d",
+    "round2_models.py": "6e61b64cfb175850a516d337439b0804c688027f31ad1fc187f5e424c9fb6a0c",
+    "data.py": "57dda758353d96a4e413f3b1aaabb1c38ab70b72c95335ebe1bef7e383cc1c67"
+  },
+  "parent_git_commit": "975406e6a50cd1a61c915209920848a064353b68",
+  "torch_version": "2.11.0+cu130",
+  "git_commit": "975406e6a50cd1a61c915209920848a064353b68",
+  "selection": "best selector H32 MAE including initialized epoch0; never reporting windows",
+  "response_loss": "SSM: match frozen R4 responses, normalized by 0.1*training std, weight1",
+  "prediction_teacher_weight": 0.25
+}
