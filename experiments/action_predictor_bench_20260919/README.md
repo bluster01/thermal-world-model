@@ -2,7 +2,24 @@
 
 目的：在同一套数据与指标下看清预测精度、动态外推和动作响应各自的长短处，再组合有效思路。本轮是基线探索，不做论文收口、不上现场闭环。
 
-## 直接运行
+## 当前执行：1/3 数据基线 + 响应消融
+
+用户在首轮回传后要求将训练数据扩大到1/3。**当前默认包是 `screen_A_33pct.npz`**，已提交，无需Linux重新准备原始数据。完整的结果解读和下一轮实验说明见 [ROUND2.md](ROUND2.md)。
+
+```bash
+python -m pip install -r experiments/action_predictor_bench_20260919/requirements.txt
+python -m pytest experiments/action_predictor_bench_20260919/test_bench.py experiments/action_predictor_bench_20260919/test_round2.py -q
+# 9个基线全部在1/3包上重新训练，得到11行结果。
+python -m experiments.action_predictor_bench_20260919.run --output results/action_predictor_bench_20260919/screen33_seed11
+# 上一步成功后：2个免训练组合 + 4个有等预算对照的继续训练消融。
+python -m experiments.action_predictor_bench_20260919.round2 --output results/action_predictor_bench_20260919/round2_33_seed11
+```
+
+20,371训练窗，包含原6,111窗；selector128、reporting256及归一化逐值一致。每epoch160次更新，6epoch共960次；不将相对1/10的变化解读成纯数据量效应。旧结果和数据包保留。
+
+回传 `screen33_seed11` 与 `round2_33_seed11` 两个完整目录，优先读后者的 `COMPARISON.md` 和 `DIAGNOSIS.md`。如需重启完成部分，分别加 `--resume`，仍要求配置、代码和父checkpoint完全一致。
+
+## 首轮1/10历史协议（已执行）
 
 从仓库根目录执行。小数据包已随本分支提交，Linux 不需要 Windows 原始 CSV 或其他未提交的侧会话目录。
 
@@ -12,6 +29,7 @@ python -m pytest experiments/action_predictor_bench_20260919/test_bench.py -q
 python -m experiments.action_predictor_bench_20260919.run \
   --output results/action_predictor_bench_20260919/smoke --smoke
 python -m experiments.action_predictor_bench_20260919.run \
+  --data experiments/action_predictor_bench_20260919/data/screen_A_10pct.npz \
   --output results/action_predictor_bench_20260919/screen_seed11
 ```
 
@@ -19,7 +37,7 @@ CPU 默认单线程、顺序执行，避免小模型并发争抢；可用 `--dev
 
 `--resume` 仅接受数据/代码/配置一致的目录，跳过完成模型；未完成模型从原 seed 重启，不宣称优化器断点续训。不要并发写同一个结果目录。
 
-第二轮只复核有希望的模型，例如：
+后续多seed复核示例（不是当前执行入口）：
 
 ```bash
 python -m experiments.action_predictor_bench_20260919.run \
@@ -27,7 +45,7 @@ python -m experiments.action_predictor_bench_20260919.run \
   --models direct attention_concat ait r4 r4_mlp r4_directref --seeds 11 23 37
 ```
 
-首轮不要自动启动上述第二轮，也不要擅自调参。保留所有成功/失败模型，回传结果后讨论。
+上述多seed示例尚未启用；当前只执行文档顶部的1/3基线与六臂消融。保留所有成功/失败模型，回传结果后讨论。
 
 ## 模型
 
@@ -52,19 +70,20 @@ python -m experiments.action_predictor_bench_20260919.run \
 ## 数据与时间
 
 - Side A，统一13维历史：五路温度、双阀位、六个边界。历史64步，每步10秒。
-- 默认从原61,114个合法80秒步幅训练窗中，按时间分箱抽取6,111窗（1/10），覆盖整个训练时段。比例指窗口数量，不是互不重叠的原始时长比例；压缩包约19.5MB。
+- 首轮从原61,114个合法stride80（800秒步幅）训练窗中，按时间分箱抽取6,111窗（1/10），覆盖整个训练时段。比例指窗口数量，不是互不重叠的原始时长比例；压缩包约19.5MB。
 - 标准化沿用唯一训练行统计。selector128窗和reporting256窗来自原validation的不同时间段，中间留出完整长窗间隔；所有模型共用。
 - 训练H32=320秒；评价H128=21分20秒、H512=85分20秒。当前轮的外推主要指**超训练时长外推**，不是新电厂、新工况或锁定extension测试。
 - 保留原train/validation划分；未读取test/extension作拟合或评价。报告早/晚validation子组，便于看时间变化，但不称新独立测试。
 - 左端动作/边界驱动下一时刻温度：历史止于t，输入u[t]/d[t]对应标签T[t+1]。
 - 主表使用记录的未来阀位和边界条件；另列边界保持压力测试。不同条件不混排。
 
-如后续决定扩到1/3，在有原准备数据的机器上重新打包到新路径，使用新的输出目录：
+当前1/3包已提交。以下命令仅用于从原准备数据重新生成同一嵌套样本：
 
 ```bash
 python -m experiments.action_predictor_bench_20260919.data \
   --source results/side_full_windows_20260913/v1 \
   --fraction 0.3333333333333333 --side A \
+  --include-pack experiments/action_predictor_bench_20260919/data/screen_A_10pct.npz \
   --output /path/to/screen_A_33pct.npz
 # run命令加 --data /path/to/screen_A_33pct.npz
 ```

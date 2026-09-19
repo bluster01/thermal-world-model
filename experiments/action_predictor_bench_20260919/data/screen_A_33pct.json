@@ -1,0 +1,39 @@
+{
+  "source_dataset": "side_full_windows_20260913_v1",
+  "source_manifest_sha256": "b48c32bbea785a3f7a9f7a660ad55878c403451d51efd027262d0a1b75723bb5",
+  "source_values_sha256": "1f9de6be6d1eb1643843916dce4933a8c900ece6395dc2171896a8a5f6960897",
+  "pack_sha256": "ddf42e52acfb1bf31465703c5c6f735b4337a8d696c2f13ccd1320e970c09389",
+  "side": "A",
+  "fraction_of_training_windows": 0.333333333333333,
+  "fraction_note": "Fraction of eligible stride80 windows, not unique raw rows/duration; overlapping windows.",
+  "training_pool_count": 61114,
+  "selection_seed": 20260919,
+  "counts": {
+    "train": 20371,
+    "selector": 128,
+    "evaluation": 256
+  },
+  "context": 64,
+  "train_horizon": 32,
+  "evaluation_horizon": 512,
+  "normalization": "existing unique train-row statistics; no validation fit",
+  "split": "original train/validation; selector and reporting windows time-separated; no test/extension",
+  "time_alignment": "history ends at t; u/d at t lead to T at t+1; pack also contains right-end controls for history feedback",
+  "channel_names": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5_main",
+    "valve1",
+    "valve2",
+    "steam_flow",
+    "coal",
+    "separator_pressure",
+    "separator_temperature",
+    "feedwater_temperature",
+    "outlet_pressure"
+  ],
+  "contains_previous_pack_sha256": "5767ecb38470980e4661356db06336f34e068b0d642e4872e53dcb48d3daff88",
+  "retained_training_windows": 6111
+}

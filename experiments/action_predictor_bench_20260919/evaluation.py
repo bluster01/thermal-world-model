@@ -11,6 +11,8 @@ def forecast(model, history, actions, boundaries, *, mode='block'):
     horizon = actions.shape[1] - 1
     if horizon < 1 or boundaries.shape[1] != horizon + 1:
         raise ValueError('Expected H+1 left/right endpoint controls')
+    if hasattr(model, 'forecast_plan'):
+        return model.forecast_plan(history, actions, boundaries, mode=mode)
     if isinstance(model, Anchored):
         # Keep one nominal plan for the ENTIRE candidate comparison, not one
         # redefined from each candidate's generated block history.

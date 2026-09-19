@@ -155,7 +155,7 @@ def aggregate(output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--data', type=Path, default=HERE / 'data/screen_A_10pct.npz')
+    parser.add_argument('--data', type=Path, default=HERE / 'data/screen_A_33pct.npz')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--models', nargs='+', choices=TRAINED, default=TRAINED)
     parser.add_argument('--seeds', type=int, nargs='+', default=[11])

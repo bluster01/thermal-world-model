@@ -25,6 +25,8 @@ def report(output):
     for r in entries:
         if r['status'] != 'complete': continue
         folder = output / f"seed{r['seed']}" / r['model']
+        detail_result = json.loads((folder / 'result.json').read_text())
+        block_label = detail_result.get('block_protocol', 'Block32 recorded boundary')
         with np.load(folder / 'forecasts.npz') as data:
             pred = data['block_recorded'][:, :, 4]
             label = f"{r['model']} s{r['seed']}"
@@ -34,7 +36,7 @@ def report(output):
             detail, axs = plt.subplots(3, 2, figsize=(11, 9), squeeze=False)
             for ax, index in zip(axs.flat, selected):
                 ax.plot(time, truth[index], c='black', lw=1.5, label='Observed')
-                ax.plot(time, pred[index], lw=1.2, label='Block32 recorded boundary')
+                ax.plot(time, pred[index], lw=1.2, label=block_label)
                 if 'native_recorded' in data:
                     ax.plot(time, data['native_recorded'][index, :, 4], '--', lw=1, label='Native uninterrupted')
                 ax.axvline(32*10/60, color='gray', ls=':', lw=.8)
@@ -81,7 +83,7 @@ def report(output):
     learning.tight_layout()
     learning.savefig(figures / 'training_curves.png', dpi=160)
     plt.close(learning)
-    lines = ['# Quick benchmark results', '', 'Common block32 protocol; native metrics are separate. Missing native entries mean fixed-horizon head, not failure.', '',
+    lines = ['# Quick benchmark results', '', 'Block32 reference-refresh and native metrics are separate. Protected arms retain continuous carrier state in block mode; original arms reencode the full model. Missing native entries mean fixed-horizon head, not failure.', '',
              '| Model | Seed | H32 MAE | Block H128 MAE | Block H512 MAE | Native H512 MAE |',
              '|---|---:|---:|---:|---:|---:|']
     def fmt(x): return f'{x:.4f}' if isinstance(x, (float, int)) else '—'

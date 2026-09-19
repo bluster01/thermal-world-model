@@ -27,7 +27,19 @@ def stratified_sample(starts, count, seed):
     return np.asarray(starts)[[rng.integers(lo, hi) for lo, hi in zip(edges[:-1], edges[1:])]]
 
 
-def pack(source, destination, fraction=.1, side='A', seed=20260919):
+def expanded_sample(pool, existing, count, seed):
+    """Retain every earlier window and stratify the additional sample in time."""
+    existing = np.asarray(existing)
+    if len(np.unique(existing)) != len(existing) or not np.isin(existing, pool).all():
+        raise ValueError('Existing windows must be unique members of the training pool')
+    if not len(existing) <= count <= len(pool):
+        raise ValueError('Expansion count outside available pool')
+    remaining = np.setdiff1d(pool, existing)
+    extra = stratified_sample(remaining, count-len(existing), seed) if count > len(existing) else []
+    return np.sort(np.concatenate((existing, extra))).astype(np.int64)
+
+
+def pack(source, destination, fraction=.1, side='A', seed=20260919, include_pack=None):
     if not .1 <= fraction <= 1 / 3:
         raise ValueError('Quick screen fraction must be between 1/10 and 1/3')
     source, destination = Path(source), Path(destination)
@@ -42,6 +54,12 @@ def pack(source, destination, fraction=.1, side='A', seed=20260919):
     train_pool = np.load(source / f'windows/{side}/train/c64_h128_stride80.npy')
     val_pool = np.load(source / f'windows/{side}/validation/c64_h512_stride80.npy')
     train = stratified_sample(train_pool, int(len(train_pool) * fraction), seed)
+    previous_metadata = None
+    if include_pack is not None:
+        previous, previous_metadata = load_pack(include_pack)
+        if previous_metadata['side'] != side or previous_metadata['source_manifest_sha256'] != sha256(source / 'manifest.json'):
+            raise ValueError('Expansion must use the same source and side')
+        train = expanded_sample(train_pool, previous['train_starts'], len(train), seed)
     # Selector first third, reporting last two thirds, with a full long-window gap.
     edge = val_pool[len(val_pool) // 3]
     selector_pool = val_pool[val_pool + CONTEXT + LONG_H <= edge]
@@ -63,6 +81,10 @@ def pack(source, destination, fraction=.1, side='A', seed=20260919):
     norm = manifest['normalization'][side]
     arrays['mean'] = np.asarray(norm['mean'], dtype=np.float32)
     arrays['scale'] = np.asarray(norm['scale'], dtype=np.float32)
+    if include_pack is not None:
+        for name in ('selector', 'evaluation', 'selector_starts', 'evaluation_starts', 'mean', 'scale'):
+            if not np.array_equal(arrays[name], previous[name]):
+                raise ValueError(f'Expansion changed fixed evaluation or normalization: {name}')
     destination.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(destination, **arrays)
     metadata = {'source_dataset': manifest['dataset_id'], 'source_manifest_sha256': sha256(source / 'manifest.json'),
@@ -78,6 +100,9 @@ def pack(source, destination, fraction=.1, side='A', seed=20260919):
                 'channel_names': ['T1', 'T2', 'T3', 'T4', 'T5_main', 'valve1', 'valve2',
                                   'steam_flow', 'coal', 'separator_pressure', 'separator_temperature',
                                   'feedwater_temperature', 'outlet_pressure']}
+    if previous_metadata:
+        metadata['contains_previous_pack_sha256'] = previous_metadata['pack_sha256']
+        metadata['retained_training_windows'] = len(previous['train'])
     destination.with_suffix('.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')
     return metadata
 
@@ -103,5 +128,6 @@ if __name__ == '__main__':
     p.add_argument('--output', required=True)
     p.add_argument('--fraction', type=float, default=.1)
     p.add_argument('--side', choices=['A', 'B'], default='A')
+    p.add_argument('--include-pack', help='Keep all training windows and the fixed validation of an earlier pack')
     args = p.parse_args()
-    print(json.dumps(pack(args.source, args.output, args.fraction, args.side), indent=2))
+    print(json.dumps(pack(args.source, args.output, args.fraction, args.side, include_pack=args.include_pack), indent=2))
