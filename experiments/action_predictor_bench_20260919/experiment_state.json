@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "status": "ready_for_linux",
+  "scope": "quick baseline discovery: accuracy and action response",
+  "data_fraction": 0.1,
+  "training_windows": 6111,
+  "selector_windows": 128,
+  "evaluation_windows": 256,
+  "default_seeds": [11],
+  "planned_fits": 9,
+  "no_fit_controls": ["persistence", "anchored_hold"],
+  "linux_training_started_by_this_task": false,
+  "verification": "27 focused tests passed; all 11 rows completed local tiny real-data smoke; full 110-scenario paired R4 probes passed",
+  "next": "User runs Linux seed11 quick screen and returns the output directory; no automatic next round"
+}
