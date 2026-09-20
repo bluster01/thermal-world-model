@@ -2,7 +2,15 @@
 
 目的：在同一套数据与指标下看清预测精度、动态外推和动作响应各自的长短处，再组合有效思路。本轮是基线探索，不做论文收口、不上现场闭环。
 
-## 当前执行：四臂历史信息 × 连续响应
+## 当前执行：物理热状态 × JEPA式辅助训练
+
+四臂已回传：[FOCUSED_RETURN.md](FOCUSED_RETURN.md)。下一轮三个拟合、六行评价，执行细节及物理近似见[PHYSICAL.md](PHYSICAL.md)：
+
+```bash
+python -m experiments.action_predictor_bench_20260919.physical --output results/action_predictor_bench_20260919/physical33_seed11
+```
+
+## 已完成：四臂历史信息 × 连续响应
 
 全基线已完成并解读，用户允许部分收敛。Linux旁路包已接入，执行说明见[FOCUSED.md](FOCUSED.md)：
 

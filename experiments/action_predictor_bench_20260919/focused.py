@@ -15,7 +15,7 @@ from .full_baselines import fit, complete_row
 from .run import HERE, aggregate, save_json
 
 
-def load_data(base_path, aux_path):
+def load_data(base_path, aux_path, train_horizon=32):
     data, meta = load_pack(base_path)
     aux, aux_meta = load_pack(aux_path)
     if len(data['train']) != 20371 or data['selector'].shape[1] != 192:
@@ -31,7 +31,7 @@ def load_data(base_path, aux_path):
         values = aux[f'hist12_{split}'][:, :, selected]
         if values.shape != (len(data[split]), 64, len(selected)) or not np.isfinite(values).all() or not aux[f'valid_{split}'].all():
             raise ValueError(f'{split} auxiliary coverage invalid; no silent row dropping')
-        bank = data[split][:, :96] if split == 'train' else data[split]
+        bank = data[split][:, :64+train_horizon] if split == 'train' else data[split]
         extended = np.zeros((*bank.shape[:2], 13+len(selected)), dtype=np.float32)
         extended[:, :, :13] = bank
         extended[:, :64, 13:] = values

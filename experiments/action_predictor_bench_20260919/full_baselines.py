@@ -44,7 +44,7 @@ def advance_budget(scores, milestones, stale, lr, epoch, args):
     return milestones, stale, lr, stop
 
 
-def fit(name, seed, data, args, folder, model=None):
+def fit(name, seed, data, args, folder, model=None, training_objective=None, supervision_horizon=32):
     torch.manual_seed(seed)
     if torch.cuda.is_available(): torch.cuda.manual_seed_all(seed)
     model = (build(name, data['mean'], data['scale']) if model is None else model).to(args.device)
@@ -63,13 +63,19 @@ def fit(name, seed, data, args, folder, model=None):
             for start in range(0, len(order), args.batch_size):
                 ids = order[start:start+args.batch_size]
                 # Long data bank supplies selector labels, NOT H128 supervision.
-                h, u, d, y = unpack(data['train'][ids, :96], args.device)
-                p = model(h, u[:, :-1], d[:, :-1])
-                loss = loss_fn(model, p, y)
+                if training_objective is None:
+                    h, u, d, y = unpack(data['train'][ids, :64+supervision_horizon], args.device)
+                    p = model(h, u[:, :-1], d[:, :-1])
+                    loss = loss_fn(model, p, y)
+                else:
+                    batch = torch.as_tensor(data['train'][ids, :64+supervision_horizon], device=args.device)
+                    loss = training_objective(model, batch)
                 if not torch.isfinite(loss): raise ValueError('Nonfinite training loss')
                 optimizer.zero_grad(set_to_none=True); loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 5., error_if_nonfinite=True)
                 optimizer.step(); updates += 1
+                if hasattr(model, 'after_optimizer_step'):
+                    model.after_optimizer_step()
                 total += float(loss.detach())*len(ids)
             scores = select(model, data['selector'], args)
             for choice in CHOICES:
@@ -92,7 +98,7 @@ def fit(name, seed, data, args, folder, model=None):
         reached_validation_plateau=stop and not args.smoke, best_epochs=best_epochs,
         best_selector=best, final_selector=scores, final_lr=optimizer.param_groups[0]['lr'],
         train_seconds=time.perf_counter()-started, parameters=sum(p.numel() for p in model.parameters()),
-        training_windows=len(data['train']), supervision_horizon=32)
+        training_windows=len(data['train']), supervision_horizon=supervision_horizon)
     save_json(folder/'fit.json', result)
     return result
 
