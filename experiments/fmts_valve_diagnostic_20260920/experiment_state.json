@@ -11,7 +11,7 @@
   "publication_date": "2026-09-20",
   "linux_claim_received": true,
   "formal_inference_started": true,
-  "results_returned": false,
+  "results_returned": true,
   "audited": false,
   "training_authorized": false,
   "locked_test_evaluated": false,
@@ -25,7 +25,7 @@
   "properties_fingerprint_matches_parent": true,
   "local_input_blocker": "canonical Side A v2.2 NPZ absent; BLOCK1 private export contains main-temperature histories only",
   "registration": "docs/fmts2026/PREREG_VALVE_DIAGNOSTIC_20260920.md",
-  "next_step": "Public receipt pushed to origin/main; private package emailed, awaiting recipient confirmation. results_returned flips only after public receipt + private arrays are both received on the author side; audited stays false until author review.",
+  "next_step": "Public receipt pushed and private package confirmed received; results_returned=true. audited stays false until author review of the diagnostic results.",
   "linux_claim": {
     "source_commit": "3131bf97465c1be708ba39a3be398d3ffdf8620d",
     "worker": "linux worker",
@@ -47,11 +47,13 @@
     "training_updates": 0
   },
   "private_delivery": {
-    "status": "emailed_pending_confirmation",
+    "status": "confirmed_received",
     "channel": "email to 1402005847@qq.com",
     "zip": "fmts_vd1_private_20260920.zip",
     "zip_sha256": "3f8a900ace8ac937af8fa521449158d45fdc48b5701cab1cfaac5239925ab792",
     "sent_at": "2026-09-20T15:38:39+08:00",
-    "contents": "full private output dir (23MB, 735 files) + stdout/stderr/resource + exit codes"
+    "contents": "full private output dir (23MB, 735 files) + stdout/stderr/resource + exit codes",
+    "confirmed_at": "2026-09-20T16:05:41+08:00",
+    "confirmed_by": "author side confirmation (chat)"
   }
 }
