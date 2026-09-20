@@ -53,4 +53,6 @@ python -m experiments.action_predictor_bench_20260919.full_baselines --output re
 
 ## 本次已收到的是哪批结果
 
+后续设计输入见[侧窗口研究纪要](../../docs/SSM_PHYSICS_RESPONSE_DECONFOUNDING_IDEAS_20260920.md)：物理响应结构、参考工况调度与共因扰动分离。均为未实现、未验证的候选消融，不改变本轮全部家族的训练和评价协议，也未据此启动新的 SSM 支线。
+
 `b1d933a`回传的是此前发布的round3支线：6次拟合，各追加3epoch，两个selector，共12行评价。它不是上述全部家族的充分训练结果。支线的发现已单列在[ROUND3_RETURN.md](ROUND3_RETURN.md)，保留有用结论，但不据此删减全基线名单。
