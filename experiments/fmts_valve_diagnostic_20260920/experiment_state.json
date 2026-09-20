@@ -9,7 +9,7 @@
   "published_source_commit": "58b1ac9b72edcb9c90c27b35d80e283a1f59f5b6",
   "publication_branch": "origin/main",
   "publication_date": "2026-09-20",
-  "linux_claim_received": false,
+  "linux_claim_received": true,
   "formal_inference_started": false,
   "results_returned": false,
   "audited": false,
@@ -25,5 +25,11 @@
   "properties_fingerprint_matches_parent": true,
   "local_input_blocker": "canonical Side A v2.2 NPZ absent; BLOCK1 private export contains main-temperature histories only",
   "registration": "docs/fmts2026/PREREG_VALVE_DIAGNOSTIC_20260920.md",
-  "next_step": "Linux fetches origin/main, records claim and executes fixed RUN_LINUX command; no VD1 execution receipt or actual diagnostic results yet"
+  "next_step": "Linux fetches origin/main, records claim and executes fixed RUN_LINUX command; no VD1 execution receipt or actual diagnostic results yet",
+  "linux_claim": {
+    "source_commit": "3131bf97465c1be708ba39a3be398d3ffdf8620d",
+    "worker": "linux worker",
+    "claimed_at": "2026-09-20T15:32:15+08:00",
+    "actual_start": "2026-09-20T15:32:15+08:00"
+  }
 }
