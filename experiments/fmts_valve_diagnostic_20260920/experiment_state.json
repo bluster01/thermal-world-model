@@ -1,12 +1,14 @@
 {
   "id": "FMTS-VD1",
-  "status": "ready_for_linux_unpublished",
+  "status": "ready_for_linux_published",
   "execution_authorized": true,
   "execution_authorization_date": "2026-09-20",
   "execution_scope": "fixed checkpoints only; Linux real inference; no training",
   "ready_for_linux": true,
-  "published": false,
-  "published_source_commit": null,
+  "published": true,
+  "published_source_commit": "58b1ac9b72edcb9c90c27b35d80e283a1f59f5b6",
+  "publication_branch": "origin/main",
+  "publication_date": "2026-09-20",
   "linux_claim_received": false,
   "formal_inference_started": false,
   "results_returned": false,
@@ -23,5 +25,5 @@
   "properties_fingerprint_matches_parent": true,
   "local_input_blocker": "canonical Side A v2.2 NPZ absent; BLOCK1 private export contains main-temperature histories only",
   "registration": "docs/fmts2026/PREREG_VALVE_DIAGNOSTIC_20260920.md",
-  "next_step": "publish isolated package; Linux claims and executes fixed RUN_LINUX command; no actual diagnostic results yet"
+  "next_step": "Linux fetches origin/main, records claim and executes fixed RUN_LINUX command; no VD1 execution receipt or actual diagnostic results yet"
 }
