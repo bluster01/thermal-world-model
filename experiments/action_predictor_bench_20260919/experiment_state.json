@@ -1,25 +1,27 @@
 {
-  "version": 2,
+  "version": 3,
   "status": "ready_for_linux",
-  "scope": "1/3 baseline rerun and six response ablations",
-  "previous_return_commit": "059af64",
-  "previous_results": "results/action_predictor_bench_20260919/screen_seed11",
+  "scope": "H32/H128 supervision and held/predicted nominal action plan",
+  "previous_return_commit": "8aa9204",
   "previous_results_analyzed": true,
-  "analysis": "ROUND2.md",
+  "analysis": "RETURN33_AND_ROUND3.md",
   "data_fraction": 0.3333333333333333,
   "training_windows": 20371,
-  "retained_previous_training_windows": 6111,
   "selector_windows": 128,
   "evaluation_windows": 256,
   "default_seeds": [
     11
   ],
-  "baseline_fits": 9,
-  "baseline_result_rows": 11,
-  "round2_new_fits": 4,
-  "round2_no_fit_rows": 2,
-  "updates_per_fit": 960,
+  "policy_fits": 1,
+  "temperature_fits": 6,
+  "evaluation_rows": 12,
+  "epochs_per_fit": 3,
+  "updates_per_fit": 480,
+  "selection_rules": [
+    "short",
+    "balanced"
+  ],
   "linux_training_started_by_this_task": false,
-  "verification": "32 tests passed; 1/3 baseline tiny smoke 11/11; round2 wiring tiny smoke 6/6 with returned 1/10 parents explicitly supplied; no full fits locally",
-  "next": "Linux runs run -> screen33_seed11, then round2 -> round2_33_seed11 using fresh 1/3 parents; return both directories"
+  "verification": "36 tests passed; one policy + six temperature fits / twelve rows completed tiny real-data smoke; no formal local fits",
+  "next": "Linux runs round3 -> results/action_predictor_bench_20260919/round3_33_seed11 and returns the complete directory"
 }

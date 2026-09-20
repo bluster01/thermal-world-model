@@ -39,9 +39,11 @@ def expanded_sample(pool, existing, count, seed):
     return np.sort(np.concatenate((existing, extra))).astype(np.int64)
 
 
-def pack(source, destination, fraction=.1, side='A', seed=20260919, include_pack=None):
+def pack(source, destination, fraction=.1, side='A', seed=20260919, include_pack=None, train_horizon=TRAIN_H):
     if not .1 <= fraction <= 1 / 3:
         raise ValueError('Quick screen fraction must be between 1/10 and 1/3')
+    if train_horizon not in (32, 128):
+        raise ValueError('Supported supervision horizons: 32, 128')
     source, destination = Path(source), Path(destination)
     if destination.exists():
         raise FileExistsError(destination)
@@ -67,8 +69,8 @@ def pack(source, destination, fraction=.1, side='A', seed=20260919, include_pack
     selector = stratified_sample(selector_pool, min(128, len(selector_pool)), seed + 1)
     report = stratified_sample(report_pool, min(256, len(report_pool)), seed + 2)
     arrays = {}
-    for name, starts, horizon, split_id in [('train', train, TRAIN_H, 0),
-                                         ('selector', selector, TRAIN_H, 1),
+    for name, starts, horizon, split_id in [('train', train, train_horizon, 0),
+                                         ('selector', selector, train_horizon, 1),
                                          ('evaluation', report, LONG_H, 1)]:
         rows = starts[:, None] + np.arange(CONTEXT + horizon)
         if not np.all(split[rows] == split_id) or not np.all(np.diff(ts[rows], axis=1) == DT):
@@ -83,7 +85,8 @@ def pack(source, destination, fraction=.1, side='A', seed=20260919, include_pack
     arrays['scale'] = np.asarray(norm['scale'], dtype=np.float32)
     if include_pack is not None:
         for name in ('selector', 'evaluation', 'selector_starts', 'evaluation_starts', 'mean', 'scale'):
-            if not np.array_equal(arrays[name], previous[name]):
+            current = arrays[name][:, :previous[name].shape[1]] if arrays[name].ndim == 3 else arrays[name]
+            if not np.array_equal(current, previous[name]):
                 raise ValueError(f'Expansion changed fixed evaluation or normalization: {name}')
     destination.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(destination, **arrays)
@@ -93,7 +96,7 @@ def pack(source, destination, fraction=.1, side='A', seed=20260919, include_pack
                 'fraction_note': 'Fraction of eligible stride80 windows, not unique raw rows/duration; overlapping windows.',
                 'training_pool_count': len(train_pool), 'selection_seed': seed,
                 'counts': {k: len(arrays[k]) for k in ('train', 'selector', 'evaluation')},
-                'context': CONTEXT, 'train_horizon': TRAIN_H, 'evaluation_horizon': LONG_H,
+                'context': CONTEXT, 'train_horizon': train_horizon, 'selector_horizon': train_horizon, 'evaluation_horizon': LONG_H,
                 'normalization': 'existing unique train-row statistics; no validation fit',
                 'split': 'original train/validation; selector and reporting windows time-separated; no test/extension',
                 'time_alignment': 'history ends at t; u/d at t lead to T at t+1; pack also contains right-end controls for history feedback',
@@ -129,5 +132,6 @@ if __name__ == '__main__':
     p.add_argument('--fraction', type=float, default=.1)
     p.add_argument('--side', choices=['A', 'B'], default='A')
     p.add_argument('--include-pack', help='Keep all training windows and the fixed validation of an earlier pack')
+    p.add_argument('--train-horizon', type=int, choices=[32, 128], default=TRAIN_H)
     args = p.parse_args()
-    print(json.dumps(pack(args.source, args.output, args.fraction, args.side, include_pack=args.include_pack), indent=2))
+    print(json.dumps(pack(args.source, args.output, args.fraction, args.side, include_pack=args.include_pack, train_horizon=args.train_horizon), indent=2))

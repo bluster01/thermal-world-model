@@ -1,5 +1,12 @@
 # Local verification — 2026-09-19
 
+## 2026-09-20: H128 and nominal-plan screen
+
+- 36 tests passed in42.11s. Added: exact hold initialization including valve bounds, causal nominal-plan prefix, frozen-policy gradients, nominal temperature identity, all110 paired response invariance between held and predicted nominal plans, and nonzero long-tail loss gradients.
+- Round3 tiny smoke: one policy fit and six temperature fits complete, twelve checkpoint evaluations complete, zero failures. Each fit sees16 windows and2 updates. Reports/plots generated; these are wiring checks only.
+- H128 pack retains all20,371 train origins and every existing train/selector prefix, all evaluation rows and normalization exactly. SHA256 `6f97d5cabc0f0834b05d920baf2337fe32046e63a246b06fe3ce89374ff76c8e`;24,530,842 bytes.
+- Formal round3 fits have not run locally. Returned1/3 baseline and round2 findings are in RETURN33_AND_ROUND3.md; the Linux command is at the top of README.md.
+
 ## After first return: 1/3 expansion and response ablations
 
 - 32 tests pass (25.07s): original suite plus nested sampling, protected nominal identity, prefix/topology/sign preservation across reference refresh, full110 scenarios in both modes, finite-difference action gradient and frozen response-teacher behavior.

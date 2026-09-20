@@ -2,7 +2,18 @@
 
 目的：在同一套数据与指标下看清预测精度、动态外推和动作响应各自的长短处，再组合有效思路。本轮是基线探索，不做论文收口、不上现场闭环。
 
-## 当前执行：1/3 数据基线 + 响应消融
+## 当前执行：H32/H128 × 保持/预测名义动作
+
+1/3基线和六个响应消融已经回传（`8aa9204`）。结果解读与下一轮设计见 [RETURN33_AND_ROUND3.md](RETURN33_AND_ROUND3.md)。当前只需运行：
+
+```bash
+python -m pytest experiments/action_predictor_bench_20260919/test_bench.py experiments/action_predictor_bench_20260919/test_round2.py experiments/action_predictor_bench_20260919/test_round3.py -q
+python -m experiments.action_predictor_bench_20260919.round3 --output results/action_predictor_bench_20260919/round3_33_seed11
+```
+
+新入口默认读取已提交的H128延长包与1/3父权重。6个温度拟合各3epoch，加一次共享名义动作预测器预训练；每个温度拟合保留short/balanced两个checkpoint，共12行评价。训练起点仍是20,371个，报告集不变。回传整个 `round3_33_seed11`，优先看 `COMPARISON.md`、`DIAGNOSIS.md`、`policy/result.json`。
+
+## 已完成：1/3 数据基线 + 响应消融
 
 用户在首轮回传后要求将训练数据扩大到1/3。**当前默认包是 `screen_A_33pct.npz`**，已提交，无需Linux重新准备原始数据。完整的结果解读和下一轮实验说明见 [ROUND2.md](ROUND2.md)。
 
@@ -45,7 +56,7 @@ python -m experiments.action_predictor_bench_20260919.run \
   --models direct attention_concat ait r4 r4_mlp r4_directref --seeds 11 23 37
 ```
 
-上述多seed示例尚未启用；当前只执行文档顶部的1/3基线与六臂消融。保留所有成功/失败模型，回传结果后讨论。
+上述多seed示例尚未启用；当前只执行文档顶部的round3入口。保留所有成功/失败模型，回传结果后讨论。
 
 ## 模型
 
