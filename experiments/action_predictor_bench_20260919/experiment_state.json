@@ -1,27 +1,45 @@
 {
-  "version": 3,
+  "version": 4,
   "status": "ready_for_linux",
-  "scope": "H32/H128 supervision and held/predicted nominal action plan",
-  "previous_return_commit": "8aa9204",
+  "scope": "all nine original baseline families with longer fitting and explicit plateau accounting",
+  "previous_return_commit": "b1d933a",
   "previous_results_analyzed": true,
-  "analysis": "RETURN33_AND_ROUND3.md",
+  "latest_return_analysis": "ROUND3_RETURN.md",
+  "main_plan": "FULL_BASELINES.md",
+  "ssm_branch_status": "results retained; no new SSM-only experiment queued",
   "data_fraction": 0.3333333333333333,
   "training_windows": 20371,
+  "supervision_horizon": 32,
+  "selector_horizon": 128,
   "selector_windows": 128,
   "evaluation_windows": 256,
   "default_seeds": [
     11
   ],
-  "policy_fits": 1,
-  "temperature_fits": 6,
-  "evaluation_rows": 12,
-  "epochs_per_fit": 3,
-  "updates_per_fit": 480,
+  "trained_models": [
+    "direct_no_action",
+    "direct",
+    "gru",
+    "ssm",
+    "attention_concat",
+    "ait",
+    "r4",
+    "r4_mlp",
+    "r4_directref"
+  ],
+  "no_fit_controls": [
+    "persistence",
+    "anchored_hold"
+  ],
+  "minimum_epochs": 12,
+  "maximum_epochs": 60,
   "selection_rules": [
     "short",
-    "balanced"
+    "balanced_common_block"
   ],
+  "evaluation_rows_per_seed": 21,
+  "completion_is_convergence_claim": false,
   "linux_training_started_by_this_task": false,
-  "verification": "36 tests passed; one policy + six temperature fits / twelve rows completed tiny real-data smoke; no formal local fits",
-  "next": "Linux runs round3 -> results/action_predictor_bench_20260919/round3_33_seed11 and returns the complete directory"
+  "verification": "40 tests passed; 9 fits and 21 evaluation rows completed tiny real-data smoke; no formal local fits",
+  "next": "Linux runs full_baselines -> results/action_predictor_bench_20260919/full33_seed11; return all model results and CONVERGENCE.md"
 }

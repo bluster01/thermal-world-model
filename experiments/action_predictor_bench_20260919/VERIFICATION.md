@@ -1,5 +1,12 @@
 # Local verification — 2026-09-19
 
+## Full-family fitting after scope correction
+
+- 40 tests passed. Added coverage for LR reductions, complete patience at the LR floor, minimum epochs, improvement in either selector, identical selector interfaces across all9 families, and visible nonfinite long forecasts in diagnosis.
+- All9 original trained families plus persistence and both anchored selections completed the tiny real-data smoke:21 evaluation rows, no failures. Every trained model used16 windows for2 updates; smoke rows explicitly do not claim a validation plateau.
+- Formal12–60epoch full-family fits have not run locally. No model architecture or training sample set changed. H128 bank is cropped toH32 for training and supplies the common H128 selector targets.
+- Main handoff is now full_baselines; round3 return b1d933a is analyzed separately in ROUND3_RETURN.md.
+
 ## 2026-09-20: H128 and nominal-plan screen
 
 - 36 tests passed in42.11s. Added: exact hold initialization including valve bounds, causal nominal-plan prefix, frozen-policy gradients, nominal temperature identity, all110 paired response invariance between held and predicted nominal plans, and nonzero long-tail loss gradients.

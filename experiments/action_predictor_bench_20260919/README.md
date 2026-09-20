@@ -2,9 +2,22 @@
 
 目的：在同一套数据与指标下看清预测精度、动态外推和动作响应各自的长短处，再组合有效思路。本轮是基线探索，不做论文收口、不上现场闭环。
 
-## 当前执行：H32/H128 × 保持/预测名义动作
+## 当前执行：全部原始基线的较充分训练
 
-1/3基线和六个响应消融已经回传（`8aa9204`）。结果解读与下一轮设计见 [RETURN33_AND_ROUND3.md](RETURN33_AND_ROUND3.md)。当前只需运行：
+按用户纠正，主线恢复到全部模型比较。**9个原始训练家族全部保留，另有persistence与anchored_hold。** 每个训练家族至少12轮、上限60轮，统一的学习率下降与验证停滞规则，明确列出到顶仍未确认停滞的模型。设计与完整名单见 [FULL_BASELINES.md](FULL_BASELINES.md)。
+
+```bash
+python -m pytest experiments/action_predictor_bench_20260919/test_bench.py experiments/action_predictor_bench_20260919/test_round2.py experiments/action_predictor_bench_20260919/test_round3.py experiments/action_predictor_bench_20260919/test_full_baselines.py -q
+python -m experiments.action_predictor_bench_20260919.full_baselines --output results/action_predictor_bench_20260919/full33_seed11
+```
+
+同一1/3训练数据，所有家族从头训练H32；每家族同时保留short/balanced两个checkpoint。共9次训练、21行评价（每种选模规则均有完整11个概念基线，persistence共用）。优先回传 `ALL_BASELINES.md`、`CONVERGENCE.md` 及整个结果目录。不要自动追加SSM支线。
+
+最新收到的`b1d933a`是此前已安排的SSM支线，6次拟合/12行评价，不是全基线充分训练。发现见 [ROUND3_RETURN.md](ROUND3_RETURN.md)。
+
+## 已回传的SSM支线：H32/H128 × 保持/预测名义动作
+
+以下保留历史round3命令与设计，不是当前默认任务。1/3基线和六个响应消融回传于`8aa9204`，后续round3已回传于`b1d933a`。原设计见 [RETURN33_AND_ROUND3.md](RETURN33_AND_ROUND3.md)。
 
 ```bash
 python -m pytest experiments/action_predictor_bench_20260919/test_bench.py experiments/action_predictor_bench_20260919/test_round2.py experiments/action_predictor_bench_20260919/test_round3.py -q
@@ -56,7 +69,7 @@ python -m experiments.action_predictor_bench_20260919.run \
   --models direct attention_concat ait r4 r4_mlp r4_directref --seeds 11 23 37
 ```
 
-上述多seed示例尚未启用；当前只执行文档顶部的round3入口。保留所有成功/失败模型，回传结果后讨论。
+上述多seed示例尚未启用；当前只执行文档顶部的full_baselines入口。保留所有成功/失败模型，回传结果后讨论。
 
 ## 模型
 
