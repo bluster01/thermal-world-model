@@ -1,0 +1,307 @@
+{
+  "pack_id": "hist_bypass_A_33pct_v0",
+  "date": "2026-09-20",
+  "produced_by": "execution-side (Linux worker)",
+  "purpose": "history-only auxiliary series for response-focused design round (docs/plans/2026-09-20-response-focused-design.md §4)",
+  "reference_pack": "/home/bluster/projectA/thermal-world-model/experiments/action_predictor_bench_20260919/data/screen_A_33pct.npz",
+  "reference_pack_sha256": "ddf42e52acfb1bf31465703c5c6f735b4337a8d696c2f13ccd1320e970c09389",
+  "reference_channel_names": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5_main",
+    "valve1",
+    "valve2",
+    "steam_flow",
+    "coal",
+    "separator_pressure",
+    "separator_temperature",
+    "feedwater_temperature",
+    "outlet_pressure"
+  ],
+  "context": 64,
+  "dt_seconds": 10,
+  "history_alignment": "epoch = t_end - 630 + 10*k (k=0..63); t_end from reference pack *_time; values RAW from merged plant table at identical epochs",
+  "series": [
+    {
+      "key": "corr_fuel_total",
+      "name": "校正后总燃料量",
+      "merged_col_index": "校正后总燃料量",
+      "notes": "热负荷; key new signal"
+    },
+    {
+      "key": "sa_flow",
+      "name": "总二次风量",
+      "merged_col_index": "总二次风量",
+      "notes": "热负荷"
+    },
+    {
+      "key": "o2_a_3sel",
+      "name": "三选后A侧烟气含氧量",
+      "merged_col_index": "三选后A侧烟气含氧量",
+      "notes": "热负荷; alternates: A侧锅炉出口烟气氧量1/2/3"
+    },
+    {
+      "key": "load",
+      "name": "机组负荷_GENERATOR_POWER",
+      "merged_col_index": "机组负荷_GENERATOR_POWER",
+      "notes": "热负荷"
+    },
+    {
+      "key": "sp1_a",
+      "name": "一级减A副调设定值",
+      "merged_col_index": "一级减A副调设定值",
+      "notes": "控制意图"
+    },
+    {
+      "key": "sp2_a_set",
+      "name": "过热器二级减温器A喷水调节阀设定",
+      "merged_col_index": "过热器二级减温器A喷水调节阀设定",
+      "notes": "控制意图"
+    },
+    {
+      "key": "agc",
+      "name": "AGC指令",
+      "merged_col_index": "AGC指令",
+      "notes": "控制意图"
+    },
+    {
+      "key": "load_rate",
+      "name": "机组负荷变化率",
+      "merged_col_index": "机组负荷变化率",
+      "notes": "控制意图"
+    },
+    {
+      "key": "b_sh1_in",
+      "name": "选择后右侧一过喷水减温器入口",
+      "merged_col_index": "选择后右侧一过喷水减温器入口",
+      "notes": "B侧代理 (T1 对侧)"
+    },
+    {
+      "key": "b_sh_out",
+      "name": "选择后右侧末级过热器出口汽温",
+      "merged_col_index": "选择后右侧末级过热器出口汽温",
+      "notes": "B侧代理 (T5 对侧)"
+    },
+    {
+      "key": "sh_spray_total",
+      "name": "过热器减温水总流量",
+      "merged_col_index": "过热器减温水总流量",
+      "notes": "代理"
+    },
+    {
+      "key": "fuel_ctl",
+      "name": "燃料主控输出",
+      "merged_col_index": "燃料主控输出",
+      "notes": "增量热输入候选"
+    }
+  ],
+  "duplicates_vs_reference_13": "checked via max|corr| against identified reference columns (8000-window train sample); see overlap_check. b_sh1_in / b_sh_out are B-side counterparts of ch0 / ch4 (distinct signals).",
+  "normalization": {
+    "fit": "unique train history-step epochs only",
+    "ddof": 0
+  },
+  "counts": {
+    "train": 20371,
+    "selector": 128,
+    "evaluation": 256
+  },
+  "validity": {
+    "train": "20371/20371",
+    "selector": "128/128",
+    "evaluation": "256/256"
+  },
+  "missingness": {
+    "corr_fuel_total": {
+      "nan_cells": 0,
+      "frozen_fraction": 1.168795042438948e-05
+    },
+    "sa_flow": {
+      "nan_cells": 0,
+      "frozen_fraction": 6.233573559674389e-06
+    },
+    "o2_a_3sel": {
+      "nan_cells": 0,
+      "frozen_fraction": 0.12218583373656762
+    },
+    "load": {
+      "nan_cells": 0,
+      "frozen_fraction": 0.01153211108539762
+    },
+    "sp1_a": {
+      "nan_cells": 0,
+      "frozen_fraction": 5.9998145511865995e-05
+    },
+    "sp2_a_set": {
+      "nan_cells": 0,
+      "frozen_fraction": 0.9917553197706357
+    },
+    "agc": {
+      "nan_cells": 0,
+      "frozen_fraction": 0.19826348224561371
+    },
+    "load_rate": {
+      "nan_cells": 0,
+      "frozen_fraction": 0.9970624284600035
+    },
+    "b_sh1_in": {
+      "nan_cells": 0,
+      "frozen_fraction": 0.0910460170192142
+    },
+    "b_sh_out": {
+      "nan_cells": 0,
+      "frozen_fraction": 0.10046650506127214
+    },
+    "sh_spray_total": {
+      "nan_cells": 0,
+      "frozen_fraction": 2.883027771349405e-05
+    },
+    "fuel_ctl": {
+      "nan_cells": 0,
+      "frozen_fraction": 1.9479917373982467e-05
+    }
+  },
+  "alignment_validation": {
+    "ch0_T1": {
+      "top1": "选择后左侧一过喷水减温器入口",
+      "corr": 1.0,
+      "med_abs_diff": 0.0
+    },
+    "ch1_T2": {
+      "top1": "选择后左侧一过喷水减温器出口",
+      "corr": 0.9999999999999998,
+      "med_abs_diff": 0.0
+    },
+    "ch2_T3": {
+      "top1": "选择后二级减温器左侧入口蒸汽",
+      "corr": 1.0,
+      "med_abs_diff": 0.0
+    },
+    "ch3_T4": {
+      "top1": "选择后左侧二过喷水减温器出口",
+      "corr": 0.9999999999999998,
+      "med_abs_diff": 0.0
+    },
+    "ch4_T5_main": {
+      "top1": "选择后左侧末级过热器出口汽温",
+      "corr": 0.9999999999999999,
+      "med_abs_diff": 0.0
+    },
+    "ch5_valve1": {
+      "top1": "过热器一级减温器A侧喷水调节门阀位反馈",
+      "corr": 0.9999999999999954,
+      "med_abs_diff": 25.860526710748672
+    },
+    "ch6_valve2": {
+      "top1": "过热器二级减温器B侧喷水调节门阀位反馈",
+      "corr": 0.9999999999999948,
+      "med_abs_diff": 29.609929263591766
+    },
+    "ch7_steam_flow": {
+      "top1": "主蒸汽流量_60BKAO0312",
+      "corr": 0.9999999999999951,
+      "med_abs_diff": 749.8249664306641
+    },
+    "ch8_coal": {
+      "top1": "未校正总煤量",
+      "corr": 1.0,
+      "med_abs_diff": 0.0
+    },
+    "ch9_separator_pressure": {
+      "top1": "选择后分离器最终出口压力",
+      "corr": 1.0,
+      "med_abs_diff": 0.0
+    },
+    "ch10_separator_temperature": {
+      "top1": "分离器最终出口温度",
+      "corr": 1.0,
+      "med_abs_diff": 0.0
+    },
+    "ch11_feedwater_temperature": {
+      "top1": "选择后省煤器出口给水温度",
+      "corr": 0.9999999999999998,
+      "med_abs_diff": 0.0
+    },
+    "ch12_outlet_pressure": {
+      "top1": "选择后末级过热器左侧出口压力",
+      "corr": 0.9999999999999998,
+      "med_abs_diff": 0.0
+    }
+  },
+  "overlap_check": {
+    "corr_fuel_total": {
+      "max_abs_corr": 0.9946780868419005,
+      "against": "ch8_coal:未校正总煤量"
+    },
+    "sa_flow": {
+      "max_abs_corr": 0.9693326305949267,
+      "against": "ch7_steam_flow:主蒸汽流量_60BKAO0312"
+    },
+    "o2_a_3sel": {
+      "max_abs_corr": 0.9135795285100275,
+      "against": "ch10_separator_temperature:分离器最终出口温度"
+    },
+    "load": {
+      "max_abs_corr": 0.9982055983556095,
+      "against": "ch7_steam_flow:主蒸汽流量_60BKAO0312"
+    },
+    "sp1_a": {
+      "max_abs_corr": 0.9790857816476337,
+      "against": "ch1_T2:选择后左侧一过喷水减温器出口"
+    },
+    "sp2_a_set": {
+      "max_abs_corr": 0.5174010418239177,
+      "against": "ch4_T5_main:选择后左侧末级过热器出口汽温"
+    },
+    "agc": {
+      "max_abs_corr": 0.9978264220272854,
+      "against": "ch7_steam_flow:主蒸汽流量_60BKAO0312"
+    },
+    "load_rate": {
+      "max_abs_corr": 0.2321063203219213,
+      "against": "ch10_separator_temperature:分离器最终出口温度"
+    },
+    "b_sh1_in": {
+      "max_abs_corr": 0.7511018928277662,
+      "against": "ch5_valve1:过热器一级减温器A侧喷水调节门阀位反馈"
+    },
+    "b_sh_out": {
+      "max_abs_corr": 0.6056710115432711,
+      "against": "ch4_T5_main:选择后左侧末级过热器出口汽温"
+    },
+    "sh_spray_total": {
+      "max_abs_corr": 0.5397712099673156,
+      "against": "ch6_valve2:过热器二级减温器B侧喷水调节门阀位反馈"
+    },
+    "fuel_ctl": {
+      "max_abs_corr": 0.9998740962093363,
+      "against": "ch8_coal:未校正总煤量"
+    }
+  },
+  "dedup_note": "fuel_ctl (燃料主控输出) vs base-13 coal (未校正总煤量): |corr|=0.99987 — near-duplicate; retained in pack for transparency, dedup decision to design side. corr_fuel_total vs coal 0.9947; load/agc vs steam_flow ~0.998 (physical collinearity) — all retained.",
+  "signal_notes": {
+    "load_rate": "stepwise discrete signal (frozen_fraction 0.997)",
+    "sp2_a_set": "temperature-type setpoint, piecewise constant (frozen_fraction 0.992)",
+    "o2_a_3sel": "frozen_fraction 0.122 (flat stretches from selection logic)",
+    "agc": "frozen_fraction 0.198 (stepwise AGC ramps)"
+  },
+  "source_merged_table": {
+    "path": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/all_merged_10s.csv",
+    "sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6"
+  },
+  "channel_names": [
+    "corr_fuel_total",
+    "sa_flow",
+    "o2_a_3sel",
+    "load",
+    "sp1_a",
+    "sp2_a_set",
+    "agc",
+    "load_rate",
+    "b_sh1_in",
+    "b_sh_out",
+    "sh_spray_total",
+    "fuel_ctl"
+  ]
+}
