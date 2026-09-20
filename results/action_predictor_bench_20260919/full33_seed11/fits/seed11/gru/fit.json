@@ -1,0 +1,27 @@
+{
+  "status": "complete",
+  "model": "gru",
+  "seed": 11,
+  "epochs_run": 49,
+  "updates": 7840,
+  "stop_reason": "validation_plateau",
+  "reached_validation_plateau": true,
+  "best_epochs": {
+    "short": 48,
+    "balanced": 25
+  },
+  "best_selector": {
+    "short": 0.6023221015930176,
+    "balanced": 1.0929460525512695
+  },
+  "final_selector": {
+    "short": 0.6044007539749146,
+    "balanced": 1.1524143815040588,
+    "block_H128": 1.7004280090332031
+  },
+  "final_lr": 0.0001,
+  "train_seconds": 542.4963499289006,
+  "parameters": 18389,
+  "training_windows": 20371,
+  "supervision_horizon": 32
+}

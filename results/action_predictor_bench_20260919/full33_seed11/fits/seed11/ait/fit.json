@@ -1,0 +1,27 @@
+{
+  "status": "complete",
+  "model": "ait",
+  "seed": 11,
+  "epochs_run": 43,
+  "updates": 6880,
+  "stop_reason": "validation_plateau",
+  "reached_validation_plateau": true,
+  "best_epochs": {
+    "short": 36,
+    "balanced": 29
+  },
+  "best_selector": {
+    "short": 0.6085752248764038,
+    "balanced": 1.0289100408554077
+  },
+  "final_selector": {
+    "short": 0.6100209951400757,
+    "balanced": 1.0548951625823975,
+    "block_H128": 1.4997693300247192
+  },
+  "final_lr": 0.0001,
+  "train_seconds": 1202.3887805617414,
+  "parameters": 13765,
+  "training_windows": 20371,
+  "supervision_horizon": 32
+}

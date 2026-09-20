@@ -1,0 +1,146 @@
+[
+  {
+    "mode": "block",
+    "onset_relative": 0,
+    "valve": [
+      1,
+      0
+    ],
+    "common_windows": 4,
+    "type": "dose_and_symmetry",
+    "positive_dose_terminal_order_fraction": 0.75,
+    "dose_linearity_mae_C": 0.15422233923080492,
+    "plus_minus_symmetry_mae_C": 0.1702166140270565
+  },
+  {
+    "mode": "block",
+    "onset_relative": 0,
+    "valve": [
+      0,
+      1
+    ],
+    "common_windows": 8,
+    "type": "dose_and_symmetry",
+    "positive_dose_terminal_order_fraction": 1.0,
+    "dose_linearity_mae_C": 0.11089594206125852,
+    "plus_minus_symmetry_mae_C": 0.21367717833364414
+  },
+  {
+    "mode": "block",
+    "onset_relative": 0,
+    "valves": [
+      1,
+      1
+    ],
+    "common_windows": 8,
+    "type": "superposition",
+    "interaction_mae_C": 0.08240178029316679
+  },
+  {
+    "mode": "block",
+    "onset_relative": 0,
+    "valves": [
+      1,
+      -1
+    ],
+    "common_windows": 8,
+    "type": "superposition",
+    "interaction_mae_C": 0.08031972184811625
+  },
+  {
+    "mode": "block",
+    "onset_relative": 64,
+    "valve": [
+      1,
+      0
+    ],
+    "common_windows": 4,
+    "type": "dose_and_symmetry",
+    "positive_dose_terminal_order_fraction": 1.0,
+    "dose_linearity_mae_C": 0.018717830256462165,
+    "plus_minus_symmetry_mae_C": 0.05791518918359699
+  },
+  {
+    "mode": "block",
+    "onset_relative": 64,
+    "valve": [
+      0,
+      1
+    ],
+    "common_windows": 8,
+    "type": "dose_and_symmetry",
+    "positive_dose_terminal_order_fraction": 1.0,
+    "dose_linearity_mae_C": 0.026600605403539746,
+    "plus_minus_symmetry_mae_C": 0.07390592531400726
+  },
+  {
+    "mode": "block",
+    "onset_relative": 64,
+    "valves": [
+      1,
+      1
+    ],
+    "common_windows": 8,
+    "type": "superposition",
+    "interaction_mae_C": 0.0333736605590045
+  },
+  {
+    "mode": "block",
+    "onset_relative": 64,
+    "valves": [
+      1,
+      -1
+    ],
+    "common_windows": 8,
+    "type": "superposition",
+    "interaction_mae_C": 0.04572741378329668
+  },
+  {
+    "mode": "block",
+    "onset_relative": 112,
+    "valve": [
+      1,
+      0
+    ],
+    "common_windows": 4,
+    "type": "dose_and_symmetry",
+    "positive_dose_terminal_order_fraction": 1.0,
+    "dose_linearity_mae_C": 7.864074829377898e-06,
+    "plus_minus_symmetry_mae_C": 9.262632649154056e-06
+  },
+  {
+    "mode": "block",
+    "onset_relative": 112,
+    "valve": [
+      0,
+      1
+    ],
+    "common_windows": 8,
+    "type": "dose_and_symmetry",
+    "positive_dose_terminal_order_fraction": 1.0,
+    "dose_linearity_mae_C": 1.4154123065601708e-06,
+    "plus_minus_symmetry_mae_C": 1.3163635824042785e-06
+  },
+  {
+    "mode": "block",
+    "onset_relative": 112,
+    "valves": [
+      1,
+      1
+    ],
+    "common_windows": 8,
+    "type": "superposition",
+    "interaction_mae_C": 7.213561286894431e-05
+  },
+  {
+    "mode": "block",
+    "onset_relative": 112,
+    "valves": [
+      1,
+      -1
+    ],
+    "common_windows": 8,
+    "type": "superposition",
+    "interaction_mae_C": 3.8251398262723056e-05
+  }
+]

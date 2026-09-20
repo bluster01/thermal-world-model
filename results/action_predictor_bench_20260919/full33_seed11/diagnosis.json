@@ -1,0 +1,1159 @@
+{
+  "active_threshold_fraction": 0.03775152005255222,
+  "active_windows": 64,
+  "reporting_windows": 256,
+  "rows": [
+    {
+      "model": "ait_balanced",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.5910830348730087,
+      "H128": 1.3114837612956762,
+      "H512": 2.4602489196695387,
+      "active_H32": 0.6944410502910614,
+      "quiet_H32": 0.5566303630669912,
+      "upstream_max": 5.888087209094806,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.3357789838945786,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.10948278499753883,
+          "peak_abs_main_C": 0.3605141241673948
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.4349825715776774,
+          "peak_abs_main_C": 0.5427282233439428
+        }
+      ]
+    },
+    {
+      "model": "ait_balanced",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.5910830348730087,
+      "H128": 4.269968742504716,
+      "H512": 36.7484604306519,
+      "active_H32": 0.6944410502910614,
+      "quiet_H32": 0.5566303630669912,
+      "upstream_max": 22.910009229351772,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.4265607840830734,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.21404242209644053,
+          "peak_abs_main_C": 1.4119870887649029
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -2.2382851192988937,
+          "peak_abs_main_C": 2.271154341061788
+        }
+      ]
+    },
+    {
+      "model": "ait_short",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.5905542895197868,
+      "H128": 1.234868111088872,
+      "H512": 2.2755891769193113,
+      "active_H32": 0.6818903088569641,
+      "quiet_H32": 0.5601089497407278,
+      "upstream_max": 6.538932099858471,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.33653720788788377,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.09873096849807439,
+          "peak_abs_main_C": 0.34813671496102927
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.41672299156169856,
+          "peak_abs_main_C": 0.5356279496016185
+        }
+      ]
+    },
+    {
+      "model": "ait_short",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.5905542895197868,
+      "H128": 4.668768720701337,
+      "H512": 39.646142680197954,
+      "active_H32": 0.6818903088569641,
+      "quiet_H32": 0.5601089497407278,
+      "upstream_max": 24.380860607192858,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.4337003893135555,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.42522035531175106,
+          "peak_abs_main_C": 1.5428612047272594
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -2.327427119865547,
+          "peak_abs_main_C": 2.3642062979382388
+        }
+      ]
+    },
+    {
+      "model": "anchored_hold_balanced",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.6920972391963005,
+      "H128": 1.3415363989770412,
+      "H512": 1.91401402419433,
+      "active_H32": 0.8928579688072205,
+      "quiet_H32": 0.6251769959926605,
+      "upstream_max": 2.1112215518105018,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.08636643485450296,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.010225956423752791,
+          "peak_abs_main_C": 0.2953809641140026
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.15133954121220938,
+          "peak_abs_main_C": 0.3304716586057168
+        }
+      ]
+    },
+    {
+      "model": "anchored_hold_balanced",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.6920972391963005,
+      "H128": 1.3286869414150715,
+      "H512": 1.8709576427936554,
+      "active_H32": 0.8928579688072205,
+      "quiet_H32": 0.6251769959926605,
+      "upstream_max": 0.0,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.0,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.05518408562480204,
+          "peak_abs_main_C": 0.05518408562480204
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.07301729325027395,
+          "peak_abs_main_C": 0.07301729325027395
+        }
+      ]
+    },
+    {
+      "model": "anchored_hold_short",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.6676406636834145,
+      "H128": 1.3035704512149096,
+      "H512": 1.8565405062399805,
+      "active_H32": 0.8556968569755554,
+      "quiet_H32": 0.6049552659193674,
+      "upstream_max": 2.1112215518105018,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.08636643485450296,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.010225956423752791,
+          "peak_abs_main_C": 0.2953809641140026
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.15133954121220938,
+          "peak_abs_main_C": 0.3304716586057168
+        }
+      ]
+    },
+    {
+      "model": "anchored_hold_short",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.6676406636834145,
+      "H128": 1.2984350752085447,
+      "H512": 1.8209636816754937,
+      "active_H32": 0.8556968569755554,
+      "quiet_H32": 0.6049552659193674,
+      "upstream_max": 0.0,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.0,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.05518408562480204,
+          "peak_abs_main_C": 0.05518408562480204
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.07301729325027395,
+          "peak_abs_main_C": 0.07301729325027395
+        }
+      ]
+    },
+    {
+      "model": "attention_concat_balanced",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.6610708013176918,
+      "H128": 1.3412287440150976,
+      "H512": 2.043233865406364,
+      "active_H32": 0.7109375894069672,
+      "quiet_H32": 0.6444485386212667,
+      "upstream_max": 4.674680862282685,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.4044021410501376,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.15304717154911884,
+          "peak_abs_main_C": 0.470210332912103
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.2843879829783873,
+          "peak_abs_main_C": 0.38319635243458094
+        }
+      ]
+    },
+    {
+      "model": "attention_concat_balanced",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.6610708013176918,
+      "H128": 2.048199398443103,
+      "H512": 4.278744122479111,
+      "active_H32": 0.7109375894069672,
+      "quiet_H32": 0.6444485386212667,
+      "upstream_max": 8.81941798464618,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.4845882133860596,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.03221391246974292,
+          "peak_abs_main_C": 0.3311805359134894
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.476920113388033,
+          "peak_abs_main_C": 0.5898406583563656
+        }
+      ]
+    },
+    {
+      "model": "attention_concat_short",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.5880104899406433,
+      "H128": 1.171981194987893,
+      "H512": 1.837689611595124,
+      "active_H32": 0.6381405889987946,
+      "quiet_H32": 0.5713004569212595,
+      "upstream_max": 5.163691880458941,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.42837322210959405,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.13004605775265077,
+          "peak_abs_main_C": 0.43377196178072097
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.3464271660031528,
+          "peak_abs_main_C": 0.470766281031473
+        }
+      ]
+    },
+    {
+      "model": "attention_concat_short",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.5880104899406433,
+      "H128": 2.4433401357382536,
+      "H512": 4.899834061507136,
+      "active_H32": 0.6381405889987946,
+      "quiet_H32": 0.5713004569212595,
+      "upstream_max": 9.595330007354221,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.5514390071897184,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.1289548450263993,
+          "peak_abs_main_C": 0.3209093784808488
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.2292993304219948,
+          "peak_abs_main_C": 0.4564619502500733
+        }
+      ]
+    },
+    {
+      "model": "direct_balanced",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.6324440538883209,
+      "H128": 1.2525116857141256,
+      "H512": 1.831544905435294,
+      "active_H32": 0.7397686839103699,
+      "quiet_H32": 0.5966691772143046,
+      "upstream_max": 7.046781425718166,
+      "pre_onset_max": 3.2740537516909285,
+      "signed_scenario_mean_wrong_fraction": 0.41793993707892485,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.15971941667510237,
+          "peak_abs_main_C": 0.39506319017156954
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.22323429316503507,
+          "peak_abs_main_C": 0.2918053171206054
+        }
+      ]
+    },
+    {
+      "model": "direct_no_action_balanced",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.6499904692173004,
+      "H128": 1.2796571105718613,
+      "H512": 1.8416420095600188,
+      "active_H32": 0.7941522896289825,
+      "quiet_H32": 0.601936529080073,
+      "upstream_max": 3.9871799361291096,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.15344328658320758,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.18174921193036653,
+          "peak_abs_main_C": 0.2980237022367902
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.32504588578616733,
+          "peak_abs_main_C": 0.4727856467879832
+        }
+      ]
+    },
+    {
+      "model": "direct_no_action_short",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.6309438273310661,
+      "H128": 1.274990040808916,
+      "H512": 1.8523019929416478,
+      "active_H32": 0.74918133020401,
+      "quiet_H32": 0.5915313263734182,
+      "upstream_max": 5.550432775827062,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.1626534870249127,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.18498440136504257,
+          "peak_abs_main_C": 0.4500902430608278
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.2970374654367163,
+          "peak_abs_main_C": 0.5496992322706689
+        }
+      ]
+    },
+    {
+      "model": "direct_short",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.6148193776607513,
+      "H128": 1.2292554751038551,
+      "H512": 1.8211338259279728,
+      "active_H32": 0.7098260521888733,
+      "quiet_H32": 0.5831504861513773,
+      "upstream_max": 7.3689432275662625,
+      "pre_onset_max": 3.5400923728607836,
+      "signed_scenario_mean_wrong_fraction": 0.3988669723480385,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.05027683350509449,
+          "peak_abs_main_C": 0.35245564072457114
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.2664021258680691,
+          "peak_abs_main_C": 0.3469600707548466
+        }
+      ]
+    },
+    {
+      "model": "gru_balanced",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.626541256904602,
+      "H128": 1.3334541395306587,
+      "H512": 1.945567566435784,
+      "active_H32": 0.6654881834983826,
+      "quiet_H32": 0.6135589480400085,
+      "upstream_max": 8.13067704545017,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.36524663468773316,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.018383579826888763,
+          "peak_abs_main_C": 0.392255136961154
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.3184323360408996,
+          "peak_abs_main_C": 0.4608885635664848
+        }
+      ]
+    },
+    {
+      "model": "gru_balanced",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.626541256904602,
+      "H128": 1.698231142014265,
+      "H512": 3.2422654987312853,
+      "active_H32": 0.6654881834983826,
+      "quiet_H32": 0.6135589480400085,
+      "upstream_max": 11.579783228724466,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.45654895613434565,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.2213890850784992,
+          "peak_abs_main_C": 0.4620741182090029
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.6454514990254552,
+          "peak_abs_main_C": 0.6809183173247959
+        }
+      ]
+    },
+    {
+      "model": "gru_short",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.5769791826605797,
+      "H128": 1.2066755667328835,
+      "H512": 1.7715432764962316,
+      "active_H32": 0.6210095584392548,
+      "quiet_H32": 0.5623023907343546,
+      "upstream_max": 10.3352237460752,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.3625778674579137,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.02385107606912129,
+          "peak_abs_main_C": 0.48137181619694047
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.3941514369387562,
+          "peak_abs_main_C": 0.5457556196628701
+        }
+      ]
+    },
+    {
+      "model": "gru_short",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.5769791826605797,
+      "H128": 1.6736257672309875,
+      "H512": 3.1595360161736608,
+      "active_H32": 0.6210095584392548,
+      "quiet_H32": 0.5623023907343546,
+      "upstream_max": 14.106145546794494,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.4619223382887389,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.30605737228330554,
+          "peak_abs_main_C": 0.5364412982277713
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.6373267415296056,
+          "peak_abs_main_C": 0.7363543614973338
+        }
+      ]
+    },
+    {
+      "model": "persistence",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 1.075048677623272,
+      "H128": 1.5878667123615742,
+      "H512": 2.0519903264939785,
+      "active_H32": 1.5563869178295135,
+      "quiet_H32": 0.9146025975545248,
+      "upstream_max": 0.0,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.0,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.0,
+          "peak_abs_main_C": 0.0
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": 0.0,
+          "peak_abs_main_C": 0.0
+        }
+      ]
+    },
+    {
+      "model": "persistence",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 1.075048677623272,
+      "H128": 1.5878667123615742,
+      "H512": 2.0519903264939785,
+      "active_H32": 1.5563869178295135,
+      "quiet_H32": 0.9146025975545248,
+      "upstream_max": 0.0,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.0,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.0,
+          "peak_abs_main_C": 0.0
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": 0.0,
+          "peak_abs_main_C": 0.0
+        }
+      ]
+    },
+    {
+      "model": "r4_balanced",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.599861316382885,
+      "H128": 1.1493047196418047,
+      "H512": 1.6374371070414782,
+      "active_H32": 0.7082453668117523,
+      "quiet_H32": 0.5637332995732626,
+      "upstream_max": 2.1112215518105018,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.08636643485450296,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.010225956423752791,
+          "peak_abs_main_C": 0.2953809641140026
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.15133954121220938,
+          "peak_abs_main_C": 0.3304716586057168
+        }
+      ]
+    },
+    {
+      "model": "r4_balanced",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.599861316382885,
+      "H128": 1.2135147769004107,
+      "H512": 1.7878547520376742,
+      "active_H32": 0.7082453668117523,
+      "quiet_H32": 0.5637332995732626,
+      "upstream_max": 0.0,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.0,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.05518408562480204,
+          "peak_abs_main_C": 0.05518408562480204
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.07301729325027395,
+          "peak_abs_main_C": 0.07301729325027395
+        }
+      ]
+    },
+    {
+      "model": "r4_directref_balanced",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.6291652247309685,
+      "H128": 1.2618539035320282,
+      "H512": 1.8449641726911068,
+      "active_H32": 0.7996455729007721,
+      "quiet_H32": 0.5723384420077006,
+      "upstream_max": 4.101075923131248,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.12277369857459672,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.032493942401018217,
+          "peak_abs_main_C": 0.422821785263352
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.2531156945853752,
+          "peak_abs_main_C": 0.3692915786319446
+        }
+      ]
+    },
+    {
+      "model": "r4_directref_short",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.6362812891602516,
+      "H128": 1.2712083868682384,
+      "H512": 1.861574157141149,
+      "active_H32": 0.8100663721561432,
+      "quiet_H32": 0.5783529281616211,
+      "upstream_max": 4.392652274124885,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.12143272285371734,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.04161525616339645,
+          "peak_abs_main_C": 0.4481249096371158
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.29182577661782716,
+          "peak_abs_main_C": 0.4248538543037199
+        }
+      ]
+    },
+    {
+      "model": "r4_mlp_balanced",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.6120777502655983,
+      "H128": 1.144730208441615,
+      "H512": 1.6624299199320376,
+      "active_H32": 0.7070172131061554,
+      "quiet_H32": 0.5804312626520792,
+      "upstream_max": 2.047461533890157,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.0919352830627077,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.0006917755469117992,
+          "peak_abs_main_C": 0.24115062560578338
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.1583372399516776,
+          "peak_abs_main_C": 0.3683126425754466
+        }
+      ]
+    },
+    {
+      "model": "r4_mlp_balanced",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.6120777502655983,
+      "H128": 1.2209876161068678,
+      "H512": 1.7869921955280006,
+      "active_H32": 0.7070172131061554,
+      "quiet_H32": 0.5804312626520792,
+      "upstream_max": 0.0,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.0,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.04993442910394208,
+          "peak_abs_main_C": 0.04993442910394208
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.07220910420218729,
+          "peak_abs_main_C": 0.07220910420218729
+        }
+      ]
+    },
+    {
+      "model": "r4_mlp_short",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.5983968451619148,
+      "H128": 1.13052299618721,
+      "H512": 1.6662073940970004,
+      "active_H32": 0.688027948141098,
+      "quiet_H32": 0.5685198108355204,
+      "upstream_max": 2.1331415356140724,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.0883404342311915,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.012926541092042498,
+          "peak_abs_main_C": 0.2502641214050243
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.1661119371182167,
+          "peak_abs_main_C": 0.3639483613848995
+        }
+      ]
+    },
+    {
+      "model": "r4_mlp_short",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.5983968451619148,
+      "H128": 1.2224230859428644,
+      "H512": 1.8156029512174428,
+      "active_H32": 0.688027948141098,
+      "quiet_H32": 0.5685198108355204,
+      "upstream_max": 0.0,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.0,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.0427577459064139,
+          "peak_abs_main_C": 0.0427577459064139
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.07213953337868872,
+          "peak_abs_main_C": 0.07213953337868872
+        }
+      ]
+    },
+    {
+      "model": "r4_short",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.599861316382885,
+      "H128": 1.1493047196418047,
+      "H512": 1.6374371070414782,
+      "active_H32": 0.7082453668117523,
+      "quiet_H32": 0.5637332995732626,
+      "upstream_max": 2.1112215518105018,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.08636643485450296,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.010225956423752791,
+          "peak_abs_main_C": 0.2953809641140026
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.15133954121220938,
+          "peak_abs_main_C": 0.3304716586057168
+        }
+      ]
+    },
+    {
+      "model": "r4_short",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.599861316382885,
+      "H128": 1.2135147769004107,
+      "H512": 1.7878547520376742,
+      "active_H32": 0.7082453668117523,
+      "quiet_H32": 0.5637332995732626,
+      "upstream_max": 0.0,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.0,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.05518408562480204,
+          "peak_abs_main_C": 0.05518408562480204
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.07301729325027395,
+          "peak_abs_main_C": 0.07301729325027395
+        }
+      ]
+    },
+    {
+      "model": "ssm_balanced",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.6143742650747299,
+      "H128": 1.2418316528201103,
+      "H512": 1.8691750611178577,
+      "active_H32": 0.6823974251747131,
+      "quiet_H32": 0.5916998783747355,
+      "upstream_max": 4.605059448965392,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.36848055368479693,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.10828623101339474,
+          "peak_abs_main_C": 0.28549077706044557
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.33744063133723046,
+          "peak_abs_main_C": 0.44025807596348443
+        }
+      ]
+    },
+    {
+      "model": "ssm_balanced",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.6143742650747299,
+      "H128": 1.236727437004447,
+      "H512": 1.8277169582433999,
+      "active_H32": 0.6823974251747131,
+      "quiet_H32": 0.5916998783747355,
+      "upstream_max": 4.309106487622614,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.42159007455539826,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.011544422785163988,
+          "peak_abs_main_C": 0.31968847384521837
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.22914075115879484,
+          "peak_abs_main_C": 0.3231310101146221
+        }
+      ]
+    },
+    {
+      "model": "ssm_short",
+      "seed": 11,
+      "mode": "block",
+      "forecast_is_finite": true,
+      "H32": 0.5724548697471619,
+      "H128": 1.1675217375159264,
+      "H512": 1.6944826398976147,
+      "active_H32": 0.6405701637268066,
+      "quiet_H32": 0.5497497717539469,
+      "upstream_max": 4.592337963088028,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.36615985795157496,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": 0.08148136158604302,
+          "peak_abs_main_C": 0.31307886077956937
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.4132598151696527,
+          "peak_abs_main_C": 0.5418120230506531
+        }
+      ]
+    },
+    {
+      "model": "ssm_short",
+      "seed": 11,
+      "mode": "native",
+      "forecast_is_finite": true,
+      "H32": 0.5724548697471619,
+      "H128": 1.2686403505504131,
+      "H512": 1.8777873711660504,
+      "active_H32": 0.6405701637268066,
+      "quiet_H32": 0.5497497717539469,
+      "upstream_max": 4.221128973458747,
+      "pre_onset_max": 0.0,
+      "signed_scenario_mean_wrong_fraction": 0.4379397911420888,
+      "step3pp_at0": [
+        {
+          "valves": [
+            1,
+            0
+          ],
+          "terminal_main_C": -0.01579813303725075,
+          "peak_abs_main_C": 0.3322406954590491
+        },
+        {
+          "valves": [
+            0,
+            1
+          ],
+          "terminal_main_C": -0.29364349306359827,
+          "peak_abs_main_C": 0.38694279660070663
+        }
+      ]
+    }
+  ]
+}
