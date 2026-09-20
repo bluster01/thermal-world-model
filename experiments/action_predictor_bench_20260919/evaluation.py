@@ -100,9 +100,9 @@ def evaluate_forecasts(model, bank, device, batch_size=64):
     return scores, arrays
 
 
-def scenarios():
+def scenarios(length=160):
     """110 deterministic plans, 32-step burn-in +128-step scoring window."""
-    burn, length = 32, 160
+    burn = 32
     cases = []
 
     def add(shape, onset, dose, valves):
@@ -225,7 +225,7 @@ def _response_impl(model, bank, device, windows, case_batch, limit):
     positions = np.linspace(0, len(bank)-1, min(windows, len(bank)), dtype=int)
     history = unpack(bank[positions], device)[0].double()
     u0 = history[:, -1:, 5:7].expand(-1, 161, -1)
-    d0 = history[:, -1:, 7:].expand(-1, 161, -1)
+    d0 = history[:, -1:, 7:13].expand(-1, 161, -1)
     cases = scenarios()[:limit]
     modes = ['block'] + (['native'] if model.native_long else [])
     curves, rows = {}, []
@@ -267,7 +267,7 @@ def gradient_probe(model, bank, device):
     h, _, _, _ = unpack(bank[:2], device)
     h = h.to(dtype=model.mean.dtype)
     u = h[:, -1:, 5:7].expand(-1, TRAIN_H+1, -1).clone().requires_grad_(True)
-    d = h[:, -1:, 7:].expand(-1, TRAIN_H+1, -1)
+    d = h[:, -1:, 7:13].expand(-1, TRAIN_H+1, -1)
     with torch.enable_grad():
         score = forecast(model, h, u, d)[:, -1, 4].mean()
         grad = torch.autograd.grad(score, u, allow_unused=True)[0] if score.requires_grad else None

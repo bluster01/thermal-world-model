@@ -122,7 +122,8 @@ def load_pack(path):
 def unpack(bank, device='cpu'):
     bank = torch.as_tensor(bank, dtype=torch.float32, device=device)
     # u/d have H+1 entries: final entry is for right-end history feedback only.
-    return bank[:, :CONTEXT], bank[:, CONTEXT-1:, 5:7], bank[:, CONTEXT-1:, 7:], bank[:, CONTEXT:, :5]
+    # Optional auxiliary channels belong to starting history only, never boundaries.
+    return bank[:, :CONTEXT], bank[:, CONTEXT-1:, 5:7], bank[:, CONTEXT-1:, 7:13], bank[:, CONTEXT:, :5]
 
 
 if __name__ == '__main__':

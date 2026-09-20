@@ -1,5 +1,7 @@
 # 基于全基线与新增点位的部分收敛方案
 
+后续实现状态：收到Linux旁路包711abf5后，四臂入口和v1数据已完成，见[FOCUSED.md](../../experiments/action_predictor_bench_20260919/FOCUSED.md)。该实现修正本设计的二级设定为B阀对应设定，并从实际输入排除近重复fuel_ctl；下文保留原始设计背景。
+
 状态：设计建议，尚未实现、尚未排队训练。用户已允许部分收敛。依据：全基线回传 c696bf9、点位盘点 288fde9，以及《SSM_PHYSICS_RESPONSE_DECONFOUNDING_IDEAS_20260920.md》。保留全部旧结果，不把本轮缩小的新增实验范围倒写成原基线范围。
 
 ## 1. 新推送改变了什么

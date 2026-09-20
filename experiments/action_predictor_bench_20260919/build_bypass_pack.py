@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""History-bypass pack builder (v0 draft, execution-side).
+"""History-bypass pack builder (v1: stage2 setpoint follows crossed B valve).
 
 Builds a side-channel pack of 12 auxiliary *history-only* series for the
 action-predictor bench, aligned to the original window starts of
@@ -43,7 +43,7 @@ SERIES = [
     ('o2_a_3sel', '三选后A侧烟气含氧量', '热负荷; alternates: A侧锅炉出口烟气氧量1/2/3'),
     ('load', '机组负荷_GENERATOR_POWER', '热负荷'),
     ('sp1_a', '一级减A副调设定值', '控制意图'),
-    ('sp2_a_set', '过热器二级减温器A喷水调节阀设定', '控制意图'),
+    ('sp2_b_set', '过热器二级减温器B喷水调节阀设定', '控制意图; A温度链的二级动作按既定交叉接线取B阀'),
     ('agc', 'AGC指令', '控制意图'),
     ('load_rate', '机组负荷变化率', '控制意图'),
     ('b_sh1_in', '选择后右侧一过喷水减温器入口', 'B侧代理 (T1 对侧)'),
@@ -139,6 +139,8 @@ def main():
     ap.add_argument('--pilot', type=int, default=0, help='sample N train windows for identification report')
     ap.add_argument('--seed', type=int, default=7)
     args = ap.parse_args()
+    if args.out is not None and args.out.exists() and not args.pilot:
+        raise FileExistsError(args.out)
 
     name2num = load_name_map()
     all_names = [s[1] for s in SERIES] + IDENT_SHORTLIST
@@ -268,9 +270,10 @@ def main():
     args.out.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(args.out, **out)
     meta = {
-        'pack_id': 'hist_bypass_A_33pct_v0',
+        'pack_id': args.out.stem,
         'date': '2026-09-20',
-        'produced_by': 'execution-side (Linux worker)',
+        'produced_by': 'build_bypass_pack.py; v1 corrects stage2 setpoint to B',
+        'pack_sha256': sha256(args.out),
         'purpose': 'history-only auxiliary series for response-focused design round '
                    '(docs/plans/2026-09-20-response-focused-design.md §4)',
         'reference_pack': str(args.pack),
@@ -295,7 +298,7 @@ def main():
                       'corr_fuel_total vs coal 0.9947; load/agc vs steam_flow ~0.998 (physical collinearity) — all retained.',
         'signal_notes': {
             'load_rate': 'stepwise discrete signal (frozen_fraction 0.997)',
-            'sp2_a_set': 'temperature-type setpoint, piecewise constant (frozen_fraction 0.992)',
+            'sp2_b_set': 'B valve setpoint matches stage2 crossed action; see measured missingness',
             'o2_a_3sel': 'frozen_fraction 0.122 (flat stretches from selection logic)',
             'agc': 'frozen_fraction 0.198 (stepwise AGC ramps)',
         },

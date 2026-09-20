@@ -2,7 +2,15 @@
 
 目的：在同一套数据与指标下看清预测精度、动态外推和动作响应各自的长短处，再组合有效思路。本轮是基线探索，不做论文收口、不上现场闭环。
 
-## 当前执行：全部原始基线的较充分训练
+## 当前执行：四臂历史信息 × 连续响应
+
+全基线已完成并解读，用户允许部分收敛。Linux旁路包已接入，执行说明见[FOCUSED.md](FOCUSED.md)：
+
+```bash
+python -m experiments.action_predictor_bench_20260919.focused --output results/action_predictor_bench_20260919/focused33_seed11
+```
+
+## 已完成：全部原始基线的较充分训练
 
 按用户纠正，主线恢复到全部模型比较。**9个原始训练家族全部保留，另有persistence与anchored_hold。** 每个训练家族至少12轮、上限60轮，统一的学习率下降与验证停滞规则，明确列出到顶仍未确认停滞的模型。设计与完整名单见 [FULL_BASELINES.md](FULL_BASELINES.md)。
 

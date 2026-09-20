@@ -1,7 +1,13 @@
 {
-  "version": 5,
-  "status": "full_baselines_return_analyzed",
-  "scope": "all nine original baseline families with longer fitting and explicit plateau accounting",
+  "version": 6,
+  "status": "focused_four_arms_ready_for_linux",
+  "latest_data_return_commit": "711abf5",
+  "focused_plan": "FOCUSED.md",
+  "focused_arms": ["A", "B", "C", "D"],
+  "auxiliary_pack": "data/hist_bypass_A_33pct_v1.npz",
+  "auxiliary_selected_channels": 11,
+  "focused_verification": "47 tests passed; four fits and eight rows completed tiny smoke; frozen response weights unchanged",
+  "scope": "four matched SSM continuation arms: auxiliary history x protected response; all completed baseline evidence retained",
   "previous_return_commit": "b1d933a",
   "previous_results_analyzed": true,
   "latest_return_commit": "c696bf9",
@@ -10,8 +16,8 @@
   "returned_training_families": 9,
   "returned_evaluation_rows": 21,
   "validation_plateau_families": 9,
-  "main_plan": "FULL_BASELINES.md",
-  "ssm_branch_status": "results retained; no new SSM-only experiment queued",
+  "main_plan": "FOCUSED.md",
+  "ssm_branch_status": "User-authorized partial convergence: four-arm SSM information x response comparison; GRU retained as later transfer control",
   "data_fraction": 0.3333333333333333,
   "training_windows": 20371,
   "supervision_horizon": 32,
@@ -21,7 +27,7 @@
   "default_seeds": [
     11
   ],
-  "trained_models": [
+  "full_baseline_trained_models": [
     "direct_no_action",
     "direct",
     "gru",
@@ -32,7 +38,7 @@
     "r4_mlp",
     "r4_directref"
   ],
-  "no_fit_controls": [
+  "full_baseline_no_fit_controls": [
     "persistence",
     "anchored_hold"
   ],
@@ -42,10 +48,10 @@
     "short",
     "balanced_common_block"
   ],
-  "evaluation_rows_per_seed": 21,
+  "evaluation_rows_per_seed": 8,
   "completion_is_convergence_claim": false,
   "linux_training_started_by_this_task": false,
-  "verification": "40 tests passed; 9 fits and 21 evaluation rows completed tiny real-data smoke; no formal local fits",
+  "full_baseline_verification": "40 tests passed; 9 fits and 21 evaluation rows completed tiny real-data smoke; no formal local fits",
   "return_verification": "Original source and pack hashes match; 36 recorded forecast modes recomputed from returned arrays, all finite and matching H512 main MAE; no training or checkpoint replay",
-  "next": "Review the complete family comparison and architecture explanation in FULL33_RETURN.md; preserve every baseline, proposed ablations are not queued"
+  "next": "Linux runs focused -> results/action_predictor_bench_20260919/focused33_seed11 and returns all four fits/eight rows plus original and onset-aligned response arrays"
 }

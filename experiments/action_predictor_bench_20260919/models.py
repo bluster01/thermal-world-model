@@ -80,9 +80,9 @@ class Recurrent(Base):
         nn.init.normal_(self.readout.weight, std=.01)
         nn.init.zeros_(self.readout.bias)
 
-    def forward(self, history, actions, boundaries):
+    def forward(self, history, actions, boundaries, initial_context=None):
         _, hidden = self.encoder(self.norm(history))
-        h = hidden[0]
+        h = hidden[0] if initial_context is None else hidden[0] + initial_context
         h0 = h
         anchor = self.norm(history)[:, -1, :5]
         state = anchor

@@ -44,10 +44,10 @@ def advance_budget(scores, milestones, stale, lr, epoch, args):
     return milestones, stale, lr, stop
 
 
-def fit(name, seed, data, args, folder):
+def fit(name, seed, data, args, folder, model=None):
     torch.manual_seed(seed)
     if torch.cuda.is_available(): torch.cuda.manual_seed_all(seed)
-    model = build(name, data['mean'], data['scale']).to(args.device)
+    model = (build(name, data['mean'], data['scale']) if model is None else model).to(args.device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     initial = select(model, data['selector'], args)
     save_json(folder/'initial_selector.json', initial)
