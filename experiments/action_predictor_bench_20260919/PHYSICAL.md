@@ -1,5 +1,7 @@
 # 下一轮Linux入口：最小热状态 × JEPA式辅助训练
 
+2026-09-22更新：已收到`09e340d`，三臂都正常完成60轮，但均为`budget_limit`。本轮只延长训练，不改模型、损失、数据、动作测试；结果解读见[PHYSICAL_RETURN.md](PHYSICAL_RETURN.md)。
+
 依据：[四臂回传解读](FOCUSED_RETURN.md)、[实现计划](../../docs/plans/2026-09-20-physical-state-jepa.md)、[Mamba/JEPA纪要](../../docs/MAMBA_JEPA_ACTION_RESPONSE_IDEAS_20260920.md)。用户已授权继续实验。保留全部既有基线，不改写回传数据，不扩展到Mamba。
 
 ## 三臂只改变状态预测监督
@@ -50,12 +52,18 @@ batch128，Adam初始0.001，最低0.0001，12–60轮，预设学习率下降�
 
 ## Linux执行
 
+**当前入口：从60轮接续，总上限90轮。** 保留旧目录；新目录只复制拟合checkpoint和日志，六行评价全部重新生成。P0/P1/P2都接续，原早停规则可以使某臂在第61轮即停，不强制刷满90轮。`--max-epochs 90`表示累计总轮数。
+
 ```bash
-python -m pytest experiments/action_predictor_bench_20260919/test_bench.py experiments/action_predictor_bench_20260919/test_round2.py experiments/action_predictor_bench_20260919/test_round3.py experiments/action_predictor_bench_20260919/test_full_baselines.py experiments/action_predictor_bench_20260919/test_focused.py experiments/action_predictor_bench_20260919/test_physical.py -q
-python -m experiments.action_predictor_bench_20260919.physical --output results/action_predictor_bench_20260919/physical33_seed11
+python -m pytest experiments/action_predictor_bench_20260919/test_resume.py experiments/action_predictor_bench_20260919/test_physical_continue.py -q
+python -m experiments.action_predictor_bench_20260919.physical --continue-from results/action_predictor_bench_20260919/physical33_seed11 --output results/action_predictor_bench_20260919/physical33_seed11_to90 --max-epochs 90
 ```
 
-默认CPU单线程，可指定`--device cuda`。无需重建数据。回传完整输出目录：三次拟合/六行评价、两套动作数组、参数与状态诊断、配置和日志。`--resume`要求代码/配置/数据相同，只跳过已完成拟合/评价，未完成拟合从头开始，非逐batch续训。
+沿用CPU单线程，数据无需重建。若本次中断，在同一条续训命令末尾加`--resume`：已完成的拟合/评价跳过，未完成的拟合从最后保存的完整epoch接续，最多重做中断当轮。不要用旧目录加`--resume`尝试扩预算；旧实现只跳过完整拟合。
+
+恢复内容含模型、P1 EMA teacher、Adam动量、当前学习率、updates、验证改善基准、停滞计数和两个历史最优checkpoint。延续epoch编号及`[seed, epoch]`样本排序，训练用时累计，不重置学习率/早停。新checkpoint还保存CPU/CUDA RNG及最后日志行，使用临时文件原子替换；旧版60轮checkpoint未存RNG，但当前三臂没有dropout等训练随机操作，旧格式已做等价性测试。跨Torch版本/设备不宣称逐位一致，配置记录双方版本，正式接续沿用Linux环境。
+
+`config.json.continuation`记录父配置和全部拟合文件哈希。除预算、运行路径和记录的Torch版本外，参数必须一致；模型、损失、数据处理及评价源码必须一致。仅允许已知旧版训练驱动升级为断点续训实现。若best checkpoint与last.pt轮数不一致会明确拒绝，不能静默从头训练或覆盖。完成后回传整个`physical33_seed11_to90`，包括三次拟合/六行评价、两套动作数组、参数与状态诊断、配置和日志。
 
 主要输出：`CONVERGENCE.md`、`summary.csv/json`、`DIAGNOSIS.md`、`state.json`，每行有预测数组、原110方案和动作起效后128步对齐的110方案。发生失败保留`failure_<arm>.txt`及state；预算到顶仍改善标为budget_limit，不能宣称停滞。
 
@@ -64,5 +72,7 @@ python -m experiments.action_predictor_bench_20260919.physical --output results/
 54项全套测试通过，另新增的训练均值稳态初始化测试通过，共55项。覆盖离散热收支、单调水量映射与候选无关热输入、均匀无加热极限的冷却方向、无提前/上游响应、JEPA训练梯度、EMA目标不反传、未来数据不进入预测、两推演API一致。
 
 最终微型通路：三臂各16个训练窗口、2次优化更新，六行评价全部成功，无正式本地训练。微型精度不用于比较或选型。正式效果须由Linux回传判断。
+
+2026-09-22续训验证：原55项回归和新增14项测试通过，共69项。三臂小样本H128连续训练与中断后恢复的模型/EMA/Adam/学习率/最优轮数完全一致；兼容旧checkpoint，累计旧用时，检查结束边界与日志写入边界，拒绝模型或数据/损失配置变更。没有进行本地正式续训。
 
 另外在两个真实起点上检查P0初始化模型的完整原110方案和动作对齐110方案：两种推演接口分别共220条记录，全部有限，动作前/不可达通道最大变化为0；这是实现检查，不推广为训练后所有工况的响应保证。

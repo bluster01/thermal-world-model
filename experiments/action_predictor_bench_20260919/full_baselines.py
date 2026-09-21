@@ -44,19 +44,60 @@ def advance_budget(scores, milestones, stale, lr, epoch, args):
     return milestones, stale, lr, stop
 
 
-def fit(name, seed, data, args, folder, model=None, training_objective=None, supervision_horizon=32):
+def atomic_checkpoint(payload, path):
+    temporary = path.with_suffix('.tmp')
+    torch.save(payload, temporary)
+    temporary.replace(path)
+
+
+def fit(name, seed, data, args, folder, model=None, training_objective=None, supervision_horizon=32, resume=False):
     torch.manual_seed(seed)
     if torch.cuda.is_available(): torch.cuda.manual_seed_all(seed)
     model = (build(name, data['mean'], data['scale']) if model is None else model).to(args.device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
-    initial = select(model, data['selector'], args)
-    save_json(folder/'initial_selector.json', initial)
-    best = {key: initial[key] for key in CHOICES}
-    milestones, best_epochs = best.copy(), dict(short=0, balanced=0)
-    for choice in CHOICES: torch.save({'model': model.state_dict(), 'epoch': 0}, folder/f'best_{choice}.pt')
-    started, updates, stale, reason = time.perf_counter(), 0, 0, 'budget_limit'
-    with (folder/'training.jsonl').open('w') as log:
-        for epoch in range(1, args.max_epochs+1):
+    first_epoch, elapsed, resumed_epoch = 1, 0., None
+    updates, stale, reason, stop = 0, 0, 'budget_limit', False
+    if resume:
+        checkpoint = torch.load(folder/'last.pt', weights_only=True, map_location=args.device)
+        epoch = int(checkpoint['epoch'])
+        if args.max_epochs < epoch:
+            raise ValueError('max_epochs cannot be below checkpoint epoch')
+        # Refuse an inconsistent interrupted legacy bundle rather than losing a best model.
+        for choice in CHOICES:
+            saved = torch.load(folder/f'best_{choice}.pt', weights_only=True, map_location='cpu')
+            if saved['epoch'] != checkpoint['best_epochs'][choice]:
+                raise ValueError(f'Inconsistent best_{choice} checkpoint versus last.pt; restore a coherent fit bundle')
+        rows = [json.loads(line) for line in (folder/'training.jsonl').read_text().splitlines() if line.strip()]
+        rows = [row for row in rows if row['epoch'] <= epoch]
+        if (not rows or rows[-1]['epoch'] < epoch) and checkpoint.get('last_row'):
+            rows.append(checkpoint['last_row'])
+        if [row['epoch'] for row in rows] != list(range(1, epoch+1)):
+            raise ValueError('Training log does not cover checkpoint epochs')
+        if rows[-1]['updates'] != checkpoint['updates']:
+            raise ValueError('Training log updates disagree with last.pt')
+        model.load_state_dict(checkpoint['model'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        updates, stale = checkpoint['updates'], checkpoint['stale']
+        best, best_epochs, milestones = checkpoint['best'], checkpoint['best_epochs'], checkpoint['milestones']
+        stop = checkpoint.get('stop', epoch >= args.min_epochs and
+            optimizer.param_groups[0]['lr'] <= args.min_lr*(1+1e-8) and stale >= args.stop_patience)
+        if stop: reason = 'validation_plateau'
+        scores = rows[-1]['selector']
+        elapsed = float(checkpoint.get('train_seconds', rows[-1]['seconds']))
+        if 'rng_cpu' in checkpoint: torch.set_rng_state(checkpoint['rng_cpu'].cpu())
+        if torch.cuda.is_available() and 'rng_cuda' in checkpoint:
+            torch.cuda.set_rng_state_all([value.cpu() for value in checkpoint['rng_cuda']])
+        first_epoch, resumed_epoch = epoch+1, epoch
+        (folder/'training.jsonl').write_text(''.join(json.dumps(row)+'\n' for row in rows))
+    else:
+        initial = select(model, data['selector'], args)
+        save_json(folder/'initial_selector.json', initial)
+        best = {key: initial[key] for key in CHOICES}
+        milestones, best_epochs = best.copy(), dict(short=0, balanced=0)
+        for choice in CHOICES: atomic_checkpoint({'model': model.state_dict(), 'epoch': 0}, folder/f'best_{choice}.pt')
+    started = time.perf_counter()
+    with (folder/'training.jsonl').open('a' if resume else 'w') as log:
+        for epoch in range(first_epoch, args.max_epochs+1) if not stop else ():
             order = np.random.default_rng(np.random.SeedSequence([seed, epoch])).permutation(len(data['train']))
             model.train(); total = 0.
             lr_used = optimizer.param_groups[0]['lr']
@@ -81,24 +122,28 @@ def fit(name, seed, data, args, folder, model=None, training_objective=None, sup
             for choice in CHOICES:
                 if scores[choice] < best[choice]:
                     best[choice], best_epochs[choice] = scores[choice], epoch
-                    torch.save({'model': model.state_dict(), 'epoch': epoch}, folder/f'best_{choice}.pt')
+                    atomic_checkpoint({'model': model.state_dict(), 'epoch': epoch}, folder/f'best_{choice}.pt')
             milestones, stale, lr_next, stop = advance_budget(scores, milestones, stale, lr_used, epoch, args)
             for group in optimizer.param_groups: group['lr'] = lr_next
             if stop: reason = 'validation_plateau'
             row = dict(epoch=epoch, updates=updates, train_loss=total/len(order), selector=scores,
                 selector_main_mae_C=scores['short'], lr_used=lr_used, lr_next=lr_next,
-                stale_at_current_lr=stale, seconds=time.perf_counter()-started)
-            log.write(json.dumps(row)+'\n'); log.flush(); print(json.dumps({'model': name, 'seed': seed, **row}), flush=True)
+                stale_at_current_lr=stale, seconds=elapsed+time.perf_counter()-started)
             # Preserve optimizer and stopping state for any later budget extension.
-            torch.save(dict(model=model.state_dict(), optimizer=optimizer.state_dict(), epoch=epoch,
-                updates=updates, milestones=milestones, stale=stale, best=best, best_epochs=best_epochs), folder/'last.pt')
+            payload = dict(model=model.state_dict(), optimizer=optimizer.state_dict(), epoch=epoch,
+                updates=updates, milestones=milestones, stale=stale, best=best, best_epochs=best_epochs,
+                train_seconds=row['seconds'], last_row=row, stop=stop, rng_cpu=torch.get_rng_state())
+            if torch.cuda.is_available(): payload['rng_cuda'] = torch.cuda.get_rng_state_all()
+            atomic_checkpoint(payload, folder/'last.pt')
+            log.write(json.dumps(row)+'\n'); log.flush(); print(json.dumps({'model': name, 'seed': seed, **row}), flush=True)
             if stop: break
     result = dict(status='complete', model=name, seed=seed, epochs_run=epoch, updates=updates,
         stop_reason='smoke_budget' if args.smoke else reason,
         reached_validation_plateau=stop and not args.smoke, best_epochs=best_epochs,
         best_selector=best, final_selector=scores, final_lr=optimizer.param_groups[0]['lr'],
-        train_seconds=time.perf_counter()-started, parameters=sum(p.numel() for p in model.parameters()),
+        train_seconds=elapsed+time.perf_counter()-started, parameters=sum(p.numel() for p in model.parameters()),
         training_windows=len(data['train']), supervision_horizon=supervision_horizon)
+    if resumed_epoch is not None: result['resumed_from_epoch'] = resumed_epoch
     save_json(folder/'fit.json', result)
     return result
 

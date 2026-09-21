@@ -1,6 +1,6 @@
 {
-  "version": 7,
-  "status": "physical_three_arms_ready_for_linux",
+  "version": 8,
+  "status": "physical_continuation_to90_ready_for_linux",
   "physical_plan": "PHYSICAL.md",
   "physical_arms": ["P0", "P1", "P2"],
   "physical_verification": "54-test regression suite plus nominal equilibrium test passed (55 total); three fits and six rows passed tiny smoke",
@@ -16,9 +16,13 @@
   "scope": "three matched H128 thermal-state fits: temperature-only, EMA state prediction, online physical-view cross prediction; prior baselines retained",
   "previous_return_commit": "b1d933a",
   "previous_results_analyzed": true,
-  "latest_return_commit": "7dc96cd",
-  "latest_return_analysis": "FOCUSED_RETURN.md",
-  "latest_results": "results/action_predictor_bench_20260919/focused33_seed11",
+  "latest_return_commit": "09e340d",
+  "latest_return_analysis": "PHYSICAL_RETURN.md",
+  "latest_results": "results/action_predictor_bench_20260919/physical33_seed11",
+  "physical_returned_fits": 3,
+  "physical_returned_rows": 6,
+  "physical_validation_plateau_fits": 0,
+  "physical_returned_stop_reason": "budget_limit x3 at epoch60; execution completed normally",
   "full_baseline_returned_training_families": 9,
   "full_baseline_returned_evaluation_rows": 21,
   "full_baseline_validation_plateau_families": 9,
@@ -52,7 +56,7 @@
     "anchored_hold"
   ],
   "minimum_epochs": 12,
-  "maximum_epochs": 60,
+  "maximum_epochs": 90,
   "selection_rules": [
     "short",
     "balanced_common_block"
@@ -61,6 +65,7 @@
   "completion_is_convergence_claim": false,
   "linux_training_started_by_this_task": false,
   "full_baseline_verification": "40 tests passed; 9 fits and 21 evaluation rows completed tiny real-data smoke; no formal local fits",
-  "return_verification": "Focused source hashes match git 14392ae; all 8 rows/16 recorded modes recomputed; C/D frozen weights equal parent; no formal local training",
-  "next": "Linux runs physical -> results/action_predictor_bench_20260919/physical33_seed11; return three fits/six rows including response arrays, physical parameters and state diagnostics"
+  "return_verification": "Physical 09e340d: all three arms completed epoch60/9600updates; six evaluation rows; budget_limit not plateau; continuation validates parent config/model/data and binds fit hashes",
+  "continuation_verification": "55 regression + 9 resume + 5 parent compatibility/copy tests passed (69 total); exact tiny CPU P0/P1/P2 equivalence including EMA/Adam; no formal local continuation",
+  "next": "Linux physical --continue-from physical33_seed11 --output physical33_seed11_to90 --max-epochs 90; preserve optimizer, LR, stale and selector, reevaluate all six rows; old return remains intact"
 }

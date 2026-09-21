@@ -2,6 +2,7 @@
 import argparse
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import traceback
 
@@ -13,6 +14,48 @@ from .focused import load_data, aligned_responses
 from .full_baselines import fit, complete_row
 from .physical_models import ARMS, Physical
 from .run import HERE, aggregate, save_json
+
+
+def continuation_manifest(source, config):
+    """Allow only extra epochs; bind the continuation to its immutable parent fits."""
+    old = json.loads((source/'config.json').read_text())
+    ignored = {'data', 'aux', 'max_epochs', 'source_sha256', 'git_commit', 'torch_version', 'continuation'}
+    changed = [key for key in set(old) | set(config) if key not in ignored and old.get(key) != config.get(key)]
+    if changed: raise ValueError(f'Continuation changes experiment settings: {sorted(changed)}')
+    if config['max_epochs'] <= old['max_epochs']:
+        raise ValueError('Continuation requires a larger total max_epochs')
+    # These two drivers changed solely to support continuation. Scientific modules must match.
+    legacy = {'physical.py': '4d83134e43bfc2d021df4a7424934a7605635c638fcf6b62f1225c73db75eed7',
+              'full_baselines.py': '2c8517e1b984502774536a63d3ab003c0f4a38f36a7c7f2b70e67f55c1eb6e79'}
+    for name, digest in old['source_sha256'].items():
+        if name.startswith('test_'): continue
+        allowed = {config['source_sha256'].get(name)}
+        if name in legacy: allowed.add(legacy[name])
+        if digest not in allowed: raise ValueError(f'Continuation source mismatch: {name}')
+    files, arms = {}, {}
+    for arm in ARMS:
+        folder = source/'fits/seed11'/arm
+        cost = json.loads((folder/'fit.json').read_text())
+        if cost['status'] != 'complete': raise ValueError(f'Parent fit is incomplete: {arm}')
+        arms[arm] = dict(epoch=cost['epochs_run'], stop_reason=cost['stop_reason'],
+                         reached_validation_plateau=cost['reached_validation_plateau'])
+        for name in ('initial_selector.json', 'training.jsonl', 'last.pt', 'best_short.pt', 'best_balanced.pt', 'fit.json'):
+            file = folder/name
+            files[file.relative_to(source).as_posix()] = sha256(file)
+    return dict(parent=str(source.resolve()), parent_config_sha256=sha256(source/'config.json'),
+                parent_git_commit=old['git_commit'], parent_torch_version=old['torch_version'],
+                parent_max_epochs=old['max_epochs'], arms=arms, files=files,
+                policy='restore optimizer, LR, milestones, stale, best and EMA; extra epochs only; fresh evaluation')
+
+
+def copy_parent_fits(source, output, manifest):
+    for relative in manifest['files']:
+        arm = Path(relative).parent.name
+        if Path(relative).name == 'fit.json' and not manifest['arms'][arm]['reached_validation_plateau']:
+            continue  # budget-limited fits must train, not get skipped as completed
+        target = output/relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source/relative, target)
 
 
 @torch.no_grad()
@@ -48,6 +91,7 @@ def main():
     parser.add_argument('--latent-weight',type=float,default=.05)
     parser.add_argument('--smoke',action='store_true')
     parser.add_argument('--resume',action='store_true')
+    parser.add_argument('--continue-from',type=Path,help='Extend a completed budget-limited run in a new output directory')
     args=parser.parse_args()
     if min(args.threads,args.batch_size,args.response_windows,args.min_epochs,args.lr_patience,args.stop_patience)<1 or args.max_epochs<args.min_epochs or not 0<args.min_lr<=args.learning_rate or min(args.min_delta,args.latent_weight)<0:
         parser.error('Invalid training budget')
@@ -57,7 +101,7 @@ def main():
         for split,n in [('train',16),('selector',4),('evaluation',4)]: data[split]=data[split][:n]
         data['evaluation_time']=data['evaluation_time'][:4]
         args.min_epochs,args.max_epochs,args.batch_size,args.response_windows=1,1,8,2
-    config={k:str(v) if isinstance(v,Path) else v for k,v in vars(args).items() if k not in ('output','resume')}
+    config={k:str(v) if isinstance(v,Path) else v for k,v in vars(args).items() if k not in ('output','resume','continue_from')}
     config.update(arms=list(ARMS),seed=11,initialization='same seed from scratch, no inherited SSM/R4 weights',
         source_sha256={p.name:sha256(p) for p in HERE.glob('*.py')},
         data_sha256=sha256(args.data),auxiliary_sha256=sha256(args.aux),
@@ -69,13 +113,22 @@ def main():
         limitations=['constant effective cp','inlet-flow and coolant-temperature proxies','unobserved metal estimates, not truth',
                      'P2 reduced physical view, not independent privileged state or exact JEPA-x reproduction',
                      'energy balance does not guarantee total transient monotonicity'])
-    args.output.mkdir(parents=True,exist_ok=True)
+    if args.continue_from:
+        if args.output.resolve() == args.continue_from.resolve():
+            raise ValueError('Continuation needs a new output directory; preserve the parent return')
+        if args.smoke: raise ValueError('Use a separate from-scratch --smoke; do not truncate continuation data')
+        config['continuation'] = continuation_manifest(args.continue_from, config)
     path=args.output/'config.json'
     if path.exists():
         old=json.loads(path.read_text())
         if not args.resume or any(old.get(k)!=v for k,v in config.items() if k!='git_commit'):
             raise ValueError('Existing output requires --resume and identical code/config/data')
-    else: save_json(path,config)
+    else:
+        if args.output.exists() and any(args.output.iterdir()):
+            raise ValueError('Output without config must be empty')
+        args.output.mkdir(parents=True,exist_ok=True)
+        if args.continue_from: copy_parent_fits(args.continue_from,args.output,config['continuation'])
+        save_json(path,config)
     save_json(args.output/'data_metadata.json',metadata)
     save_json(args.output/'state.json',dict(status='running',smoke=args.smoke))
     np.savez_compressed(args.output/'evaluation_inputs.npz',bank=data['evaluation'],times=data['evaluation_time'])
@@ -87,7 +140,8 @@ def main():
             folder=args.output/'fits/seed11'/arm; folder.mkdir(parents=True,exist_ok=True)
             cost=json.loads((folder/'fit.json').read_text()) if (folder/'fit.json').exists() else fit(
                 arm,11,data,args,folder,model=model,supervision_horizon=128,
-                training_objective=lambda m,b:m.training_objective(b,args.latent_weight))
+                training_objective=lambda m,b:m.training_objective(b,args.latent_weight),
+                resume=(folder/'last.pt').exists())
             costs.append(cost)
             for choice in ('short','balanced'):
                 name=f'{arm}_{choice}'

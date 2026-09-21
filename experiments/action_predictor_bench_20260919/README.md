@@ -4,10 +4,10 @@
 
 ## 当前执行：物理热状态 × JEPA式辅助训练
 
-四臂已回传：[FOCUSED_RETURN.md](FOCUSED_RETURN.md)。下一轮三个拟合、六行评价，执行细节及物理近似见[PHYSICAL.md](PHYSICAL.md)：
+三臂60轮已回传，全部预算到顶而未确认停滞，解读见[PHYSICAL_RETURN.md](PHYSICAL_RETURN.md)。下一步保留原优化器/学习率/早停进度，三臂在新目录接续至最多90轮，执行细节见[PHYSICAL.md](PHYSICAL.md)：
 
 ```bash
-python -m experiments.action_predictor_bench_20260919.physical --output results/action_predictor_bench_20260919/physical33_seed11
+python -m experiments.action_predictor_bench_20260919.physical --continue-from results/action_predictor_bench_20260919/physical33_seed11 --output results/action_predictor_bench_20260919/physical33_seed11_to90 --max-epochs 90
 ```
 
 ## 已完成：四臂历史信息 × 连续响应
