@@ -75,3 +75,9 @@ python -m experiments.action_predictor_bench_20260919.dynamic_response
 ```
 
 可直接阅读已保存图表，无需Linux重新训练。原始响应数组、因素分解数组、数据对齐与来源哈希都在[本轮结果目录](../../results/action_predictor_bench_20260919/ssm_dynamic_20260922)。
+
+## 2026-09-22 后续：谷底、保护幅度和双侧规划
+
+已增加同权重 H512 及16/32/64步重编码对照。长程未保护二级阀响应确实大于D，但谷底对推演协议敏感，不能直接用作幅度真值。进一步按五个测点定位保护响应，再设计四阀、AB十温度的消融。
+
+见[完整训练spec](../../docs/plans/2026-09-22-bilateral-response-training-spec.md)、[双侧数据核对](../../docs/plans/2026-09-22-bilateral-data-notes.md)、[谷底统计](../../results/action_predictor_bench_20260919/response_spec_20260922/nadir_summary.md)和[H512固定权重结果](../../results/action_predictor_bench_20260919/response_spec_20260922/horizon_summary.md)。这是新诊断与下一轮规划，不表示双侧模型已训练。
