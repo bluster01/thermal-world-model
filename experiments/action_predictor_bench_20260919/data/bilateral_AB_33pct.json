@@ -1,8 +1,8 @@
 {
   "pack_id": "bilateral_AB_33pct",
   "date": "2026-09-22",
-  "produced_by": "bilateral_data.py (execution-side implementation of the 2026-09-22 spec §2)",
-  "pack_sha256": "ecdbf27b2ab045bb69ab940dc77ecb0cf6af6bd98379f17fe42a0d65a0b0a559",
+  "produced_by": "bilateral_data.py (execution-side implementation of the 2026-09-22 spec §2); canonicalize_bilateral.py acceptance repair 2026-09-23",
+  "pack_sha256": "08d6728fc9cecbcbffd3865041d45f4f37d8ace119ce51fa60a832f5c9d28465",
   "reference_pack": "/home/bluster/projectA/thermal-world-model/experiments/action_predictor_bench_20260919/data/screen_A_33pct_h128.npz",
   "reference_pack_sha256": "6f97d5cabc0f0834b05d920baf2337fe32046e63a246b06fe3ce89374ff76c8e",
   "bypass_pack": "/home/bluster/projectA/thermal-world-model/experiments/action_predictor_bench_20260919/data/hist_bypass_A_33pct_v1.npz",
@@ -50,7 +50,7 @@
     "selector": 128,
     "evaluation": 512
   },
-  "history_alignment": "epoch = t_end - 630 + 10*k (k=0..63); t_end from reference pack *_time; raw merged-table values at identical epochs",
+  "history_alignment": "epoch = t_end - 630 + 10*k (k=0..63); t_end from reference pack *_time; raw merged-table values at identical epochs; core values replaced by exact frozen mmap values",
   "future_alignment": "future_temp rows k=64..63+H (epoch t_end+10..t_end+10H); future_act/future_bnd rows k=63..63+H (H+1 rows) so the control at t drives T(t+10s)",
   "unit_conversions": {
     "valves": "merged table percent * 0.01 -> fraction (mmap convention)",
@@ -99,7 +99,7 @@
       "u2a_min": -0.008178844451904296
     }
   },
-  "verification": {
+  "returned_csv_verification": {
     "ref_ch0_T1": {
       "our_channel": "A_T1",
       "corr": 1.0,
@@ -241,5 +241,109 @@
       0.1696,
       0.6084
     ]
+  },
+  "canonicalization": {
+    "previous_pack_sha256": "ecdbf27b2ab045bb69ab940dc77ecb0cf6af6bd98379f17fe42a0d65a0b0a559",
+    "original_return_commit": "9ab31ba",
+    "reason": "CSV float64 conversion vs frozen mmap float32 conversion; temperatures already identical",
+    "source_files": {
+      "timestamps.npy": "ab38f9e0b6747c031c60bc6f264c0ec59d2d69904f35f6e5f42f340f5ae9571a",
+      "values_A.npy": "1f9de6be6d1eb1643843916dce4933a8c900ece6395dc2171896a8a5f6960897",
+      "values_B.npy": "375167f572e56c6eef6cbd71c7dcf26e0c026b1d61f5918ad782f8aae12848cf"
+    },
+    "code_sha256": "768c5550007221015d403a2a25aea3099e9a9299e3193143879acbc8f2b0118d",
+    "differences": {
+      "train_A_history_max_difference_per_core_channel": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        5.960464477539063e-08,
+        5.960464477539063e-08,
+        6.103515625e-05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "selector_A_history_max_difference_per_core_channel": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.9802322387695312e-08,
+        5.960464477539063e-08,
+        6.103515625e-05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "evaluation_A_history_max_difference_per_core_channel": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.9802322387695312e-08,
+        5.960464477539063e-08,
+        6.103515625e-05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "train_B_history_max_difference_per_core_channel": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        5.960464477539063e-08,
+        5.960464477539063e-08,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "selector_B_history_max_difference_per_core_channel": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.9802322387695312e-08,
+        2.9802322387695312e-08,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "evaluation_B_history_max_difference_per_core_channel": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        5.960464477539063e-08,
+        2.9802322387695312e-08,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "preserved": "origins, timestamps, nine auxiliary history channels, old core/aux normalization"
   }
 }

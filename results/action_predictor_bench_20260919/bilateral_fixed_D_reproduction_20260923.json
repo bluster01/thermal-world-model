@@ -1,0 +1,15 @@
+{
+  "windows": 3,
+  "horizon": 512,
+  "parent_sha256": "a7a70db1a28616b8997adfc12777da4414c916aa6f324eaa89e9b78f10e3dbfe",
+  "inputs": "bit-identical original A history, 11 auxiliary channels, action and boundary arrays",
+  "float32_max_abs_difference_C": {
+    "native": 6.103515625e-05,
+    "block_context_fixed": 0.000244140625
+  },
+  "float64_max_abs_difference_C": {
+    "native": 0.0,
+    "block_context_fixed": 0.0
+  },
+  "interpretation": "Frozen wrapper is algebraically identical in float64. Small float32 execution differences are disclosed, not called bit-identical predictions. No fitting in this check."
+}

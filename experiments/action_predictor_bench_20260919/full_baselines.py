@@ -50,10 +50,13 @@ def atomic_checkpoint(payload, path):
     temporary.replace(path)
 
 
-def fit(name, seed, data, args, folder, model=None, training_objective=None, supervision_horizon=32, resume=False):
+def fit(name, seed, data, args, folder, model=None, training_objective=None, supervision_horizon=32, resume=False,
+        selector_fn=None, checkpoint_choices=CHOICES, budget_choices=CHOICES, epoch_diagnostics=None):
     torch.manual_seed(seed)
     if torch.cuda.is_available(): torch.cuda.manual_seed_all(seed)
     model = (build(name, data['mean'], data['scale']) if model is None else model).to(args.device)
+    selector = select if selector_fn is None else selector_fn
+    # Keep legacy parameter-group ordering for old frozen-teacher checkpoints.
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     first_epoch, elapsed, resumed_epoch = 1, 0., None
     updates, stale, reason, stop = 0, 0, 'budget_limit', False
@@ -63,7 +66,7 @@ def fit(name, seed, data, args, folder, model=None, training_objective=None, sup
         if args.max_epochs < epoch:
             raise ValueError('max_epochs cannot be below checkpoint epoch')
         # Refuse an inconsistent interrupted legacy bundle rather than losing a best model.
-        for choice in CHOICES:
+        for choice in checkpoint_choices:
             saved = torch.load(folder/f'best_{choice}.pt', weights_only=True, map_location='cpu')
             if saved['epoch'] != checkpoint['best_epochs'][choice]:
                 raise ValueError(f'Inconsistent best_{choice} checkpoint versus last.pt; restore a coherent fit bundle')
@@ -90,16 +93,17 @@ def fit(name, seed, data, args, folder, model=None, training_objective=None, sup
         first_epoch, resumed_epoch = epoch+1, epoch
         (folder/'training.jsonl').write_text(''.join(json.dumps(row)+'\n' for row in rows))
     else:
-        initial = select(model, data['selector'], args)
+        initial = selector(model, data['selector'], args)
         save_json(folder/'initial_selector.json', initial)
-        best = {key: initial[key] for key in CHOICES}
-        milestones, best_epochs = best.copy(), dict(short=0, balanced=0)
-        for choice in CHOICES: atomic_checkpoint({'model': model.state_dict(), 'epoch': 0}, folder/f'best_{choice}.pt')
+        best = {key: initial[key] for key in checkpoint_choices}
+        milestones = {key: initial[source] for key, source in zip(CHOICES, budget_choices)}
+        best_epochs = {key: 0 for key in checkpoint_choices}
+        for choice in checkpoint_choices: atomic_checkpoint({'model': model.state_dict(), 'epoch': 0}, folder/f'best_{choice}.pt')
     started = time.perf_counter()
     with (folder/'training.jsonl').open('a' if resume else 'w') as log:
         for epoch in range(first_epoch, args.max_epochs+1) if not stop else ():
             order = np.random.default_rng(np.random.SeedSequence([seed, epoch])).permutation(len(data['train']))
-            model.train(); total = 0.
+            model.train(); total = 0.; components = {}; gradient_norm_total = 0.
             lr_used = optimizer.param_groups[0]['lr']
             for start in range(0, len(order), args.batch_size):
                 ids = order[start:start+args.batch_size]
@@ -110,25 +114,35 @@ def fit(name, seed, data, args, folder, model=None, training_objective=None, sup
                     loss = loss_fn(model, p, y)
                 else:
                     batch = torch.as_tensor(data['train'][ids, :64+supervision_horizon], device=args.device)
-                    loss = training_objective(model, batch)
+                    objective = training_objective(model, batch)
+                    if isinstance(objective, dict):
+                        loss = objective['loss']
+                        for key, value in objective.items():
+                            if key != 'loss': components[key] = components.get(key, 0.) + float(value.detach())*len(ids)
+                    else:
+                        loss = objective
                 if not torch.isfinite(loss): raise ValueError('Nonfinite training loss')
                 optimizer.zero_grad(set_to_none=True); loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 5., error_if_nonfinite=True)
+                gradient_norm_total += float(torch.nn.utils.clip_grad_norm_(model.parameters(), 5., error_if_nonfinite=True))*len(ids)
                 optimizer.step(); updates += 1
                 if hasattr(model, 'after_optimizer_step'):
                     model.after_optimizer_step()
                 total += float(loss.detach())*len(ids)
-            scores = select(model, data['selector'], args)
-            for choice in CHOICES:
+            scores = selector(model, data['selector'], args)
+            for choice in checkpoint_choices:
                 if scores[choice] < best[choice]:
                     best[choice], best_epochs[choice] = scores[choice], epoch
                     atomic_checkpoint({'model': model.state_dict(), 'epoch': epoch}, folder/f'best_{choice}.pt')
-            milestones, stale, lr_next, stop = advance_budget(scores, milestones, stale, lr_used, epoch, args)
+            budget_scores = {key: scores[source] for key, source in zip(CHOICES, budget_choices)}
+            milestones, stale, lr_next, stop = advance_budget(budget_scores, milestones, stale, lr_used, epoch, args)
             for group in optimizer.param_groups: group['lr'] = lr_next
             if stop: reason = 'validation_plateau'
             row = dict(epoch=epoch, updates=updates, train_loss=total/len(order), selector=scores,
                 selector_main_mae_C=scores['short'], lr_used=lr_used, lr_next=lr_next,
                 stale_at_current_lr=stale, seconds=elapsed+time.perf_counter()-started)
+            if components: row['train_components'] = {k: v/len(order) for k,v in components.items()}
+            if selector_fn is not None: row['gradient_norm_before_clip'] = gradient_norm_total/len(order)
+            if epoch_diagnostics is not None: row['response_diagnostics'] = epoch_diagnostics(model, data, args)
             # Preserve optimizer and stopping state for any later budget extension.
             payload = dict(model=model.state_dict(), optimizer=optimizer.state_dict(), epoch=epoch,
                 updates=updates, milestones=milestones, stale=stale, best=best, best_epochs=best_epochs,
@@ -142,6 +156,7 @@ def fit(name, seed, data, args, folder, model=None, training_objective=None, sup
         reached_validation_plateau=stop and not args.smoke, best_epochs=best_epochs,
         best_selector=best, final_selector=scores, final_lr=optimizer.param_groups[0]['lr'],
         train_seconds=elapsed+time.perf_counter()-started, parameters=sum(p.numel() for p in model.parameters()),
+        trainable_parameters=sum(p.numel() for p in model.parameters() if p.requires_grad),
         training_windows=len(data['train']), supervision_horizon=supervision_horizon)
     if resumed_epoch is not None: result['resumed_from_epoch'] = resumed_epoch
     save_json(folder/'fit.json', result)

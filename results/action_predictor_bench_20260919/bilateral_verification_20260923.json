@@ -1,0 +1,112 @@
+{
+  "status": "passed",
+  "formal_training": false,
+  "pytest": "56 passed in 42.61s",
+  "source_hashes": {
+    "bilateral.py": "16aea3125aab5c35117f7d6d6cf300250f5452a7361d18bc52256c79598967dc",
+    "bilateral_models.py": "56d33718889b4b955b4f9d61c953db9584969b51e1883eb7bef12522b121fdfe",
+    "bilateral_evaluation.py": "452aabb5443f14aa0df3ba4e050bee4909fb31a587bad057508a1b010e9567cb",
+    "full_baselines.py": "380a18749b39768a9190fe49113224160e45838ef92601a74395dd2b78993c59",
+    "r4_base.py": "d796cb4b2c0da25be7c3e4948a5d1c768405fb0c45aeacca5ee46a8a3b6b709d",
+    "r4_transport.py": "e2cae8ef993b052a2aea5a1e6714d534ad22203e9efb79b0cf1b1741de0d1903",
+    "focused_models.py": "5795ef9704b3274fadf3e9dd1b2f047f2d2627b44459812a408e6b86150222c9",
+    "models.py": "c9630a83c6cae523938eedbf1102e5ad451d97815ed1d1f3a113f484b56c5ef8",
+    "bilateral_data.py": "e44d34015e74a9600f1807d5f336c7f782759481ad95e9bf9fe5989b76109e3b",
+    "data.py": "e14c029874d6fcee499b85fa91cfe5fd20e5445303463156ede978eaf2ef60f0",
+    "run.py": "bdb37c2fbdace01783a9999008e4d9747c4f7c99b3fa0bd17e05d16036abbe54",
+    "analyze_nadir.py": "0826c2d4850276c9b8e3a442729301c8192339a772d967fda6023c6048cea61d",
+    "dynamic_factual.py": "216f36b2dfd315951d0a9fc3fe0d4c0e809fd6a20faa85be56f728e7e8d6130e"
+  },
+  "data_sha256": "08d6728fc9cecbcbffd3865041d45f4f37d8ace119ce51fa60a832f5c9d28465",
+  "parent_sha256": "a7a70db1a28616b8997adfc12777da4414c916aa6f324eaa89e9b78f10e3dbfe",
+  "event_pack_sha256": "303376ee805576d1745917704976196b5442d21830efffb0751224850d0fc95f",
+  "smoke": {
+    "state": {
+      "status": "complete",
+      "failures": [],
+      "smoke": true,
+      "fits": 8,
+      "expected_fits": 8,
+      "not_confirmed_plateau": [
+        "seed11/G2",
+        "seed11/S0_A",
+        "seed11/S0_B",
+        "seed11/S1",
+        "seed11/S2",
+        "seed11/S3",
+        "seed11/R3",
+        "seed11/P3"
+      ]
+    },
+    "origins": {
+      "train": 4,
+      "selector": 2,
+      "evaluation": 2
+    },
+    "epochs": 1,
+    "selected_checkpoints": 22,
+    "fixed_parent_evaluations": 1,
+    "completed_resume": "no refits or repeated evaluation",
+    "fit_parameters": {
+      "G2": {
+        "parameters": 32721,
+        "trainable_parameters": 2,
+        "updates": 2
+      },
+      "P3": {
+        "parameters": 59300,
+        "trainable_parameters": 59300,
+        "updates": 2
+      },
+      "R3": {
+        "parameters": 33722,
+        "trainable_parameters": 33722,
+        "updates": 2
+      },
+      "S0_A": {
+        "parameters": 23413,
+        "trainable_parameters": 23413,
+        "updates": 2
+      },
+      "S0_B": {
+        "parameters": 23413,
+        "trainable_parameters": 23413,
+        "updates": 2
+      },
+      "S1": {
+        "parameters": 25333,
+        "trainable_parameters": 25333,
+        "updates": 2
+      },
+      "S2": {
+        "parameters": 25333,
+        "trainable_parameters": 25333,
+        "updates": 2
+      },
+      "S3": {
+        "parameters": 25578,
+        "trainable_parameters": 25578,
+        "updates": 2
+      }
+    }
+  },
+  "full_response_catalog_smoke": {
+    "S3": {
+      "cases": 272,
+      "origins": 2,
+      "maximum_pre_onset_difference_C": 0.0
+    },
+    "R3": {
+      "cases": 136,
+      "origins": 2,
+      "maximum_pre_onset_difference_C": 0.0
+    },
+    "P3": {
+      "cases": 272,
+      "origins": 2,
+      "maximum_pre_onset_difference_C": 0.0
+    }
+  },
+  "bash_syntax": "bash -n passed",
+  "limits": "CPU tiny functional checks only, not accuracy evidence; no full training or CUDA execution locally"
+}

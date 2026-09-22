@@ -1,0 +1,37 @@
+{
+  "status": "accepted",
+  "pack_sha256": "08d6728fc9cecbcbffd3865041d45f4f37d8ace119ce51fa60a832f5c9d28465",
+  "source_sha256": "f955e9f3e1bb0e5f3df5b2814378353f4455f2298ab05f43c821f454e7f7cc1c",
+  "checks": {
+    "train": {
+      "windows": 20371,
+      "A_all_rows_max_abs_difference": 0.0,
+      "auxiliary_bit_identical": true,
+      "mmap_A_all_rows_max_abs_difference": 0.0,
+      "mmap_B_all_rows_max_abs_difference": 0.0
+    },
+    "selector": {
+      "windows": 128,
+      "A_all_rows_max_abs_difference": 0.0,
+      "auxiliary_bit_identical": true,
+      "mmap_A_all_rows_max_abs_difference": 0.0,
+      "mmap_B_all_rows_max_abs_difference": 0.0
+    },
+    "evaluation": {
+      "windows": 256,
+      "A_all_rows_max_abs_difference": 0.0,
+      "auxiliary_bit_identical": true,
+      "mmap_A_all_rows_max_abs_difference": 0.0,
+      "mmap_B_all_rows_max_abs_difference": 0.0
+    }
+  },
+  "mmap_used": "C:\\Users\\14020\\Documents\\ChatGPT\\thermal-world-model\\results\\side_full_windows_20260913\\v1",
+  "normalization": "A/core and auxiliary frozen; added channels train-history only",
+  "strict_counts": {
+    "train": 13473,
+    "selector": 70,
+    "evaluation": 174
+  },
+  "old_event_analysis": "v1 not accepted; use reviewed v2",
+  "training_launched": false
+}

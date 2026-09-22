@@ -44,17 +44,14 @@ def test_channel_layout_is_fixed_and_unique():
 
 
 def test_reference_channels_reproduce_old_pack(pack, meta):
-    """A-side channels are bit-identical (or float32-rounding identical) to the old pack."""
+    """Require exact identity, not merely high correlation or a loose tolerance."""
     ref = {k: np.load(REF)[k] for k in np.load(REF).files}
-    n = min(3000, len(ref['train']))
-    sample = slice(0, n)
-    for rc, oc in sorted(REF_MAP.items()):
-        b = ref['train'][sample, :CONTEXT, rc].astype(np.float64)
-        v = pack['hist30_train'][sample, :, oc].astype(np.float64)
-        diff = np.abs(b - v)
-        assert np.isfinite(diff).all()
-        assert diff.max() < 1e-3, (rc, oc, NAMES[oc], diff.max())
-        assert np.corrcoef(b.ravel(), v.ravel())[0, 1] > 0.9999
+    for split in ('train','selector','evaluation'):
+        for rc, oc in sorted(REF_MAP.items()):
+            np.testing.assert_array_equal(pack[f'hist30_{split}'][:,:,oc],ref[split][:,:CONTEXT,rc])
+        np.testing.assert_array_equal(pack[f'future_temp_{split}'][:,:,:5],ref[split][:,CONTEXT:,:5])
+        np.testing.assert_array_equal(pack[f'future_act_{split}'][:,:,[0,3]],ref[split][:,63:,5:7])
+        np.testing.assert_array_equal(pack[f'future_bnd_{split}'][:,:,:6],ref[split][:,63:,7:13])
 
 
 def test_bypass_channels_bit_identical(pack):
