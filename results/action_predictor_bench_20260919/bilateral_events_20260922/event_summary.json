@@ -1,0 +1,45 @@
+{
+  "pack": "/home/bluster/projectA/thermal-world-model/experiments/action_predictor_bench_20260919/data/bilateral_AB_33pct.npz",
+  "pack_sha256": "ecdbf27b2ab045bb69ab940dc77ecb0cf6af6bd98379f17fe42a0d65a0b0a559",
+  "rule": {
+    "dose": 0.02,
+    "guard": 0.002,
+    "window_steps": 6,
+    "merge_steps": 12
+  },
+  "windows": 20371,
+  "quiet_windows": 8090,
+  "events_detected": {
+    "u1A": 8412,
+    "u1B": 4259,
+    "u2A": 5802,
+    "u2B": 7428
+  },
+  "events_usable": {
+    "u1A": 1444,
+    "u1B": 714,
+    "u2A": 992,
+    "u2B": 1273
+  },
+  "match_distance_median": 1.5514211654663086,
+  "match_pool": "windows where the same event rule triggers nothing (feedback valves jitter, so perfectly static windows do not exist); events restricted to history onsets with >=32 pre-action rows so every event/control shares one descriptor",
+  "relaxed_sensitivity": "rerun with --dose 0.01 --guard 0.004 as a separate sensitivity table",
+  "local_pairs": {
+    "u1A": [
+      1,
+      0
+    ],
+    "u1B": [
+      6,
+      5
+    ],
+    "u2A": [
+      8,
+      7
+    ],
+    "u2B": [
+      3,
+      2
+    ]
+  }
+}
