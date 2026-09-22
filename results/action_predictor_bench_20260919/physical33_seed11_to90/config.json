@@ -1,0 +1,131 @@
+{
+  "data": "/home/bluster/projectA/thermal-world-model/experiments/action_predictor_bench_20260919/data/screen_A_33pct_h128.npz",
+  "aux": "/home/bluster/projectA/thermal-world-model/experiments/action_predictor_bench_20260919/data/hist_bypass_A_33pct_v1.npz",
+  "device": "cpu",
+  "threads": 1,
+  "batch_size": 128,
+  "response_windows": 8,
+  "min_epochs": 12,
+  "max_epochs": 90,
+  "learning_rate": 0.001,
+  "min_lr": 0.0001,
+  "min_delta": 0.002,
+  "lr_patience": 4,
+  "stop_patience": 6,
+  "latent_weight": 0.05,
+  "smoke": false,
+  "arms": [
+    "P0",
+    "P1",
+    "P2"
+  ],
+  "seed": 11,
+  "initialization": "same seed from scratch, no inherited SSM/R4 weights",
+  "source_sha256": {
+    "__init__.py": "d2b28e2bceac3035eb4e6ee55323053ae16f666e14a0e85fecb7a5133247c1ff",
+    "physical.py": "ad9142f3b674766b958a4fa3e28d8cec0bf928a6d0cd1685c40673ab3852589b",
+    "models.py": "c9630a83c6cae523938eedbf1102e5ad451d97815ed1d1f3a113f484b56c5ef8",
+    "test_focused.py": "8c9da4faf1ac124b4d35ee610b85ad784d922660ca10b2f34be95bbbeb751fe4",
+    "physical_models.py": "3e304ae07e3d57d2228bf73ac8e8882eab91163dd57e0e9cc6165467e60a1c37",
+    "round2.py": "d16e2b725ee5d4e32737849af3a10b83f9ca0feab61a4772d88cc9d36fce9efd",
+    "evaluation.py": "df44bbf3b77ba0728a17812da01b97ef4f0ffd99c282cbb504c280352fddf2f4",
+    "round3.py": "af972ccf011fdc878c6e3d1c3ec4761d5240a3900da3bd2f0654c3f08423a780",
+    "test_physical_continue.py": "d5bc3f610c15d2dc78f93b15d0dbb036745fa1317e96a3aaa6d1c5abcb0ba2fb",
+    "full_baselines.py": "f22c9b31c69f0c4b428641c204fc7ca961e737ecd83da9f9e70318c93723dc31",
+    "analyze_return.py": "0dd277678e43116441da3b864af45ebfba6a53065b26aa4c3a8723338e595666",
+    "r4_transport.py": "e2cae8ef993b052a2aea5a1e6714d534ad22203e9efb79b0cf1b1741de0d1903",
+    "test_round2.py": "f5a0fef28c608a7c4323d70959f03c6e3132dfcdfebd32844e27a21bd31ae791",
+    "report.py": "73f3c614cddaed882dc31a64d377bef0b07dfb48c7a58aa365cabc6186ee2674",
+    "run.py": "bdb37c2fbdace01783a9999008e4d9747c4f7c99b3fa0bd17e05d16036abbe54",
+    "test_bench.py": "a5d17fc752ac9e2ae94e2b18c123a0f7b937bcf61a1bad12a7bb800595a79b1b",
+    "build_bypass_pack.py": "f7f19668ce80449d6e0ae478222ef53cb700bd48323ca7dff7df522b3dec7f03",
+    "r4_base.py": "d796cb4b2c0da25be7c3e4948a5d1c768405fb0c45aeacca5ee46a8a3b6b709d",
+    "round3_models.py": "386f505fad4c6dd60b5f124ff4e009cd9a9c78b1cad63a8c85d23d98ec1a7275",
+    "test_round3.py": "19f2b91d0caff25437885fe27b7efba981ac10910008450cfb3ba2151898fd88",
+    "test_full_baselines.py": "aeb403747955a83e88767c50ad50e7ddd8f1bc0b9c9831530cbf0c358a3806e7",
+    "round2_models.py": "6e61b64cfb175850a516d337439b0804c688027f31ad1fc187f5e424c9fb6a0c",
+    "test_physical.py": "f15f9511aef35827c4aae0b87595c59ad635433c73a9b040d980140e840f5fbb",
+    "data.py": "e14c029874d6fcee499b85fa91cfe5fd20e5445303463156ede978eaf2ef60f0",
+    "focused_models.py": "5795ef9704b3274fadf3e9dd1b2f047f2d2627b44459812a408e6b86150222c9",
+    "test_resume.py": "84c22a3690041fecb199f6f6bcb47af552f0c630764cb9162c9f80933e715b5e",
+    "focused.py": "1887836af99bff1452ecaee6dfb0e224c1c193366dee5898f25c9066637eae95"
+  },
+  "data_sha256": "6f97d5cabc0f0834b05d920baf2337fe32046e63a246b06fe3ce89374ff76c8e",
+  "auxiliary_sha256": "39ef9c705fb1142ea592e050fd05f0435975edf51477c9acfdfb5fe8e70ba8b3",
+  "git_commit": "fa39444e7898d30b93c0471f74b044c22590f7b2",
+  "torch_version": "2.11.0+cu130",
+  "supervision_horizon": 128,
+  "temperature_loss": ".5 first32 + .5 next96, original five-channel weights",
+  "jepa_horizons": [
+    32,
+    64,
+    128
+  ],
+  "P1_ema_decay": 0.99,
+  "selected_auxiliary_channels": [
+    "corr_fuel_total",
+    "sa_flow",
+    "o2_a_3sel",
+    "load",
+    "sp1_a",
+    "sp2_b_set",
+    "agc",
+    "load_rate",
+    "b_sh1_in",
+    "b_sh_out",
+    "sh_spray_total"
+  ],
+  "block_protocol": "same continuous physical state as native; two API labels, not independent protocols",
+  "limitations": [
+    "constant effective cp",
+    "inlet-flow and coolant-temperature proxies",
+    "unobserved metal estimates, not truth",
+    "P2 reduced physical view, not independent privileged state or exact JEPA-x reproduction",
+    "energy balance does not guarantee total transient monotonicity"
+  ],
+  "continuation": {
+    "parent": "/home/bluster/projectA/thermal-world-model/results/action_predictor_bench_20260919/physical33_seed11",
+    "parent_config_sha256": "c4abe1c03a71030d48f923502e63acc7cb812844662e9232301ca8868b46ef35",
+    "parent_git_commit": "db296606aba2086360dfdd77c39bc8921b4c1b38",
+    "parent_torch_version": "2.11.0+cu130",
+    "parent_max_epochs": 60,
+    "arms": {
+      "P0": {
+        "epoch": 60,
+        "stop_reason": "budget_limit",
+        "reached_validation_plateau": false
+      },
+      "P1": {
+        "epoch": 60,
+        "stop_reason": "budget_limit",
+        "reached_validation_plateau": false
+      },
+      "P2": {
+        "epoch": 60,
+        "stop_reason": "budget_limit",
+        "reached_validation_plateau": false
+      }
+    },
+    "files": {
+      "fits/seed11/P0/initial_selector.json": "1432029b39ee112c59a73ba427b015cce73887d7423ceb167ee523ea5e9ffec9",
+      "fits/seed11/P0/training.jsonl": "9a1e5a58cb75c935e70f42573f8b345cd07f701a6aba3cdf417a6dce2718692d",
+      "fits/seed11/P0/last.pt": "e07993a63359762efeb3d8e456b4cf03b6bdd1ab9a4fff28ebc1403658d89fe1",
+      "fits/seed11/P0/best_short.pt": "88e1fa9cf2c1e0987b4bdcbc21f6a6f04e57fb17db74e2b557c60e9174498349",
+      "fits/seed11/P0/best_balanced.pt": "b111604ee63ddee5d3a446d35dfc9a41c5af7aa9d308fc75409e0dee5a1e39ec",
+      "fits/seed11/P0/fit.json": "dc680dc0d448e4ce5365a2d5758ce6eb21a11d551ed51a6f7dbc63249bb66152",
+      "fits/seed11/P1/initial_selector.json": "1432029b39ee112c59a73ba427b015cce73887d7423ceb167ee523ea5e9ffec9",
+      "fits/seed11/P1/training.jsonl": "60a7afc35022f2c8c3f59de8eaa3da888e43498992625ddafde8cb4f5f858d9d",
+      "fits/seed11/P1/last.pt": "1fff5bca508744e8315203f802ec0f232dd7a66594257d66bd8ec1a50f24fb3b",
+      "fits/seed11/P1/best_short.pt": "080cd2447a81da0c17fd44600919bbd8c086280441577bddf76541521f416cb2",
+      "fits/seed11/P1/best_balanced.pt": "f67ae0b66994821084f34eaad86688f26a201578aece56149c854353de706a46",
+      "fits/seed11/P1/fit.json": "2bc69145e09b340f96aced86c82b3fbb05444d22f79a0620cfa6989541d0a10b",
+      "fits/seed11/P2/initial_selector.json": "1432029b39ee112c59a73ba427b015cce73887d7423ceb167ee523ea5e9ffec9",
+      "fits/seed11/P2/training.jsonl": "cad1185c38205d92c14aa28371146035955e37ba50d98389c6c4d742539b7911",
+      "fits/seed11/P2/last.pt": "3c474e3b6a01eefcafbb8200970fd4fa92edfe6c146302f863739f185cf2ce24",
+      "fits/seed11/P2/best_short.pt": "5201c46c85b8a0c9fa321bb80b48e4da8ec78d3db7f7402db810240eb2ef39fc",
+      "fits/seed11/P2/best_balanced.pt": "e1f42a9a84e18694102fc869fde7b6464f0135605e1d09d92e288d2bb586353e",
+      "fits/seed11/P2/fit.json": "204a0437edf8c94934cd4c50065a7349ae64565496802af2ea6d1f9af4506160"
+    },
+    "policy": "restore optimizer, LR, milestones, stale, best and EMA; extra epochs only; fresh evaluation"
+  }
+}
