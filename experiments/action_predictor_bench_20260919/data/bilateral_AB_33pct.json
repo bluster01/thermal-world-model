@@ -1,0 +1,245 @@
+{
+  "pack_id": "bilateral_AB_33pct",
+  "date": "2026-09-22",
+  "produced_by": "bilateral_data.py (execution-side implementation of the 2026-09-22 spec §2)",
+  "pack_sha256": "ecdbf27b2ab045bb69ab940dc77ecb0cf6af6bd98379f17fe42a0d65a0b0a559",
+  "reference_pack": "/home/bluster/projectA/thermal-world-model/experiments/action_predictor_bench_20260919/data/screen_A_33pct_h128.npz",
+  "reference_pack_sha256": "6f97d5cabc0f0834b05d920baf2337fe32046e63a246b06fe3ce89374ff76c8e",
+  "bypass_pack": "/home/bluster/projectA/thermal-world-model/experiments/action_predictor_bench_20260919/data/hist_bypass_A_33pct_v1.npz",
+  "bypass_pack_sha256": "39ef9c705fb1142ea592e050fd05f0435975edf51477c9acfdfb5fe8e70ba8b3",
+  "source_merged_table": {
+    "path": "/home/bluster/Desktop/AI/时序预测/AA数据中心/伊敏12.10/cleaned_data/all_merged_10s.csv",
+    "sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6"
+  },
+  "channel_names": [
+    "A_T1",
+    "A_T2",
+    "A_T3",
+    "A_T4",
+    "A_T5",
+    "B_T1",
+    "B_T2",
+    "B_T3",
+    "B_T4",
+    "B_T5",
+    "u1A",
+    "u1B",
+    "u2A",
+    "u2B",
+    "steam_flow",
+    "coal",
+    "sep_p",
+    "sep_T",
+    "fw_T",
+    "out_p_left",
+    "out_p_right",
+    "corr_fuel_total",
+    "sa_flow",
+    "o2_a_3sel",
+    "load",
+    "sp1_a",
+    "sp2_b_set",
+    "agc",
+    "load_rate",
+    "sh_spray_total"
+  ],
+  "context": 64,
+  "dt_seconds": 10,
+  "horizons": {
+    "train": 128,
+    "selector": 128,
+    "evaluation": 512
+  },
+  "history_alignment": "epoch = t_end - 630 + 10*k (k=0..63); t_end from reference pack *_time; raw merged-table values at identical epochs",
+  "future_alignment": "future_temp rows k=64..63+H (epoch t_end+10..t_end+10H); future_act/future_bnd rows k=63..63+H (H+1 rows) so the control at t drives T(t+10s)",
+  "unit_conversions": {
+    "valves": "merged table percent * 0.01 -> fraction (mmap convention)",
+    "steam_flow": "t/h * 1/3.6 -> kg/s (reference-pack convention)"
+  },
+  "feedback_protocol": {
+    "tolerance": "raw feedback retained; canonical reference band [-0.02, 1] for valve validity",
+    "strict_subgroup": "strict01_* = all four valves within [0,1] over history+future rows",
+    "negative_feedback": "u2a_negative_* flags raw negative u2A readings (sensor reading, not negative spray)",
+    "note": "explicit protocol change vs the earlier strict-fraction packing; all original windows retained"
+  },
+  "normalization": {
+    "fit": "new channels: unique train rows (ddof=0); old-13 channels: reference pack values; bypass-9: bypass pack values"
+  },
+  "counts": {
+    "train": 20371,
+    "selector": 128,
+    "evaluation": 256
+  },
+  "protocol_stats": {
+    "train": {
+      "rows": 20371,
+      "valid": 20371,
+      "strict_all01": 13473,
+      "u2a_negative": 6898,
+      "near_closed": 13398,
+      "time_coverage": 1.0,
+      "u2a_min": -0.008892192840576171
+    },
+    "selector": {
+      "rows": 128,
+      "valid": 128,
+      "strict_all01": 70,
+      "u2a_negative": 58,
+      "near_closed": 86,
+      "time_coverage": 1.0,
+      "u2a_min": -0.008682384490966796
+    },
+    "evaluation": {
+      "rows": 256,
+      "valid": 256,
+      "strict_all01": 174,
+      "u2a_negative": 82,
+      "near_closed": 195,
+      "time_coverage": 1.0,
+      "u2a_min": -0.008178844451904296
+    }
+  },
+  "verification": {
+    "ref_ch0_T1": {
+      "our_channel": "A_T1",
+      "corr": 1.0,
+      "max_abs_diff": 0.0
+    },
+    "ref_ch1_T2": {
+      "our_channel": "A_T2",
+      "corr": 1.0,
+      "max_abs_diff": 0.0
+    },
+    "ref_ch2_T3": {
+      "our_channel": "A_T3",
+      "corr": 1.0,
+      "max_abs_diff": 0.0
+    },
+    "ref_ch3_T4": {
+      "our_channel": "A_T4",
+      "corr": 0.9999999999999998,
+      "max_abs_diff": 0.0
+    },
+    "ref_ch4_T5_main": {
+      "our_channel": "A_T5",
+      "corr": 1.0,
+      "max_abs_diff": 0.0
+    },
+    "ref_ch5_valve1": {
+      "our_channel": "u1A",
+      "corr": 0.9999999999999983,
+      "max_abs_diff": 2.9802322387695312e-08
+    },
+    "ref_ch6_valve2": {
+      "our_channel": "u2B",
+      "corr": 0.9999999999999963,
+      "max_abs_diff": 5.960464477539063e-08
+    },
+    "ref_ch7_steam_flow": {
+      "our_channel": "steam_flow",
+      "corr": 0.9999999999999956,
+      "max_abs_diff": 6.103515625e-05
+    },
+    "ref_ch8_coal": {
+      "our_channel": "coal",
+      "corr": 0.9999999999999998,
+      "max_abs_diff": 0.0
+    },
+    "ref_ch9_separator_pressure": {
+      "our_channel": "sep_p",
+      "corr": 0.9999999999999999,
+      "max_abs_diff": 0.0
+    },
+    "ref_ch10_separator_temperature": {
+      "our_channel": "sep_T",
+      "corr": 1.0,
+      "max_abs_diff": 0.0
+    },
+    "ref_ch11_feedwater_temperature": {
+      "our_channel": "fw_T",
+      "corr": 1.0,
+      "max_abs_diff": 0.0
+    },
+    "ref_ch12_outlet_pressure": {
+      "our_channel": "out_p_left",
+      "corr": 1.0,
+      "max_abs_diff": 0.0
+    },
+    "bypass_corr_fuel_total": {
+      "equal": true,
+      "max_abs_diff": 0.0
+    },
+    "bypass_sa_flow": {
+      "equal": true,
+      "max_abs_diff": 0.0
+    },
+    "bypass_o2_a_3sel": {
+      "equal": true,
+      "max_abs_diff": 0.0
+    },
+    "bypass_load": {
+      "equal": true,
+      "max_abs_diff": 0.0
+    },
+    "bypass_sp1_a": {
+      "equal": true,
+      "max_abs_diff": 0.0
+    },
+    "bypass_sp2_b_set": {
+      "equal": true,
+      "max_abs_diff": 0.0
+    },
+    "bypass_agc": {
+      "equal": true,
+      "max_abs_diff": 0.0
+    },
+    "bypass_load_rate": {
+      "equal": true,
+      "max_abs_diff": 0.0
+    },
+    "bypass_sh_spray_total": {
+      "equal": true,
+      "max_abs_diff": 0.0
+    },
+    "valve_level_corr": [
+      [
+        1.0,
+        0.7742,
+        -0.1898,
+        -0.0803
+      ],
+      [
+        0.7742,
+        1.0,
+        -0.073,
+        -0.0358
+      ],
+      [
+        -0.1898,
+        -0.073,
+        1.0,
+        0.318
+      ],
+      [
+        -0.0803,
+        -0.0358,
+        0.318,
+        1.0
+      ]
+    ],
+    "AB_mean_gap_C": [
+      -7.5921,
+      -4.6631,
+      -2.042,
+      4.0675,
+      -0.1428
+    ],
+    "AB_stage_corr": [
+      0.1042,
+      0.6403,
+      0.5284,
+      0.1696,
+      0.6084
+    ]
+  }
+}
