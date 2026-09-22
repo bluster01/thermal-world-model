@@ -1,5 +1,7 @@
 # 下一轮Linux入口：最小热状态 × JEPA式辅助训练
 
+续训已由`ddc9c67`回传：P0/P1/P2在71/61/61轮早停。以下命令作为复现记录保留，无需重跑。当前观察与图表见[SSM_DYNAMIC_RESPONSE.md](SSM_DYNAMIC_RESPONSE.md)。
+
 2026-09-22更新：已收到`09e340d`，三臂都正常完成60轮，但均为`budget_limit`。本轮只延长训练，不改模型、损失、数据、动作测试；结果解读见[PHYSICAL_RETURN.md](PHYSICAL_RETURN.md)。
 
 依据：[四臂回传解读](FOCUSED_RETURN.md)、[实现计划](../../docs/plans/2026-09-20-physical-state-jepa.md)、[Mamba/JEPA纪要](../../docs/MAMBA_JEPA_ACTION_RESPONSE_IDEAS_20260920.md)。用户已授权继续实验。保留全部既有基线，不改写回传数据，不扩展到Mamba。

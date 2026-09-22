@@ -1,0 +1,63 @@
+{
+  "purpose": "Post-hoc report-set dynamic-regime stratification; never a model or training input",
+  "produced_by": "experiments\\action_predictor_bench_20260919\\load_context.py",
+  "script_sha256": "29bbffd7cbb0d6a57291f26eeaebc77143c8466f025b8926f83ea0aefe763691",
+  "source": {
+    "path": "C:\\Users\\14020\\Desktop\\时间预测模型\\AA数据中心\\伊敏12.10\\merged_all_data\\all_merged_10s.csv",
+    "sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+    "bytes": 3987138416,
+    "rows_scanned": 1192329
+  },
+  "evaluation": {
+    "path": "C:\\Users\\14020\\.codex\\worktrees\\action-predictor-bench\\thermal-world-model\\results\\action_predictor_bench_20260919\\focused33_seed11\\evaluation_inputs.npz",
+    "sha256": "de799f2bb99790c9f493e82a5edc9edce5ed4e703dc3febb1f2e3c74f463c212"
+  },
+  "auxiliary": {
+    "path": "C:\\Users\\14020\\.codex\\worktrees\\action-predictor-bench\\thermal-world-model\\experiments\\action_predictor_bench_20260919\\data\\hist_bypass_A_33pct_v1.npz",
+    "sha256": "39ef9c705fb1142ea592e050fd05f0435975edf51477c9acfdfb5fe8e70ba8b3"
+  },
+  "output_sha256": "d956d082eec5d00d0dca85abd09cfa0d6e7572dca542a119487cd3e24dea529c",
+  "columns": {
+    "load_MW": "机组负荷_GENERATOR_POWER",
+    "agc_raw": "AGC指令",
+    "load_rate_raw": "机组负荷变化率"
+  },
+  "units": {
+    "load_MW": "MW (canonical-v2 project variable mapping)",
+    "agc_raw": "source raw; MW-like but source engineering unit not independently verified",
+    "load_rate_raw": "source raw discrete control signal; do not interpret as observed MW/min"
+  },
+  "alignment": "times = last history epoch; epochs[n,k] = times[n] - 630 + 10*k; first64 history and next512 future; source parser uses utc=True exactly as bypass builder, without claiming source clock timezone",
+  "shape": [
+    256,
+    576,
+    3
+  ],
+  "history_steps": 64,
+  "future_steps": 512,
+  "dt_seconds": 10,
+  "unique_requested_times": 51560,
+  "missing_time_cells": 0,
+  "missing_value_cells": {
+    "load_MW": 0,
+    "agc_raw": 0,
+    "load_rate_raw": 0
+  },
+  "history_matches_aux_exactly": true,
+  "history_max_abs_difference": 0.0,
+  "ranges": {
+    "load_MW": [
+      204.99363708496094,
+      615.5921020507812
+    ],
+    "agc_raw": [
+      209.61178588867188,
+      600.4044799804688
+    ],
+    "load_rate_raw": [
+      1.0,
+      6.0
+    ]
+  },
+  "seconds": 22.581219999992754
+}

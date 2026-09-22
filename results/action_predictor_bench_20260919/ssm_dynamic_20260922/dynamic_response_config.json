@@ -1,0 +1,274 @@
+{
+  "checkpoints": {
+    "A": {
+      "path": "C:\\Users\\14020\\.codex\\worktrees\\action-predictor-bench\\thermal-world-model\\results\\action_predictor_bench_20260919\\focused33_seed11\\seed11\\A_short\\best.pt",
+      "sha256": "1ea8b49bb5dc9bc086b692d3b58cd53c9b38d1a666d7f18596f0f0fd824bb542"
+    },
+    "B": {
+      "path": "C:\\Users\\14020\\.codex\\worktrees\\action-predictor-bench\\thermal-world-model\\results\\action_predictor_bench_20260919\\focused33_seed11\\seed11\\B_short\\best.pt",
+      "sha256": "d91534ffc70e5e96413effb551f19232537af13eeae6c2b604f3b4a5d165dce1"
+    },
+    "D": {
+      "path": "C:\\Users\\14020\\.codex\\worktrees\\action-predictor-bench\\thermal-world-model\\results\\action_predictor_bench_20260919\\focused33_seed11\\seed11\\D_short\\best.pt",
+      "sha256": "a7a70db1a28616b8997adfc12777da4414c916aa6f324eaa89e9b78f10e3dbfe"
+    },
+    "P0": {
+      "path": "C:\\Users\\14020\\.codex\\worktrees\\action-predictor-bench\\thermal-world-model\\results\\action_predictor_bench_20260919\\physical33_seed11_to90\\seed11\\P0_short\\best.pt",
+      "sha256": "5e69bda2995b48b89976c872ec232c94d22db9af6a1bdc59c4369c5a12ed22b0"
+    }
+  },
+  "windows": {
+    "rise": [
+      7,
+      27,
+      58,
+      90,
+      110,
+      157,
+      196,
+      255
+    ],
+    "fall": [
+      0,
+      26,
+      43,
+      78,
+      99,
+      133,
+      193,
+      254
+    ],
+    "vary": [
+      25,
+      33,
+      123,
+      145,
+      147,
+      187,
+      217,
+      233
+    ],
+    "steady": [
+      1,
+      72,
+      118,
+      148,
+      178,
+      204,
+      229,
+      251
+    ]
+  },
+  "load_sha256": "d956d082eec5d00d0dca85abd09cfa0d6e7572dca542a119487cd3e24dea529c",
+  "evaluation_sha256": "de799f2bb99790c9f493e82a5edc9edce5ed4e703dc3febb1f2e3c74f463c212",
+  "source_sha256": {
+    "dynamic_response.py": "857c276f128747824219651a9cfe898cc54246dd5d47312ee4c819c1f1ecb6ed",
+    "dynamic_factual.py": "216f36b2dfd315951d0a9fc3fe0d4c0e809fd6a20faa85be56f728e7e8d6130e",
+    "evaluation.py": "df44bbf3b77ba0728a17812da01b97ef4f0ffd99c282cbb504c280352fddf2f4"
+  },
+  "git_commit": "ddc9c670f151f3574dd63a4535fa2a09b0ee1c05",
+  "protocol": "Add +/-3pp step/ramp/pulse to RECORDED future valve plans; keep the same historical state and boundary in each pair",
+  "observation": "128 steps after action, dt10s; first affected output is 10s after onset",
+  "response_grouping": "Reclassify actual MW change over each action-onset to onset+128 interval; original 32 origins selected by origin-time groups",
+  "future_load_usage": "Only post-hoc regime labels. MW is NOT an input in future plans.",
+  "boundary_ablation": "Joint observed coal/steamflow/pressure/temperature trajectory, not a calibrated MW intervention",
+  "no_training": true,
+  "cases": [
+    {
+      "id": "step_t0_v1_-0.03",
+      "shape": "step",
+      "onset": 0,
+      "valve": 0,
+      "dose": -0.03
+    },
+    {
+      "id": "step_t0_v1_+0.03",
+      "shape": "step",
+      "onset": 0,
+      "valve": 0,
+      "dose": 0.03
+    },
+    {
+      "id": "step_t0_v2_-0.03",
+      "shape": "step",
+      "onset": 0,
+      "valve": 1,
+      "dose": -0.03
+    },
+    {
+      "id": "step_t0_v2_+0.03",
+      "shape": "step",
+      "onset": 0,
+      "valve": 1,
+      "dose": 0.03
+    },
+    {
+      "id": "step_t64_v1_-0.03",
+      "shape": "step",
+      "onset": 64,
+      "valve": 0,
+      "dose": -0.03
+    },
+    {
+      "id": "step_t64_v1_+0.03",
+      "shape": "step",
+      "onset": 64,
+      "valve": 0,
+      "dose": 0.03
+    },
+    {
+      "id": "step_t64_v2_-0.03",
+      "shape": "step",
+      "onset": 64,
+      "valve": 1,
+      "dose": -0.03
+    },
+    {
+      "id": "step_t64_v2_+0.03",
+      "shape": "step",
+      "onset": 64,
+      "valve": 1,
+      "dose": 0.03
+    },
+    {
+      "id": "step_t128_v1_-0.03",
+      "shape": "step",
+      "onset": 128,
+      "valve": 0,
+      "dose": -0.03
+    },
+    {
+      "id": "step_t128_v1_+0.03",
+      "shape": "step",
+      "onset": 128,
+      "valve": 0,
+      "dose": 0.03
+    },
+    {
+      "id": "step_t128_v2_-0.03",
+      "shape": "step",
+      "onset": 128,
+      "valve": 1,
+      "dose": -0.03
+    },
+    {
+      "id": "step_t128_v2_+0.03",
+      "shape": "step",
+      "onset": 128,
+      "valve": 1,
+      "dose": 0.03
+    },
+    {
+      "id": "ramp_t0_v1_-0.03",
+      "shape": "ramp",
+      "onset": 0,
+      "valve": 0,
+      "dose": -0.03
+    },
+    {
+      "id": "ramp_t0_v1_+0.03",
+      "shape": "ramp",
+      "onset": 0,
+      "valve": 0,
+      "dose": 0.03
+    },
+    {
+      "id": "ramp_t0_v2_-0.03",
+      "shape": "ramp",
+      "onset": 0,
+      "valve": 1,
+      "dose": -0.03
+    },
+    {
+      "id": "ramp_t0_v2_+0.03",
+      "shape": "ramp",
+      "onset": 0,
+      "valve": 1,
+      "dose": 0.03
+    },
+    {
+      "id": "ramp_t64_v1_-0.03",
+      "shape": "ramp",
+      "onset": 64,
+      "valve": 0,
+      "dose": -0.03
+    },
+    {
+      "id": "ramp_t64_v1_+0.03",
+      "shape": "ramp",
+      "onset": 64,
+      "valve": 0,
+      "dose": 0.03
+    },
+    {
+      "id": "ramp_t64_v2_-0.03",
+      "shape": "ramp",
+      "onset": 64,
+      "valve": 1,
+      "dose": -0.03
+    },
+    {
+      "id": "ramp_t64_v2_+0.03",
+      "shape": "ramp",
+      "onset": 64,
+      "valve": 1,
+      "dose": 0.03
+    },
+    {
+      "id": "ramp_t128_v1_-0.03",
+      "shape": "ramp",
+      "onset": 128,
+      "valve": 0,
+      "dose": -0.03
+    },
+    {
+      "id": "ramp_t128_v1_+0.03",
+      "shape": "ramp",
+      "onset": 128,
+      "valve": 0,
+      "dose": 0.03
+    },
+    {
+      "id": "ramp_t128_v2_-0.03",
+      "shape": "ramp",
+      "onset": 128,
+      "valve": 1,
+      "dose": -0.03
+    },
+    {
+      "id": "ramp_t128_v2_+0.03",
+      "shape": "ramp",
+      "onset": 128,
+      "valve": 1,
+      "dose": 0.03
+    },
+    {
+      "id": "pulse_t64_v1_-0.03",
+      "shape": "pulse",
+      "onset": 64,
+      "valve": 0,
+      "dose": -0.03
+    },
+    {
+      "id": "pulse_t64_v1_+0.03",
+      "shape": "pulse",
+      "onset": 64,
+      "valve": 0,
+      "dose": 0.03
+    },
+    {
+      "id": "pulse_t64_v2_-0.03",
+      "shape": "pulse",
+      "onset": 64,
+      "valve": 1,
+      "dose": -0.03
+    },
+    {
+      "id": "pulse_t64_v2_+0.03",
+      "shape": "pulse",
+      "onset": 64,
+      "valve": 1,
+      "dose": 0.03
+    }
+  ]
+}

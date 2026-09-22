@@ -2,9 +2,15 @@
 
 目的：在同一套数据与指标下看清预测精度、动态外推和动作响应各自的长短处，再组合有效思路。本轮是基线探索，不做论文收口、不上现场闭环。
 
-## 当前执行：物理热状态 × JEPA式辅助训练
+## 当前结论：SSM升降负荷动态与阀门响应
 
-三臂60轮已回传，全部预算到顶而未确认停滞，解读见[PHYSICAL_RETURN.md](PHYSICAL_RETURN.md)。下一步保留原优化器/学习率/早停进度，三臂在新目录接续至最多90轮，执行细节见[PHYSICAL.md](PHYSICAL.md)：
+物理三臂续训已收到`ddc9c67`，P0/P1/P2分别在71/61/61轮达到早停，未解决精度损失。本次无训练，重新分析全部256个报告窗口和17个模型，并在32个起点上做28种动态工况阀门探针。
+
+直接看[SSM动态响应解读及图表](SSM_DYNAMIC_RESPONSE.md)。SSM已经能追踪不少升降负荷温度波动；阀1短时方向与跨块递推的动作响应仍需处理。当前没有新的训练任务。
+
+## 已完成：物理热状态 × JEPA式辅助训练及续训
+
+三臂60轮回传解读见[PHYSICAL_RETURN.md](PHYSICAL_RETURN.md)。随后保留原优化器/学习率/早停进度接续，已经完成，无需重复以下命令；复现细节见[PHYSICAL.md](PHYSICAL.md)：
 
 ```bash
 python -m experiments.action_predictor_bench_20260919.physical --continue-from results/action_predictor_bench_20260919/physical33_seed11 --output results/action_predictor_bench_20260919/physical33_seed11_to90 --max-epochs 90
