@@ -1,0 +1,28 @@
+{
+  "status": "complete",
+  "model": "S0_B",
+  "seed": 11,
+  "epochs_run": 47,
+  "updates": 7520,
+  "stop_reason": "validation_plateau",
+  "reached_validation_plateau": true,
+  "best_epochs": {
+    "short": 33,
+    "balanced": 33
+  },
+  "best_selector": {
+    "short": 0.79493248462677,
+    "balanced": 1.333142101764679
+  },
+  "final_selector": {
+    "short": 0.8130995035171509,
+    "balanced": 1.3820797801017761,
+    "block_H128": 1.9510600566864014
+  },
+  "final_lr": 0.0001,
+  "train_seconds": 378.15869507426396,
+  "parameters": 23413,
+  "trainable_parameters": 23413,
+  "training_windows": 20371,
+  "supervision_horizon": 128
+}
