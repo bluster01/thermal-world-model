@@ -1,0 +1,284 @@
+{
+ "batch": "unified_industrial_stage1_20260923",
+ "release_commit": "d14a5a80c697fa96b08dac1be4892b03447c0cc1",
+ "kind": "merged-source deviation build identity (pre-claim proposal, Linux side)",
+ "generated_utc_date": "2026-09-24",
+ "source_table_sha256": "85a3f92648d5f88a4543f500859b200207fb55a32555900ca88f7c339c4e4da6",
+ "alias_mapping": "verified by recipe filename_sha256: 80/80 matched",
+ "preparation_code_sha256_check": {
+  "prepare.py": "PASS",
+  "dataset.py": "PASS"
+ },
+ "grid_rows": 1200210,
+ "channels": 80,
+ "check_summary": {
+  "npy_values_match": {
+   "flags.npy": false,
+   "observed.npy": false,
+   "source_time_ns.npy": false,
+   "split.npy": true,
+   "time_ns.npy": true,
+   "valid.npy": false,
+   "values.npy": false
+  },
+  "normalization_match": {
+   "center": false,
+   "scale": false,
+   "fit_count": false,
+   "active_from_training_variation": true,
+   "aliases_ok": true
+  },
+  "tasks_match": true,
+  "grid_rows_match": true,
+  "aliases_match": true,
+  "reader_config_match": {
+   "profiles": true,
+   "operating_floor_mw": true
+  },
+  "sources_match": "0/80"
+ },
+ "window_counts_ours": {
+  "scr": {
+   "h60m_f10m": {
+    "train": {
+     "origins": 138762,
+     "complete_label_origins": 137081
+    },
+    "validation": {
+     "origins": 28432,
+     "complete_label_origins": 27900
+    },
+    "historical_test": {
+     "origins": 19877,
+     "complete_label_origins": 19451
+    }
+   },
+   "h60m_f30m": {
+    "train": {
+     "origins": 138584,
+     "complete_label_origins": 133452
+    },
+    "validation": {
+     "origins": 28392,
+     "complete_label_origins": 26913
+    },
+    "historical_test": {
+     "origins": 19857,
+     "complete_label_origins": 18678
+    }
+   }
+  },
+  "main_steam": {
+   "h60m_f10m": {
+    "train": {
+     "origins": 139872,
+     "complete_label_origins": 138296
+    },
+    "validation": {
+     "origins": 28544,
+     "complete_label_origins": 28123
+    },
+    "historical_test": {
+     "origins": 20080,
+     "complete_label_origins": 19700
+    }
+   },
+   "h60m_f30m": {
+    "train": {
+     "origins": 139832,
+     "complete_label_origins": 135117
+    },
+    "validation": {
+     "origins": 28504,
+     "complete_label_origins": 27243
+    },
+    "historical_test": {
+     "origins": 20060,
+     "complete_label_origins": 18953
+    }
+   }
+  },
+  "reheat_steam": {
+   "h60m_f10m": {
+    "train": {
+     "origins": 139872,
+     "complete_label_origins": 138296
+    },
+    "validation": {
+     "origins": 28544,
+     "complete_label_origins": 28123
+    },
+    "historical_test": {
+     "origins": 20080,
+     "complete_label_origins": 19700
+    }
+   },
+   "h60m_f30m": {
+    "train": {
+     "origins": 139832,
+     "complete_label_origins": 135117
+    },
+    "validation": {
+     "origins": 28504,
+     "complete_label_origins": 27243
+    },
+    "historical_test": {
+     "origins": 20060,
+     "complete_label_origins": 18953
+    }
+   }
+  }
+ },
+ "window_count_deltas_vs_expected": {
+  "origins_main_steam_h60m_f10m.npz": {
+   "train": 392,
+   "train_complete": 108883,
+   "validation": -228,
+   "validation_complete": 23116,
+   "historical_test": 59,
+   "historical_test_complete": 15859
+  },
+  "origins_main_steam_h60m_f30m.npz": {
+   "train": 206,
+   "train_complete": 132992,
+   "validation": -228,
+   "validation_complete": 26884,
+   "historical_test": 79,
+   "historical_test_complete": 18648
+  },
+  "origins_reheat_steam_h60m_f10m.npz": {
+   "train": 79,
+   "train_complete": 113466,
+   "validation": -120,
+   "validation_complete": 24411,
+   "historical_test": 59,
+   "historical_test_complete": 17530
+  },
+  "origins_reheat_steam_h60m_f30m.npz": {
+   "train": 0,
+   "train_complete": 133209,
+   "validation": -120,
+   "validation_complete": 27099,
+   "historical_test": 79,
+   "historical_test_complete": 18869
+  },
+  "origins_scr_h60m_f10m.npz": {
+   "train": 54173,
+   "train_complete": 79854,
+   "validation": -536,
+   "validation_complete": 16002,
+   "historical_test": 10,
+   "historical_test_complete": 6232
+  },
+  "origins_scr_h60m_f30m.npz": {
+   "train": 1471,
+   "train_complete": 120717,
+   "validation": -536,
+   "validation_complete": 25640,
+   "historical_test": 30,
+   "historical_test_complete": 12159
+  }
+ },
+ "pack_output_hashes": {
+  "config.json": "fb04c13e721b389f33559f3feac53f7457a5524157a535c1b797c98b60bfe1fe",
+  "flags.npy": "32ea11a7d09bf14ab3c3f20408769502f07378a154f14feb5d62cea85e188a9f",
+  "normalization.json": "4cc5a68409e345b9a44587fd31d33b5d8f6f48d7abfd2c6339e37797b881daa4",
+  "observed.npy": "75a1fe9938bdaa1bf16a51474378d66bb2eb791ed9b71c634547e462532dee9c",
+  "origins_main_steam_h60m_f10m.npz": "edcfab462a97d8740ed47b0f82e98e548749fcd1c2781614828d926a9268986a",
+  "origins_main_steam_h60m_f30m.npz": "d30eb32f172c85ed7e75aa9bcf7ab43d614aafcb0012323e3c658785ccc9a897",
+  "origins_reheat_steam_h60m_f10m.npz": "edcfab462a97d8740ed47b0f82e98e548749fcd1c2781614828d926a9268986a",
+  "origins_reheat_steam_h60m_f30m.npz": "d30eb32f172c85ed7e75aa9bcf7ab43d614aafcb0012323e3c658785ccc9a897",
+  "origins_scr_h60m_f10m.npz": "82ad25b265331b9e2440ac6204d6ab6bbe883f63cc09e8a711a830f8a6b157d5",
+  "origins_scr_h60m_f30m.npz": "134041337eab978ce1f6dcdaaf5d6464c8f12a9a87f5ed9f0fe9a20a67db0bac",
+  "quality.csv": "c3e742baea40b62bbb6981e5057e9bf804c08a30550df8020c1d5957ed351bfe",
+  "source_time_ns.npy": "d6daf71b8da4c5f195603aa74987f0838228114dc2c40e32d659e25ad801277d",
+  "sources.json": "b88f856056905edfae016b6f8d2027da49def757823ef57c739013176b890995",
+  "split.npy": "4d5c49ba07cdb6cd0948863489a11f890bc514f44aa0836d8d66ad92275bd576",
+  "tasks.json": "006e74a56c3c73e5389f268d984d416597101a6e294f6d5879d204e904144c5e",
+  "time_ns.npy": "306d9aed3b3f7240d2ed6c34c9de2ae83f874039c6bba26e93e1f9a3c307bf80",
+  "valid.npy": "eec5ea0a94c35c61c98d22fddd60de352d159483b7d458bb81b75c981b0b203f",
+  "values.npy": "7db11c9ab75c81a7bf945a1bad21cf2421608e17c604876c798fad89189fe5c9"
+ },
+ "extracted_source_sha256": {
+  "load": "e39d5d56092907dab90100525c222d5783bd5950911c46a1e7700ffe4e83cfb5",
+  "a_in": "f7a5a9b3496573ef65bbfeff40c8df16cadb639b25e5df103c6bfd3478078a6a",
+  "a_out": "8f269acfef89b06c7b9a442141c042e0be0f817fee7d3ef7068deb548619d505",
+  "b_in": "8dd25289f6b1127fd0f3f65edbba1d692a977f5fbf4e8c705fcfb2b2044a6eaf",
+  "b_out": "c6d3f8929ec647b912e2580baa686a240f5201bc813448bb8cf9eb5e8a4c64e6",
+  "coal": "36e3f767fbd17c0a130bdfd62ad53125fdaf501daaade140e723c4a883873b50",
+  "air": "e53fdf49daf419fb2a9856d7131e2b61b2a7be99039ca8856a9a977f517d79c9",
+  "temp_a": "a0a215cbd4f9ace5dbb04de1f8dda523cd54ab42ae57fa4ed7bc76c17c57ae80",
+  "temp_b": "b16a913e1ef95ad538c71bd8ba732bcb8525cf0e0371371ca4a9181a400d1d80",
+  "o2_a": "147aafb7a8c2760a8f7bca1bde0a26eda3ce8b20ee5c9948284c4195ff105d40",
+  "o2_b": "5c03ed90d79a733de4f752a0e17b4d3900f07fd652f86b4564490fc226cc1b6a",
+  "reagent_a": "634f16941bbb7e5c530a72cae16a68238345bef423cf46df50ef5f7ed50e9030",
+  "reagent_b": "ff5719305ce2b56a241cb982e28b0fb84a9dc78ff558a6628576b698703d3f1c",
+  "reagent_c": "a47f3fd224b8361e9da1951f5106c9e769762b95226b890287d5354652cb7acf",
+  "reagent_d": "b936ffe2ec419d7146be6414dfb261881f8052bdfbc21ef56bfd33c947f8e3a4",
+  "reagent_e": "bfd50ecd1f22348fc541e618c93a407e34a69b4c0df851473984d9da1dc78415",
+  "reagent_f": "bafd53638e8db145737e0b081c1300a674c35904ae174c88afcef7f205fc06a9",
+  "urea_z13": "19eda7610601f94a20ba17df3dff3b0e8ac0f0c06b86952673f70579dd5e190a",
+  "urea_z2": "bf1769d690a39518fb05cf3e203010bd0b926b801f4bf7962455fb5f5a01aa5b",
+  "urea_z3": "21df66141b1aa2c04fc7342c73752b35b49c42c24f70cf242283ac32a8d524f3",
+  "urea_z4": "a73b852c2950189fff4689482d4647ceb803adaa2ea583cb8a528b840d551a0e",
+  "a_nh3_out": "f4853f0719aa90a60329cad07cd64daef3bd0f247ae197bb4df4937edd5f5fe5",
+  "b_nh3_out": "c644fe2c1da616186e69ef5609bce4b38f7dcb7aafe899ddee553c274f1d509c",
+  "reagent_pid_a": "1cb07d3bb6699d5676e4d55ed12a8f1c0af03dcb14d6f39fc1e52a8d8d0efbe5",
+  "reagent_valve_a": "22425bc1e04c4621cc6a188a9eac97f92205413275710ec5c5f0f14a783413eb",
+  "reagent_pid_b": "5feea737fc49473351ed25f056a128e73e8ed7d8702ac6a7d6ee1b095edb7aac",
+  "reagent_valve_b": "22425bc1e04c4621cc6a188a9eac97f92205413275710ec5c5f0f14a783413eb",
+  "reagent_pid_c": "825e289fd13eaa18febf5159611e7e794fda8a47f89393b25d93f4093af88d5a",
+  "reagent_valve_c": "22425bc1e04c4621cc6a188a9eac97f92205413275710ec5c5f0f14a783413eb",
+  "reagent_pid_d": "c42611e23a21bf23fff066363a789c9c72c64509ac9b52171483de61ef4e2d20",
+  "reagent_valve_d": "22425bc1e04c4621cc6a188a9eac97f92205413275710ec5c5f0f14a783413eb",
+  "reagent_pid_e": "9b14993aac06231aafc3ceaa8f8d0ddf0bc36104f335289ab5da4c6f2f2da1dd",
+  "reagent_valve_e": "22425bc1e04c4621cc6a188a9eac97f92205413275710ec5c5f0f14a783413eb",
+  "reagent_pid_f": "f5dd03bf9776d810969951120d4c76d57fcc54befa00902f6af8da721e1e73dc",
+  "reagent_valve_f": "22425bc1e04c4621cc6a188a9eac97f92205413275710ec5c5f0f14a783413eb",
+  "urea_valve_z13": "22425bc1e04c4621cc6a188a9eac97f92205413275710ec5c5f0f14a783413eb",
+  "urea_valve_z2": "22425bc1e04c4621cc6a188a9eac97f92205413275710ec5c5f0f14a783413eb",
+  "urea_valve_z4": "22425bc1e04c4621cc6a188a9eac97f92205413275710ec5c5f0f14a783413eb",
+  "ms_A_sh1_inlet_temp": "a9129e96b0d8455c6f540697abe4244d54503f8ce412983b43fac2b1390d622e",
+  "ms_A_sh1_outlet_temp": "bd39bec75725388d3a3dae5327e93baabb5f1224fd77839d8cee47cc824bbf5d",
+  "ms_A_sh2_inlet_temp": "1f4e2e3ae99e948fc59b4505d28f9b6faa79dda1fa6459f6f491bf66b8ff1e46",
+  "ms_A_sh2_outlet_temp": "dada7d6081ccc41e1ece50ceac87d51e5c351a125ede03f24a22b7b237b9bb75",
+  "ms_A_final_outlet_temp": "2b2bde1e279410609857f15b47df71a8f5d323c036d5db910f1218d02ab2f7ba",
+  "ms_A_valve1_position": "d8bdb62a2f1888d80f31681aa045201d6474f89db58420626dac899b0b3acac2",
+  "ms_A_valve2_position": "3f937e1b36a69a09c3da09c2dcffc165d731ecbb3eb6e180989534e737755e81",
+  "ms_A_outlet_pressure": "db3788a2bd5c9119104f7723055f42d3b22c0b787f7c65a74a0d41351b3edf87",
+  "rh_A_steam_inlet_temp": "e1d7ade1fbdff43841e98163dd31da6bfce150c4d7c621f1dbdd39f526fffd9c",
+  "rh_A_emergency_spray_outlet_temp": "097c03b11f77b0cb927dbcf7bca1890c579a22b228f647b9e1fef8268184a6e3",
+  "rh_A_stage1_spray_inlet_temp": "02cde26889ae66b79ba0afebe9b6edcd21ad40c82ed784b1fe77b1c5244cf3c4",
+  "rh_A_desuperheater_outlet_temp": "372f2e28d93f8f005f6fd8fd728b1cf9a46dfb1ebd4ab654875e391661a70a99",
+  "rh_A_final_outlet_temp": "67c045e6a7535ef2213b624034a44a54a9ddaff3355d783b64fc79fd9e0fa867",
+  "rh_A_valve_position": "817a3a25ce28821847919174c2ea7faec1930602c726e617b43182b35f459a96",
+  "rh_A_gas_inlet_vertical_temp": "e665d4e1a9ca27715ae17d33b714f9aa16e651b9fb5a222b0be204d7a15c032b",
+  "rh_A_gas_inlet_horizontal_temp": "77fb1b98974b0aa20c72960f4553a746c460e99ab4a45b6010f6eba67417e12e",
+  "ms_B_sh1_inlet_temp": "6d760e102c97d230586372269c46bf7ee647605dbe4b70d7eaf624f6be79a5ad",
+  "ms_B_sh1_outlet_temp": "0b7ee3932a87d99fc32f35fee2ec7fafeb7e2081a050f0d30ed39c8732852b82",
+  "ms_B_sh2_inlet_temp": "1e7866dad841c8b7f45790f5c777a48e384da668acf9f942fb9ce62190656926",
+  "ms_B_sh2_outlet_temp": "a428911460ad65d3e2fe1a2de6aa47c76f5f17958700ddf7d251cc918cacc305",
+  "ms_B_final_outlet_temp": "42cd5ee4f89fbcb7ff09c60a6b7fe477e923554113ab7d8a836c4991d4ae8d82",
+  "ms_B_valve1_position": "eb991925a66979d142c5b281995ac6bc0f84a2bc3ce0ab6d702d1bc2de51d977",
+  "ms_B_valve2_position": "5b30d2285f6df3a550a97577fdf422d30aacb60b261410ba92cd4d43986b0c9a",
+  "ms_B_outlet_pressure": "7c61775c679fe5b36369b1d9c3635e4df01654e131c92ab2707e4bb8d7d68816",
+  "rh_B_steam_inlet_temp": "e628fda7c0ce88b0050ca2609a027b8df93ee4ec00a976106f532a4cb907a389",
+  "rh_B_emergency_spray_outlet_temp": "166122d3ee825acd1eff0536ac0ac7de9f5ca3ae042d640e9cd64cd5f79ceb55",
+  "rh_B_stage1_spray_inlet_temp": "843dc4923aa6e9f4ea3c51c7fd24f1ee58ec7c3ff5245c2475eb266d6aa564ad",
+  "rh_B_desuperheater_outlet_temp": "745c5dae117d571c16e6d960d7caa9e7c4141ec6d48e5449979e6226108dba34",
+  "rh_B_final_outlet_temp": "79e37b53c83805caeaa0cdf94dcf07b25d16dc68f96a5086ac64f9beff89ff1f",
+  "rh_B_valve_position": "0604a5a4d80c91cfd8147ffd0d8d92430eceeb779b5b7cdecd631f17f9605379",
+  "rh_B_gas_inlet_vertical_temp": "cbf5ded4fdae1eb02582e4249463b5fe31e1c22d86f8c00efe1965e42dcb46a5",
+  "rh_B_gas_inlet_horizontal_temp": "9df750054f6add8d59de6aa15ad958d4dd8b9ac3b078d64ed372ba10e0738051",
+  "steam_flow": "2b8c1a3f2812ab8c32a6b9c16a09cfd4e76cc02f71e877003bfddc18f9e1033f",
+  "separator_pressure": "5a0a11096edfcbca49ab59f97914a2b3bec53f5d4441d9be64aaddceebc34c58",
+  "separator_temperature": "5c1b4eb720c99d99584b291c2983cc85f06cd5eff47465be3ca6df16f691ca7b",
+  "feedwater_outlet_temperature": "753cff21a24f13c1921607ff5f90a86e053b3ffd9ad13951c4ae56528f70cba6",
+  "ms_spray_total": "a125857b7577c7e2b6dd1e6cc993ba52d9acc7e7d8f13cea712faa486f19ec8a",
+  "rh_spray_total": "fe24a39f4cc5a9b0b0cf798cc22ee86b1f189a66dfddeb6510ef41fa7bcc7cad",
+  "rh_spray_supply_temperature": "42c334a5c85636a30c59071ed0c565a7f87a0d0c9c72a3ab756401cc9e23ef5f",
+  "rh_hp_exhaust_temperature": "06d3ae115ca156a38854735a26df613721d28f0d455c3f88bb0f635d850df23f",
+  "rh_cold_pressure": "fb66e0966710a6977a74956bdb67451af7cec086a08d3537eeaf7c6e311a0e18",
+  "rh_hot_pressure": "f0aa41f7ec0311e6b2a9603ff2e88c0757db0f0f39f56927dc9b38bb78f68c0b"
+ }
+}
