@@ -1,0 +1,256 @@
+{
+  "returned_commit": "187673b",
+  "trained_commit": "46371ead3a7e07b1e6d7ec1b6c11f37ee7ba1e4f",
+  "source_hashes_match": {
+    "bilateral.py": true,
+    "bilateral_models.py": true,
+    "bilateral_evaluation.py": true,
+    "full_baselines.py": true,
+    "r4_base.py": true,
+    "r4_transport.py": true,
+    "focused_models.py": true,
+    "models.py": true,
+    "bilateral_data.py": true,
+    "data.py": true,
+    "run.py": true,
+    "analyze_nadir.py": true,
+    "dynamic_factual.py": true
+  },
+  "fits": [
+    {
+      "model": "G2",
+      "epochs_run": 29,
+      "updates": 4640,
+      "stop_reason": "validation_plateau",
+      "best_epochs": {
+        "short": 29,
+        "balanced": 29
+      },
+      "train_seconds": 527.8531314861029,
+      "parameters": 32721,
+      "trainable_parameters": 2
+    },
+    {
+      "model": "S0_A",
+      "epochs_run": 61,
+      "updates": 9760,
+      "stop_reason": "validation_plateau",
+      "best_epochs": {
+        "short": 57,
+        "balanced": 40
+      },
+      "train_seconds": 486.7521202019416,
+      "parameters": 23413,
+      "trainable_parameters": 23413
+    },
+    {
+      "model": "S0_B",
+      "epochs_run": 47,
+      "updates": 7520,
+      "stop_reason": "validation_plateau",
+      "best_epochs": {
+        "short": 33,
+        "balanced": 33
+      },
+      "train_seconds": 378.15869507426396,
+      "parameters": 23413,
+      "trainable_parameters": 23413
+    },
+    {
+      "model": "S1",
+      "epochs_run": 43,
+      "updates": 6880,
+      "stop_reason": "validation_plateau",
+      "best_epochs": {
+        "short": 29,
+        "balanced": 20
+      },
+      "train_seconds": 342.9717994388193,
+      "parameters": 25333,
+      "trainable_parameters": 25333
+    },
+    {
+      "model": "S2",
+      "epochs_run": 49,
+      "updates": 7840,
+      "stop_reason": "validation_plateau",
+      "best_epochs": {
+        "short": 43,
+        "balanced": 31
+      },
+      "train_seconds": 389.3818796318956,
+      "parameters": 25333,
+      "trainable_parameters": 25333
+    },
+    {
+      "model": "S3",
+      "epochs_run": 47,
+      "updates": 7520,
+      "stop_reason": "validation_plateau",
+      "best_epochs": {
+        "short": 41,
+        "balanced": 18,
+        "AB_short": 41,
+        "AB_balanced": 40
+      },
+      "train_seconds": 444.45833383873105,
+      "parameters": 25578,
+      "trainable_parameters": 25578
+    },
+    {
+      "model": "R3",
+      "epochs_run": 53,
+      "updates": 8480,
+      "stop_reason": "validation_plateau",
+      "best_epochs": {
+        "short": 42,
+        "balanced": 40,
+        "AB_short": 31,
+        "AB_balanced": 39
+      },
+      "train_seconds": 3737.2219770541415,
+      "parameters": 33722,
+      "trainable_parameters": 33722
+    },
+    {
+      "model": "P3",
+      "epochs_run": 44,
+      "updates": 7040,
+      "stop_reason": "validation_plateau",
+      "best_epochs": {
+        "short": 30,
+        "balanced": 43,
+        "AB_short": 34,
+        "AB_balanced": 28
+      },
+      "train_seconds": 3657.8744094660506,
+      "parameters": 59300,
+      "trainable_parameters": 59300
+    }
+  ],
+  "prediction_rows_checked": 23,
+  "maximum_recomputed_mae_difference_C": 0.0,
+  "data_sha256": "08d6728fc9cecbcbffd3865041d45f4f37d8ace119ce51fa60a832f5c9d28465",
+  "single_seed": true,
+  "blind_test": false,
+  "replay": {
+    "local_torch": "2.5.1+cu121",
+    "returned_torch": "2.11.0+cu130",
+    "positions": [
+      0,
+      127,
+      255
+    ],
+    "rows": [
+      {
+        "model": "D_fixed",
+        "mode": "native",
+        "max_abs_C": 6.103515625e-05,
+        "mean_abs_C": 1.0371207963544293e-06
+      },
+      {
+        "model": "D_fixed",
+        "mode": "block_context_fixed",
+        "max_abs_C": 0.000244140625,
+        "mean_abs_C": 2.1676221876987256e-05
+      },
+      {
+        "model": "G2_balanced",
+        "mode": "native",
+        "max_abs_C": 6.103515625e-05,
+        "mean_abs_C": 1.045068074745359e-06
+      },
+      {
+        "model": "G2_balanced",
+        "mode": "block_context_fixed",
+        "max_abs_C": 0.000244140625,
+        "mean_abs_C": 2.1668274712283164e-05
+      },
+      {
+        "model": "S0_A_balanced",
+        "mode": "native",
+        "max_abs_C": 6.103515625e-05,
+        "mean_abs_C": 9.020169500217889e-07
+      },
+      {
+        "model": "S0_A_balanced",
+        "mode": "block_context_fixed",
+        "max_abs_C": 0.0001220703125,
+        "mean_abs_C": 9.147325727099087e-06
+      },
+      {
+        "model": "S0_B_balanced",
+        "mode": "native",
+        "max_abs_C": 6.103515625e-05,
+        "mean_abs_C": 6.437301749429025e-07
+      },
+      {
+        "model": "S0_B_balanced",
+        "mode": "block_context_fixed",
+        "max_abs_C": 0.00018310546875,
+        "mean_abs_C": 8.022785550565459e-06
+      },
+      {
+        "model": "S1_balanced",
+        "mode": "native",
+        "max_abs_C": 6.103515625e-05,
+        "mean_abs_C": 7.192293765001523e-07
+      },
+      {
+        "model": "S1_balanced",
+        "mode": "block_context_fixed",
+        "max_abs_C": 0.000152587890625,
+        "mean_abs_C": 1.2934207916259766e-05
+      },
+      {
+        "model": "S2_balanced",
+        "mode": "native",
+        "max_abs_C": 6.103515625e-05,
+        "mean_abs_C": 1.0212262395725702e-06
+      },
+      {
+        "model": "S2_balanced",
+        "mode": "block_context_fixed",
+        "max_abs_C": 6.103515625e-05,
+        "mean_abs_C": 2.8689703412965173e-06
+      },
+      {
+        "model": "S3_AB_balanced",
+        "mode": "native",
+        "max_abs_C": 6.103515625e-05,
+        "mean_abs_C": 9.139378676081833e-07
+      },
+      {
+        "model": "S3_AB_balanced",
+        "mode": "block_joint_refresh",
+        "max_abs_C": 0.0001220703125,
+        "mean_abs_C": 1.0353326615586411e-05
+      },
+      {
+        "model": "R3_AB_balanced",
+        "mode": "native",
+        "max_abs_C": 6.103515625e-05,
+        "mean_abs_C": 1.0669231187421246e-06
+      },
+      {
+        "model": "R3_AB_balanced",
+        "mode": "block_joint_refresh",
+        "max_abs_C": 6.103515625e-05,
+        "mean_abs_C": 1.0669231187421246e-06
+      },
+      {
+        "model": "P3_AB_balanced",
+        "mode": "native",
+        "max_abs_C": 9.1552734375e-05,
+        "mean_abs_C": 9.695688731881091e-07
+      },
+      {
+        "model": "P3_AB_balanced",
+        "mode": "block_joint_refresh",
+        "max_abs_C": 0.0001220703125,
+        "mean_abs_C": 1.2944142326887231e-05
+      }
+    ],
+    "interpretation": "Cross-version CPU float32 differences disclosed separately from exact artifact hashes"
+  }
+}
