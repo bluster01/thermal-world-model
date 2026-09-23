@@ -1,0 +1,106 @@
+{
+  "experiment_id": "unified_industrial_merged_stage1_20260924",
+  "tasks": [
+    "scr",
+    "main_steam",
+    "reheat_steam"
+  ],
+  "arms": [
+    "gru_direct",
+    "ssm_rollout",
+    "itransformer",
+    "mechanism",
+    "mechanism_no_slow"
+  ],
+  "seeds": [
+    11,
+    22,
+    33
+  ],
+  "fit_count": 45,
+  "primary_profile": "h60m_f10m",
+  "long_profile": "h60m_f30m",
+  "history_steps": 360,
+  "training_horizon": 60,
+  "long_horizon": 180,
+  "future_inputs": "none; all arms use history only",
+  "long_readout": "recurrence for state models; the same continuous lead-query decoder for direct arms, evaluated beyond trained leads",
+  "hidden": 64,
+  "training": {
+    "optimizer": "AdamW",
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "max_epochs": 80,
+    "min_epochs": 20,
+    "early_stop_patience": 12,
+    "plateau_patience": 4,
+    "plateau_factor": 0.5,
+    "minimum_learning_rate": 1e-05,
+    "gradient_clip_norm": 1.0,
+    "minimum_improvement": 1e-05,
+    "loss": "equal-target masked MSE in shared training-IQR units plus the same multiscale increment loss for every arm",
+    "increment_lags": [
+      1,
+      6,
+      18
+    ],
+    "increment_weight": 0.2,
+    "use_all_eligible_training_origins": true,
+    "epoch_cap_status": "BUDGET_EXHAUSTED, not converged"
+  },
+  "validation": {
+    "selection": "fixed chronological evenly spaced subset; target-macro normalized MSE",
+    "max_selection_origins": 4096,
+    "batch_size": 256,
+    "final_selection_split": "validation",
+    "physical_metrics": [
+      "MAE",
+      "RMSE",
+      "increment_MAE",
+      "endpoint_MAE"
+    ],
+    "endpoints": [
+      6,
+      18,
+      36,
+      60,
+      120,
+      180
+    ],
+    "mask_policy": "same frozen merged-pack origins and per-target grid-based masks for every arm"
+  },
+  "execution": {
+    "os": "Linux",
+    "device": "CUDA required for formal fits",
+    "parallel_fits": 1,
+    "workers": 2,
+    "cpu_threads": 4,
+    "matrix_order": "seed,task,arm",
+    "resume": "explicit --resume preserves optimizer/scheduler/RNG and completed epoch; failed entries require an explicit same-config retry",
+    "historical_test": "after all 45 fits have completed, evaluate the same frozen matrix once; do not select or tune on it",
+    "process_ownership": "new private output directory; no interruption of unrelated jobs"
+  },
+  "research_scope": {
+    "shared": "architecture and training rules across three tasks; each task fits its own weights in this stage",
+    "transfer": "cross-task weight transfer is a subsequent registered comparison",
+    "thermal": "equivalent typed temperature/storage coordinates, not calibrated equipment energy inventories",
+    "scr": "nonnegative concentration source/removal surrogate; no claim of elemental conservation or measured reagent-to-side allocation",
+    "thermal_connectivity": "per-target local storage stars conditioned on shared history; no inter-target physical chain is asserted in this first stage",
+    "mechanism_ablation": "paired full mechanism versus no slow state, same data and training objective",
+    "control": "no closed-loop deployment or measured causal-response claim",
+    "data_source": "existing Linux merged-grid data; all model comparisons share this source and its observation-time semantics"
+  },
+  "data_variant": {
+    "kind": "linux_merged_pack",
+    "source_receipt_commit": "d4a04eb4be7a519f72a7b2f90a4bd01e0b9dcb40",
+    "expected_data": "expected_data.json",
+    "original_release": "d14a5a80c697fa96b08dac1be4892b03447c0cc1",
+    "observation_semantics": {
+      "observed": "availability in the existing merged grid, not reconstructed native instrument arrivals",
+      "age": "computed from merged-grid export timestamps",
+      "scope": "prediction and slow-state comparison on this merged-table source",
+      "source_files_needed_for_training": false
+    }
+  }
+}

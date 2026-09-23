@@ -1,5 +1,7 @@
 # Thermal World Model
 
+> **当前执行入口（2026-09-24）**：按作者选择，直接使用 Linux 已有合并表数据包，执行 SCR、主汽温、再热汽温的 **45 次拟合**。数据身份由 Linux `d4a04eb` 现成包登记，模型与训练规则沿用原发布版。[立即执行](experiments/unified_merged_20260924/README.md) · [当前状态](experiments/unified_merged_20260924/experiment_state.json)。本轮使用 `unified_industrial_merged_stage1_20260924` 标识，领取与回执写入同名 results 目录。
+
 > **统一工业模型首轮：授权 Linux 执行（2026-09-23）**：SCR 出入口、主汽温、再热汽温三任务，共享数据口径，5 组模型 × 3 seed，共 45 次拟合。首轮检验历史观察器、显式状态递推及局部慢储能结构；60 分钟历史预测 10 分钟，并评价同权重 30 分钟延展。[模型与协议](experiments/unified_experiments_20260923/README.md) · [Linux 执行单](experiments/unified_experiments_20260923/RUN_LINUX.md) · [机器状态](experiments/unified_experiments_20260923/experiment_state.json)。本批代码经 GitHub 交付，科学实验由 Linux 领取后执行；领取与执行回执位于 `results/unified_industrial_stage1_20260923/`。工业数据、权重和详细结果留在私有存储。下方条目保留原实验的历史记录。
 
 > **FMTS-BLOCK1：已发布，授权Linux执行（2026-09-15，`ef1c4ed`）**：每次回填完整180秒主汽温预测块，累计1,200秒；原黑箱/GRU/no-rewet独立灰箱×3 seed，零训练。其余输入使用记录上下文，不称自主全状态仿真。[注册](docs/fmts2026/PREREG_BLOCK_ROLLOUT_20260915.md) · [Linux执行单](experiments/fmts_block_rollout_20260915/RUN_LINUX.md) · [验证](experiments/fmts_block_rollout_20260915/VERIFICATION.md)。30项工程测试复测通过、9个checkpoint严格加载；已push至origin/main，待Linux领取/运行回执。原H18双阀响应及稿件保持不变；真实历史/逐时轨迹私有回传。下方旧任务条目为历史，不是本次执行清单。

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "experiment_id": "unified_industrial_merged_stage1_20260924",
+  "source_sha256_lf": {
+    "experiments/unified_data_20260923/prepare.py": "98fe8c46ac9b5e88a0c5af66902b4d8ccb5cbdb03300ae1728b397ba776c5f2a",
+    "experiments/unified_data_20260923/dataset.py": "af824b2a1117fbb0fc14e6b2a783e98c4ad1454a21045bdd32b14b48b21ea06f",
+    "experiments/unified_experiments_20260923/models.py": "dd9e2a50f0f72b2df0263c30eac57d87e0968fb0a20d38ba84fcc91261cbe2bc",
+    "experiments/unified_experiments_20260923/test_models.py": "bf6d0c2379dd823937b7f6caf757c3f4c2fd3172cf75a2520deb4a3c11446a5d",
+    "experiments/unified_experiments_20260923/run.py": "1fd6e61ef91090bffc2f353865c769dc8372e5eea6963e413da7826e21574be7",
+    "experiments/unified_experiments_20260923/test_runner.py": "20446f21a33bcd2cb830ccc8187560e3366bfcd618e7b4c78eab44a33ec6d15f",
+    "experiments/unified_experiments_20260923/summarize.py": "58ed4cb8def2da789b89bd8ff1016191f642cf8d20590d919fa0c845cae7a19f",
+    "experiments/unified_experiments_20260923/test_summarize.py": "c54e3263082c7388ff06454937174487cf2d24a2b5b6cf49a2f098d08122c7e4",
+    "experiments/unified_experiments_20260923/prepare_linux.py": "1dbc82260a6256c2bd99fe0aa31be960e48025cc63a4cc522218d2373448a63f",
+    "experiments/unified_experiments_20260923/test_prepare_linux.py": "b1decb34b573ab29e1fd55b20e05470018cd0045990f4d99acebf52b27fbac91",
+    "experiments/unified_experiments_20260923/test_execution.py": "d2a47e6027a0df2c30e22f2dade844a112ede042ad30d4a7eca9a2085ce1b840",
+    "experiments/unified_experiments_20260923/protocol.json": "3724830c6b565d021cb37a8102b071099a3465197c06b0bc097db3f121c88ac6",
+    "experiments/unified_experiments_20260923/data_recipe.json": "e2fe87d7a629b285fa57174fdcff124bcd320ffe2bc22a1c766bb2443ca38b93",
+    "experiments/unified_experiments_20260923/expected_data.json": "ef8354b566c0389f559e49ba40b2c56739d8aa23205518853c73c927aedbbb59",
+    "experiments/unified_experiments_20260923/requirements.txt": "2a91001e2a4bcb212328c5a67761b79028b5117b6bf58e60359244e424a27093",
+    "experiments/unified_experiments_20260923/README.md": "e5069061ecdfd3b8711803af6616ecd3eea15da115035574210f28ece141b0e2",
+    "experiments/unified_experiments_20260923/RUN_LINUX.md": "840df72345714ca514f414bc28a221be6af27ad3f0d5d7ee305b2feaa4e1c7f7",
+    "experiments/unified_experiments_20260923/VERIFICATION.md": "d2f59727305424ec54bc80d335076389cedefec5c43907572ead4335bd227825",
+    "experiments/unified_merged_20260924/run.py": "aa745bd1dcb8a797cc39ffedfd7ef37d6f74768ae6fcd11a6759a612417facb7",
+    "experiments/unified_merged_20260924/data_contract.py": "71469033ac5967549ee990da19d1a668a5005bbeec7b11c8ef1566ee24a20efa",
+    "experiments/unified_merged_20260924/test_data_contract.py": "9bb9829d6c3a15e86ba7447ca26895de11f687967f8ad0e319c8c0f0e359b42d",
+    "experiments/unified_merged_20260924/expected_data.json": "9e96b24ef6b42554d8270293031179f3053f23bd78cb50e4513a9ad32b140c56",
+    "experiments/unified_merged_20260924/protocol.json": "82600e91160e6d7f62be421012c7b59ad5e56ea9cd24cb18c8600cbd9b6b07ff",
+    "experiments/unified_merged_20260924/README.md": "3b5cda2c74ba12b8eab28ccfb6ab51cd26fc748f175f6999bf137075ba906452",
+    "experiments/unified_merged_20260924/VERIFICATION.md": "401c256842d9eb8c521302b0fd82d8afb273d5d832864cc5acddf35984f27644",
+    "analysis/unified_merged_source_20260924/identity.json": "77a98da20218e7ed006c268072ebe1faff1a3cd56458d47efc729105f19e5b2c"
+  },
+  "software_verification": {
+    "new_data_contract_tests_passed": 16,
+    "new_runner_regression_tests_passed": 7,
+    "scientific_training_performed_locally": false
+  },
+  "base_release_commit": "d14a5a80c697fa96b08dac1be4892b03447c0cc1",
+  "data_contract": "Linux existing merged pack registered at d4a04eb; exact declared file bytes",
+  "execution": "same 45 fits; Linux CUDA; private outputs"
+}

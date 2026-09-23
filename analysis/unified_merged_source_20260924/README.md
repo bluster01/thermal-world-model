@@ -1,4 +1,6 @@
 # Linux 侧预领取说明：合并表源偏离版数据包（状态与身份）
+
+> 2026-09-24 后续：作者已选择使用本包，执行入口为 [unified_merged_20260924](../../experiments/unified_merged_20260924/README.md)。下文保留预领取背景。
 批次：`unified_industrial_stage1_20260923`（release `d14a5a80`）· 生成：2026-09-24 · Linux 执行侧
 **性质：预领取（pre-claim）工作说明，不是回执；未领取、未训练、未改动任何冻结源码。**
 
@@ -19,8 +21,8 @@ Linux 本机不持有本批公开发布的 80 个原生逐点导出（按别名�
   origins 计数（明细见 `identity.json`）；源哈希 0/80（预期——源非原生导出）
 
 ## 影响要点（供口径判断）
-- train/validation/historical_test 窗口数：多数 **±0.3%–0.9%**；最大项 scr f10m train **+64%**；
-- `*_complete` 子集数值膨胀（最大 ~63×）——**但 runner 全链路未使用 complete 子集**（读码确认，train/评估均用非 complete 集 + 逐目标逐步掩码）；
+- train/validation/historical_test 窗口数：除 SCR 外多数绝对变化小于 1.1%；SCR validation 两时域约 −1.85%，scr f10m train 约 **+64.04%**；
+- `*_complete` 子集数值膨胀（最大约225.6×，对应再热30分钟历史测试84→18,953）——**但 runner 全链路未使用 complete 子集**（读码确认，train/评估均用非 complete 集 + 逐目标逐步掩码）；
 - `observed`/fresh 语义不可从合并表复原（无原生时标）：约 **1–2%** (目标,步) 计分对变化；
 - 整行缺失 **7,881/1,200,210**（0.66%：一块 ~21 小时 + 281 个小块）；
 - 数值抽验（以本机原生拉取为参照，非本批真源）：同源通道中位差为 float32 舍入级；
