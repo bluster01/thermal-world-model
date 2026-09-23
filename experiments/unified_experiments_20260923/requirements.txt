@@ -1,0 +1,6 @@
+# Use an isolated Linux environment. Keep its resolved versions for the matrix.
+# Install the CUDA build of PyTorch appropriate to the worker's existing driver.
+torch>=2.5,<3
+numpy==1.26.4
+pandas==2.1.4
+pytest>=7.4,<9

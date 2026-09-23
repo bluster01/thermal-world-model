@@ -1,3 +1,16 @@
+## 当前新增任务：统一工业模型首轮，Linux 执行（2026-09-23）
+
+- [x] 作者明确授权开始实验并使用 Linux。
+- [x] SCR、主汽温、再热汽温统一数据接口与匿名重建配方；严格字节与数值身份核验。
+- [x] 冻结 3 任务 × 5 模型 × 3 seed = 45 次拟合；H60 训练及同权重 H180 延展。
+- [x] 实现 Linux runner、数据预运行、断点续训、完整矩阵后评测及三种子模块汇总。
+- [x] 本地合成软件检查；不把软件通过计为工业实验结果。
+- [ ] Linux 提交领取回执，再执行数据重建与 CUDA 预运行。
+- [ ] Linux 完成 45 次拟合、统一评测和私有汇总，回传执行状态。
+- [ ] 对实际产物按任务和种子复算慢状态贡献，推进后续链路与迁移实验。
+
+执行入口：[RUN_LINUX](experiments/unified_experiments_20260923/RUN_LINUX.md)。协议：[protocol.json](experiments/unified_experiments_20260923/protocol.json)。本批公开回执仅写入 `results/unified_industrial_stage1_20260923/{claim.json,public_status.json,return_receipt.json}`。原始数据与详细结果不写入公开 Git。当前尚无本批领取或启动回执。此新授权仅对应本批比较，下列旧任务保留各自状态。
+
 ## 当前 FMTS 任务：BLOCK1已发布，待Linux执行回执（2026-09-15）
 
 - [x] 作者确认180秒完整预测块反馈；注册 [FMTS-BLOCK1](docs/fmts2026/PREREG_BLOCK_ROLLOUT_20260915.md)，不是旧stride1或原生H60方案。

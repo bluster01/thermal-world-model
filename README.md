@@ -1,5 +1,7 @@
 # Thermal World Model
 
+> **统一工业模型首轮：授权 Linux 执行（2026-09-23）**：SCR 出入口、主汽温、再热汽温三任务，共享数据口径，5 组模型 × 3 seed，共 45 次拟合。首轮检验历史观察器、显式状态递推及局部慢储能结构；60 分钟历史预测 10 分钟，并评价同权重 30 分钟延展。[模型与协议](experiments/unified_experiments_20260923/README.md) · [Linux 执行单](experiments/unified_experiments_20260923/RUN_LINUX.md) · [机器状态](experiments/unified_experiments_20260923/experiment_state.json)。本批代码经 GitHub 交付，科学实验由 Linux 领取后执行；领取与执行回执位于 `results/unified_industrial_stage1_20260923/`。工业数据、权重和详细结果留在私有存储。下方条目保留原实验的历史记录。
+
 > **FMTS-BLOCK1：已发布，授权Linux执行（2026-09-15，`ef1c4ed`）**：每次回填完整180秒主汽温预测块，累计1,200秒；原黑箱/GRU/no-rewet独立灰箱×3 seed，零训练。其余输入使用记录上下文，不称自主全状态仿真。[注册](docs/fmts2026/PREREG_BLOCK_ROLLOUT_20260915.md) · [Linux执行单](experiments/fmts_block_rollout_20260915/RUN_LINUX.md) · [验证](experiments/fmts_block_rollout_20260915/VERIFICATION.md)。30项工程测试复测通过、9个checkpoint严格加载；已push至origin/main，待Linux领取/运行回执。原H18双阀响应及稿件保持不变；真实历史/逐时轨迹私有回传。下方旧任务条目为历史，不是本次执行清单。
 
 > **FMTS-CORE1 交付 Linux，真实证据回传前暂停改稿（2026-09-14）**：作者确认先做同核固定权重对照。保留 GRU 每个 seed 的物理参数，观察器×闭合四格+原GNR参考，共15个真实数据推理单元、零训练；不把提取物理核心冒充独立辨识。[证据计划](experiments/fmts_core_20260914/EVIDENCE_PLAN_ZH.md) · [注册](docs/fmts2026/PREREG_CORE_ABLATION_20260914.md) · [Linux执行单](experiments/fmts_core_20260914/RUN_LINUX.md)。本地35项工程测试通过，不是科学实验结果；尚无Linux启动/回传回执。[时间外候选溯源](analysis/fmts_greybox_core_20260914/EXPOSURE_REVIEW_ZH.md)确认3–5月数据已有历史使用，不能称全新独立test；本轮不开放评分。

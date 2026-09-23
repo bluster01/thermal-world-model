@@ -1,0 +1,27 @@
+{
+  "experiment_id": "unified_industrial_stage1_20260923",
+  "status": "ready_for_linux",
+  "authorization": {
+    "source": "user_instruction",
+    "date": "2026-09-23",
+    "scope": "prepare and execute the frozen three-task industrial model comparison on remote Linux"
+  },
+  "release_manifest": "release_manifest.json",
+  "protocol": "protocol.json",
+  "runbook": "RUN_LINUX.md",
+  "fits_planned": 45,
+  "fits_observed_started": 0,
+  "fits_observed_completed": 0,
+  "linux_claim_observed": false,
+  "dispatch": "GitHub main handoff; Linux worker must claim before execution",
+  "receipt_paths": [
+    "results/unified_industrial_stage1_20260923/claim.json",
+    "results/unified_industrial_stage1_20260923/public_status.json",
+    "results/unified_industrial_stage1_20260923/return_receipt.json"
+  ],
+  "public_scope": "source code, anonymized recipe/hashes, execution status only",
+  "private_scope": "raw data, prepared arrays, actual source paths, weights, per-target metrics, trajectories, detailed logs and summaries",
+  "future_inputs": "history only",
+  "historical_test": "all 45 fits finalized before evaluation; reused historical source, not a new blind test",
+  "evidence_status": "software verification only; scientific results pending Linux execution"
+}
