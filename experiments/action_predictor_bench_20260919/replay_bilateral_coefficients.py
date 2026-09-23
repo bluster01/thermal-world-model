@@ -59,20 +59,21 @@ def replay(model,history,actions,coef):
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--run',type=Path,default=ROOT/'bilateral33_seed11')
+    p.add_argument('--seed',type=int,default=11)
     p.add_argument('--out',type=Path,default=ROOT/'bilateral_review_20260923')
     args=p.parse_args();args.out.mkdir(parents=True,exist_ok=True);torch.set_num_threads(1)
     rows=[];checks=[];saved={}
     for arm in ('R3','P3'):
-        folder=args.run/'seed11'/f'{arm}_AB_balanced'
+        folder=args.run/f'seed{args.seed}'/f'{arm}_AB_balanced'
         catalog=read(folder/'response_catalog.json')
         with np.load(folder/'responses.npz') as z:
             positions=z['positions'];returned={c['key']:z[c['key']] for c in catalog if c['shape']=='step'
                 and c['onset']==0 and abs(c['dose'])==.03 and c['mode']=='native' and c['boundary_action_protocol']=='recorded'}
         with np.load(OUT_DEFAULT) as z:
-            model=make_model(arm,z['mean'],z['scale'],11,PARENT)
+            model=make_model(arm,z['mean'],z['scale'],args.seed,PARENT)
             h,u,d=[torch.tensor(z[f'{key}_evaluation'][positions],dtype=torch.float64)
                    for key in ('hist30','future_act','future_bnd')]
-        checkpoint=args.run/'fits/seed11'/arm/'best_AB_balanced.pt'
+        checkpoint=args.run/f'fits/seed{args.seed}'/arm/'best_AB_balanced.pt'
         model.load_state_dict(torch.load(checkpoint,weights_only=True)['model']);model.double().eval()
         coef,base=coefficients(model,h,u,d);reproduced=replay(model,h,u,coef)
         error=float((base-reproduced).abs().max());assert error<1e-10
@@ -103,7 +104,7 @@ def main():
                 saved[f'{arm}_{VALVES[v]}_{"open" if sign>0 else "close"}']=change.astype(np.float32)
             rows.append(row)
     np.savez_compressed(args.out/'shared_coefficient_responses.npz',positions=positions,**saved)
-    save_json(args.out/'shared_coefficient_diagnostic.json',dict(checks=checks,cases=rows,
+    save_json(args.out/'shared_coefficient_diagnostic.json',dict(seed=args.seed,checks=checks,cases=rows,
         reference='recorded future valve plan and boundary plan, explicitly shared across every candidate',
         proof='Fixed alpha in (0,1), nonnegative valve mixing, forward carrier routing and positive gains define a nonnegative causal kernel with negative temperature readout; pointwise larger valve plans cannot warm reachable outputs.',
         limits='Reference-conditioned comparison only. Exact reference fit is algebraic and uses its known plan. It does not prove a globally monotone adaptive model, correct physical amplitude, or unchanged MAE on plans different from the declared reference.'))

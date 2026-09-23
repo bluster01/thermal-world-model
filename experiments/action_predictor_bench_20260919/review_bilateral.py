@@ -95,10 +95,10 @@ def validate(run, replay):
     return result
 
 
-def factual(run):
+def factual(run, seed=11, names=None):
     rows=[]
-    for name in DEPLOY:
-        result=read(run/'seed11'/name/'result.json')
+    for name in (DEPLOY if names is None else names):
+        result=read(run/f'seed{seed}'/name/'result.json')
         for mode,sides in result['factual'].items():
             for side,item in sides.items():
                 if side not in ('A','B') or 'H32' not in item: continue
@@ -110,14 +110,14 @@ def factual(run):
     return rows
 
 
-def analyze_responses(run):
+def analyze_responses(run, seed=11, names=None):
     rows=[]; curves={}; catalogs={}; arrays={}
     with np.load(ROOT/'ssm_dynamic_20260922/load_context.npz') as z:
         with np.load(OUT_DEFAULT) as pack:
             assert np.array_equal(z['times'],pack['evaluation_time'])
         load=z['load_MW']
-    for name in DEPLOY:
-        folder=run/'seed11'/name; catalogs[name]=read(folder/'response_catalog.json')
+    for name in (DEPLOY if names is None else names):
+        folder=run/f'seed{seed}'/name; catalogs[name]=read(folder/'response_catalog.json')
         with np.load(folder/'responses.npz') as z: arrays[name]={k:z[k] for k in z.files}
         for case in catalogs[name]:
             if not case['all_perturbed_inputs_supplied'] or np.count_nonzero(case['vector'])!=1: continue
