@@ -1,0 +1,34 @@
+{
+  "status": "complete",
+  "model": "P3",
+  "seed": 23,
+  "epochs_run": 46,
+  "updates": 7360,
+  "stop_reason": "validation_plateau",
+  "reached_validation_plateau": true,
+  "best_epochs": {
+    "short": 44,
+    "balanced": 17,
+    "AB_short": 28,
+    "AB_balanced": 28
+  },
+  "best_selector": {
+    "short": 0.5271613001823425,
+    "balanced": 0.9523153901100159,
+    "AB_short": 0.6397848129272461,
+    "AB_balanced": 1.1164135932922363
+  },
+  "final_selector": {
+    "short": 0.5290957689285278,
+    "balanced": 0.9862461686134338,
+    "block_H128": 1.4433965682983398,
+    "AB_short": 0.642959713935852,
+    "AB_balanced": 1.1369969844818115
+  },
+  "final_lr": 0.0001,
+  "train_seconds": 3835.4848164780997,
+  "parameters": 59300,
+  "trainable_parameters": 59300,
+  "training_windows": 20371,
+  "supervision_horizon": 128
+}
